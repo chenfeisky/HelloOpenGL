@@ -3219,7 +3219,7 @@ void code_6_exercise_23()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_24
-float a = 0.1;
+float a = 0.01;
 float b = 10;
 inline int Round(const double a)
 {
@@ -3286,13 +3286,13 @@ void parabola(int xc, int yc)
 	p = pow(((y + sign * 1) - b) / a, 0.5) - (x + 0.5);
 	while (x < winWidth / 2)
 	{
+		y += sign * 1;
 		if (p > 0)
 		{
 			x++;
-		}
-		y--;
+		}		
 		plotPoint(xc, yc, x, y);
-		p = pow(50 - (y - 1), 0.5) - (x + 0.5);
+		p = pow(((y + sign * 1) - b) / a, 0.5) - (x + 0.5);
 	}
 }
 
