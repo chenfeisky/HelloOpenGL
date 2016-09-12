@@ -1,0 +1,87 @@
+// 第五章代码
+
+// 选择一个，注释掉其他的
+//#define CHAPTER_5_7_2
+//#define CHAPTER_5_EXERCISE_1
+//#define CHAPTER_5_EXERCISE_2
+//#define CHAPTER_5_EXERCISE_4
+//#define CHAPTER_5_EXERCISE_5
+//#define CHAPTER_5_EXERCISE_6
+//#define CHAPTER_5_EXERCISE_7
+//#define CHAPTER_5_EXERCISE_8
+//#define CHAPTER_5_EXERCISE_9
+#define CHAPTER_5_EXERCISE_10
+//#define CHAPTER_5_EXERCISE_11
+//#define CHAPTER_5_EXERCISE_12
+//#define CHAPTER_5_EXERCISE_13
+//#define CHAPTER_5_EXERCISE_14
+//#define CHAPTER_5_EXERCISE_15
+//#define CHAPTER_5_EXERCISE_16
+//#define CHAPTER_5_EXERCISE_17
+//#define CHAPTER_5_ADD_EXERCISE_1
+//#define CHAPTER_5_ADD_EXERCISE_2
+
+
+#ifdef CHAPTER_5_7_2
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_2
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_4
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_7
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_8
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_9
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_10
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_11
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_12
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_13
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_14
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_15
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_16
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_EXERCISE_17
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_ADD_EXERCISE_1
+#define CHAPTER_5_COMMON
+#endif
+
+#ifdef CHAPTER_5_ADD_EXERCISE_2
+#define CHAPTER_5_COMMON
+#endif

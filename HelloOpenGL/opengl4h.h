@@ -1,0 +1,153 @@
+// 第四章代码
+
+// 选择一个，注释掉其他的
+//#define CHAPTER_4_Test
+//#define CHAPTER_4_15_2
+//#define CHAPTER_4_16
+//#define CHAPTER_4_EXAMPLE_1
+//#define CHAPTER_4_EXAMPLE_2
+//#define CHAPTER_4_EXAMPLE_3
+//#define CHAPTER_4_EXAMPLE_4
+//#define CHAPTER_4_EXERCISE_1
+//#define CHAPTER_4_EXERCISE_2
+//#define CHAPTER_4_EXERCISE_3
+//#define CHAPTER_4_EXERCISE_4
+//#define CHAPTER_4_EXERCISE_5
+//#define CHAPTER_4_EXERCISE_6
+//#define CHAPTER_4_EXERCISE_7
+//#define CHAPTER_4_EXERCISE_8
+//#define CHAPTER_4_EXERCISE_9
+//#define CHAPTER_4_EXERCISE_10
+//#define CHAPTER_4_EXERCISE_11
+//#define CHAPTER_4_EXERCISE_12
+//#define CHAPTER_4_EXERCISE_13
+//#define CHAPTER_4_EXERCISE_14
+//#define CHAPTER_4_EXERCISE_15
+//#define CHAPTER_4_EXERCISE_16
+//#define CHAPTER_4_EXERCISE_17
+//#define CHAPTER_4_EXERCISE_18
+//#define CHAPTER_4_EXERCISE_19
+//#define CHAPTER_4_EXERCISE_20
+//#define CHAPTER_4_EXERCISE_21
+//#define CHAPTER_4_EXERCISE_22
+//#define CHAPTER_4_EXERCISE_23
+//#define CHAPTER_4_EXERCISE_24
+//#define CHAPTER_4_EXERCISE_25
+//#define CHAPTER_4_EXERCISE_26
+//#define CHAPTER_4_EXERCISE_27
+//#define CHAPTER_4_EXERCISE_28
+//#define CHAPTER_4_EXERCISE_29
+//#define CHAPTER_4_EXERCISE_30
+#define CHAPTER_4_ADD_EXERCISE_2
+
+#ifdef CHAPTER_4_Test
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_15_2
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_1
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_2
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_3
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_4
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_5
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_6
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_7
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_8
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_9
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_10
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_11
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_12
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_13
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_14
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_15
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_16
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_17
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_18
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_19
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_20
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_21
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_22
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_23
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_24
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_EXERCISE_25
+#define CHAPTER_4_COMMON
+#endif
+
+#ifdef CHAPTER_4_ADD_EXERCISE_2
+#define CHAPTER_4_COMMON
+#endif
