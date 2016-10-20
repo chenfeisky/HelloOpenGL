@@ -3314,6 +3314,96 @@ void code_6_exercise_24()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_25
+float xcenter = winWidth / 2;
+float ycenter = winHeight / 2;
+float radius = 100;
+float h = 400;
+int spliteNum = 1000;
+const GLdouble twoPi = 6.283185;
+struct Point
+{
+	GLint x, y, z;
+};
+struct Surface
+{
+	vector<Point> points;
+};
+vector<Surface> surfaceTable;
+inline int Round(const double a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void coord()
+{
+	glBegin(GL_LINES);
+	glVertex2i(xcenter, 0);
+	glVertex2i(xcenter, 1000);
+
+	glVertex2i(0, ycenter);
+	glVertex2i(1000, ycenter);
+	glEnd();
+}
+void column()
+{
+	for (auto& s : surfaceTable)
+	{
+		glBegin(GL_LINE_LOOP);
+			for (auto& p : s.points)
+			{
+				glVertex3i(p.x, p.y, p.z);
+			}
+		glEnd();
+	}
+}
+
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 0.0, 0.0);
+	coord();
+
+	glColor3f(1.0, 1.0, 1.0);
+	column();
+
+	glFlush();
+}
+void makeSurface(float lx, float ly, float cx, float cy)
+{
+	surfaceTable.push_back(Surface());
+	surfaceTable.back().points.push_back({ Round(xcenter + lx),Round(ycenter + ly),Round(0) });
+	surfaceTable.back().points.push_back({ Round(xcenter + cx),Round(ycenter + cy),Round(0) });
+	surfaceTable.back().points.push_back({ Round(xcenter + cx),Round(ycenter + cy),Round(h) });
+	surfaceTable.back().points.push_back({ Round(xcenter + lx),Round(ycenter + ly),Round(h) });
+}
+void clac()
+{
+	float lx = radius;
+	float ly = 0;
+	for (int i = 1; i < spliteNum; i++)
+	{
+		double angle = i * twoPi / spliteNum;
+		float cx = radius * cos(angle);
+		float cy = radius * sin(angle);
+
+		makeSurface(lx, ly, cx, cy);
+
+		lx = cx;
+		ly = cy;
+	}
+	makeSurface(lx, ly, radius, 0);
+}
+void code_6_exercise_25()
+{
+	clac();
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -3465,6 +3555,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_24
 	code_6_exercise_24();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_25
+	code_6_exercise_25();
 #endif
 
 	glutMainLoop();
