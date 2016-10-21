@@ -3405,7 +3405,6 @@ void code_6_exercise_25()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_26
-std::string type1 = "11111000";
 inline int Round(const double a)
 {
 	if (a >= 0)
@@ -3413,59 +3412,260 @@ inline int Round(const double a)
 	else
 		return int(a - 0.5);
 }
-void column()
+bool needPixel(int index, const std::string& lineTypeMode)
 {
-	for (auto& s : surfaceTable)
+	return lineTypeMode[index % lineTypeMode.size()] == '1';
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
 	{
-		glBegin(GL_LINE_LOOP);
-		for (auto& p : s.points)
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+	
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+
+	if(needPixel(index, lineTypeMode))
+		setPixel(x, y);
+
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
 		{
-			glVertex3i(p.x, p.y, p.z);
+			y++;
+			p += twoDyMinusDx;
 		}
-		glEnd();
+
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
 	}
 }
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
 
+	int index = 0;
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int index = 0;
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+}
+// 固定像素数划线
+void lineType1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	lineBres(x0, y0, xEnd, yEnd, lineTypeMode);
+}
+// 固定长度划线
+void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = std::abs(x0 - xEnd);
+	int dy = std::abs(y0 - yEnd);
+	float realRate = dx / std::sqrt(dx * dx + dy * dy);
+	std::string newLineTypeMode;
+	char curType = lineTypeMode[0];
+	int curCount = 0;
+	for (int i = 0;; i++)
+	{
+		if (i == lineTypeMode.size())
+		{
+			newLineTypeMode.append(Round(curCount * realRate), curType);
+			break;
+		}
+		if (lineTypeMode[i] != curType)
+		{
+			newLineTypeMode.append(Round(curCount * realRate), curType);
+			curType = lineTypeMode[i];
+			curCount = 1;
+		}
+		else
+		{
+			curCount++;
+		}
+	}
+	lineBres(x0, y0, xEnd, yEnd, newLineTypeMode);
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glColor3f(1.0, 0.0, 0.0);
-	coord();
-
 	glColor3f(1.0, 1.0, 1.0);
-	column();
+	lineType1(100, 100, 200, 200, "1");
+	lineType1(100, 150, 200, 250, "11111111000");
+	lineType1(100, 200, 200, 300, "1100");
+
+	lineType1(100, 450, 200, 400, "1");
+	lineType1(100, 500, 200, 450, "11111111000");
+	lineType1(100, 550, 200, 500, "1100");
+
+	glColor3f(1.0, 0.0, 0.0);
+
+	lineType2(300, 100, 400, 200, "1");
+	lineType2(300, 150, 400, 250, "11111111000");
+	lineType2(300, 200, 400, 300, "1100");
+			
+	lineType2(300, 450, 400, 400, "1");
+	lineType2(300, 500, 400, 450, "11111111000");
+	lineType2(300, 550, 400, 500, "1100");
 
 	glFlush();
 }
-void makeSurface(float lx, float ly, float cx, float cy)
+void code_6_exercise_26()
 {
-	surfaceTable.push_back(Surface());
-	surfaceTable.back().points.push_back({ Round(xcenter + lx),Round(ycenter + ly),Round(0) });
-	surfaceTable.back().points.push_back({ Round(xcenter + cx),Round(ycenter + cy),Round(0) });
-	surfaceTable.back().points.push_back({ Round(xcenter + cx),Round(ycenter + cy),Round(h) });
-	surfaceTable.back().points.push_back({ Round(xcenter + lx),Round(ycenter + ly),Round(h) });
-}
-void clac()
-{
-	float lx = radius;
-	float ly = 0;
-	for (int i = 1; i < spliteNum; i++)
-	{
-		double angle = i * twoPi / spliteNum;
-		float cx = radius * cos(angle);
-		float cy = radius * sin(angle);
-
-		makeSurface(lx, ly, cx, cy);
-
-		lx = cx;
-		ly = cy;
-	}
-	makeSurface(lx, ly, radius, 0);
-}
-void code_6_exercise_25()
-{
-	clac();
 	glutDisplayFunc(drawFunc);
 }
 #endif

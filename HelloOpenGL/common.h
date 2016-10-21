@@ -17,6 +17,7 @@
 
 using std::vector;
 
+//#define TOOLS
 #define CHAPTER_6
 #define WIN_DEBUG
 
