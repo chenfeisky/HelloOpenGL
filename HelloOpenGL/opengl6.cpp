@@ -3639,6 +3639,76 @@ void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	}
 	lineBres(x0, y0, xEnd, yEnd, newLineTypeMode);
 }
+// ·Ö¶Î»®Ïß
+void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float l = std::sqrt(dx * dx + dy * dy);
+	float rateX = dx / l;
+	float rateY = dy / l;
+
+	/*std::string newLineTypeMode;
+	char curType = lineTypeMode[0];
+	int curCount = 0;
+	for (int i = 0;; i++)
+	{
+		if (i == lineTypeMode.size())
+		{
+			newLineTypeMode.append(Round(curCount * realRate), curType);
+			break;
+		}
+		if (lineTypeMode[i] != curType)
+		{
+			newLineTypeMode.append(Round(curCount * realRate), curType);
+			curType = lineTypeMode[i];
+			curCount = 1;
+		}
+		else
+		{
+			curCount++;
+		}
+	}
+	lineBres(x0, y0, xEnd, yEnd, newLineTypeMode);*/
+
+	int totalSize = lineTypeMode.size();
+	float startX, startY;
+	int count = 0;
+	bool begin = false;
+	int _startx, _starty;
+	for (int i = 0;; i++)
+	{
+		startX = i * totalSize * rateX;
+		startY = i * totalSize * rateY;
+		count = 0;
+		begin = false;
+		for (int j = 0; j < totalSize; j++)
+		{
+			if (lineTypeMode[j] == '1')
+			{
+				if (!begin)
+				{
+					begin = true;
+					_startx = Round(j * rateX);
+					_starty = Round(j * rateY);
+				}
+				if (begin)
+				{
+					count++;
+				}				
+			}
+			else
+			{
+				if (begin)
+				{
+					lineBres();
+				}
+				count = 0;
+				begin = false;
+			}
+		}
+	}
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
