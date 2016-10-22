@@ -3648,7 +3648,265 @@ void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	float rateX = dx / l;
 	float rateY = dy / l;
 
-	/*std::string newLineTypeMode;
+	int totalSize = lineTypeMode.size();
+	float start;
+	bool begin = false;
+	int _startx, _starty;
+	for (int i = 0;; i++)
+	{
+		start = i * totalSize;
+		begin = false;
+		for (int j = 0;; j++)
+		{
+			if (j >= totalSize)
+			{
+				if (begin)
+				{
+					lineBres(_startx, _starty, x0 + Round((start + j - 1) * rateX), y0 + Round((start + j - 1) * rateY), "1");
+				}
+				break;
+			}
+
+			if (lineTypeMode[j] == '1')
+			{
+				if (!begin)
+				{
+					begin = true;
+					_startx = x0 + Round((start + j) * rateX);
+					_starty = y0 + Round((start + j) * rateY);
+				}
+			}
+			else
+			{
+				if (begin)
+				{
+					lineBres(_startx, _starty, x0 + Round((start + j - 1) * rateX), y0 + Round((start + j - 1) * rateY), "1");
+				}
+				begin = false;
+			}
+
+			// 退出条件
+			if (std::abs(Round((start + j + 1) * rateX)) >= std::abs(dx))
+			{
+				if (begin)
+				{
+					lineBres(_startx, _starty, x0 + Round((start + j) * rateX), y0 + Round((start + j) * rateY), "1");
+				}
+				return;
+			}
+		}
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	lineType1(100, 100, 200, 200, "1");// 实线
+	lineType1(100, 150, 200, 250, "11111111000");// 划线
+	lineType1(100, 200, 200, 300, "1100");// 点线
+
+	lineType1(100, 450, 200, 400, "1");
+	lineType1(100, 500, 200, 450, "11111111000");
+	lineType1(100, 550, 200, 500, "1100");
+
+	glColor3f(1.0, 0.0, 0.0);
+
+	lineType2(300, 100, 400, 200, "1");
+	lineType2(300, 150, 400, 250, "11111111000");
+	lineType2(300, 200, 400, 300, "1100");
+			
+	lineType2(300, 450, 400, 400, "1");
+	lineType2(300, 500, 400, 450, "11111111000");
+	lineType2(300, 550, 400, 500, "1100");
+
+	glColor3f(1.0, 1.0, 0.0);
+
+	lineType3(500, 100, 600, 200, "1");
+	lineType3(500, 150, 600, 250, "11111111000");
+	lineType3(500, 200, 600, 300, "1100");
+			  			
+	lineType3(500, 450, 600, 400, "1");
+	lineType3(500, 500, 600, 450, "11111111000");
+	lineType3(500, 550, 600, 500, "1100");
+
+	glFlush();
+}
+void code_6_exercise_26()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_27
+inline int Round(const double a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool needPixel(int index, const std::string& lineTypeMode)
+{
+	return lineTypeMode[index % lineTypeMode.size()] == '1';
+}
+// 0<m<1(m>1)
+// XYmirror: x,y坐标交换（沿y=x直线对称变换）
+void lineBresMid1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode, bool XYmirror = false)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dx - 2 * dy;
+	int twoDy = 2 * dy, twoDxMinusDy = 2 * (dx - dy);
+	int x = x0;
+	int y = y0;
+	int index = 0;
+
+	if (XYmirror)
+	{
+		if (needPixel(index, lineTypeMode))
+			setPixel(y, x);
+	}		
+	else
+	{
+		if (needPixel(index, lineTypeMode))
+			setPixel(x, y);
+	}
+
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p -= twoDy;
+		else
+		{
+			y++;
+			p += twoDxMinusDy;
+		}
+		if (XYmirror)
+		{
+			if (needPixel(++index, lineTypeMode))
+				setPixel(y, x);
+		}
+		else
+		{
+			if (needPixel(++index, lineTypeMode))
+				setPixel(x, y);
+		}			
+	}
+}
+// -1<m<0(m<-1)
+// XYmirror: x,y坐标交换（沿y=x直线对称变换）
+void lineBresMid2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode, bool XYmirror = false)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = xEnd - x0, dy = yEnd - y0;
+	int p = -dx - 2 * dy;
+	int twoDy = 2 * dy, twoDxMinusDy = 2 * (-dx - dy);
+	int x = x0;
+	int y = y0;
+	int index = 0;
+
+	if (XYmirror)
+	{
+		if (needPixel(index, lineTypeMode))
+			setPixel(y, x);
+	}
+	else
+	{
+		if (needPixel(index, lineTypeMode))
+			setPixel(x, y);
+	}
+
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p -= twoDy;
+		else
+		{
+			y--;
+			p += twoDxMinusDy;
+		}
+		if (XYmirror)
+		{
+			if (needPixel(++index, lineTypeMode))
+				setPixel(y, x);
+		}
+		else
+		{
+			if (needPixel(++index, lineTypeMode))
+				setPixel(x, y);
+		};
+	}
+}
+void lineBresMid(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBresMid1(y0, x0, yEnd, xEnd, lineTypeMode, true);
+		}
+		else
+		{
+			lineBresMid1(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBresMid2(y0, x0, yEnd, xEnd, lineTypeMode, true);
+		}
+		else
+		{
+			lineBresMid2(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+}
+// 固定像素数划线
+void lineType1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	lineBresMid(x0, y0, xEnd, yEnd, lineTypeMode);
+}
+// 固定长度划线
+void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = std::abs(x0 - xEnd);
+	int dy = std::abs(y0 - yEnd);
+	float realRate = dx / std::sqrt(dx * dx + dy * dy);
+	std::string newLineTypeMode;
 	char curType = lineTypeMode[0];
 	int curCount = 0;
 	for (int i = 0;; i++)
@@ -3669,42 +3927,62 @@ void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 			curCount++;
 		}
 	}
-	lineBres(x0, y0, xEnd, yEnd, newLineTypeMode);*/
+	lineBresMid(x0, y0, xEnd, yEnd, newLineTypeMode);
+}
+// 分段划线
+void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float l = std::sqrt(dx * dx + dy * dy);
+	float rateX = dx / l;
+	float rateY = dy / l;
 
 	int totalSize = lineTypeMode.size();
-	float startX, startY;
-	int count = 0;
+	float start;
 	bool begin = false;
 	int _startx, _starty;
 	for (int i = 0;; i++)
 	{
-		startX = i * totalSize * rateX;
-		startY = i * totalSize * rateY;
-		count = 0;
+		start = i * totalSize;
 		begin = false;
-		for (int j = 0; j < totalSize; j++)
+		for (int j = 0;; j++)
 		{
+			if (j >= totalSize)
+			{
+				if (begin)
+				{
+					lineBresMid(_startx, _starty, x0 + Round((start + j - 1) * rateX), y0 + Round((start + j - 1) * rateY), "1");
+				}
+				break;
+			}
+
 			if (lineTypeMode[j] == '1')
 			{
 				if (!begin)
 				{
 					begin = true;
-					_startx = Round(j * rateX);
-					_starty = Round(j * rateY);
+					_startx = x0 + Round((start + j) * rateX);
+					_starty = y0 + Round((start + j) * rateY);
 				}
-				if (begin)
-				{
-					count++;
-				}				
 			}
 			else
 			{
 				if (begin)
 				{
-					lineBres();
+					lineBresMid(_startx, _starty, x0 + Round((start + j - 1) * rateX), y0 + Round((start + j - 1) * rateY), "1");
 				}
-				count = 0;
 				begin = false;
+			}
+
+			// 退出条件
+			if (std::abs(Round((start + j + 1) * rateX)) >= std::abs(dx))
+			{
+				if (begin)
+				{
+					lineBresMid(_startx, _starty, x0 + Round((start + j) * rateX), y0 + Round((start + j) * rateY), "1");
+				}
+				return;
 			}
 		}
 	}
@@ -3714,9 +3992,9 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	lineType1(100, 100, 200, 200, "1");
-	lineType1(100, 150, 200, 250, "11111111000");
-	lineType1(100, 200, 200, 300, "1100");
+	lineType1(100, 100, 200, 200, "1");  // 实线
+	lineType1(100, 150, 200, 250, "11111111000"); // 划线
+	lineType1(100, 200, 200, 300, "1100"); // 点线
 
 	lineType1(100, 450, 200, 400, "1");
 	lineType1(100, 500, 200, 450, "11111111000");
@@ -3727,19 +4005,28 @@ void drawFunc()
 	lineType2(300, 100, 400, 200, "1");
 	lineType2(300, 150, 400, 250, "11111111000");
 	lineType2(300, 200, 400, 300, "1100");
-			
+
 	lineType2(300, 450, 400, 400, "1");
 	lineType2(300, 500, 400, 450, "11111111000");
 	lineType2(300, 550, 400, 500, "1100");
 
+	glColor3f(1.0, 1.0, 0.0);
+
+	lineType3(500, 100, 600, 200, "1");
+	lineType3(500, 150, 600, 250, "11111111000");
+	lineType3(500, 200, 600, 300, "1100");
+
+	lineType3(500, 450, 600, 400, "1");
+	lineType3(500, 500, 600, 450, "11111111000");
+	lineType3(500, 550, 600, 500, "1100");
+
 	glFlush();
 }
-void code_6_exercise_26()
+void code_6_exercise_27()
 {
 	glutDisplayFunc(drawFunc);
 }
 #endif
-
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -3899,6 +4186,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_26
 	code_6_exercise_26();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_27
+	code_6_exercise_27();
 #endif
 
 	glutMainLoop();
