@@ -4028,6 +4028,415 @@ void code_6_exercise_27()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_28
+inline int Round(const double a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool needPixel(int index, const std::string& lineTypeMode)
+{
+	return lineTypeMode[index % lineTypeMode.size()] == '1';
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int index = 0;
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+}
+void threadFunc(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	lineBres(x0, y0, xEnd, yEnd, lineTypeMode);
+}
+// 固定像素数划线
+void parallelLineType1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	//std::vector<std::thread> threads;
+
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float rateXY = (float)dy / dx;
+
+	int totalSize = lineTypeMode.size();
+	int startx, starty;
+	int endx, endy;
+	bool forEnd = false;
+	int sgin = dx >= 0 ? 1 : -1;
+	for (int i = 0;; i++)
+	{
+		startx = x0 + sgin * i * totalSize;
+		starty = y0 + Round(sgin * i * totalSize * rateXY);
+		endx = x0 + sgin * (i + 1) * totalSize;
+		endy = y0 + Round(sgin * (i + 1) * totalSize * rateXY);
+
+		if (std::abs(sgin * (i+1) * totalSize) >= std::abs(dx))
+		{
+			endx = xEnd;
+			endy = yEnd;
+			forEnd = true;
+		}			
+		//threads.push_back(std::thread(threadFunc, startx, starty, endx, endy, lineTypeMode));
+		threadFunc(startx, starty, endx, endy, lineTypeMode);
+		if (forEnd)
+			break;
+	}
+	//for (auto& thread : threads)
+	//	thread.join();
+}
+// 固定长度划线
+void parallelLineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float l = std::sqrt(std::abs(dx) * std::abs(dx) + std::abs(dy) * std::abs(dy));
+	float realRate = std::abs(dx) / l;
+	std::string newLineTypeMode;
+	char curType = lineTypeMode[0];
+	int curCount = 0;
+	for (int i = 0;; i++)
+	{
+		if (i == lineTypeMode.size())
+		{
+			newLineTypeMode.append(Round(curCount * realRate), curType);
+			break;
+		}
+		if (lineTypeMode[i] != curType)
+		{
+			newLineTypeMode.append(Round(curCount * realRate), curType);
+			curType = lineTypeMode[i];
+			curCount = 1;
+		}
+		else
+		{
+			curCount++;
+		}
+	}
+
+	float rateX = dx / l;
+	float rateY = dy / l;
+	int totalSize = lineTypeMode.size();
+	int startx, starty;
+	int endx, endy;
+	bool forEnd = false;
+	for (int i = 0;; i++)
+	{
+		startx = x0 + Round(i * totalSize * rateX);
+		starty = y0 + Round(i * totalSize * rateY);
+		endx = x0 + Round((i + 1) * totalSize * rateX);
+		endy = y0 + Round((i + 1) * totalSize * rateY);
+
+		if (std::abs(Round((i + 1) * totalSize * rateX)) >= std::abs(dx))
+		{
+			endx = xEnd;
+			endy = yEnd;
+			forEnd = true;
+		}
+
+		threadFunc(startx, starty, endx, endy, newLineTypeMode);
+		if (forEnd)
+			return;
+	}
+}
+void _threadFunc(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float l = std::sqrt(dx * dx + dy * dy);
+	float rateX = dx / l;
+	float rateY = dy / l;
+
+	int totalSize = lineTypeMode.size();
+	bool begin = false;
+	int _startx, _starty;
+
+	for (int j = 0;; j++)
+	{
+		if (j >= totalSize)
+		{
+			if (begin)
+			{
+				lineBres(_startx, _starty, x0 + Round((j - 1) * rateX), y0 + Round((j - 1) * rateY), "1");
+			}
+			return;
+		}
+
+		if (lineTypeMode[j] == '1')
+		{
+			if (!begin)
+			{
+				begin = true;
+				_startx = x0 + Round(j * rateX);
+				_starty = y0 + Round(j * rateY);
+			}
+		}
+		else
+		{
+			if (begin)
+			{
+				lineBres(_startx, _starty, x0 + Round((j - 1) * rateX), y0 + Round((j - 1) * rateY), "1");
+			}
+			begin = false;
+		}
+	}
+}
+// 分段划线
+void parallelLineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float l = std::sqrt(std::abs(dx) * std::abs(dx) + std::abs(dy) * std::abs(dy));
+
+	float rateX = dx / l;
+	float rateY = dy / l;
+	int totalSize = lineTypeMode.size();
+	int startx, starty;
+	int endx, endy;
+	bool forEnd = false;
+	for (int i = 0;; i++)
+	{
+		startx = x0 + Round(i * totalSize * rateX);
+		starty = y0 + Round(i * totalSize * rateY);
+		endx = x0 + Round((i + 1) * totalSize * rateX);
+		endy = y0 + Round((i + 1) * totalSize * rateY);
+
+		if (std::abs(Round((i + 1) * totalSize * rateX)) >= std::abs(dx))
+		{
+			endx = xEnd;
+			endy = yEnd;
+			forEnd = true;
+		}
+
+		_threadFunc(startx, starty, endx, endy, lineTypeMode);
+		if (forEnd)
+			return;
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	parallelLineType1(100, 100, 200, 200, "1");  // 实线
+	parallelLineType1(100, 150, 200, 250, "11111111000"); // 划线
+	parallelLineType1(100, 200, 200, 300, "1100"); // 点线
+
+	parallelLineType1(100, 450, 200, 400, "1");
+	parallelLineType1(100, 500, 200, 450, "11111111000");
+	parallelLineType1(100, 550, 200, 500, "1100");
+
+	glColor3f(1.0, 0.0, 0.0);
+
+	parallelLineType2(300, 100, 400, 200, "1");
+	parallelLineType2(300, 150, 400, 250, "11111111000");
+	parallelLineType2(300, 200, 400, 300, "1100");
+	
+	parallelLineType2(300, 450, 400, 400, "1");
+	parallelLineType2(300, 500, 400, 450, "11111111000");
+	parallelLineType2(300, 550, 400, 500, "1100");
+
+	glColor3f(1.0, 1.0, 0.0);
+
+	parallelLineType3(500, 100, 600, 200, "1");
+	parallelLineType3(500, 150, 600, 250, "11111111000");
+	parallelLineType3(500, 200, 600, 300, "1100");
+					
+	parallelLineType3(500, 450, 600, 400, "1");
+	parallelLineType3(500, 500, 600, 450, "11111111000");
+	parallelLineType3(500, 550, 600, 500, "1100");
+
+	glFlush();
+}
+void code_6_exercise_28()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -4191,6 +4600,11 @@ void main(int argc, char** argv)
 #ifdef CHAPTER_6_EXERCISE_27
 	code_6_exercise_27();
 #endif
+
+#ifdef CHAPTER_6_EXERCISE_28
+	code_6_exercise_28();
+#endif
+
 
 	glutMainLoop();
 }

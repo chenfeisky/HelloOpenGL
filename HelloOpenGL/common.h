@@ -13,7 +13,7 @@
 #include <fstream>  
 #include <math.h>
 #include <algorithm> 
-
+#include <thread>
 
 using std::vector;
 
