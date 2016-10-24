@@ -36,7 +36,8 @@
 //#define CHAPTER_6_EXERCISE_25
 //#define CHAPTER_6_EXERCISE_26
 //#define CHAPTER_6_EXERCISE_27
-#define CHAPTER_6_EXERCISE_28
+//#define CHAPTER_6_EXERCISE_28
+#define CHAPTER_6_EXERCISE_29	// 简单线宽函数，不含端点处理
 
 
 
@@ -182,5 +183,9 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_28
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_29
 #define CHAPTER_6_COMMON
 #endif
