@@ -4659,6 +4659,228 @@ void code_6_exercise_29()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_30
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
+}
+void drawRect(int x0, int y0, int xEnd, int yEnd, int width)
+{
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float sita;
+	if (dy)
+		sita = std::atan((float)-dx / dy);
+	else
+		sita = PI / 2;
+	int vertexX = Round(std::cos(sita) * width);
+	int vertexY = Round(std::sin(sita) * width);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(x0, y0, xEnd, yEnd);
+
+	glColor3f(1.0, 1.0, 0.0);
+	lineBres(x0 + vertexX, y0 + vertexY, x0 - vertexX, y0 - vertexY);
+	lineBres(x0 - vertexX, y0 - vertexY, xEnd - vertexX, yEnd - vertexY);
+	lineBres(xEnd - vertexX, yEnd - vertexY, xEnd + vertexX, yEnd + vertexY);
+	lineBres(xEnd + vertexX, yEnd + vertexY, x0 + vertexX, y0 + vertexY);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	drawRect(53, 95, 706, 95, 10);		  // 水平线
+	drawRect(495, 25, 495, 556,10);	  // 垂直线
+	drawRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
+	drawRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
+
+	drawRect(172, 134, 525, 243, 10);	  // 0<m<1
+	drawRect(222, 95, 521, 549,10);	  // m>1
+	drawRect(135, 300, 733, 139,10);	  // -1<m<0
+	drawRect(264, 487, 447, 47,10);	  // m<-1
+
+	glFlush();
+}
+void code_6_exercise_30()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -4829,6 +5051,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_29
 	code_6_exercise_29();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_30
+	code_6_exercise_30();
 #endif
 
 
