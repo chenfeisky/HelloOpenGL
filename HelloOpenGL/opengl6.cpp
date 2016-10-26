@@ -4660,6 +4660,27 @@ void code_6_exercise_29()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_30
+struct Point2 { int x; int y; };
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int beginX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+
 inline int Round(const float a)
 {
 	if (a >= 0)
@@ -4837,6 +4858,71 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 			lineBres2(x0, y0, xEnd, yEnd);
 		}
 	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if(lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+				return a.x1 < b.x1;
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+	}
+	return lineSet;
+}
+void fillPolygon(const std::vector<Point2>& points)
+{ 
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+
 }
 void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 {
