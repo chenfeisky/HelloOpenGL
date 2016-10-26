@@ -4838,7 +4838,7 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		}
 	}
 }
-void drawRect(int x0, int y0, int xEnd, int yEnd, int width)
+void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 {
 	int dx = xEnd - x0;
 	int dy = yEnd - y0;
@@ -4863,15 +4863,15 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	drawRect(53, 95, 706, 95, 10);		  // 水平线
-	drawRect(495, 25, 495, 556,10);	  // 垂直线
-	drawRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
-	drawRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
+	lineRect(53, 95, 706, 95, 10);		  // 水平线
+	lineRect(495, 25, 495, 556,10);	  // 垂直线
+	lineRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
+	lineRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
 
-	drawRect(172, 134, 525, 243, 10);	  // 0<m<1
-	drawRect(222, 95, 521, 549,10);	  // m>1
-	drawRect(135, 300, 733, 139,10);	  // -1<m<0
-	drawRect(264, 487, 447, 47,10);	  // m<-1
+	lineRect(172, 134, 525, 243, 10);	  // 0<m<1
+	lineRect(222, 95, 521, 549,10);	  // m>1
+	lineRect(135, 300, 733, 139,10);	  // -1<m<0
+	lineRect(264, 487, 447, 47,10);	  // m<-1
 
 	glFlush();
 }
