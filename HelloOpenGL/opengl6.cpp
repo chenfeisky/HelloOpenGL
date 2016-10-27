@@ -4671,6 +4671,7 @@ struct Line
 struct SortedLine
 {
 	int maxY;
+	int minY;
 	int beginX;
 	int dx;
 	int dy;
@@ -4679,6 +4680,12 @@ struct SortedLineSet
 {
 	int scanY;
 	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
 };
 
 inline int Round(const float a)
@@ -4865,7 +4872,10 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
 		lines.push_back(Line());
 		lines.back().x0 = points[i].x;
 		lines.back().y0 = points[i].y;
@@ -4878,7 +4888,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		int next = (i + 1) % lines.size();
 		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
 			lines[i].y1--;
-		else if(lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
 			lines[next].y0--;
 	}
 
@@ -4907,6 +4917,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 	});
 	std::vector<SortedLineSet> lineSet;
 	int lastY = -99999;
+	int maxY = -99999;
 	for (auto& line : lines)
 	{
 		if (line.y0 != lastY)
@@ -4917,15 +4928,74 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
 		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
 		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
 		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
 	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
 	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<Point2> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				points.push_back({ line.currentX , curY });
+
+				line.counter += line.sortedLine.dx * line.sortedLine.dx;
+				if (line.counter >= line.sortedLine.dy)
+				{
+					if(line.sortedLine.dx > 0)
+						line.currentX++;
+					else
+						line.currentX--;
+					line.counter -= line.sortedLine.dy * line.sortedLine.dy;
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				lineBres(points[2 * i].x, points[2 * i].y, points[2 * i + 1].x, points[2 * i + 1].y);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
 }
 void fillPolygon(const std::vector<Point2>& points)
 { 
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		std::remove_if(activeLines.begin(), activeLines.end(), [curY](auto& a)
+		{
+			return curY > a.sortedLine.maxY;
+		});
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+	}
 
 }
 void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
@@ -4939,14 +5009,24 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 		sita = PI / 2;
 	int vertexX = Round(std::cos(sita) * width);
 	int vertexY = Round(std::sin(sita) * width);
+	
+	std::vector<Point2> points;
+	points.push_back({ x0 + vertexX, y0 + vertexY });
+	points.push_back({ x0 - vertexX, y0 - vertexY });
+	points.push_back({ xEnd - vertexX, yEnd - vertexY });
+	points.push_back({ xEnd + vertexX, yEnd + vertexY });
+
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(x0, y0, xEnd, yEnd);
 
 	glColor3f(1.0, 1.0, 0.0);
-	lineBres(x0 + vertexX, y0 + vertexY, x0 - vertexX, y0 - vertexY);
-	lineBres(x0 - vertexX, y0 - vertexY, xEnd - vertexX, yEnd - vertexY);
-	lineBres(xEnd - vertexX, yEnd - vertexY, xEnd + vertexX, yEnd + vertexY);
-	lineBres(xEnd + vertexX, yEnd + vertexY, x0 + vertexX, y0 + vertexY);
+	lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
+	lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
+	lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
+	lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
+
+	glColor3f(1.0, 1.0, 1.0);
+	fillPolygon(points);
 }
 void drawFunc()
 {
