@@ -4896,7 +4896,11 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		if (a.y0 == b.y0)
 		{
 			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
 				return a.x1 < b.x1;
+			}
 			return a.x0 < b.x0;
 		}
 		return a.y0 < b.y0;
