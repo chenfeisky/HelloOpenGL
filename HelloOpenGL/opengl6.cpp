@@ -4950,14 +4950,22 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 			{
 				points.push_back({ line.currentX , curY });
 
-				line.counter += line.sortedLine.dx * line.sortedLine.dx;
-				if (line.counter >= line.sortedLine.dy)
+				line.counter += std::abs(line.sortedLine.dx * 2);
+				//if (line.counter >= line.sortedLine.dy)
+				//{
+				//	if(line.sortedLine.dx > 0)
+				//		line.currentX++;
+				//	else
+				//		line.currentX--;
+				//	line.counter -= line.sortedLine.dy * 2;
+				//}
+				while (line.counter >= line.sortedLine.dy)
 				{
-					if(line.sortedLine.dx > 0)
+					if (line.sortedLine.dx > 0)
 						line.currentX++;
 					else
 						line.currentX--;
-					line.counter -= line.sortedLine.dy * line.sortedLine.dy;
+					line.counter -= line.sortedLine.dy * 2;
 				}
 			}
 		}
@@ -5023,15 +5031,18 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 	points.push_back({ xEnd - vertexX, yEnd - vertexY });
 	points.push_back({ xEnd + vertexX, yEnd + vertexY });
 
+	// 直线
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(x0, y0, xEnd, yEnd);
 
+	// 线框
 	glColor3f(1.0, 1.0, 0.0);
 	lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
 	lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
 	lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
 	lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 
+	// 填充
 	glColor3f(1.0, 1.0, 1.0);
 	fillPolygon(points);
 }
@@ -5039,19 +5050,15 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	//lineRect(100, 100, 300, 100, 20);
-	//lineRect(53, 95, 706, 95, 10);		  // 水平线
-	//lineRect(495, 25, 495, 556,10);	  // 垂直线
-	//lineRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
-	//lineRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
+	lineRect(53, 95, 706, 95, 10);		  // 水平线
+	lineRect(495, 25, 495, 556,10);		// 垂直线
+	lineRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
+	lineRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
 
-	//lineRect(172, 134, 525, 243, 10);	  // 0<m<1
-	//lineRect(222, 95, 521, 549,10);	  // m>1
-	//lineRect(135, 300, 733, 139,10);	  // -1<m<0
-	//lineRect(264, 487, 447, 47,10);	  // m<-1
-
-	std::vector<Point2> points = { {100, 100}, {300,100},{300,350},{200, 350},{200, 250},{100,250} };
-	fillPolygon(points);
+	lineRect(172, 134, 525, 243, 10);	  // 0<m<1
+	lineRect(222, 95, 521, 549,10);	  // m>1
+	lineRect(135, 300, 733, 139,10);	  // -1<m<0
+	lineRect(264, 487, 447, 47,10);	  // m<-1
 
 	glFlush();
 }
