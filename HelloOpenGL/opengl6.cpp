@@ -4983,10 +4983,17 @@ void fillPolygon(const std::vector<Point2>& points)
 	for (int i = 0; i < sortedLines.size() - 1; i++)
 	{
 		int curY = sortedLines[i].scanY;
-		std::remove_if(activeLines.begin(), activeLines.end(), [curY](auto& a)
+		for (auto it = activeLines.begin(); it != activeLines.end();)
 		{
-			return curY > a.sortedLine.maxY;
-		});
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
 		for (auto& _sortedLine : sortedLines[i].sortedLines)
 		{
 			activeLines.push_back(ActiveLine());
@@ -5032,16 +5039,19 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
+	//lineRect(100, 100, 300, 100, 20);
+	//lineRect(53, 95, 706, 95, 10);		  // 水平线
+	//lineRect(495, 25, 495, 556,10);	  // 垂直线
+	//lineRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
+	//lineRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
 
-	lineRect(53, 95, 706, 95, 10);		  // 水平线
-	lineRect(495, 25, 495, 556,10);	  // 垂直线
-	lineRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
-	lineRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
+	//lineRect(172, 134, 525, 243, 10);	  // 0<m<1
+	//lineRect(222, 95, 521, 549,10);	  // m>1
+	//lineRect(135, 300, 733, 139,10);	  // -1<m<0
+	//lineRect(264, 487, 447, 47,10);	  // m<-1
 
-	lineRect(172, 134, 525, 243, 10);	  // 0<m<1
-	lineRect(222, 95, 521, 549,10);	  // m>1
-	lineRect(135, 300, 733, 139,10);	  // -1<m<0
-	lineRect(264, 487, 447, 47,10);	  // m<-1
+	std::vector<Point2> points = { {100, 100}, {300,100},{300,350},{200, 350},{200, 250},{100,250} };
+	fillPolygon(points);
 
 	glFlush();
 }
