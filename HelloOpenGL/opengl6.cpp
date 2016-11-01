@@ -5022,8 +5022,8 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 		sita = std::atan((float)-dx / dy);
 	else
 		sita = PI / 2;
-	int vertexX = Round(std::cos(sita) * width);
-	int vertexY = Round(std::sin(sita) * width);
+	int vertexX = Round(std::cos(sita) * width / 2);
+	int vertexY = Round(std::sin(sita) * width / 2);
 	
 	std::vector<Point2> points;
 	points.push_back({ x0 + vertexX, y0 + vertexY });
@@ -5069,6 +5069,33 @@ void code_6_exercise_30()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_31
+struct Point2 { int x; int y; };
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
 enum class RoundType
 {
 	All = 1,
@@ -5090,285 +5117,6 @@ inline int Round(const float a)
 	else
 		return int(a - 0.5);
 }
-void hLine(int y, int x0, int x1, int xc, int yc, RoundType type)
-{
-	for (int x = x0; x <= x1; x++)
-	{
-		switch (type)
-		{
-		case RoundType::All:
-			setPixel(xc + x, yc + y);
-			setPixel(xc - x, yc + y);
-			setPixel(xc + x, yc - y);
-			setPixel(xc - x, yc - y);
-			setPixel(xc + y, yc + x);
-			setPixel(xc - y, yc + x);
-			setPixel(xc + y, yc - x);
-			setPixel(xc - y, yc - x);
-			break;
-		case RoundType::LeftHalf:
-			setPixel(xc - x, yc + y);
-			setPixel(xc - x, yc - y);
-			setPixel(xc - y, yc + x);
-			setPixel(xc - y, yc - x);
-			break;
-		case RoundType::RightHalf:
-			setPixel(xc + x, yc + y);
-			setPixel(xc + x, yc - y);
-			setPixel(xc + y, yc + x);
-			setPixel(xc + y, yc - x);
-			break;
-		case RoundType::TopHalf:
-			setPixel(xc + x, yc + y);
-			setPixel(xc - x, yc + y);
-			setPixel(xc + y, yc + x);
-			setPixel(xc - y, yc + x);
-			break;
-		case RoundType::BottomHalf:
-			setPixel(xc + x, yc - y);
-			setPixel(xc - x, yc - y);
-			setPixel(xc + y, yc - x);
-			setPixel(xc - y, yc - x);
-			break;
-		default:
-			break;
-		}
-	}
-
-}
-void fillRound(int xc, int yc, int r, RoundType type)
-{
-	int xline = 0;
-	int xRound = r;
-
-	int d2x = 2 * r;
-	int d2y = 0;
-	int p = 1 - r;
-
-	hLine(0, 0, xRound, xc, yc, type);
-	int endY = Round(r / std::sqrt(2));
-	for (int curY = 1; curY <= endY; curY++)
-	{
-		d2y += 2;
-		if (p < 0)
-		{
-			p += d2y + 1;
-		}
-		else
-		{
-			xRound--;
-			d2x -= 2;
-			p += d2y + 1 - d2x;
-		}
-		hLine(curY, ++xline, xRound, xc, yc, type);
-	}
-}
-void setWidthPixelV(int x, int y, int width)
-{
-	int curWidthIdx = 0;
-	for (int i = 0; i < width; i++)
-	{
-		if (i % 2)
-			curWidthIdx++;
-		if (i % 2)
-			setPixel(x, y + curWidthIdx);
-		else
-			setPixel(x, y - curWidthIdx);
-	}
-}
-void setWidthPixelH(int x, int y, int width)
-{
-	int curWidthIdx = 0;
-	for (int i = 0; i < width; i++)
-	{
-		if (i % 2)
-			curWidthIdx++;
-		if (i % 2)
-			setPixel(x + curWidthIdx, y);
-		else
-			setPixel(x - curWidthIdx, y);
-	}
-}
-// 0<m<1
-void lineBres1(int x0, int y0, int xEnd, int yEnd, int width)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
-	int p = 2 * dy - dx;
-	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
-
-	int x = x0;
-	int y = y0;
-	setWidthPixelV(x, y, width);
-	while (x < xEnd)
-	{
-		x++;
-		if (p < 0)
-			p += twoDy;
-		else
-		{
-			y++;
-			p += twoDyMinusDx;
-		}
-		setWidthPixelV(x, y, width);
-	}
-}
-// m>1
-void lineBres1M(int x0, int y0, int xEnd, int yEnd, int width)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
-	int p = dy - 2 * dx;
-	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
-	int x = x0;
-	int y = y0;
-
-	setWidthPixelH(x, y, width);
-	while (y < yEnd)
-	{
-		y++;
-		if (p > 0)
-			p += twoDx;
-		else
-		{
-			x++;
-			p += twoDyMinusDx;
-		}
-		setWidthPixelH(x, y, width);
-	}
-}
-// -1<m<0
-void lineBres2(int x0, int y0, int xEnd, int yEnd, int width)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
-	int p = 2 * dy + dx;
-	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
-
-	int x = x0;
-	int y = y0;
-
-	setWidthPixelV(x, y, width);
-	while (x < xEnd)
-	{
-		x++;
-		if (p > 0)
-			p += twoDy;
-		else
-		{
-			y--;
-			p += twoDyAddDx;
-		}
-		setWidthPixelV(x, y, width);
-	}
-}
-// m<-1
-void lineBres2M(int x0, int y0, int xEnd, int yEnd, int width)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
-	int p = -2 * dx - dy;
-	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
-
-	int x = x0;
-	int y = y0;
-
-	setWidthPixelH(x, y, width);
-	while (y > yEnd)
-	{
-		y--;
-		if (p > 0)
-			p += twoDx;
-		else
-		{
-			x++;
-			p += twoDyAddDx;
-		}
-		setWidthPixelH(x, y, width);
-	}
-}
-void lineBresWithLineCap(int x0, int y0, int xEnd, int yEnd, int width, LineCap cap)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-	int dx = xEnd - x0;
-	int dy = yEnd - y0;
-	if (dy > 0)
-	{
-		if (fabs((float)dy) > fabs((float)dx))
-		{
-			lineBres1M(x0, y0, xEnd, yEnd, width);
-			fillRound(x0, y0, width / 2, RoundType::BottomHalf);
-			fillRound(xEnd, yEnd, width / 2, RoundType::TopHalf);
-		}
-		else
-		{
-			lineBres1(x0, y0, xEnd, yEnd, width);
-			fillRound(x0, y0, width / 2, RoundType::LeftHalf);
-			fillRound(xEnd, yEnd, width / 2, RoundType::RightHalf);
-		}
-	}
-	else
-	{
-		if (fabs((float)dy) > fabs((float)dx))
-		{
-			lineBres2M(x0, y0, xEnd, yEnd, width);
-			fillRound(x0, y0, width / 2, RoundType::TopHalf);
-			fillRound(xEnd, yEnd, width / 2, RoundType::BottomHalf);
-		}
-		else
-		{
-			lineBres2(x0, y0, xEnd, yEnd, width);
-			fillRound(x0, y0, width / 2, RoundType::LeftHalf);
-			fillRound(xEnd, yEnd, width / 2, RoundType::RightHalf);
-		}
-	}
-}
-
 // 中点画圆算法（逆时针0-45度圆）
 //void circlePlotPoints(int xc, int yc, int x, int y)
 //{
@@ -5406,13 +5154,497 @@ void lineBresWithLineCap(int x0, int y0, int xEnd, int yEnd, int width, LineCap 
 //		circlePlotPoints(xc, yc, x, y);
 //	}
 //}
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(x, y);
+	}
+}
+void hLineRound(int y, int x0, int x1, int xc, int yc, RoundType type, int offset = 0)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		switch (type)
+		{
+		case RoundType::All:
+			setPixel(xc + x, yc + y);
+			setPixel(xc - x + offset, yc + y);
+			setPixel(xc + x, yc - y + offset);
+			setPixel(xc - x + offset, yc - y + offset);
+			setPixel(xc + y , yc + x);
+			setPixel(xc - y + offset, yc + x);
+			setPixel(xc + y, yc - x + offset);
+			setPixel(xc - y + offset, yc - x + offset);
+			break;
+		case RoundType::LeftHalf:
+			setPixel(xc - x + offset, yc + y);
+			setPixel(xc - x + offset, yc - y + offset);
+			setPixel(xc - y + offset, yc + x);
+			setPixel(xc - y + offset, yc - x + offset);
+			break;
+		case RoundType::RightHalf:
+			setPixel(xc + x, yc + y);
+			setPixel(xc + x, yc - y + offset);
+			setPixel(xc + y, yc + x);
+			setPixel(xc + y, yc - x + offset);
+			break;
+		case RoundType::TopHalf:
+			setPixel(xc + x, yc + y);
+			setPixel(xc - x + offset, yc + y);
+			setPixel(xc + y, yc + x);
+			setPixel(xc - y + offset, yc + x);
+			break;
+		case RoundType::BottomHalf:
+			setPixel(xc + x, yc - y + offset);
+			setPixel(xc - x + offset, yc - y + offset);
+			setPixel(xc + y, yc - x + offset);
+			setPixel(xc - y + offset, yc - x + offset);
+			break;
+		default:
+			break;
+		}
+	}
+
+}
+void fillRound(int xc, int yc, float r, RoundType type)
+{
+	int xline = 0;
+	int xRound = r;
+
+	int d2x = 2 * r;
+	int d2y = 0;
+	int p = Round((float)5 / 4 - r);
+	double aa;
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // 如果是整数则偏移，保持几何特征.如果是小数(>=0.5)则不偏移
+	hLineRound(0, 0, xRound, xc, yc, type, offset);
+	int endY = Round(r / std::sqrt(2));
+	for (int curY = 1; curY <= endY; curY++)
+	{
+		d2y += 2;
+		if (p < 0)
+		{
+			p += d2y + 1;
+		}
+		else
+		{
+			xRound--;
+			d2x -= 2;
+			p += d2y + 1 - d2x;
+		}
+		hLineRound(curY, ++xline, xRound, xc, yc, type, offset);
+	}
+}
+//void setWidthPixelV(int x, int y, int width, float sita)
+//{
+//	int curWidthIdx = 0;
+//	for (int i = 0; i < width; i++)
+//	{
+//		if (i % 2)
+//			curWidthIdx++;
+//		if (i % 2)
+//			setPixel(x + Round(std::cos(sita) * curWidthIdx), y + Round(std::sin(sita) * curWidthIdx));
+//		else
+//			setPixel(x - Round(std::cos(sita) * curWidthIdx), y - Round(std::sin(sita) * curWidthIdx));
+//	}
+//}
+//void setWidthPixelH(int x, int y, int width)
+//{
+//	int curWidthIdx = 0;
+//	for (int i = 0; i < width; i++)
+//	{
+//		if (i % 2)
+//			curWidthIdx++;
+//		if (i % 2)
+//			setPixel(x + curWidthIdx, y);
+//		else
+//			setPixel(x - curWidthIdx, y);
+//	}
+//}
+//// 0<m<1
+//void lineBres1(int x0, int y0, int xEnd, int yEnd, int width,float sita)
+//{
+//	if (x0 > xEnd)
+//	{
+//		int tempx = x0;
+//		int tempy = y0;
+//		x0 = xEnd;
+//		y0 = yEnd;
+//		xEnd = tempx;
+//		yEnd = tempy;
+//	}
+//
+//	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+//	int p = 2 * dy - dx;
+//	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+//
+//	int x = x0;
+//	int y = y0;
+//	setWidthPixelV(x, y, width, sita);
+//	while (x < xEnd)
+//	{
+//		x++;
+//		if (p < 0)
+//			p += twoDy;
+//		else
+//		{
+//			y++;
+//			p += twoDyMinusDx;
+//		}
+//		setWidthPixelV(x, y, width, sita);
+//	}
+//}
+//// m>1
+//void lineBres1M(int x0, int y0, int xEnd, int yEnd, int width, float sita)
+//{
+//	if (x0 > xEnd)
+//	{
+//		int tempx = x0;
+//		int tempy = y0;
+//		x0 = xEnd;
+//		y0 = yEnd;
+//		xEnd = tempx;
+//		yEnd = tempy;
+//	}
+//
+//	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+//	int p = dy - 2 * dx;
+//	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+//	int x = x0;
+//	int y = y0;
+//
+//	setWidthPixelH(x, y, width);
+//	while (y < yEnd)
+//	{
+//		y++;
+//		if (p > 0)
+//			p += twoDx;
+//		else
+//		{
+//			x++;
+//			p += twoDyMinusDx;
+//		}
+//		setWidthPixelH(x, y, width);
+//	}
+//}
+//// -1<m<0
+//void lineBres2(int x0, int y0, int xEnd, int yEnd, int width, float sita)
+//{
+//	if (x0 > xEnd)
+//	{
+//		int tempx = x0;
+//		int tempy = y0;
+//		x0 = xEnd;
+//		y0 = yEnd;
+//		xEnd = tempx;
+//		yEnd = tempy;
+//	}
+//
+//	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+//	int p = 2 * dy + dx;
+//	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+//
+//	int x = x0;
+//	int y = y0;
+//
+//	setWidthPixelV(x, y, width,sita);
+//	while (x < xEnd)
+//	{
+//		x++;
+//		if (p > 0)
+//			p += twoDy;
+//		else
+//		{
+//			y--;
+//			p += twoDyAddDx;
+//		}
+//		setWidthPixelV(x, y, width, sita);
+//	}
+//}
+//// m<-1
+//void lineBres2M(int x0, int y0, int xEnd, int yEnd, int width, float sita)
+//{
+//	if (x0 > xEnd)
+//	{
+//		int tempx = x0;
+//		int tempy = y0;
+//		x0 = xEnd;
+//		y0 = yEnd;
+//		xEnd = tempx;
+//		yEnd = tempy;
+//	}
+//
+//	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+//	int p = -2 * dx - dy;
+//	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+//
+//	int x = x0;
+//	int y = y0;
+//
+//	setWidthPixelH(x, y, width);
+//	while (y > yEnd)
+//	{
+//		y--;
+//		if (p > 0)
+//			p += twoDx;
+//		else
+//		{
+//			x++;
+//			p += twoDyAddDx;
+//		}
+//		setWidthPixelH(x, y, width);
+//	}
+//}
+//void lineBresWithLineCap(int x0, int y0, int xEnd, int yEnd, float width, LineCap cap)
+//{
+//	if (x0 > xEnd)
+//	{
+//		int tempx = x0;
+//		int tempy = y0;
+//		x0 = xEnd;
+//
+//		y0 = yEnd;
+//		xEnd = tempx;
+//		yEnd = tempy;
+//	}
+//
+//	int dx = xEnd - x0;
+//	int dy = yEnd - y0;
+//
+//	float sita;
+//	if (dy)
+//		sita = std::atan((float)-dx / dy);
+//	else
+//		sita = PI / 2;
+//
+//	if (dy > 0)
+//	{
+//		if (fabs((float)dy) > fabs((float)dx))
+//		{
+//			lineBres1M(x0, y0, xEnd, yEnd, width, sita);
+//			fillRound(x0, y0, width / 2, RoundType::BottomHalf);
+//			fillRound(xEnd, yEnd, width / 2, RoundType::TopHalf);
+//		}
+//		else
+//		{
+//			lineBres1(x0, y0, xEnd, yEnd, width,sita);
+//			fillRound(x0, y0, width / 2, RoundType::LeftHalf);
+//			fillRound(xEnd, yEnd, width / 2, RoundType::RightHalf);
+//		}
+//	}
+//	else
+//	{
+//		if (fabs((float)dy) > fabs((float)dx))
+//		{
+//			lineBres2M(x0, y0, xEnd, yEnd, width, sita);
+//			fillRound(x0, y0, width / 2, RoundType::TopHalf);
+//			fillRound(xEnd, yEnd, width / 2, RoundType::BottomHalf);
+//		}
+//		else
+//		{
+//			lineBres2(x0, y0, xEnd, yEnd, width, sita);
+//			fillRound(x0, y0, width / 2, RoundType::LeftHalf);
+//			fillRound(xEnd, yEnd, width / 2, RoundType::RightHalf);
+//		}
+//	}
+//}
+std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<Point2> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				points.push_back({ line.currentX , curY });
+
+				line.counter += std::abs(line.sortedLine.dx * 2);
+				//if (line.counter >= line.sortedLine.dy)
+				//{
+				//	if(line.sortedLine.dx > 0)
+				//		line.currentX++;
+				//	else
+				//		line.currentX--;
+				//	line.counter -= line.sortedLine.dy * 2;
+				//}
+				while (line.counter >= line.sortedLine.dy)
+				{
+					if (line.sortedLine.dx > 0)
+						line.currentX++;
+					else
+						line.currentX--;
+					line.counter -= line.sortedLine.dy * 2;
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point2>& points)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+	}
+
+}
+void lineWithLineCap(int x0, int y0, int xEnd, int yEnd, float width, LineCap cap)
+{
+	if (cap == LineCap::ProjectingSquareCap)
+	{
+		int dx = xEnd - x0;
+		int dy = yEnd - y0;
+		float rateX = dx / std::sqrt(dx * dx + dy * dy);
+		float rateY = dy / std::sqrt(dx * dx + dy * dy);
+		xEnd += rateX * (width / 2);
+		yEnd += rateY * (width / 2);
+		x0 -= rateX * (width / 2);
+		y0 -= rateY * (width / 2);
+	}
+
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float aa;
+	int offset = Round(std::modf(width / 2, &aa)) == 0 ? 1 : 0;
+
+	float sita;
+	if (dy)
+		sita = std::atan((float)-dx / dy);
+	else
+		sita = PI / 2;
+	int vertexX = Round(std::cos(sita) * (width / 2 - offset));
+	int vertexY = Round(std::sin(sita) * (width / 2 - offset));
+
+	std::vector<Point2> points;
+	points.push_back({ x0 + vertexX, y0 + vertexY });
+	points.push_back({ x0 - vertexX, y0 - vertexY});
+	points.push_back({ xEnd - vertexX, yEnd - vertexY});
+	points.push_back({ xEnd + vertexX, yEnd + vertexY });
+
+	fillPolygon(points);
+
+	//glColor3f(1.0, 0.0, 0.0);
+	if (cap == LineCap::RoundCap)
+	{
+		fillRound(x0, y0, width / 2, RoundType::All);
+		fillRound(xEnd, yEnd, width / 2, RoundType::All);
+	}
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	//fillRound(100, 100, 10, RoundType::All);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresWithLineCap(102,381,242,466,20,LineCap::RoundCap);
+	lineWithLineCap(102, 381, 242, 500, 20, LineCap::ButtCap);
+	lineWithLineCap(302, 381, 442, 500, 20, LineCap::RoundCap);
+	lineWithLineCap(502, 381, 642, 500, 20, LineCap::ProjectingSquareCap);
 	glFlush();
 }
 void code_6_exercise_31()
