@@ -752,14 +752,14 @@ void drawCoordinate()
 	{
 		char number[8] = {};
 		sprintf_s(number, "%d", (i + 1) * 100);
-		drawWord({ (i + 1) * 100 - 15, 3 }, number);
+		drawWord({ (float)(i + 1) * 100 - 15, 3 }, number);
 	}
 	drawWord({ 790, 3 }, "x");
 	for (int i = 0; i < 5; i++)
 	{
 		char number[8] = {};
 		sprintf_s(number, "%d", (i + 1) * 100);
-		drawWord({ 0, (i + 1) * 100 - 5 }, number);
+		drawWord({ 0, (float)(i + 1) * 100 - 5 }, number);
 	}
 	drawWord({ 0, 590 }, "y");
 	glFlush();
@@ -856,14 +856,14 @@ void drawCoordinate()
 	{
 		char number[8] = {};
 		sprintf_s(number, "%d", (i + 1) * 100);
-		drawWord({ (i + 1) * 100 - 15, 3 }, number);
+		drawWord({ (float)(i + 1) * 100 - 15, 3 }, number);
 	}
 	drawWord({ 790, 3 }, "x");
 	for (int i = 0; i < 5; i++)
 	{
 		char number[8] = {};
 		sprintf_s(number, "%d", (i + 1) * 100);
-		drawWord({ 0, (i + 1) * 100 - 5 }, number);
+		drawWord({ 0, (float)(i + 1) * 100 - 5 }, number);
 	}
 	drawWord({ 0, 590 }, "y");
 	glFlush();

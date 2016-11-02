@@ -5653,6 +5653,265 @@ void code_6_exercise_31()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_32
+struct Point2 { int x; int y; };
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool needPixel(int index, const std::string& lineTypeMode)
+{
+	return lineTypeMode[index % lineTypeMode.size()] == '1';
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int index = 0;
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int index = 0;
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	if (needPixel(index, lineTypeMode))
+		setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		if (needPixel(++index, lineTypeMode))
+			setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode="1")
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd, lineTypeMode);
+		}
+	}
+}
+// 固定像素数划线
+void lineType(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
+{
+	lineBres(x0, y0, xEnd, yEnd, lineTypeMode);
+}
+
+void drawRect(const std::vector<Point2>& points, const std::string& lineTypeMode)
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		lineBres(points[i].x, points[i].y, points[next].x, points[next].y, lineTypeMode);
+	}
+}
+void drawWord(Point2 point, string word)
+{
+	glRasterPos2i(point.x, point.y);
+	for (char c : word)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+	}
+}
+void drawCoordinate()
+{
+	lineBres(0, 0, 1000, 0);
+	lineBres(0, 0, 0, 1000);
+	drawWord({ 0, 3 }, "0");
+	for (int i = 0; i < 7; i++)
+	{
+		char number[8] = {};
+		sprintf_s(number, "%d", (i + 1) * 100);
+		drawWord({ (i + 1) * 100 - 15, 3 }, number);
+	}
+	drawWord({ 790, 3 }, "x");
+	for (int i = 0; i < 5; i++)
+	{
+		char number[8] = {};
+		sprintf_s(number, "%d", (i + 1) * 100);
+		drawWord({ 0, (i + 1) * 100 - 5 }, number);
+	}
+	drawWord({ 0, 590 }, "y");
+	glFlush();
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	drawRect({100, 200}, )
+	glFlush();
+}
+void code_6_exercise_32()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -5831,6 +6090,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_31
 	code_6_exercise_31();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_32
+	code_6_exercise_32();
 #endif
 
 	glutMainLoop();
