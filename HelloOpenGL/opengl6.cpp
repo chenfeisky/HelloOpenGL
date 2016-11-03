@@ -6671,6 +6671,391 @@ void code_6_exercise_34()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_35
+struct Point2 { int x; int y; };
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+enum class RoundType
+{
+	All = 1,
+	LeftHalf = 2,
+	RightHalf = 3,
+	TopHalf = 4,
+	BottomHalf = 5,
+};
+enum class LineCap
+{
+	ButtCap = 1,	// 方帽
+	RoundCap = 2,	// 圆帽
+	ProjectingSquareCap = 3, // 突方帽
+};
+enum class BrokenLineJoin
+{
+	MiterJoin = 1,	// 斜角连接
+	RoundJoin = 2,	// 圆连接
+	BevelJoin = 3,	// 斜切连接
+};
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(x, y);
+	}
+}
+void hLineRound(int y, int x0, int x1, int xc, int yc, RoundType type, int offset = 0)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		switch (type)
+		{
+		case RoundType::All:
+			setPixel(xc + x, yc + y);
+			setPixel(xc - x + offset, yc + y);
+			setPixel(xc + x, yc - y + offset);
+			setPixel(xc - x + offset, yc - y + offset);
+			setPixel(xc + y, yc + x);
+			setPixel(xc - y + offset, yc + x);
+			setPixel(xc + y, yc - x + offset);
+			setPixel(xc - y + offset, yc - x + offset);
+			break;
+		case RoundType::LeftHalf:
+			setPixel(xc - x + offset, yc + y);
+			setPixel(xc - x + offset, yc - y + offset);
+			setPixel(xc - y + offset, yc + x);
+			setPixel(xc - y + offset, yc - x + offset);
+			break;
+		case RoundType::RightHalf:
+			setPixel(xc + x, yc + y);
+			setPixel(xc + x, yc - y + offset);
+			setPixel(xc + y, yc + x);
+			setPixel(xc + y, yc - x + offset);
+			break;
+		case RoundType::TopHalf:
+			setPixel(xc + x, yc + y);
+			setPixel(xc - x + offset, yc + y);
+			setPixel(xc + y, yc + x);
+			setPixel(xc - y + offset, yc + x);
+			break;
+		case RoundType::BottomHalf:
+			setPixel(xc + x, yc - y + offset);
+			setPixel(xc - x + offset, yc - y + offset);
+			setPixel(xc + y, yc - x + offset);
+			setPixel(xc - y + offset, yc - x + offset);
+			break;
+		default:
+			break;
+		}
+	}
+
+}
+void fillRound(int xc, int yc, float r, RoundType type)
+{
+	int xline = 0;
+	int xRound = r;
+
+	int d2x = 2 * r;
+	int d2y = 0;
+	int p = Round((float)5 / 4 - r);
+	double aa;
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // 如果是整数则偏移，保持几何特征.如果是小数(>=0.5)则不偏移
+	hLineRound(0, 0, xRound, xc, yc, type, offset);
+	int endY = Round(r / std::sqrt(2));
+	for (int curY = 1; curY <= endY; curY++)
+	{
+		d2y += 2;
+		if (p < 0)
+		{
+			p += d2y + 1;
+		}
+		else
+		{
+			xRound--;
+			d2x -= 2;
+			p += d2y + 1 - d2x;
+		}
+		hLineRound(curY, ++xline, xRound, xc, yc, type, offset);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<Point2> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				points.push_back({ line.currentX , curY });
+
+				line.counter += std::abs(line.sortedLine.dx * 2);
+				//if (line.counter >= line.sortedLine.dy)
+				//{
+				//	if(line.sortedLine.dx > 0)
+				//		line.currentX++;
+				//	else
+				//		line.currentX--;
+				//	line.counter -= line.sortedLine.dy * 2;
+				//}
+				while (line.counter >= line.sortedLine.dy)
+				{
+					if (line.sortedLine.dx > 0)
+						line.currentX++;
+					else
+						line.currentX--;
+					line.counter -= line.sortedLine.dy * 2;
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point2>& points)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+	}
+
+}
+void lineFillPolygonWithLineCap(int x0, int y0, int xEnd, int yEnd, float width, LineCap cap)
+{
+	if (cap == LineCap::ProjectingSquareCap)
+	{
+		int dx = xEnd - x0;
+		int dy = yEnd - y0;
+		float rateX = dx / std::sqrt(dx * dx + dy * dy);
+		float rateY = dy / std::sqrt(dx * dx + dy * dy);
+		xEnd += rateX * (width / 2);
+		yEnd += rateY * (width / 2);
+		x0 -= rateX * (width / 2);
+		y0 -= rateY * (width / 2);
+	}
+
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	float aa;
+	int offset = Round(std::modf(width / 2, &aa)) == 0 ? 1 : 0;
+
+	float sita;
+	if (dy)
+	{
+		sita = std::atan((float)-dx / dy);
+		sita = sita + 2 * PI;
+	}
+	else
+		sita = PI / 2;
+	int vertexX = Round(std::cos(sita) * (width / 2));
+	int vertexY = Round(std::sin(sita) * (width / 2));
+
+	std::vector<Point2> points;
+	points.push_back({ x0 + vertexX, y0 + vertexY });
+	points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
+	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
+	points.push_back({ xEnd + vertexX, yEnd + vertexY });
+
+	fillPolygon(points);
+
+	if (cap == LineCap::RoundCap)
+	{
+		fillRound(x0, y0, width / 2, RoundType::All);
+		fillRound(xEnd, yEnd, width / 2, RoundType::All);
+	}
+}
+void drawbrokenLineJoin(int x0, int y0, int x1, int y1, int x2, int y2, float width, BrokenLineJoin join)
+{
+	Point2 vec1 = { x1 - x0, y1 - y0 };
+	Point2 vec2 = { x2 - x1, y2 - y1 };
+	float cos = (vec1.x * vec2.x + vec1.y * vec2.y) / std::sqrt(vec1.x * vec1.x + vec1.y * vec1.y) * std::sqrt(vec2.x * vec2.x + vec2.y * vec2.y);
+	float tanHalf = std::sqrt((1 - cos) / (1 + cos));
+
+}
+void brokenLineWithJoin(const std::vector<Point2>& points, float width, BrokenLineJoin join)
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		if (i + 1 < points.size())
+		{
+			lineFillPolygonWithLineCap(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, width, LineCap::ButtCap);
+
+			if (i + 2 < points.size())
+			{
+				drawbrokenLineJoin(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, points[i + 2].x, points[i + 2].y, width, join);
+			}
+		}
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	
+	// 多边形填充
+	lineFillPolygonWithLineCap(102, 81, 242, 200, 20, LineCap::ButtCap);
+	lineFillPolygonWithLineCap(300, 20, 10, 200, 20, LineCap::ButtCap);
+	lineFillPolygonWithLineCap(250, 250, 20, 50, 20, LineCap::ButtCap);
+	lineFillPolygonWithLineCap(102, 500, 242, 200, 20, LineCap::ButtCap);
+
+	//lineFillPolygonWithLineCap(302, 81, 442, 200, 20, LineCap::RoundCap);
+	//lineFillPolygonWithLineCap(502, 81, 642, 200, 20, LineCap::ProjectingSquareCap);
+	//lineFillPolygonWithLineCap(650, 81, 750, 81, 20, LineCap::RoundCap);
+	glFlush();
+}
+void code_6_exercise_35()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -6861,6 +7246,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_34
 	code_6_exercise_34();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_35
+	code_6_exercise_35();
 #endif
 
 	glutMainLoop();
