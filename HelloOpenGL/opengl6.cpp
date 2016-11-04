@@ -7009,13 +7009,55 @@ void lineFillPolygonWithLineCap(int x0, int y0, int xEnd, int yEnd, float width,
 		fillRound(xEnd, yEnd, width / 2, RoundType::All);
 	}
 }
+int crossProduct(const Point2& vector1, const Point2& vector2)
+{
+	return vector1.x * vector2.y - vector1.y * vector2.x;
+}
+void calcOutPoint(int x0, int y0, int x1, int y1, float width, int compCross, float& xOut, float& yOut)
+{
+	int dx = x1 - x0;
+	int dy = y1 - y0;
+	float sita;
+	if (dy)
+		sita = std::atan((float)-dx / dy);
+	else
+		sita = PI / 2;
+
+	xOut = std::cos(sita) * (width / 2);
+	yOut = std::sin(sita) * (width / 2);
+
+	if (crossProduct({ x1 - x0, y1 - y0 }, { Round(xOut), Round(yOut) }) * compCross > 0)
+	{
+		xOut = -xOut;
+		yOut = -yOut;
+	}
+}
+
 void drawbrokenLineJoin(int x0, int y0, int x1, int y1, int x2, int y2, float width, BrokenLineJoin join)
 {
-	Point2 vec1 = { x1 - x0, y1 - y0 };
-	Point2 vec2 = { x2 - x1, y2 - y1 };
-	float cos = (vec1.x * vec2.x + vec1.y * vec2.y) / std::sqrt(vec1.x * vec1.x + vec1.y * vec1.y) * std::sqrt(vec2.x * vec2.x + vec2.y * vec2.y);
-	float tanHalf = std::sqrt((1 - cos) / (1 + cos));
-
+	if (join == BrokenLineJoin::RoundJoin)
+	{
+		fillRound(x1, y1, width / 2, RoundType::All);
+	}
+	else
+	{
+		int cross = crossProduct({ x1 - x0, y1 - y0 }, { x2 - x1, y2 - y1 });
+		float _x1, _y1, _x2, _y2;
+		calcOutPoint(x0, y0, x1, y1, width, cross, _x1, _y1);
+		calcOutPoint(x1, y1, x2, y2, width, cross, _x2, _y2);
+		_x1 = x1 + _x1;
+		_y1 = y1 + _y1;
+		_x2 = x1 + _x2;
+		_y2 = y1 + _y2;
+		float k1 = (float)(y1 - y0) / (x1 - x0);
+		float k2 = (float)(y1 - y2) / (x1 - x2);
+		float x = (_y2 - _y1 + k1 * _x1 - k2 * _x2) / (k1 - k2);
+		float y = k2 * x - k2 * _x2 + _y2;
+		if(join == BrokenLineJoin::MiterJoin)
+			fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) },{ Round(x),Round(y) },{ Round(_x2),Round(_y2) } });
+		else
+			fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) }, { Round(_x2),Round(_y2) } });
+	}
 }
 void brokenLineWithJoin(const std::vector<Point2>& points, float width, BrokenLineJoin join)
 {
@@ -7038,14 +7080,18 @@ void drawFunc()
 	glColor3f(1.0, 1.0, 1.0);
 	
 	// ¶à±ßÐÎÌî³ä
-	lineFillPolygonWithLineCap(102, 81, 242, 200, 20, LineCap::ButtCap);
-	lineFillPolygonWithLineCap(300, 20, 10, 200, 20, LineCap::ButtCap);
-	lineFillPolygonWithLineCap(250, 250, 20, 50, 20, LineCap::ButtCap);
-	lineFillPolygonWithLineCap(102, 500, 242, 200, 20, LineCap::ButtCap);
+	//lineFillPolygonWithLineCap(102, 81, 242, 200, 20, LineCap::ButtCap);
+	//lineFillPolygonWithLineCap(300, 20, 10, 200, 20, LineCap::ButtCap);
+	//lineFillPolygonWithLineCap(250, 250, 20, 50, 20, LineCap::ButtCap);
+	//lineFillPolygonWithLineCap(102, 500, 242, 200, 20, LineCap::ButtCap);
 
 	//lineFillPolygonWithLineCap(302, 81, 442, 200, 20, LineCap::RoundCap);
 	//lineFillPolygonWithLineCap(502, 81, 642, 200, 20, LineCap::ProjectingSquareCap);
 	//lineFillPolygonWithLineCap(650, 81, 750, 81, 20, LineCap::RoundCap);
+
+	brokenLineWithJoin({ { 100,500 },{ 266,464 },{ 114,353 },{ 196,323 } }, 20, BrokenLineJoin::MiterJoin);
+	brokenLineWithJoin({ { 324,340 },{ 241,135 },{ 463,149 },{ 391,247 } }, 20, BrokenLineJoin::RoundJoin);
+	brokenLineWithJoin({ { 572,419 },{ 572,252 },{ 636,343 },{ 729,269 } }, 20, BrokenLineJoin::BevelJoin);
 	glFlush();
 }
 void code_6_exercise_35()
