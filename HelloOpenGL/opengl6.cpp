@@ -6672,6 +6672,7 @@ void code_6_exercise_34()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_35
+float MinMiterAngel = PI / 6; // 最小的斜角连接角度（小于此值将切换为斜切连接）
 struct Point2 { int x; int y; };
 struct Line
 {
@@ -7009,6 +7010,25 @@ void lineFillPolygonWithLineCap(int x0, int y0, int xEnd, int yEnd, float width,
 		fillRound(xEnd, yEnd, width / 2, RoundType::All);
 	}
 }
+float calcAngle(int x0, int y0, int x1, int y1, int x2, int y2)
+{
+	float xa = x0 - x1;
+	float ya = y0 - y1;
+	float xb = x2 - x1;
+	float yb = y2 - y1;
+	float cos = (xa * xb + ya * yb) / (std::sqrt(xa*xa+ya*ya)*std::sqrt(xb*xb + yb*yb));
+	float ret = std::acos(cos);
+	// 规整到最小"数值"(0到180或者0到-180)
+	if (ret > PI)
+	{
+		ret -= 2 * PI;
+	}
+	else if (ret < -PI)
+	{
+		ret += 2 * PI;
+	}
+	return ret;
+}
 int crossProduct(const Point2& vector1, const Point2& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
@@ -7049,14 +7069,49 @@ void drawbrokenLineJoin(int x0, int y0, int x1, int y1, int x2, int y2, float wi
 		_y1 = y1 + _y1;
 		_x2 = x1 + _x2;
 		_y2 = y1 + _y2;
-		float k1 = (float)(y1 - y0) / (x1 - x0);
-		float k2 = (float)(y1 - y2) / (x1 - x2);
-		float x = (_y2 - _y1 + k1 * _x1 - k2 * _x2) / (k1 - k2);
-		float y = k2 * x - k2 * _x2 + _y2;
-		if(join == BrokenLineJoin::MiterJoin)
-			fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) },{ Round(x),Round(y) },{ Round(_x2),Round(_y2) } });
+		float x, y; // 外边缘交点
+		if (x1 == x0 && x1 == x2)
+		{
+			return;
+		}
+		else if (x1 == x0)
+		{
+			float k2 = (float)(y1 - y2) / (x1 - x2);
+			x = _x1;
+			y = k2 * x - k2 * _x2 + _y2;
+		}
+		else if (x1 == x2)
+		{
+			float k1 = (float)(y1 - y0) / (x1 - x0);
+			x = _x2;
+			y = k1 * x - k1 * _x1 + _y1;
+		}
 		else
-			fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) }, { Round(_x2),Round(_y2) } });
+		{
+			float k1 = (float)(y1 - y0) / (x1 - x0);
+			float k2 = (float)(y1 - y2) / (x1 - x2);
+			if (k1 == k2)
+				return;
+
+			x = (_y2 - _y1 + k1 * _x1 - k2 * _x2) / (k1 - k2);
+			y = k2 * x - k2 * _x2 + _y2;
+		}
+		
+		if (join == BrokenLineJoin::MiterJoin)
+		{
+			if (std::fabs(calcAngle(x0, y0, x1, y1, x2, y2)) <= MinMiterAngel)
+			{
+				fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) },{ Round(_x2),Round(_y2) } });
+			}
+			else
+			{
+				fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) },{ Round(x),Round(y) },{ Round(_x2),Round(_y2) } });
+			}
+		}
+		else
+		{
+			fillPolygon({ { x1, y1 },{ Round(_x1),Round(_y1) },{ Round(_x2),Round(_y2) } });
+		}			
 	}
 }
 void brokenLineWithJoin(const std::vector<Point2>& points, float width, BrokenLineJoin join)
@@ -7078,20 +7133,14 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	
-	// 多边形填充
-	//lineFillPolygonWithLineCap(102, 81, 242, 200, 20, LineCap::ButtCap);
-	//lineFillPolygonWithLineCap(300, 20, 10, 200, 20, LineCap::ButtCap);
-	//lineFillPolygonWithLineCap(250, 250, 20, 50, 20, LineCap::ButtCap);
-	//lineFillPolygonWithLineCap(102, 500, 242, 200, 20, LineCap::ButtCap);
-
-	//lineFillPolygonWithLineCap(302, 81, 442, 200, 20, LineCap::RoundCap);
-	//lineFillPolygonWithLineCap(502, 81, 642, 200, 20, LineCap::ProjectingSquareCap);
-	//lineFillPolygonWithLineCap(650, 81, 750, 81, 20, LineCap::RoundCap);
 
 	brokenLineWithJoin({ { 100,500 },{ 266,464 },{ 114,353 },{ 196,323 } }, 20, BrokenLineJoin::MiterJoin);
-	brokenLineWithJoin({ { 324,340 },{ 241,135 },{ 463,149 },{ 391,247 } }, 20, BrokenLineJoin::RoundJoin);
+	brokenLineWithJoin({ { 324,390 },{ 241,185 },{ 463,199 },{ 391,297 } }, 20, BrokenLineJoin::RoundJoin);
 	brokenLineWithJoin({ { 572,419 },{ 572,252 },{ 636,343 },{ 729,269 } }, 20, BrokenLineJoin::BevelJoin);
+
+	brokenLineWithJoin({ { 100, 40 },{ 200, 40 },{ 100,80 } }, 20, BrokenLineJoin::MiterJoin); // 小于30度
+	brokenLineWithJoin({ { 250, 40 },{ 350, 40 },{ 250,140 } }, 20, BrokenLineJoin::MiterJoin); // 大于30度
+
 	glFlush();
 }
 void code_6_exercise_35()
