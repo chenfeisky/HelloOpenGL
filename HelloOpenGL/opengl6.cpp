@@ -7154,9 +7154,15 @@ const int m = 3;
 const int n = 4;
 int stencil[m][n] =
 {
-	{ 0,1,1,0},
-	{ 1,1,1,1},
-	{ 0,1,1,0},
+	{ 0,1,0,0},
+	{ 1,1,1,0},
+	{ 0,1,0,0},
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc = 0;
+	int yc = 0;
 };
 int xc = 2, yc = 1;
 void drawStencil(int x, int y, std::map<int, std::set<int>> & pixelCache)
@@ -7350,16 +7356,239 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> &
 		}
 	}
 }
+
+void drawStencil(int x, int y)
+{
+	for (int i = 0; i < m; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			if (stencil[i][j])
+			{
+				int realx = x + j - xc;
+				int realy = y + (-(i - yc));
+				setPixel(realx, realy);
+			}
+		}
+	}
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd, int space)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+	int count = 0;
+
+	int x = x0;
+	int y = y0;
+	drawStencil(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		count++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		if (count >= space)
+		{
+			drawStencil(x, y);
+			count = 0;
+		}			
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, int space)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int count = 0;
+	int x = x0;
+	int y = y0;
+
+	drawStencil(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		count++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		if (count >= space)
+		{
+			drawStencil(x, y);
+			count = 0;
+		}
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd, int space)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+	int count = 0;
+
+	int x = x0;
+	int y = y0;
+
+	drawStencil(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		count++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		if (count >= space)
+		{
+			drawStencil(x, y);
+			count = 0;
+		}
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, int space)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+	int count = 0;
+
+	int x = x0;
+	int y = y0;
+
+	drawStencil(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		count++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		if (count >= space)
+		{
+			drawStencil(x, y);
+			count = 0;
+		}
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd, m);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd, n);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd, m);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd, n);
+		}
+	}
+}
 void linePen(int x0, int y0, int xEnd, int yEnd)
 {
 	std::map<int, std::set<int>> pixelCache;
 	lineBres(x0, y0, xEnd, yEnd, pixelCache);
 }
+void lineBrush(int x0, int y0, int xEnd, int yEnd)
+{
+	lineBres(x0, y0, xEnd, yEnd);
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	linePen(200, 200, 300, 300);
+	//linePen(200, 200, 300, 300);
+	Stencil s2;
+	s2.stencil =
+	{
+		{ 0,1,0,0 },
+		{ 1,1,1,0 },
+		{ 0,1,0,0 },
+	};
+	lineBrush(200, 200, 300, 300);
 	glFlush();
 }
 void code_6_exercise_36()
