@@ -7150,31 +7150,22 @@ void code_6_exercise_35()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_36
-const int m = 3;
-const int n = 4;
-int stencil[m][n] =
-{
-	{ 0,1,0,0},
-	{ 1,1,1,0},
-	{ 0,1,0,0},
-};
 struct Stencil
 {
 	std::vector<std::vector<int>> stencil;
-	int xc = 0;
-	int yc = 0;
+	int xc;
+	int yc;
 };
-int xc = 2, yc = 1;
-void drawStencil(int x, int y, std::map<int, std::set<int>> & pixelCache)
+void drawStencil(int x, int y, const Stencil& s, std::map<int, std::set<int>> & pixelCache)
 {
-	for (int i = 0; i < m; i++)
+	for (int i = 0; i < s.stencil.size(); i++)
 	{
-		for (int j = 0; j < n; j++)
+		for (int j = 0; j < s.stencil[i].size(); j++)
 		{
-			if (stencil[i][j])
+			if (s.stencil[i][j])
 			{
-				int realx = x + j - xc;
-				int realy = y + (- (i - yc));
+				int realx = x + j - s.xc;
+				int realy = y + s.stencil.size() - 1 - i - s.yc;
 				if ((pixelCache.find(realy) == pixelCache.end()) ||
 					(pixelCache.find(realy) != pixelCache.end() && pixelCache[realy].find(realx) == pixelCache[realy].end()))
 				{
@@ -7186,7 +7177,7 @@ void drawStencil(int x, int y, std::map<int, std::set<int>> & pixelCache)
 	}
 }
 // 0<m<1
-void lineBres1(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> & pixelCache)
+void lineBres1(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<int, std::set<int>> & pixelCache)
 {
 	if (x0 > xEnd)
 	{
@@ -7204,7 +7195,7 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> 
 
 	int x = x0;
 	int y = y0;
-	drawStencil(x, y, pixelCache);
+	drawStencil(x, y, s, pixelCache);
 	while (x < xEnd)
 	{
 		x++;
@@ -7215,11 +7206,11 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> 
 			y++;
 			p += twoDyMinusDx;
 		}
-		drawStencil(x, y, pixelCache);
+		drawStencil(x, y, s, pixelCache);
 	}
 }
 // m>1
-void lineBres1M(int x0, int y0, int xEnd, int yEnd,std::map<int, std::set<int>> & pixelCache)
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<int, std::set<int>> & pixelCache)
 {
 	if (x0 > xEnd)
 	{
@@ -7237,7 +7228,7 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd,std::map<int, std::set<int>> 
 	int x = x0;
 	int y = y0;
 
-	drawStencil(x, y, pixelCache);
+	drawStencil(x, y, s, pixelCache);
 	while (y < yEnd)
 	{
 		y++;
@@ -7248,11 +7239,11 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd,std::map<int, std::set<int>> 
 			x++;
 			p += twoDyMinusDx;
 		}
-		drawStencil(x, y, pixelCache);
+		drawStencil(x, y, s, pixelCache);
 	}
 }
 // -1<m<0
-void lineBres2(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> & pixelCache)
+void lineBres2(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<int, std::set<int>> & pixelCache)
 {
 	if (x0 > xEnd)
 	{
@@ -7271,7 +7262,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> 
 	int x = x0;
 	int y = y0;
 
-	drawStencil(x, y, pixelCache);
+	drawStencil(x, y, s, pixelCache);
 	while (x < xEnd)
 	{
 		x++;
@@ -7282,11 +7273,11 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> 
 			y--;
 			p += twoDyAddDx;
 		}
-		drawStencil(x, y, pixelCache);
+		drawStencil(x, y, s, pixelCache);
 	}
 }
 // m<-1
-void lineBres2M(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> & pixelCache)
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<int, std::set<int>> & pixelCache)
 {
 	if (x0 > xEnd)
 	{
@@ -7305,7 +7296,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>>
 	int x = x0;
 	int y = y0;
 
-	drawStencil(x, y, pixelCache);
+	drawStencil(x, y, s, pixelCache);
 	while (y > yEnd)
 	{
 		y--;
@@ -7316,10 +7307,10 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>>
 			x++;
 			p += twoDyAddDx;
 		}
-		drawStencil(x, y, pixelCache);
+		drawStencil(x, y, s, pixelCache);
 	}
 }
-void lineBres(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> & pixelCache)
+void lineBres(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<int, std::set<int>> & pixelCache)
 {
 	if (x0 > xEnd)
 	{
@@ -7337,43 +7328,43 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, std::map<int, std::set<int>> &
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres1M(x0, y0, xEnd, yEnd,pixelCache);
+			lineBres1M(x0, y0, xEnd, yEnd, s, pixelCache);
 		}
 		else
 		{
-			lineBres1(x0, y0, xEnd, yEnd, pixelCache);
+			lineBres1(x0, y0, xEnd, yEnd, s, pixelCache);
 		}
 	}
 	else
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres2M(x0, y0, xEnd, yEnd,pixelCache);
+			lineBres2M(x0, y0, xEnd, yEnd, s, pixelCache);
 		}
 		else
 		{
-			lineBres2(x0, y0, xEnd, yEnd, pixelCache);
+			lineBres2(x0, y0, xEnd, yEnd, s, pixelCache);
 		}
 	}
 }
 
-void drawStencil(int x, int y)
+void drawStencil(int x, int y, const Stencil& s)
 {
-	for (int i = 0; i < m; i++)
+	for (int i = 0; i < s.stencil.size(); i++)
 	{
-		for (int j = 0; j < n; j++)
+		for (int j = 0; j < s.stencil[i].size(); j++)
 		{
-			if (stencil[i][j])
+			if (s.stencil[i][j])
 			{
-				int realx = x + j - xc;
-				int realy = y + (-(i - yc));
+				int realx = x + j - s.xc;
+				int realy = y + s.stencil.size() - 1 - i - s.yc;
 				setPixel(realx, realy);
 			}
 		}
 	}
 }
 // 0<m<1
-void lineBres1(int x0, int y0, int xEnd, int yEnd, int space)
+void lineBres1(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
 	if (x0 > xEnd)
 	{
@@ -7392,7 +7383,7 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, int space)
 
 	int x = x0;
 	int y = y0;
-	drawStencil(x, y);
+	drawStencil(x, y, s);
 	while (x < xEnd)
 	{
 		x++;
@@ -7404,15 +7395,15 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, int space)
 			y++;
 			p += twoDyMinusDx;
 		}
-		if (count >= space)
+		if (count >= s.stencil[0].size())
 		{
-			drawStencil(x, y);
+			drawStencil(x, y, s);
 			count = 0;
 		}			
 	}
 }
 // m>1
-void lineBres1M(int x0, int y0, int xEnd, int yEnd, int space)
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
 	if (x0 > xEnd)
 	{
@@ -7431,7 +7422,7 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd, int space)
 	int x = x0;
 	int y = y0;
 
-	drawStencil(x, y);
+	drawStencil(x, y, s);
 	while (y < yEnd)
 	{
 		y++;
@@ -7443,15 +7434,15 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd, int space)
 			x++;
 			p += twoDyMinusDx;
 		}
-		if (count >= space)
+		if (count >= s.stencil.size())
 		{
-			drawStencil(x, y);
+			drawStencil(x, y, s);
 			count = 0;
 		}
 	}
 }
 // -1<m<0
-void lineBres2(int x0, int y0, int xEnd, int yEnd, int space)
+void lineBres2(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
 	if (x0 > xEnd)
 	{
@@ -7471,7 +7462,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, int space)
 	int x = x0;
 	int y = y0;
 
-	drawStencil(x, y);
+	drawStencil(x, y, s);
 	while (x < xEnd)
 	{
 		x++;
@@ -7483,15 +7474,15 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, int space)
 			y--;
 			p += twoDyAddDx;
 		}
-		if (count >= space)
+		if (count >= s.stencil[0].size())
 		{
-			drawStencil(x, y);
+			drawStencil(x, y, s);
 			count = 0;
 		}
 	}
 }
 // m<-1
-void lineBres2M(int x0, int y0, int xEnd, int yEnd, int space)
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
 	if (x0 > xEnd)
 	{
@@ -7511,7 +7502,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, int space)
 	int x = x0;
 	int y = y0;
 
-	drawStencil(x, y);
+	drawStencil(x, y, s);
 	while (y > yEnd)
 	{
 		y--;
@@ -7523,14 +7514,14 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, int space)
 			x++;
 			p += twoDyAddDx;
 		}
-		if (count >= space)
+		if (count >= s.stencil.size())
 		{
-			drawStencil(x, y);
+			drawStencil(x, y, s);
 			count = 0;
 		}
 	}
 }
-void lineBres(int x0, int y0, int xEnd, int yEnd)
+void lineBres(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
 	if (x0 > xEnd)
 	{
@@ -7548,47 +7539,64 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres1M(x0, y0, xEnd, yEnd, m);
+			lineBres1M(x0, y0, xEnd, yEnd, s);
 		}
 		else
 		{
-			lineBres1(x0, y0, xEnd, yEnd, n);
+			lineBres1(x0, y0, xEnd, yEnd, s);
 		}
 	}
 	else
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres2M(x0, y0, xEnd, yEnd, m);
+			lineBres2M(x0, y0, xEnd, yEnd, s);
 		}
 		else
 		{
-			lineBres2(x0, y0, xEnd, yEnd, n);
+			lineBres2(x0, y0, xEnd, yEnd, s);
 		}
 	}
 }
-void linePen(int x0, int y0, int xEnd, int yEnd)
+void linePen(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
 	std::map<int, std::set<int>> pixelCache;
-	lineBres(x0, y0, xEnd, yEnd, pixelCache);
+	lineBres(x0, y0, xEnd, yEnd, s, pixelCache);
 }
-void lineBrush(int x0, int y0, int xEnd, int yEnd)
+void lineBrush(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 {
-	lineBres(x0, y0, xEnd, yEnd);
+	lineBres(x0, y0, xEnd, yEnd, s);
 }
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	//linePen(200, 200, 300, 300);
-	Stencil s2;
-	s2.stencil =
+	Stencil s1 = {
 	{
-		{ 0,1,0,0 },
-		{ 1,1,1,0 },
-		{ 0,1,0,0 },
-	};
-	lineBrush(200, 200, 300, 300);
+		{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+		{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+	}, 4, 4 };
+	linePen(108, 451, 427, 278, s1);
+	Stencil s2 = {
+	{
+		{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+		{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+	}, 4, 4 };
+	lineBrush(308, 451, 627, 278, s2);
 	glFlush();
 }
 void code_6_exercise_36()
@@ -7597,6 +7605,219 @@ void code_6_exercise_36()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_37
+void setGrayPixel(int x, int y, float grayPercent, bool slopeFix)
+{
+	if (slopeFix)
+		grayPercent = (grayPercent * 0.5) + 0.5;
+	else
+		grayPercent = 1.f;
+
+	glColor3f(1.0 * grayPercent , 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+}
+
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setGrayPixel(x, y, 1.f, slopeFix);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		float d = fabs((float)dy / dx * (x - x0) + y0 - y);
+		float percent = 1 - d / 0.5;
+		setGrayPixel(x, y, fabs(percent), slopeFix);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setGrayPixel(x, y, 1.f, slopeFix);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		float d = fabs((float)dx / dy * (y - y0) + x0 - x);
+		float percent = 1 - d / 0.5;
+		setGrayPixel(x, y, fabs(percent), slopeFix);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setGrayPixel(x, y, 1.f, slopeFix);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		float d = fabs((float)dy / dx * (x - x0) + y0 - y);
+		float percent = 1 - d / 0.5;
+		setGrayPixel(x, y, fabs(percent), slopeFix);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setGrayPixel(x, y, 1.f, slopeFix);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		float d = fabs((float)dx / dy * (y - y0) + x0 - x);
+		float percent = 1 - d / 0.5;
+		setGrayPixel(x, y, fabs(percent), slopeFix);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd, slopeFix);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd, slopeFix);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd, slopeFix);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd, slopeFix);
+		}
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(104, 470, 470, 481, false);
+	lineBres(133, 372, 145, 74, false);
+	lineBres(403, 138, 685, 162, false);
+	lineBres(480, 516, 548, 224, false);
+
+	lineBres(104, 420, 470, 431, true);
+	lineBres(183, 372, 195, 74, true);
+	lineBres(403, 88, 685, 112, true);
+	lineBres(530, 516, 598, 224, true);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glFlush();
+}
+void code_6_exercise_37()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
 
 
 
@@ -7797,6 +8018,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_36
 	code_6_exercise_36();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_37
+	code_6_exercise_37();
 #endif
 
 	glutMainLoop();
