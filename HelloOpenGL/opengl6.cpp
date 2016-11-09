@@ -7606,19 +7606,14 @@ void code_6_exercise_36()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_37
-void setGrayPixel(int x, int y, float grayPercent, bool slopeFix)
+void setGrayPixel(int x, int y, float grayPercent)
 {
-	if (slopeFix)
-		grayPercent = (grayPercent * 0.5) + 0.5;
-	else
-		grayPercent = 1.f;
-
 	glColor3f(1.0 * grayPercent , 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
 }
 
 // 0<m<1
-void lineBres1(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+void lineBres1(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 {
 	if (x0 > xEnd)
 	{
@@ -7634,9 +7629,12 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 	int p = 2 * dy - dx;
 	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
 
+	if (dy == 0)
+		antiAliasing = false;
+
 	int x = x0;
 	int y = y0;
-	setGrayPixel(x, y, 1.f, slopeFix);
+	setGrayPixel(x, y, 1.f);
 	while (x < xEnd)
 	{
 		x++;
@@ -7647,13 +7645,22 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 			y++;
 			p += twoDyMinusDx;
 		}
-		float d = fabs((float)dy / dx * (x - x0) + y0 - y);
-		float percent = 1 - d / 0.5;
-		setGrayPixel(x, y, fabs(percent), slopeFix);
+		float real = fabs((float)dy / dx * (x - x0) + y0);
+		float cur = fabs(real - y);
+		float top = fabs(y + 1 - real);
+		float bottom = fabs(real - (y - 1));
+		setGrayPixel(x, y, antiAliasing ? fabs(1 - cur) : 1.f);
+		if (antiAliasing)
+		{
+			if (top < bottom)
+				setGrayPixel(x, y + 1, fabs(1 - top));
+			else
+				setGrayPixel(x, y - 1, fabs(1 - bottom));
+		}
 	}
 }
 // m>1
-void lineBres1M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 {
 	if (x0 > xEnd)
 	{
@@ -7671,7 +7678,10 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 	int x = x0;
 	int y = y0;
 
-	setGrayPixel(x, y, 1.f, slopeFix);
+	if (dx == 0)
+		antiAliasing = false;
+
+	setGrayPixel(x, y, 1.f);
 	while (y < yEnd)
 	{
 		y++;
@@ -7682,13 +7692,22 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 			x++;
 			p += twoDyMinusDx;
 		}
-		float d = fabs((float)dx / dy * (y - y0) + x0 - x);
-		float percent = 1 - d / 0.5;
-		setGrayPixel(x, y, fabs(percent), slopeFix);
+		float real = fabs((float)dx / dy * (y - y0) + x0);
+		float cur = fabs(real - x);
+		float right = fabs(x + 1 - real);
+		float left = fabs(real - (x - 1));
+		setGrayPixel(x, y, antiAliasing ? fabs(1 - cur) : 1.f);
+		if (antiAliasing)
+		{
+			if (right < left)
+				setGrayPixel(x + 1, y, fabs(1 - right));
+			else
+				setGrayPixel(x - 1, y, fabs(1 - left));
+		}		
 	}
 }
 // -1<m<0
-void lineBres2(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+void lineBres2(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 {
 	if (x0 > xEnd)
 	{
@@ -7707,7 +7726,10 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 	int x = x0;
 	int y = y0;
 
-	setGrayPixel(x, y, 1.f, slopeFix);
+	if (dy == 0)
+		antiAliasing = false;
+
+	setGrayPixel(x, y, 1.f);
 	while (x < xEnd)
 	{
 		x++;
@@ -7718,13 +7740,22 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 			y--;
 			p += twoDyAddDx;
 		}
-		float d = fabs((float)dy / dx * (x - x0) + y0 - y);
-		float percent = 1 - d / 0.5;
-		setGrayPixel(x, y, fabs(percent), slopeFix);
+		float real = fabs((float)dy / dx * (x - x0) + y0);
+		float cur = fabs(real - y);
+		float top = fabs(y + 1 - real);
+		float bottom = fabs(real - (y - 1));
+		setGrayPixel(x, y, antiAliasing ? fabs(1 - cur) : 1.f);
+		if (antiAliasing)
+		{
+			if (top < bottom)
+				setGrayPixel(x, y + 1, fabs(1 - top));
+			else
+				setGrayPixel(x, y - 1, fabs(1 - bottom));
+		}
 	}
 }
 // m<-1
-void lineBres2M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 {
 	if (x0 > xEnd)
 	{
@@ -7740,10 +7771,12 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 	int p = -2 * dx - dy;
 	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
 
+	if (dx == 0)
+		antiAliasing = false;
+
 	int x = x0;
 	int y = y0;
-
-	setGrayPixel(x, y, 1.f, slopeFix);
+	setGrayPixel(x, y, 1.f);
 	while (y > yEnd)
 	{
 		y--;
@@ -7754,12 +7787,21 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 			x++;
 			p += twoDyAddDx;
 		}
-		float d = fabs((float)dx / dy * (y - y0) + x0 - x);
-		float percent = 1 - d / 0.5;
-		setGrayPixel(x, y, fabs(percent), slopeFix);
+		float real = fabs((float)dx / dy * (y - y0) + x0);
+		float cur = fabs(real - x);
+		float right = fabs(x + 1 - real);
+		float left = fabs(real - (x - 1));
+		setGrayPixel(x, y, antiAliasing ? fabs(1 - cur) : 1.f);
+		if (antiAliasing)
+		{
+			if (right < left)
+				setGrayPixel(x + 1, y, fabs(1 - right));
+			else
+				setGrayPixel(x - 1, y, fabs(1 - left));
+		}
 	}
 }
-void lineBres(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
+void lineBres(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 {
 	if (x0 > xEnd)
 	{
@@ -7777,22 +7819,22 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, bool slopeFix)
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres1M(x0, y0, xEnd, yEnd, slopeFix);
+			lineBres1M(x0, y0, xEnd, yEnd, antiAliasing);
 		}
 		else
 		{
-			lineBres1(x0, y0, xEnd, yEnd, slopeFix);
+			lineBres1(x0, y0, xEnd, yEnd, antiAliasing);
 		}
 	}
 	else
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres2M(x0, y0, xEnd, yEnd, slopeFix);
+			lineBres2M(x0, y0, xEnd, yEnd, antiAliasing);
 		}
 		else
 		{
-			lineBres2(x0, y0, xEnd, yEnd, slopeFix);
+			lineBres2(x0, y0, xEnd, yEnd, antiAliasing);
 		}
 	}
 }
@@ -7800,15 +7842,23 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	lineBres(104, 470, 470, 481, false);
-	lineBres(133, 372, 145, 74, false);
-	lineBres(403, 138, 685, 162, false);
-	lineBres(480, 516, 548, 224, false);
 
-	lineBres(104, 420, 470, 431, true);
-	lineBres(183, 372, 195, 74, true);
-	lineBres(403, 88, 685, 112, true);
-	lineBres(530, 516, 598, 224, true);
+	// 0<m<1
+	lineBres(78, 503, 408, 512, false);
+	lineBres(78, 453, 408, 462, true);
+	// m>1
+	lineBres(533, 362, 539, 564, false);
+	lineBres(583, 362, 589, 564, true);
+	// -1<m<0
+	lineBres(79, 319, 389, 279, false);
+	lineBres(79, 269, 389, 229, true);
+	// m<-1
+	lineBres(488, 318, 553, 79, false);
+	lineBres(538, 318, 603, 79, true);
+	// Ë®Æ½
+	lineBres(42, 49, 242, 49, true);
+	// ´¹Ö±
+	lineBres(282, 22, 282, 170, true);
 
 	glColor3f(1.0, 1.0, 1.0);
 	glFlush();
