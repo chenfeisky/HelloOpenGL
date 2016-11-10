@@ -4,13 +4,16 @@
 #include <stdio.h>
 //#include <gl/glut.h>
 #include "glut.h"
+
+#include <string>
 #include <vector>
 #include <map>
 #include <set>
+#include <list>
+
 #include <time.h>
 #include <iostream>
 #include <assert.h>
-#include <string>
 #include <fstream>
 #include <math.h>
 #include <algorithm> 

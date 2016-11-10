@@ -7869,6 +7869,135 @@ void code_6_exercise_37()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_38
+struct Point2 { int x; int y; };
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void ellipsePlotPoints(int x, int y, bool originSymmetryOnly, std::vector<std::list<Point2>>& points)
+{
+	points[0].push_back({x, y});
+
+	if(!originSymmetryOnly)
+		points[1].push_front({x, -y});
+
+	points[2].push_back({-x, -y });
+
+	if (!originSymmetryOnly)
+		points[3].push_front({-x, y });
+}
+void ellipseMidpoint(int Rx, int Ry, std::vector<std::list<Point2>>& points)
+{
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = Ry;
+	int px = 0;
+	int py = twoRx2*y;
+	ellipsePlotPoints(x, y, true, points);
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		ellipsePlotPoints(x, y, false, points);
+	}
+	/*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		ellipsePlotPoints(x, y, y == 0, points);
+	}
+}
+std::list<Point2> makeAllEllipsePoints(std::vector<std::list<Point2>>& points)
+{
+	std::list<Point2> ret;
+	ret.splice(ret.end(), points[0]);
+	ret.splice(ret.end(), points[1]);
+	ret.splice(ret.end(), points[2]);
+	ret.splice(ret.end(), points[3]);
+	return ret;
+}
+void draw(int xCenter, int yCenter, const std::list<Point2>& points, const std::string& lineTypeMode)
+{
+	int index = 0;
+	for (auto it = points.begin(); it != points.end(); it++)
+	{		
+		if (lineTypeMode[index] == '1')
+			setPixel(xCenter + it->x, yCenter + it->y);
+		index = ++index % lineTypeMode.size();
+	}
+}
+void drawWithSlope(int xCenter, int yCenter, const std::list<Point2>& points, const std::string& lineTypeMode)
+{
+	int index = 0;
+	std::string newLineMode;
+	for (auto it = points.begin(); it != points.end(); it++)
+	{
+		if (lineTypeMode[index] == '1')
+			setPixel(it->x, it->y);
+		index = ++index % lineTypeMode.size();
+	}
+}
+// 固定像素数划线
+void ellipseLineType1(int xCenter, int yCenter, int Rx, int Ry, const std::string& lineTypeMode)
+{
+	std::vector<std::list<Point2>> points = std::vector<std::list<Point2>>(4);
+	ellipseMidpoint(Rx, Ry, points);
+	std::list<Point2> ellipsePoints = makeAllEllipsePoints(points);
+	draw(xCenter, yCenter, ellipsePoints, lineTypeMode);
+}
+// 固定长度划线
+void ellipseLineType2(int xCenter, int yCenter, int Rx, int Ry, const std::string& lineTypeMode)
+{
+	std::vector<std::list<Point2>> points = std::vector<std::list<Point2>>(4);
+	ellipseMidpoint(Rx, Ry, points);
+	std::list<Point2> ellipsePoints = makeAllEllipsePoints(points);
+	drawWithSlope(xCenter, yCenter, ellipsePoints, lineTypeMode);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	ellipseLineType1(150, 200, 100, 50, "1");// 实线
+	ellipseLineType1(400, 200, 100, 50, "11111111000");// 划线
+	ellipseLineType1(650, 200, 100, 50, "1100");// 点线
+
+	glFlush();
+}
+void code_6_exercise_38()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -8072,6 +8201,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_37
 	code_6_exercise_37();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_38
+	code_6_exercise_38();
 #endif
 
 	glutMainLoop();
