@@ -7954,6 +7954,18 @@ void draw(int xCenter, int yCenter, const std::list<Point2>& points, const std::
 		index = ++index % lineTypeMode.size();
 	}
 }
+float calcRealRate(int x, int Rx, int Ry)
+{
+	float tan = fabs((float)Ry * x / (Rx * std::sqrt(Rx * Rx - x * x)));
+	if (tan < 1.0)
+	{
+
+	}
+}
+std::string makeNewLineTypeMode(int x, int Rx, int Ry, const std::string& lineTypeMode)
+{
+
+}
 void drawWithSlope(int xCenter, int yCenter, const std::list<Point2>& points, const std::string& lineTypeMode)
 {
 	int index = 0;

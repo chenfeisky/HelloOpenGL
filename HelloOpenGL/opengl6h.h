@@ -34,7 +34,7 @@
 //#define CHAPTER_6_EXERCISE_23
 //#define CHAPTER_6_EXERCISE_24
 //#define CHAPTER_6_EXERCISE_25
-#define CHAPTER_6_EXERCISE_26
+//#define CHAPTER_6_EXERCISE_26
 //#define CHAPTER_6_EXERCISE_27
 //#define CHAPTER_6_EXERCISE_28
 //#define CHAPTER_6_EXERCISE_29	// 简单线宽函数，不含端点处理
@@ -46,7 +46,7 @@
 //#define CHAPTER_6_EXERCISE_35
 //#define CHAPTER_6_EXERCISE_36
 //#define CHAPTER_6_EXERCISE_37 // Wu反走样算法
-//#define CHAPTER_6_EXERCISE_38
+#define CHAPTER_6_EXERCISE_38
 
 
 
