@@ -47,7 +47,8 @@
 //#define CHAPTER_6_EXERCISE_36
 //#define CHAPTER_6_EXERCISE_37 // Wu反走样算法
 //#define CHAPTER_6_EXERCISE_38
-#define CHAPTER_6_EXERCISE_39
+//#define CHAPTER_6_EXERCISE_39
+#define CHAPTER_6_EXERCISE_40
 
 
 
@@ -236,5 +237,9 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_39
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_40
 #define CHAPTER_6_COMMON
 #endif

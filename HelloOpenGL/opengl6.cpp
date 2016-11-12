@@ -8224,6 +8224,261 @@ void code_6_exercise_39()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_40
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+struct Point2 { int x; int y; };
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void hLine(int y, int x0, int x1, const Stencil& s, Point2 zeroPoint)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		int mapY = s.stencil.size() - 1 - (y - zeroPoint.y + s.yc) % s.stencil.size();
+		int mapX = (x - zeroPoint.x + s.xc) % (int)(s.stencil[0].size());
+		if(mapX < 0)
+			mapX += s.stencil[0].size();
+
+		if(s.stencil[mapY][mapX] == 1)
+			setPixel(x, y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point2 zeroPoint)
+{
+	std::vector<Point2> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				points.push_back({ line.currentX , curY });
+
+				line.counter += std::abs(line.sortedLine.dx * 2);
+				//if (line.counter >= line.sortedLine.dy)
+				//{
+				//	if(line.sortedLine.dx > 0)
+				//		line.currentX++;
+				//	else
+				//		line.currentX--;
+				//	line.counter -= line.sortedLine.dy * 2;
+				//}
+				while (line.counter >= line.sortedLine.dy)
+				{
+					if (line.sortedLine.dx > 0)
+						line.currentX++;
+					else
+						line.currentX--;
+					line.counter -= line.sortedLine.dy * 2;
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, s, zeroPoint);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point2>& points, const Stencil& s)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, s, { sortedLines[0].sortedLines[0].beginX, sortedLines[0].scanY});
+	}
+
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	Stencil s1 = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		}, 0, 0 };
+	fillPolygon({ {144,421},{295, 302},{301, 165}, {172,112},{87,249}}, s1);
+
+	Stencil s2 = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		}, 4, 4 };
+	fillPolygon({ { 420,139 },{ 575, 235 },{ 680, 154 },{ 723,311 },{ 582,419 },{443,404} }, s2);
+	glFlush();
+}
+void code_6_exercise_40()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -8435,6 +8690,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_39
 	code_6_exercise_39();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_40
+	code_6_exercise_40();
 #endif
 
 	glutMainLoop();
