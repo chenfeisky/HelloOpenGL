@@ -8479,6 +8479,231 @@ void code_6_exercise_40()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_41
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void hLineEllipsePlot(int y, int x0, int x1, int xc, int yc)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(xc + x, yc + y);
+		setPixel(xc - x, yc + y);
+		setPixel(xc + x, yc - y);
+		setPixel(xc - x, yc - y);
+	}
+}
+void fillEllipse(int xCenter, int yCenter, int Rx, int Ry)
+{
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = Ry;
+	int px = 0;
+	int py = twoRx2*y;
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter); // 绘制上一条x最大的扫描线
+
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	}
+	hLineEllipsePlot(y, 0, x, xCenter, yCenter); // 绘制最后一条扫描线
+
+	/*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		hLineEllipsePlot(y, 0, x, xCenter, yCenter);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	fillEllipse(200, 200, 100, 50);
+	glFlush();
+}
+void code_6_exercise_41()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_42
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+struct Point2 { int x; int y; };
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void hLine(int y, int x0, int x1, const Stencil& s, int xCenter, int yCenter)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		int _mapY = (y + s.yc) % (int)(s.stencil.size());
+		if (_mapY < 0)
+			_mapY += s.stencil.size();
+		int mapY = s.stencil.size() - 1 - _mapY;
+
+		int mapX = (x + s.xc) % (int)(s.stencil[0].size());
+		if (mapX < 0)
+			mapX += s.stencil[0].size();
+
+		if (s.stencil[mapY][mapX] == 1)
+			setPixel(xCenter + x, yCenter + y);
+	}
+}
+void hLineEllipsePlot(int y, int x0, int x1, const Stencil& s, int xCenter, int yCenter)
+{
+	hLine(y, x0, x1, s, xCenter, yCenter);
+	hLine(y, -x1, -x0, s, xCenter, yCenter);
+	hLine(-y, x0, x1, s, xCenter, yCenter);
+	hLine(-y, -x1, -x0, s, xCenter, yCenter);
+}
+void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, const Stencil& s)
+{
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = Ry;
+	int px = 0;
+	int py = twoRx2*y;
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			hLineEllipsePlot(y, 0, x - 1, s, xCenter, yCenter); // 绘制上一条x最大的扫描线
+
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	}
+	hLineEllipsePlot(y, 0, x, s, xCenter, yCenter); // 绘制最后一条扫描线
+
+												 /*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		hLineEllipsePlot(y, 0, x, s, xCenter, yCenter);
+	}
+}
+void coord(int xCenter, int yCenter)
+{
+	for (int x = 0; x < 800; x++)
+	{
+		setPixel(x, yCenter);
+	}
+	for (int y = 0; y < 600; y++)
+	{
+		setPixel(xCenter, y);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	Stencil s1 = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		}, 0, 0 };
+	fillEllipse(250, 400, 100, 50, s1);
+	glColor3f(1.0, 0.0, 0.0);
+	coord(250, 400);
+
+	glColor3f(1.0, 1.0, 1.0);
+	Stencil s2 = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		}, 4, 4 };
+	fillEllipse(550, 400, 100, 50, s2);
+	glColor3f(1.0, 0.0, 0.0);
+	coord(550, 400);
+	glFlush();
+}
+void code_6_exercise_42()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -8694,6 +8919,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_40
 	code_6_exercise_40();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_41
+	code_6_exercise_41();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_42
+	code_6_exercise_42();
 #endif
 
 	glutMainLoop();
