@@ -8704,6 +8704,205 @@ void code_6_exercise_42()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_43
+struct Vector
+{
+	float x, y;
+};
+struct Point
+{
+	GLfloat x, y, z;
+};
+vector<Point> ploygon = { { 420, 430, 0 },{ 225, 170, 0 },{ 201, 335, 0 },{ 453, 374, 0 },
+{ 447, 212, 0 },{ 135, 201, 0 },{ 388, 274, 0 } };
+Point testP1 = { 356, 303, 0 }, rayP1 = { 608, 397, 0 };
+Point testP2 = { 250, 223, 0 }, rayP2 = { 229, 439, 0 };
+Point testP3 = { 376, 225, 0 }, rayP3 = { 235, 548, 0 };
+// 判断浮点数相等
+bool equal(float f1, float f2)
+{
+	return std::abs(f1 - f2) < 0.0001;
+}
+inline bool operator==(const Point& p1, const Point& p2)
+{
+	return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
+}
+inline bool operator<(const Point& p1, const Point& p2)
+{
+	return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
+}
+int crossProduct(const Vector& vector1, const Vector& vector2)
+{
+	return vector1.x * vector2.y - vector1.y * vector2.x;
+}
+// 计算两条直线的交点（直线公式：Ax+By+C=0）
+bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
+{
+	if (equal(A1 * B2, A2 * B1))
+		return false;
+
+	point.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
+	point.y = (A2 * C1 - A1 * C2) / (A1 * B2 - A2 * B1);
+	point.z = 0;
+	return true;
+}
+bool sameDir(Vector v1, Vector v2)
+{
+	return v1.x * v2.x >= 0 && v1.y * v2.y >= 0;
+}
+bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
+{
+	// rayPoint在包围盒外
+	float Xmin = ploygon[0].x, Xmax = ploygon[0].x, Ymin = ploygon[0].y, Ymax = ploygon[0].y;
+	for (auto& p : ploygon)
+	{
+		if (p.x > Xmax)
+			Xmax = p.x;
+		if (p.x < Xmin)
+			Xmin = p.x;
+		if (p.y > Ymax)
+			Ymax = p.y;
+		if (p.y < Ymin)
+			Ymin = p.y;
+	}
+	if (Xmin <= rayPoint.x && rayPoint.x <= Xmax && Ymin <= rayPoint.y && rayPoint.y <= Ymax)
+		return false;
+
+	for (auto& p : ploygon)
+	{
+		if (p == checkPoint)
+			return true;
+	}
+
+	float rayK;
+	bool v = false;
+	if (rayPoint.x != checkPoint.x)
+	{
+		rayK = (rayPoint.y - checkPoint.y) / (rayPoint.x - checkPoint.x);
+		v = false;
+	}
+	else
+	{
+		rayK = 0.f;
+		v = true;
+	}
+
+	for (auto& p : ploygon)
+	{
+		if (p == checkPoint)
+			return true;
+
+		if (p.x != checkPoint.x && !v)
+		{	
+			float k = (p.y - checkPoint.y) / (p.x - checkPoint.x);
+			if (k == rayK && sameDir({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y }, { p.x - checkPoint.x, p.y - checkPoint.y }))
+				return false;
+		}
+		else if(p.x == checkPoint.x && v)
+		{
+			if(sameDir({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y }, { p.x - checkPoint.x, p.y - checkPoint.y }))
+				return false;
+		}
+	}
+	return true;
+}
+bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
+{
+	int count = 0;
+	float A1 = rayPoint.y - checkPoint.y;
+	float B1 = checkPoint.x - rayPoint.x;
+	float C1 = rayPoint.x * checkPoint.y - checkPoint.x * rayPoint.y;
+	for (int i = 0; i < ploygon.size(); i++)
+	{
+		int j = i + 1 < ploygon.size() ? i + 1 : 0;
+
+		float A2 = ploygon[j].y - ploygon[i].y;
+		float B2 = ploygon[i].x - ploygon[j].x;
+		float C2 = ploygon[j].x * ploygon[i].y - ploygon[i].x * ploygon[j].y;
+		Point point;
+		if (linesPoint(A1, B1, C1, A2, B2, C2, point))
+		{
+			if (point == checkPoint || point == rayPoint || point == ploygon[i] || point == ploygon[j])
+				return true;
+
+			float EXmax = ploygon[j].x > ploygon[i].x ? ploygon[j].x : ploygon[i].x;
+			float EXmin = ploygon[j].x > ploygon[i].x ? ploygon[i].x : ploygon[j].x;
+			float EYmax = ploygon[j].y > ploygon[i].y ? ploygon[j].y : ploygon[i].y;
+			float EYmin = ploygon[j].y > ploygon[i].y ? ploygon[i].y : ploygon[j].y;
+
+			float CheckXmax = rayPoint.x > checkPoint.x ? rayPoint.x : checkPoint.x;
+			float CheckXmin = rayPoint.x > checkPoint.x ? checkPoint.x : rayPoint.x;
+			float CheckYmax = rayPoint.y > checkPoint.y ? rayPoint.y : checkPoint.y;
+			float CheckYmin = rayPoint.y > checkPoint.y ? checkPoint.y : rayPoint.y;
+
+			if (EXmin < point.x && point.x < EXmax &&
+				EYmin < point.y && point.y < EYmax &&
+				CheckXmin < point.x && point.x < CheckXmax &&
+				CheckYmin < point.y && point.y < CheckYmax)
+			{
+				if (crossProduct({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y },
+				{ ploygon[j].x - ploygon[i].x, ploygon[j].y - ploygon[i].y }) > 0)
+				{
+					count++;
+				}
+				else
+				{
+					count--;
+				}
+			}
+		}
+	}
+	//printf("点(%f, %f)是%s\n", checkPoint.x, checkPoint.y, count != 0 ? "内点" : "外点");
+	return count != 0;
+}
+void fillRect(const vector<Point>& ploygon)
+{
+	float Xmin = ploygon[0].x, Xmax = ploygon[0].x, Ymin = ploygon[0].y, Ymax = ploygon[0].y;
+	for (auto& p : ploygon)
+	{
+		if (p.x > Xmax)
+			Xmax = p.x;
+		if (p.x < Xmin)
+			Xmin = p.x;
+		if (p.y > Ymax)
+			Ymax = p.y;
+		if (p.y < Ymin)
+			Ymin = p.y;
+	}
+	Point rayPoint = { ploygon[0].x + 100, ploygon[0].y + 100 };
+	for (float x = Xmin; x <= Xmax; x++)
+	{
+		for (float y = Ymin; y <= Ymax; y++)
+		{			
+			while (1)
+			{
+				if (checkRayWay({x, y}, rayPoint, ploygon))
+					break;
+				else
+				{
+					rayPoint.x += std::rand() % 10;
+					rayPoint.y += std::rand() % 10;
+				}
+			}
+			if (checkInner({ x, y }, rayPoint, ploygon))
+				setPixel(x, y);
+		}
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	fillRect({ {100, 100}, {200, 100},{ 200, 200 },{ 100, 200 } });
+	glFlush();
+}
+void code_6_exercise_43()
+{
+	srand(time(NULL));
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -8927,6 +9126,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_42
 	code_6_exercise_42();
+#endif
+	
+#ifdef CHAPTER_6_EXERCISE_43
+	code_6_exercise_43();
 #endif
 
 	glutMainLoop();
