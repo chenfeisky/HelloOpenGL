@@ -8713,23 +8713,19 @@ struct Point
 {
 	GLfloat x, y, z;
 };
-vector<Point> ploygon = { { 420, 430, 0 },{ 225, 170, 0 },{ 201, 335, 0 },{ 453, 374, 0 },
-{ 447, 212, 0 },{ 135, 201, 0 },{ 388, 274, 0 } };
-Point testP1 = { 356, 303, 0 }, rayP1 = { 608, 397, 0 };
-Point testP2 = { 250, 223, 0 }, rayP2 = { 229, 439, 0 };
-Point testP3 = { 376, 225, 0 }, rayP3 = { 235, 548, 0 };
 // 判断浮点数相等
-bool equal(float f1, float f2)
-{
-	return std::abs(f1 - f2) < 0.0001;
-}
+bool Equal(float f1, float f2){ return std::abs(f1 - f2) < 0.0001;}
+bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
+bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
+bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
+bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 inline bool operator==(const Point& p1, const Point& p2)
 {
-	return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y) && Equal(p1.z, p2.z);
 }
 inline bool operator<(const Point& p1, const Point& p2)
 {
-	return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
+	return Less(p1.x, p2.x) && Less(p1.y, p2.y) && Less(p1.z, p2.z);
 }
 int crossProduct(const Vector& vector1, const Vector& vector2)
 {
@@ -8738,7 +8734,7 @@ int crossProduct(const Vector& vector1, const Vector& vector2)
 // 计算两条直线的交点（直线公式：Ax+By+C=0）
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
-	if (equal(A1 * B2, A2 * B1))
+	if (Equal(A1 * B2, A2 * B1))
 		return false;
 
 	point.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
@@ -8748,7 +8744,7 @@ bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Poin
 }
 bool sameDir(Vector v1, Vector v2)
 {
-	return v1.x * v2.x >= 0 && v1.y * v2.y >= 0;
+	return GreaterQ(v1.x * v2.x, 0) && GreaterQ(v1.y * v2.y, 0);
 }
 bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 {
@@ -8756,16 +8752,16 @@ bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 	float Xmin = ploygon[0].x, Xmax = ploygon[0].x, Ymin = ploygon[0].y, Ymax = ploygon[0].y;
 	for (auto& p : ploygon)
 	{
-		if (p.x > Xmax)
+		if (Greater(p.x, Xmax))
 			Xmax = p.x;
-		if (p.x < Xmin)
+		if (Less(p.x, Xmin))
 			Xmin = p.x;
-		if (p.y > Ymax)
+		if (Greater(p.y, Ymax))
 			Ymax = p.y;
-		if (p.y < Ymin)
+		if (Less(p.y, Ymin))
 			Ymin = p.y;
 	}
-	if (Xmin <= rayPoint.x && rayPoint.x <= Xmax && Ymin <= rayPoint.y && rayPoint.y <= Ymax)
+	if (LessQ(Xmin, rayPoint.x) && LessQ(rayPoint.x, Xmax) && LessQ(Ymin, rayPoint.y) && LessQ(rayPoint.y, Ymax))
 		return false;
 
 	for (auto& p : ploygon)
@@ -8776,7 +8772,7 @@ bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 
 	float rayK;
 	bool v = false;
-	if (rayPoint.x != checkPoint.x)
+	if (!Equal(rayPoint.x, checkPoint.x))
 	{
 		rayK = (rayPoint.y - checkPoint.y) / (rayPoint.x - checkPoint.x);
 		v = false;
@@ -8789,13 +8785,13 @@ bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 
 	for (auto& p : ploygon)
 	{
-		if (p.x != checkPoint.x && !v)
+		if (!Equal(p.x, checkPoint.x) && !v)
 		{	
 			float k = (p.y - checkPoint.y) / (p.x - checkPoint.x);
-			if (k == rayK && sameDir({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y }, { p.x - checkPoint.x, p.y - checkPoint.y }))
+			if (Equal(k, rayK) && sameDir({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y }, { p.x - checkPoint.x, p.y - checkPoint.y }))
 				return false;
 		}
-		else if(p.x == checkPoint.x && v)
+		else if(Equal(p.x, checkPoint.x) && v)
 		{
 			if(sameDir({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y }, { p.x - checkPoint.x, p.y - checkPoint.y }))
 				return false;
@@ -8805,6 +8801,12 @@ bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 }
 bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 {
+	for (auto& p : ploygon)
+	{
+		if (p == checkPoint)
+			return true;
+	}
+
 	int count = 0;
 	float A1 = rayPoint.y - checkPoint.y;
 	float B1 = checkPoint.x - rayPoint.x;
@@ -8819,9 +8821,6 @@ bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 		Point point;
 		if (linesPoint(A1, B1, C1, A2, B2, C2, point))
 		{
-			if (point == checkPoint || point == rayPoint || point == ploygon[i] || point == ploygon[j])
-				return true;
-
 			float EXmax = ploygon[j].x > ploygon[i].x ? ploygon[j].x : ploygon[i].x;
 			float EXmin = ploygon[j].x > ploygon[i].x ? ploygon[i].x : ploygon[j].x;
 			float EYmax = ploygon[j].y > ploygon[i].y ? ploygon[j].y : ploygon[i].y;
@@ -8832,11 +8831,14 @@ bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 			float CheckYmax = rayPoint.y > checkPoint.y ? rayPoint.y : checkPoint.y;
 			float CheckYmin = rayPoint.y > checkPoint.y ? checkPoint.y : rayPoint.y;
 
-			if (EXmin <= point.x && point.x <= EXmax &&
-				EYmin <= point.y && point.y <= EYmax &&
-				CheckXmin <= point.x && point.x <= CheckXmax &&
-				CheckYmin <= point.y && point.y <= CheckYmax)
+			if (LessQ(EXmin, point.x) && LessQ(point.x, EXmax) &&
+				LessQ(EYmin, point.y) && LessQ(point.y, EYmax) &&
+				LessQ(CheckXmin, point.x) && LessQ(point.x, CheckXmax) &&
+				LessQ(CheckYmin, point.y) && LessQ(point.y, CheckYmax))
 			{
+				if (point == checkPoint)
+					return true;
+
 				if (crossProduct({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y },
 				{ ploygon[j].x - ploygon[i].x, ploygon[j].y - ploygon[i].y }) > 0)
 				{
@@ -8854,52 +8856,47 @@ bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 }
 void fillRect(const vector<Point>& ploygon)
 {
+	auto time0 = GetTickCount();
 	float Xmin = ploygon[0].x, Xmax = ploygon[0].x, Ymin = ploygon[0].y, Ymax = ploygon[0].y;
 	for (auto& p : ploygon)
 	{
-		if (p.x > Xmax)
+		if (Greater(p.x, Xmax))
 			Xmax = p.x;
-		if (p.x < Xmin)
+		if (Less(p.x, Xmin))
 			Xmin = p.x;
-		if (p.y > Ymax)
+		if (Greater(p.y, Ymax))
 			Ymax = p.y;
-		if (p.y < Ymin)
+		if (Less(p.y, Ymin))
 			Ymin = p.y;
 	}
 	Point rayPoint = { ploygon[0].x + 100, ploygon[0].y + 100 };
 	for (float x = Xmin; x <= Xmax; x++)
 	{
 		for (float y = Ymin; y <= Ymax; y++)
-		{	
-			printf("开始x = %f, y = %f\n", x, y);
+		{
 			while (1)
 			{
 				if (checkRayWay({x, y}, rayPoint, ploygon))
 					break;
 				else
 				{
-					rayPoint.x += std::rand() % 10;
-					rayPoint.y += std::rand() % 10;
+					rayPoint.x += std::rand() % 100 + 100;
+					rayPoint.y += std::rand() % 100 + 100;
 				}
 			}
 			if (checkInner({ x, y }, rayPoint, ploygon))
-			{
-				setPixel(x, y);
-				printf("结束x = %f, y = %f, 内点\n", x, y);
-			}
-			else
-			{
-				printf("结束x = %f, y = %f, 外点\n", x, y);
-			}			
+				setPixel(x, y);		
 		}
 	}
+	auto time1 = GetTickCount();
+	printf("use time %ld\n", time1 - time0);
 }
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	//fillRect({ {100, 100}, {200, 100},{ 200, 200 },{ 100, 200 } });
-	fillRect({ { 361, 67 },{ 409, 73 },{ 409, 98 },{ 363, 89 },{389,35},{408,134} });
+	fillRect({{ 112, 172 }, { 644, 243 }, { 574, 454 }, { 223, 393 }, { 259,108 }, { 417, 522 }, { 479, 338 }});
+
 	glFlush();
 }
 void code_6_exercise_43()
