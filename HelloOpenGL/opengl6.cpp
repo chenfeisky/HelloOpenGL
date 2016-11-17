@@ -8789,9 +8789,6 @@ bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 
 	for (auto& p : ploygon)
 	{
-		if (p == checkPoint)
-			return true;
-
 		if (p.x != checkPoint.x && !v)
 		{	
 			float k = (p.y - checkPoint.y) / (p.x - checkPoint.x);
@@ -8835,10 +8832,10 @@ bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 			float CheckYmax = rayPoint.y > checkPoint.y ? rayPoint.y : checkPoint.y;
 			float CheckYmin = rayPoint.y > checkPoint.y ? checkPoint.y : rayPoint.y;
 
-			if (EXmin < point.x && point.x < EXmax &&
-				EYmin < point.y && point.y < EYmax &&
-				CheckXmin < point.x && point.x < CheckXmax &&
-				CheckYmin < point.y && point.y < CheckYmax)
+			if (EXmin <= point.x && point.x <= EXmax &&
+				EYmin <= point.y && point.y <= EYmax &&
+				CheckXmin <= point.x && point.x <= CheckXmax &&
+				CheckYmin <= point.y && point.y <= CheckYmax)
 			{
 				if (crossProduct({ rayPoint.x - checkPoint.x, rayPoint.y - checkPoint.y },
 				{ ploygon[j].x - ploygon[i].x, ploygon[j].y - ploygon[i].y }) > 0)
@@ -8873,7 +8870,8 @@ void fillRect(const vector<Point>& ploygon)
 	for (float x = Xmin; x <= Xmax; x++)
 	{
 		for (float y = Ymin; y <= Ymax; y++)
-		{			
+		{	
+			printf("开始x = %f, y = %f\n", x, y);
 			while (1)
 			{
 				if (checkRayWay({x, y}, rayPoint, ploygon))
@@ -8885,7 +8883,14 @@ void fillRect(const vector<Point>& ploygon)
 				}
 			}
 			if (checkInner({ x, y }, rayPoint, ploygon))
+			{
 				setPixel(x, y);
+				printf("结束x = %f, y = %f, 内点\n", x, y);
+			}
+			else
+			{
+				printf("结束x = %f, y = %f, 外点\n", x, y);
+			}			
 		}
 	}
 }
@@ -8893,7 +8898,8 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	fillRect({ {100, 100}, {200, 100},{ 200, 200 },{ 100, 200 } });
+	//fillRect({ {100, 100}, {200, 100},{ 200, 200 },{ 100, 200 } });
+	fillRect({ { 361, 67 },{ 409, 73 },{ 409, 98 },{ 363, 89 },{389,35},{408,134} });
 	glFlush();
 }
 void code_6_exercise_43()
