@@ -52,6 +52,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>$(ProjectDir)..\opengl\lib</AdditionalLibraryDirectories>
+      <StackReserveSize>10000000</StackReserveSize>
     </Link>
     <PreLinkEvent>
       <Command>if not exist "$(OutDir)" mkdir "$(OutDir)"
@@ -74,6 +75,7 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <SubSystem>NotSet</SubSystem>
       <AdditionalLibraryDirectories>$(ProjectDir)..\opengl\lib</AdditionalLibraryDirectories>
+      <StackReserveSize>10000000</StackReserveSize>
     </Link>
     <PreLinkEvent>
       <Command>if not exist "$(OutDir)" mkdir "$(OutDir)"

@@ -8906,6 +8906,241 @@ void code_6_exercise_43()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_44
+struct Point { int x; int y; };
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
+}
+bool operator==(const Color3f& c1, const Color3f& c2)
+{
+	return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
+bool operator!=(const Color3f& c1, const Color3f& c2)
+{
+	return !(c1 == c2);
+}
+Color3f getPixelColor(int x, int y)
+{
+	Color3f ret;
+	glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &ret);
+	return ret;
+}
+int count1 = 0;
+void boundaryFill4(int x, int y, Color3f fillColor, Color3f borderColor)
+{
+	//static int count = 0;
+	//count++;
+	//printf("%d\n", count);
+
+	count1++;
+	Color3f interiorColor = getPixelColor(x, y);
+	
+	if ((interiorColor != borderColor) && (interiorColor != fillColor))
+	{
+		setPixel(x, y);
+		boundaryFill4(x + 1, y, fillColor, borderColor);
+		boundaryFill4(x - 1, y, fillColor, borderColor);
+		boundaryFill4(x, y + 1, fillColor, borderColor);
+		boundaryFill4(x, y - 1, fillColor, borderColor);
+	}
+}
+void fillRect()
+{
+	std::vector<Point> points = { {100, 100}, {200, 100}, {200, 200}, {100, 200} };
+	for (int i = 0; i < points.size(); i ++)
+	{
+		int next = i + 1 >= points.size() ? 0 : i + 1;
+		lineBres(points[i].x, points[i].y, points[next].x, points[next].y);
+	}
+	boundaryFill4(150, 150, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
+	printf("%d\n", count1);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	fillRect();
+	glFlush();
+}
+void code_6_exercise_44()
+{
+	srand(time(NULL));
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -9133,6 +9368,10 @@ void main(int argc, char** argv)
 	
 #ifdef CHAPTER_6_EXERCISE_43
 	code_6_exercise_43();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_44
+	code_6_exercise_44();
 #endif
 
 	glutMainLoop();
