@@ -11,6 +11,12 @@ void setPixel(GLint xCoord, GLint yCoord)
 	glBegin(GL_POINTS);
 	glVertex2i(xCoord, yCoord);
 	glEnd();
+
+	//glRasterPos2d(xCoord, yCoord);
+	//static GLfloat a[4];
+	//memset(a, 0, 4 * sizeof(GLfloat));
+	//glGetFloatv(GL_CURRENT_COLOR, a);
+	//glDrawPixels(1, 1, GL_RGB, GL_FLOAT, a);
 }
 #endif
 
@@ -9222,10 +9228,10 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-
+	
 	drawRect1();
 	boundaryFill4(150, 150, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
-
+	
 	drawRect2();
 	boundaryFill4ByStack(558, 300, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
