@@ -52,7 +52,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>$(ProjectDir)..\opengl\lib</AdditionalLibraryDirectories>
-      <StackReserveSize>10000000</StackReserveSize>
+      <StackReserveSize>100000000</StackReserveSize>
     </Link>
     <PreLinkEvent>
       <Command>if not exist "$(OutDir)" mkdir "$(OutDir)"
