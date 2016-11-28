@@ -8916,10 +8916,9 @@ void code_6_exercise_43()
 // 最小化崩溃的原因：点击最小化按钮之后，opengl重绘窗口，但是此时窗口的尺寸为最小化（0,0），即不能画出边界线，所以边界条件判断失败
 // 但是点击任务栏最小化，opengl不重绘，所以不会出问题
 struct Point { int x; int y; };
-#define SHOW_DRAW // 显示绘制过程
+//#define SHOW_DRAW // 显示绘制过程
 #ifdef SHOW_DRAW
 int showTime = 1; //毫秒
-std::vector<Point> drawPoints;
 #endif
 struct Color3f
 {
@@ -9119,7 +9118,8 @@ void boundaryFill4(int x, int y, Color3f fillColor, Color3f borderColor)
 	{
 		setPixel(x, y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back({ x, y });
+		glFlush();
+		Sleep(showTime);
 #endif
 		boundaryFill4(x + 1, y, fillColor, borderColor);
 		boundaryFill4(x - 1, y, fillColor, borderColor);
@@ -9186,7 +9186,8 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, cons
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
+		glFlush();
+		Sleep(showTime);
 #endif		
 		curPoint.x++;
 	}
@@ -9237,20 +9238,7 @@ void drawFunc()
 	drawRect2();
 	boundaryFill4ByStack(558, 300, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
-	glFlush();
-
-#ifdef SHOW_DRAW
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	drawRect1();
-	drawRect2();
-	for (auto& p : drawPoints)
-	{
-		Sleep(showTime);
-		setPixel(p.x, p.y);
-		glFlush();
-	}
-#endif	
+	glFlush();	
 }
 void code_6_exercise_44()
 { 
@@ -9261,10 +9249,9 @@ void code_6_exercise_44()
 
 #ifdef CHAPTER_6_EXERCISE_45
 struct Point { int x; int y; };
-#define SHOW_DRAW // 显示绘制过程
+//#define SHOW_DRAW // 显示绘制过程
 #ifdef SHOW_DRAW
 int showTime = 1; //毫秒
-std::vector<Point> drawPoints;
 #endif
 struct Color3f
 {
@@ -9464,7 +9451,8 @@ void boundaryFill4(int x, int y, Color3f fillColor, Color3f borderColor)
 	{
 		setPixel(x, y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back({ x, y });
+		glFlush();
+		Sleep(showTime);
 #endif
 		boundaryFill4(x + 1, y, fillColor, borderColor);
 		boundaryFill4(x - 1, y, fillColor, borderColor);
@@ -9480,7 +9468,8 @@ void boundaryFill8(int x, int y, Color3f fillColor, Color3f borderColor)
 	{
 		setPixel(x, y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back({ x, y });
+		glFlush();
+		Sleep(showTime);
 #endif
 		boundaryFill8(x + 1, y, fillColor, borderColor);
 		boundaryFill8(x - 1, y, fillColor, borderColor);
@@ -9552,8 +9541,9 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, cons
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
-#endif		
+		glFlush();
+		Sleep(showTime);
+#endif	
 		curPoint.x++;
 	}
 
@@ -9582,7 +9572,8 @@ void fill8Connected(std::list<Point>& pointStack, const Color3f& fillColor, cons
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
+		glFlush();
+		Sleep(showTime);
 #endif		
 		curPoint.x++;
 	}
@@ -9632,20 +9623,6 @@ void drawFunc()
 	boundaryFill8ByStack(320, 170, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
 	glFlush();
-
-#ifdef SHOW_DRAW
-	glClear(GL_COLOR_BUFFER_BIT);
-	drawRect(points1);
-	drawRect(points2);
-	drawRect(points3);
-	drawRect(points4);
-	for (auto& p : drawPoints)
-	{
-		Sleep(showTime);
-		setPixel(p.x, p.y);
-		glFlush();
-	}
-#endif	
 }
 void code_6_exercise_45()
 {
@@ -9655,10 +9632,9 @@ void code_6_exercise_45()
 
 #ifdef CHAPTER_6_EXERCISE_46
 struct Point { int x; int y; };
-//#define SHOW_DRAW // 显示绘制过程
+#define SHOW_DRAW // 显示绘制过程
 #ifdef SHOW_DRAW
 int showTime = 1; //毫秒
-std::vector<Point> drawPoints;
 #endif
 struct Color3f
 {
@@ -9747,7 +9723,8 @@ void boundaryFill4(int x, int y, Color3f fillColor, Color3f borderColor)
 	{
 		setPixel(x, y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back({ x, y });
+		glFlush();
+		Sleep(showTime);
 #endif
 		boundaryFill4(x + 1, y, fillColor, borderColor);
 		boundaryFill4(x - 1, y, fillColor, borderColor);
@@ -9814,7 +9791,8 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, cons
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
+		glFlush();
+		Sleep(showTime);
 #endif		
 		curPoint.x++;
 	}
@@ -9842,19 +9820,7 @@ void drawFunc()
 	ellipseMidpoint(500, 300, 100, 50);
 	boundaryFill4ByStack(500, 300, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
-	glFlush();
-
-#ifdef SHOW_DRAW
-	glClear(GL_COLOR_BUFFER_BIT);
-	ellipseMidpoint(200, 300, 100, 50);
-	ellipseMidpoint(500, 300, 100, 50);
-	for (auto& p : drawPoints)
-	{
-		Sleep(showTime);
-		setPixel(p.x, p.y);
-		glFlush();
-	}
-#endif	
+	glFlush();	
 }
 void code_6_exercise_46()
 {
@@ -9867,7 +9833,6 @@ struct Point { int x; int y; };
 #define SHOW_DRAW // 显示绘制过程
 #ifdef SHOW_DRAW
 int showTime = 1; //毫秒
-std::vector<Point> drawPoints;
 #endif
 struct Color3f
 {
@@ -10127,7 +10092,8 @@ void floodFill4(int x, int y, Color3f fillColor, Color3f interiorColor)
 	{
 		setPixel(x, y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back({ x, y });
+		glFlush();
+		Sleep(showTime);
 #endif
 		floodFill4(x + 1, y, fillColor, interiorColor);
 		floodFill4(x - 1, y, fillColor, interiorColor);
@@ -10143,7 +10109,8 @@ void floodFill8(int x, int y, Color3f fillColor, Color3f interiorColor)
 	{
 		setPixel(x, y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back({ x, y });
+		glFlush();
+		Sleep(showTime);
 #endif
 		floodFill8(x + 1, y, fillColor, interiorColor);
 		floodFill8(x - 1, y, fillColor, interiorColor);
@@ -10215,7 +10182,8 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& interiorColor)
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
+		glFlush();
+		Sleep(showTime);
 #endif		
 		curPoint.x++;
 	}
@@ -10245,7 +10213,8 @@ void fill8Connected(std::list<Point>& pointStack, const Color3f& interiorColor)
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
+		glFlush();
+		Sleep(showTime);
 #endif		
 		curPoint.x++;
 	}
@@ -10307,24 +10276,6 @@ void drawFunc()
 	floodFill4ByStack(600, 300, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 
 	glFlush();
-
-#ifdef SHOW_DRAW
-	glClear(GL_COLOR_BUFFER_BIT);
-	drawRect(points1, colors);
-	drawRect(points2, colors);
-	drawRect(points3, colors);
-	drawRect(points4, colors);
-	glColor3f(1.0, 0.0, 0.0);
-	ellipseMidpoint(600, 300, 100, 50);
-
-	glColor3f(1.0, 1.0, 1.0);
-	for (auto& p : drawPoints)
-	{
-		Sleep(showTime);
-		setPixel(p.x, p.y);
-		glFlush();
-	}
-#endif	
 }
 void code_6_exercise_47()
 {
@@ -10333,6 +10284,11 @@ void code_6_exercise_47()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_48
+struct Point { int x; int y; };
+#define SHOW_DRAW // 显示绘制过程
+#ifdef SHOW_DRAW
+int showTime = 1; //毫秒
+#endif
 struct Color3f
 {
 	GLfloat r, g, b;
@@ -10343,7 +10299,6 @@ struct Stencil
 	int xc;
 	int yc;
 };
-struct Point { int x; int y; };
 struct Line
 {
 	int x0;
@@ -10369,6 +10324,11 @@ struct ActiveLine
 	SortedLine sortedLine;
 	int counter;
 	int currentX;
+};
+struct LineRecord
+{
+	int beginX;
+	int endX;
 };
 
 inline int Round(const float a)
@@ -10549,17 +10509,27 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		}
 	}
 }
+void setPixelByStencil(int x, int y, const Stencil& s, Point zeroPoint)
+{
+	int mapY = s.stencil.size() - 1 - (y - zeroPoint.y + s.yc) % s.stencil.size();
+	int mapX = (x - zeroPoint.x + s.xc) % (int)(s.stencil[0].size());
+	if (mapX < 0)
+		mapX += s.stencil[0].size();
+
+	if (s.stencil[mapY][mapX] == 1)
+	{
+		setPixel(x, y);
+#ifdef SHOW_DRAW
+		glFlush();
+		Sleep(showTime);
+#endif
+	}
+}
 void hLine(int y, int x0, int x1, const Stencil& s, Point zeroPoint)
 {
 	for (int x = x0; x <= x1; x++)
 	{
-		int mapY = s.stencil.size() - 1 - (y - zeroPoint.y + s.yc) % s.stencil.size();
-		int mapX = (x - zeroPoint.x + s.xc) % (int)(s.stencil[0].size());
-		if (mapX < 0)
-			mapX += s.stencil[0].size();
-
-		if (s.stencil[mapY][mapX] == 1)
-			setPixel(x, y);
+		setPixelByStencil(x, y, s, zeroPoint);
 	}
 }
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
@@ -10648,7 +10618,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point2 zeroPoint)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point zeroPoint)
 {
 	std::vector<Point> points;
 	for (int curY = beginY; curY < endY; curY++)
@@ -10729,31 +10699,48 @@ bool operator!=(const Color3f& c1, const Color3f& c2)
 {
 	return !(c1 == c2);
 }
-Point findLineBeginPoint(Point curPoint, const Color3f& interiorColor)
+Color3f getPixelColor(int x, int y)
+{
+	static Color3f ret = {};
+	ret = {};
+	glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &ret);
+	return ret;
+}
+bool newPixel(int x, int y, const Color3f& fillColor, const Color3f& borderColor, std::map<int, std::vector<LineRecord>>& lineRecord)
+{
+	if (lineRecord.find(y) != lineRecord.end())
+	{
+		for (auto& lineR : lineRecord[y])
+		{
+			if (lineR.beginX <= x && x <= lineR.endX)
+				return false;
+		}
+	}
+
+	return getPixelColor(x, y) != fillColor && getPixelColor(x, y) != borderColor;
+}
+Point findLineBeginPoint(Point curPoint, const Color3f& fillColor, const Color3f& borderColor, std::map<int, std::vector<LineRecord>>& lineRecord)
 {
 	Point ret = curPoint;
-	Color3f curColor = getPixelColor(ret.x, ret.y);
-	while (curColor == interiorColor)
+	while (newPixel(ret.x, ret.y, fillColor, borderColor, lineRecord))
 	{
 		ret.x--;
-		curColor = getPixelColor(ret.x, ret.y);
 	}
-	while (curColor != interiorColor)
+	while (!newPixel(ret.x, ret.y, fillColor, borderColor, lineRecord))
 	{
 		ret.x++;
-		curColor = getPixelColor(ret.x, ret.y);
 	}
 	return ret;
 }
-void stackLinePoints(Point begin, Point end, std::list<Point>& pointStack, const Color3f& interiorColor)
+void stackLinePoints(Point begin, Point end, std::list<Point>& pointStack, const Color3f& fillColor, const Color3f& borderColor, std::map<int, std::vector<LineRecord>>& lineRecord)
 {
-	Point curPoint = findLineBeginPoint(begin, interiorColor);
+	Point curPoint = findLineBeginPoint(begin, fillColor, borderColor, lineRecord);
 	if (curPoint.x <= end.x)
 	{
 		bool spaceRecording = false;
 		while (1)
 		{
-			if (getPixelColor(curPoint.x, curPoint.y) == interiorColor)
+			if (newPixel(curPoint.x, curPoint.y, fillColor, borderColor, lineRecord))
 			{
 				if (!spaceRecording)
 				{
@@ -10773,21 +10760,68 @@ void stackLinePoints(Point begin, Point end, std::list<Point>& pointStack, const
 		}
 	}
 }
-struct LineRecord
+void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, const Color3f& borderColor, std::map<int, std::vector<LineRecord>>& lineRecord, const Stencil& s, Point zeroPoint)
 {
-	int beginX;
-	int endX;
-};
-Color3f getPixelColor(int x, int y)
-{
-	static Color3f ret = {};
-	ret = {};
-	glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &ret);
-	return ret;
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (newPixel(curPoint.x, curPoint.y, fillColor, borderColor, lineRecord))
+	{
+		end = curPoint;
+		//setPixel(curPoint.x, curPoint.y);
+		setPixelByStencil(curPoint.x, curPoint.y, s, zeroPoint);		
+		curPoint.x++;
+	}
+	lineRecord[begin.y].push_back({ begin.x, end.x });
+
+	stackLinePoints({ begin.x, begin.y - 1 }, { end.x, end.y - 1 }, pointStack, fillColor, borderColor, lineRecord);
+	stackLinePoints({ begin.x, begin.y + 1 }, { end.x, end.y + 1 }, pointStack, fillColor, borderColor, lineRecord);
+	fill4Connected(pointStack, fillColor, borderColor, lineRecord, s, zeroPoint);
 }
-bool newPixel(int x, int y, const Color3f& fillColor, const Color3f& borderColor, std::map<int, std::vector<LineRecord>>& lineRecord)
+void boundaryFill4ByStack(int x, int y, Color3f fillColor, Color3f borderColor, const Stencil& s, Point zeroPoint)
 {
-	if (lineRecord.find(y) != lineRecord.end)
+	std::list<Point> pointStack;
+	std::map<int, std::vector<LineRecord>> lineRecord;
+	pointStack.push_front(findLineBeginPoint({ x, y }, fillColor, borderColor, lineRecord));
+	fill4Connected(pointStack, fillColor, borderColor, lineRecord, s, zeroPoint);
+}
+void fill8Connected(std::list<Point>& pointStack, const Color3f& fillColor, const Color3f& borderColor, std::map<int, std::vector<LineRecord>>& lineRecord, const Stencil& s, Point zeroPoint)
+{
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (newPixel(curPoint.x, curPoint.y, fillColor, borderColor, lineRecord))
+	{
+		end = curPoint;
+		//setPixel(curPoint.x, curPoint.y);
+		setPixelByStencil(curPoint.x, curPoint.y, s, zeroPoint);	
+		curPoint.x++;
+	}
+	lineRecord[begin.y].push_back({ begin.x, end.x });
+	stackLinePoints({ begin.x - 1, begin.y - 1 }, { end.x + 1, end.y - 1 }, pointStack, fillColor, borderColor, lineRecord);
+	stackLinePoints({ begin.x - 1, begin.y + 1 }, { end.x + 1, end.y + 1 }, pointStack, fillColor, borderColor, lineRecord);
+	fill8Connected(pointStack, fillColor, borderColor, lineRecord, s, zeroPoint);
+}
+void boundaryFill8ByStack(int x, int y, Color3f fillColor, Color3f borderColor, const Stencil& s, Point zeroPoint)
+{
+	std::list<Point> pointStack;
+	std::map<int, std::vector<LineRecord>> lineRecord;
+	pointStack.push_front(findLineBeginPoint({ x, y }, fillColor, borderColor, lineRecord));
+	fill8Connected(pointStack, fillColor, borderColor, lineRecord, s, zeroPoint);
+}
+bool newPixelFlood(int x, int y, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord)
+{
+	if (lineRecord.find(y) != lineRecord.end())
 	{
 		for (auto& lineR : lineRecord[y])
 		{
@@ -10796,7 +10830,426 @@ bool newPixel(int x, int y, const Color3f& fillColor, const Color3f& borderColor
 		}
 	}
 
-	return getPixelColor(x, y) != fillColor && getPixelColor(x, y) != borderColor;
+	return getPixelColor(x, y) == interiorColor;
+}
+Point findLineBeginPointFlood(Point curPoint, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord)
+{
+	Point ret = curPoint;
+	while (newPixelFlood(ret.x, ret.y, interiorColor, lineRecord))
+	{
+		ret.x--;
+	}
+	while (!newPixelFlood(ret.x, ret.y, interiorColor, lineRecord))
+	{
+		ret.x++;
+	}
+	return ret;
+}
+void stackLinePointsFlood(Point begin, Point end, std::list<Point>& pointStack, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord)
+{
+	Point curPoint = findLineBeginPointFlood(begin, interiorColor, lineRecord);
+	if (curPoint.x <= end.x)
+	{
+		bool spaceRecording = false;
+		while (1)
+		{
+			if (newPixelFlood(curPoint.x, curPoint.y, interiorColor, lineRecord))
+			{
+				if (!spaceRecording)
+				{
+					spaceRecording = true;
+					pointStack.push_front(curPoint);
+				}
+			}
+			else
+			{
+				spaceRecording = false;
+			}
+
+			if (curPoint.x >= end.x)
+				return;
+
+			curPoint.x++;
+		}
+	}
+}
+void fill4ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord, const Stencil& s, Point zeroPoint)
+{
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (newPixelFlood(curPoint.x, curPoint.y, interiorColor, lineRecord))
+	{
+		end = curPoint;
+		//setPixel(curPoint.x, curPoint.y);
+		setPixelByStencil(curPoint.x, curPoint.y, s, zeroPoint);		
+		curPoint.x++;
+	}
+	lineRecord[begin.y].push_back({ begin.x, end.x });
+
+	stackLinePointsFlood({ begin.x, begin.y - 1 }, { end.x, end.y - 1 }, pointStack, interiorColor, lineRecord);
+	stackLinePointsFlood({ begin.x, begin.y + 1 }, { end.x, end.y + 1 }, pointStack, interiorColor, lineRecord);
+	fill4ConnectedFlood(pointStack, interiorColor, lineRecord, s, zeroPoint);
+}
+void floodFill4ByStack(int x, int y, Color3f interiorColor, const Stencil& s, Point zeroPoint)
+{
+	std::list<Point> pointStack;
+	std::map<int, std::vector<LineRecord>> lineRecord;
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor, lineRecord));
+	fill4ConnectedFlood(pointStack, interiorColor, lineRecord, s, zeroPoint);
+}
+void fill8ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord, const Stencil& s, Point zeroPoint)
+{
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (newPixelFlood(curPoint.x, curPoint.y, interiorColor, lineRecord))
+	{
+		end = curPoint;
+		//setPixel(curPoint.x, curPoint.y);
+		setPixelByStencil(curPoint.x, curPoint.y, s, zeroPoint);	
+		curPoint.x++;
+	}
+	lineRecord[begin.y].push_back({ begin.x, end.x });
+	stackLinePointsFlood({ begin.x - 1, begin.y - 1 }, { end.x + 1, end.y - 1 }, pointStack, interiorColor, lineRecord);
+	stackLinePointsFlood({ begin.x - 1, begin.y + 1 }, { end.x + 1, end.y + 1 }, pointStack, interiorColor, lineRecord);
+	fill8ConnectedFlood(pointStack, interiorColor, lineRecord, s, zeroPoint);
+}
+void floodFill8ByStack(int x, int y, Color3f interiorColor, const Stencil& s, Point zeroPoint)
+{
+	std::list<Point> pointStack;
+	std::map<int, std::vector<LineRecord>> lineRecord;
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor, lineRecord));
+	fill8ConnectedFlood(pointStack, interiorColor, lineRecord, s, zeroPoint);
+}
+void drawRect(const std::vector<Point>& points)
+{
+	for (int i = 0, j = 0; i < points.size(); i++, j++)
+	{
+		int next = i + 1 >= points.size() ? 0 : i + 1;
+		lineBres(points[i].x, points[i].y, points[next].x, points[next].y);
+	}
+}
+void drawRect(const std::vector<Point>& points, const std::vector<Color3f>& colors)
+{
+	for (int i = 0, j = 0; i < points.size(); i++, j++)
+	{
+		int next = i + 1 >= points.size() ? 0 : i + 1;
+		auto color = colors[j = j >= colors.size() ? 0 : j];
+		glColor3f(color.r, color.g, color.b);
+		lineBres(points[i].x, points[i].y, points[next].x, points[next].y);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> points1 = { {76, 207},{125, 150},{185, 205},{235, 150},{220, 313},{155, 425} };
+	std::vector<Point> points2 = { { 350, 350 },{ 401, 350 },{ 401, 399 },{ 450, 399 },{ 450, 450 },{ 400, 450 },{ 400, 400 },{ 350, 400 } };
+	std::vector<Point> points3 = { { 550, 350 },{ 601, 350 },{ 601, 399 },{ 650, 399 },{ 650, 450 },{ 600, 450 },{ 600, 400 },{ 550, 400 } };
+	std::vector<Point> points4 = { { 350, 150 },{ 401, 150 },{ 401, 199 },{ 450, 199 },{ 450, 250 },{ 400, 250 },{ 400, 200 },{ 350, 200 } };
+	std::vector<Point> points5 = { { 550, 150 },{ 601, 150 },{ 601, 199 },{ 650, 199 },{ 650, 250 },{ 600, 250 },{ 600, 200 },{ 550, 200 } };
+	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ 0.f, 0.f, 1.f } };
+
+	Stencil s = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+		}, 0, 0 };
+
+	// 扫描线填充
+	drawRect(points1);
+	fillPolygon(points1, s, { 0, 0 });
+
+	// 边界填充
+	// 4联通（使用堆栈）
+	drawRect(points2);
+	boundaryFill4ByStack(370, 370, {1.f, 1.f, 1.f}, { 1.f, 1.f, 1.f }, s, { 0, 0 });
+
+	// 8联通（使用堆栈）
+	drawRect(points3);
+	boundaryFill8ByStack(570, 370, { 1.f, 1.f, 1.f }, { 1.f, 1.f, 1.f }, s, { 0, 0 });
+
+	// 泛滥填充
+	// 4联通（使用堆栈）
+	drawRect(points4, colors);
+	glColor3f(1.0, 1.0, 1.0);
+	floodFill4ByStack(370, 170, { 0.f, 0.f, 0.f }, s, { 0, 0 });
+
+	// 8联通（使用堆栈）
+	drawRect(points5, colors);
+	glColor3f(1.0, 1.0, 1.0);
+	floodFill8ByStack(570, 170, { 0.f, 0.f, 0.f }, s, { 0, 0 });
+
+	glFlush();
+}
+void code_6_exercise_48()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_49
+struct Point { int x; int y; };
+#define SHOW_DRAW // 显示绘制过程
+#ifdef SHOW_DRAW
+int showTime = 1; //毫秒
+#endif
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
+}
+bool operator==(const Color3f& c1, const Color3f& c2)
+{
+	return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
+bool operator!=(const Color3f& c1, const Color3f& c2)
+{
+	return !(c1 == c2);
+}
+Color3f getPixelColor(int x, int y)
+{
+	static Color3f ret = {};
+	ret = {};
+	glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &ret);
+	return ret;
+}
+struct Color3d
+{
+	GLdouble r, g, b;
+};
+Point findLineBeginPoint(Point curPoint, const Color3f& fillColor, const Color3f& borderColor)
+{
+	Point ret = curPoint;
+	Color3f curColor = getPixelColor(ret.x, ret.y);
+	while (curColor != fillColor && curColor != borderColor)
+	{
+		ret.x--;
+		curColor = getPixelColor(ret.x, ret.y);
+	}
+	while (curColor == fillColor || curColor == borderColor)
+	{
+		ret.x++;
+		curColor = getPixelColor(ret.x, ret.y);
+	}
+	return ret;
+}
+void stackLinePoints(Point begin, Point end, std::list<Point>& pointStack, const Color3f& fillColor, const Color3f& borderColor)
+{
+	Point curPoint = findLineBeginPoint(begin, fillColor, borderColor);
+	if (curPoint.x <= end.x)
+	{
+		bool spaceRecording = false;
+		while (1)
+		{
+			if (getPixelColor(curPoint.x, curPoint.y) != fillColor && getPixelColor(curPoint.x, curPoint.y) != borderColor)
+			{
+				if (!spaceRecording)
+				{
+					spaceRecording = true;
+					pointStack.push_front(curPoint);
+				}
+			}
+			else
+			{
+				spaceRecording = false;
+			}
+
+			if (curPoint.x >= end.x)
+				return;
+
+			curPoint.x++;
+		}
+	}
 }
 void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, const Color3f& borderColor)
 {
@@ -10813,7 +11266,8 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, cons
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
 #ifdef SHOW_DRAW
-		drawPoints.push_back(curPoint);
+		glFlush();
+		Sleep(showTime);
 #endif		
 		curPoint.x++;
 	}
@@ -10836,42 +11290,36 @@ void drawRect(const std::vector<Point>& points)
 		lineBres(points[i].x, points[i].y, points[next].x, points[next].y);
 	}
 }
+void drawRect(const std::vector<Point>& points, const std::vector<Color3f>& colors)
+{
+	for (int i = 0, j = 0; i < points.size(); i++, j++)
+	{
+		int next = i + 1 >= points.size() ? 0 : i + 1;
+		auto color = colors[j = j >= colors.size() ? 0 : j];
+		glColor3f(color.r, color.g, color.b);
+		lineBres(points[i].x, points[i].y, points[next].x, points[next].y);
+	}
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> points1 = { {76, 207},{125, 150},{185, 205},{235, 150},{220, 313},{155, 425} };
-	
-	Stencil s = {
-		{
-			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
-			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-			{ 0, 0, 1, 1, 1, 1, 1, 0, 0 },
-			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
-			{ 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
-		}, 0, 0 };
-
-	// 扫描线填充
-	//drawRect(points1);
-	//fillPolygon(points1, s, {0, 0});
-
-	// 边界填充
-	// 
+	std::vector<Point> points1 = { { 100, 350 },{ 151, 350 },{ 151, 399 },{ 200, 399 },{ 200, 450 },{ 150, 450 },{ 150, 400 },{ 100, 400 } };
+	std::vector<Point> points2 = { { 300, 350 },{ 351, 350 },{ 351, 399 },{ 400, 399 },{ 400, 450 },{ 350, 450 },{ 350, 400 },{ 300, 400 } };
+	std::vector<Point> points3 = { { 100, 150 },{ 151, 150 },{ 151, 199 },{ 200, 199 },{ 200, 250 },{ 150, 250 },{ 150, 200 },{ 100, 200 } };
+	std::vector<Point> points4 = { { 300, 150 },{ 351, 150 },{ 351, 199 },{ 400, 199 },{ 400, 250 },{ 350, 250 },{ 350, 200 },{ 300, 200 } };
+	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ 0.f, 0.f, 1.f } };
+	// 4联通
+	glColor3f(1.0, 1.0, 1.0);
 	drawRect(points1);
-	fillPolygon(points1, s, { 0, 0 });
+	glColor3f(0.75, 0.75, 0.75);
+	boundaryFill4ByStack(120, 370, { 0.75, 0.75, 0.75 }, { 1.0, 1.0, 1.0 });
 
-	//for (int i = 0; i < 1000; i++)
-	//{
-	//	hLine(i, 0, 1000, s, { 4, 4 });
-	//}
+
 	glFlush();
 }
-void code_6_exercise_48()
+void code_6_exercise_49()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -11123,6 +11571,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_48
 	code_6_exercise_48();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_49
+	code_6_exercise_49();
 #endif
 
 	glutMainLoop();
