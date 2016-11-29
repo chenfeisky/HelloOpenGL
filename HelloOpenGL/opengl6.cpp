@@ -11323,6 +11323,16 @@ bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2)
 }
 bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2, ColorMix& c3)
 {
+	float D = (c1.color.r - c3.color.r)*(c2.color.g - c3.color.g) - (c2.color.r - c3.color.r)*(c1.color.g - c3.color.g);
+	if (Equal(D, 0))
+	{
+		return false;
+	}
+	float D1 = (current.r - c3.color.r)*(c2.color.g - c3.color.g) - (c2.color.r - c3.color.r)*(current.g - c3.color.g);
+	float D2 = (c1.color.r - c3.color.r)*(current.g - c3.color.g) - (current.r - c3.color.r)*(c1.color.g - c3.color.g);
+	c1.percent = D1 / D;
+	c2.percent = D2 / D;
+	c3.percent = 1 - c1.percent - c2.percent;
 	return true;
 }
 void drawFunc()
@@ -11338,15 +11348,29 @@ void drawFunc()
 
 	// ±ß½çÌî³ä
 	// 4ÁªÍ¨
-	drawRect(points1);
-	glColor3f(0.5, 0.5, 0.5);
-	SHOW_DRAW = false;
-	boundaryFill4ByStack(120, 370, { 0.5, 0.5, 0.5 }, { 1.0, 1.0, 1.0 });
+	//drawRect(points1);
+	//glColor3f(0.5, 0.5, 0.5);
+	//SHOW_DRAW = false;
+	//boundaryFill4ByStack(120, 370, { 0.5, 0.5, 0.5 }, { 1.0, 1.0, 1.0 });
 
-	ColorMix F = { { 1.0, 1.0, 1.0 },0 };
+	//ColorMix F = { { 1.0, 1.0, 1.0 },0 };
+	//ColorMix B = { { 0.0, 0.0, 0.0 },0 };
+	//calcFillParam(getPixelColor(120, 370), F, B);
+	//auto c = mixColors({ {{ 1.0, 0.0, 0.0 },F.percent},B });
+	//glColor3f(c.r, c.g, c.b);
+	//SHOW_DRAW = true;
+	//boundaryFill4ByStack(120, 370, c, { 1.0, 1.0, 1.0 });
+
+	drawRect(points1);
+	glColor3f(0.5, 0.5, 0.0);
+	SHOW_DRAW = false;
+	boundaryFill4ByStack(120, 370, { 0.5, 0.5, 0.0 }, { 1.0, 1.0, 1.0 });
+
+	ColorMix F1 = { { 1.0, 0.0, 0.0 },0 };
+	ColorMix F2 = { { 0.0, 1.0, 0.0 },0 };
 	ColorMix B = { { 0.0, 0.0, 0.0 },0 };
-	calcFillParam(getPixelColor(120, 370), F, B);
-	auto c = mixColors({ {{ 1.0, 0.0, 0.0 },F.percent},B });
+	calcFillParam(getPixelColor(120, 370), F1, F2, B);
+	auto c = mixColors({ { { 0.0, 1.0, 0.0 },F1.percent },{ { 0.0, 0.0, 1.0 },F2.percent },B });
 	glColor3f(c.r, c.g, c.b);
 	SHOW_DRAW = true;
 	boundaryFill4ByStack(120, 370, c, { 1.0, 1.0, 1.0 });
