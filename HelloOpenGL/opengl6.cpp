@@ -11009,14 +11009,17 @@ void code_6_exercise_48()
 
 #ifdef CHAPTER_6_EXERCISE_49
 struct Point { int x; int y; };
-#define SHOW_DRAW // 显示绘制过程
-#ifdef SHOW_DRAW
-int showTime = 1; //毫秒
-#endif
 struct Color3f
 {
 	GLfloat r, g, b;
 };
+struct ColorMix
+{
+	Color3f color;
+	float percent;
+};
+bool SHOW_DRAW = true; // 显示绘制过程
+int showTime = 1; //毫秒
 // 0<m<1
 void lineBres1(int x0, int y0, int xEnd, int yEnd)
 {
@@ -11188,9 +11191,10 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		}
 	}
 }
+bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.01; }
 bool operator==(const Color3f& c1, const Color3f& c2)
 {
-	return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+	return Equal(c1.r, c2.r) && Equal(c1.g, c2.g) && Equal(c1.b, c2.b);
 }
 bool operator!=(const Color3f& c1, const Color3f& c2)
 {
@@ -11203,10 +11207,6 @@ Color3f getPixelColor(int x, int y)
 	glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &ret);
 	return ret;
 }
-struct Color3d
-{
-	GLdouble r, g, b;
-};
 Point findLineBeginPoint(Point curPoint, const Color3f& fillColor, const Color3f& borderColor)
 {
 	Point ret = curPoint;
@@ -11265,10 +11265,11 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& fillColor, cons
 	{
 		end = curPoint;
 		setPixel(curPoint.x, curPoint.y);
-#ifdef SHOW_DRAW
-		glFlush();
-		Sleep(showTime);
-#endif		
+		if (SHOW_DRAW)
+		{
+			glFlush();
+			Sleep(showTime);
+		}	
 		curPoint.x++;
 	}
 
@@ -11300,6 +11301,30 @@ void drawRect(const std::vector<Point>& points, const std::vector<Color3f>& colo
 		lineBres(points[i].x, points[i].y, points[next].x, points[next].y);
 	}
 }
+Color3f mixColors(const std::vector<ColorMix>& colors)
+{
+	Color3f ret = {0, 0, 0};
+	for (auto& c : colors)
+	{
+		ret.r += c.color.r * c.percent;
+		ret.g += c.color.g * c.percent;
+		ret.b += c.color.b * c.percent;
+	}
+	return ret;
+}
+bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2)
+{
+	if (Equal(c1.color.r, c2.color.r))
+		return false;
+
+	c1.percent = (current.r - c2.color.r) / (c1.color.r - c2.color.r);
+	c2.percent = 1 - c1.percent;
+	return true;
+}
+bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2, ColorMix& c3)
+{
+	return true;
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -11310,12 +11335,21 @@ void drawFunc()
 	std::vector<Point> points3 = { { 100, 150 },{ 151, 150 },{ 151, 199 },{ 200, 199 },{ 200, 250 },{ 150, 250 },{ 150, 200 },{ 100, 200 } };
 	std::vector<Point> points4 = { { 300, 150 },{ 351, 150 },{ 351, 199 },{ 400, 199 },{ 400, 250 },{ 350, 250 },{ 350, 200 },{ 300, 200 } };
 	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ 0.f, 0.f, 1.f } };
-	// 4联通
-	glColor3f(1.0, 1.0, 1.0);
-	drawRect(points1);
-	glColor3f(0.75, 0.75, 0.75);
-	boundaryFill4ByStack(120, 370, { 0.75, 0.75, 0.75 }, { 1.0, 1.0, 1.0 });
 
+	// 边界填充
+	// 4联通
+	drawRect(points1);
+	glColor3f(0.5, 0.5, 0.5);
+	SHOW_DRAW = false;
+	boundaryFill4ByStack(120, 370, { 0.5, 0.5, 0.5 }, { 1.0, 1.0, 1.0 });
+
+	ColorMix F = { { 1.0, 1.0, 1.0 },0 };
+	ColorMix B = { { 0.0, 0.0, 0.0 },0 };
+	calcFillParam(getPixelColor(120, 370), F, B);
+	auto c = mixColors({ {{ 1.0, 0.0, 0.0 },F.percent},B });
+	glColor3f(c.r, c.g, c.b);
+	SHOW_DRAW = true;
+	boundaryFill4ByStack(120, 370, c, { 1.0, 1.0, 1.0 });
 
 	glFlush();
 }
