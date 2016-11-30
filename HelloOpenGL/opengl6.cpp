@@ -11283,6 +11283,147 @@ void boundaryFill4ByStack(int x, int y, Color3f fillColor, Color3f borderColor)
 	pointStack.push_front(findLineBeginPoint({ x, y }, fillColor, borderColor));
 	fill4Connected(pointStack, fillColor, borderColor);
 }
+void fill8Connected(std::list<Point>& pointStack, const Color3f& fillColor, const Color3f& borderColor)
+{
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (getPixelColor(curPoint.x, curPoint.y) != fillColor && getPixelColor(curPoint.x, curPoint.y) != borderColor)
+	{
+		end = curPoint;
+		setPixel(curPoint.x, curPoint.y);
+		if (SHOW_DRAW)
+		{
+			glFlush();
+			Sleep(showTime);
+		}
+		curPoint.x++;
+	}
+
+	stackLinePoints({ begin.x - 1, begin.y - 1 }, { end.x + 1, end.y - 1 }, pointStack, fillColor, borderColor);
+	stackLinePoints({ begin.x - 1, begin.y + 1 }, { end.x + 1, end.y + 1 }, pointStack, fillColor, borderColor);
+	fill8Connected(pointStack, fillColor, borderColor);
+}
+void boundaryFill8ByStack(int x, int y, Color3f fillColor, Color3f borderColor)
+{
+	std::list<Point> pointStack;
+	pointStack.push_front(findLineBeginPoint({ x, y }, fillColor, borderColor));
+	fill8Connected(pointStack, fillColor, borderColor);
+}
+Point findLineBeginPointFlood(Point curPoint, const Color3f& interiorColor)
+{
+	Point ret = curPoint;
+	Color3f curColor = getPixelColor(ret.x, ret.y);
+	while (curColor == interiorColor)
+	{
+		ret.x--;
+		curColor = getPixelColor(ret.x, ret.y);
+	}
+	while (curColor != interiorColor)
+	{
+		ret.x++;
+		curColor = getPixelColor(ret.x, ret.y);
+	}
+	return ret;
+}
+void stackLinePointsFlood(Point begin, Point end, std::list<Point>& pointStack, const Color3f& interiorColor)
+{
+	Point curPoint = findLineBeginPointFlood(begin, interiorColor);
+	if (curPoint.x <= end.x)
+	{
+		bool spaceRecording = false;
+		while (1)
+		{
+			if (getPixelColor(curPoint.x, curPoint.y) == interiorColor)
+			{
+				if (!spaceRecording)
+				{
+					spaceRecording = true;
+					pointStack.push_front(curPoint);
+				}
+			}
+			else
+			{
+				spaceRecording = false;
+			}
+
+			if (curPoint.x >= end.x)
+				return;
+
+			curPoint.x++;
+		}
+	}
+}
+void fill4ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorColor)
+{
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (getPixelColor(curPoint.x, curPoint.y) == interiorColor)
+	{
+		end = curPoint;
+		setPixel(curPoint.x, curPoint.y);
+		if (SHOW_DRAW)
+		{
+			glFlush();
+			Sleep(showTime);
+		}
+		curPoint.x++;
+	}
+
+	stackLinePointsFlood({ begin.x, begin.y - 1 }, { end.x, end.y - 1 }, pointStack, interiorColor);
+	stackLinePointsFlood({ begin.x, begin.y + 1 }, { end.x, end.y + 1 }, pointStack, interiorColor);
+	fill4ConnectedFlood(pointStack, interiorColor);
+}
+void floodFill4ByStack(int x, int y, Color3f fillColor, Color3f interiorColor)
+{
+	std::list<Point> pointStack;
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor));
+	fill4ConnectedFlood(pointStack, interiorColor);
+}
+void fill8ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorColor)
+{
+	if (pointStack.empty())
+		return;
+
+	auto curPoint = pointStack.front();
+	pointStack.pop_front();
+
+	Point begin = curPoint;
+	Point end = curPoint;
+	while (getPixelColor(curPoint.x, curPoint.y) == interiorColor)
+	{
+		end = curPoint;
+		setPixel(curPoint.x, curPoint.y);
+		if (SHOW_DRAW)
+		{
+			glFlush();
+			Sleep(showTime);
+		}
+		curPoint.x++;
+	}
+
+	stackLinePointsFlood({ begin.x - 1, begin.y - 1 }, { end.x + 1, end.y - 1 }, pointStack, interiorColor);
+	stackLinePointsFlood({ begin.x - 1, begin.y + 1 }, { end.x + 1, end.y + 1 }, pointStack, interiorColor);
+	fill8ConnectedFlood(pointStack, interiorColor);
+}
+void floodFill8ByStack(int x, int y, Color3f fillColor, Color3f interiorColor)
+{
+	std::list<Point> pointStack;
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor));
+	fill8ConnectedFlood(pointStack, interiorColor);
+}
+
 void drawRect(const std::vector<Point>& points)
 {
 	for (int i = 0, j = 0; i < points.size(); i++, j++)
@@ -11335,6 +11476,181 @@ bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2, ColorMix& c3)
 	c3.percent = 1 - c1.percent - c2.percent;
 	return true;
 }
+float calcDet(const std::vector<std::vector<float>>& det)
+{
+	assert(det.size() && det.size() == det[0].size());
+	if (det.size() == 2)
+	{
+		return det[0][0] * det[1][1] - det[0][1] * det[1][0];
+	}
+	else
+	{
+		return det[0][0] * det[1][1] * det[2][2] + det[0][1] * det[1][2] * det[2][0] + det[0][2] * det[1][0] * det[2][1]
+			- det[0][2] * det[1][1] * det[2][0] - det[0][1] * det[1][0] * det[2][2] - det[0][0] * det[1][2] * det[2][1];
+	}
+}
+bool calcFillParam(Color3f current, std::vector<ColorMix>& colors)
+{
+	if (colors.size() == 0 || colors.size() == 1)
+	{
+		return false;
+	}
+	else if (colors.size() == 2)
+	{
+		if (Equal(colors[0].color.r, colors[1].color.r))
+			return false;
+		colors[0].percent = (current.r - colors[1].color.r) / (colors[0].color.r - colors[1].color.r);
+		colors[1].percent = 1 - colors[0].percent;
+		return true;
+	}
+	else if (colors.size() == 3)
+	{
+		std::vector<std::vector<float>> detD = {
+			{ colors[0].color.r - colors[2].color.r, colors[1].color.r - colors[2].color.r},
+			{ colors[0].color.g - colors[2].color.g, colors[1].color.g - colors[2].color.g}, };
+		std::vector<std::vector<float>> detD1 = {
+			{ current.r - colors[2].color.r, colors[1].color.r - colors[2].color.r },
+			{ current.g - colors[2].color.g, colors[1].color.g - colors[2].color.g }, };
+		std::vector<std::vector<float>> detD2 = {
+			{ colors[0].color.r - colors[2].color.r, current.r - colors[2].color.r },
+			{ colors[0].color.g - colors[2].color.g, current.g - colors[2].color.g }, };
+
+
+		float D = calcDet(detD);
+		if (Equal(D, 0))
+			return false;
+		float D1 = calcDet(detD1);
+		float D2 = calcDet(detD2);
+		colors[0].percent = D1 / D;
+		colors[1].percent = D2 / D;
+		colors[2].percent = 1 - colors[0].percent - colors[1].percent;
+		return true;
+	}
+	else if (colors.size() == 4)
+	{
+		std::vector<std::vector<float>> detD = {
+			{ colors[0].color.r - colors[3].color.r, colors[1].color.r - colors[3].color.r, colors[2].color.r - colors[3].color.r },
+			{ colors[0].color.g - colors[3].color.g, colors[1].color.g - colors[3].color.g, colors[2].color.g - colors[3].color.g },
+			{ colors[0].color.b - colors[3].color.b, colors[1].color.b - colors[3].color.b, colors[2].color.b - colors[3].color.b }, };
+		std::vector<std::vector<float>> detD1 = {
+			{ current.r - colors[3].color.r, colors[1].color.r - colors[3].color.r, colors[2].color.r - colors[3].color.r },
+			{ current.g - colors[3].color.g, colors[1].color.g - colors[3].color.g, colors[2].color.g - colors[3].color.g },
+			{ current.b - colors[3].color.b, colors[1].color.b - colors[3].color.b, colors[2].color.b - colors[3].color.b }, };
+		std::vector<std::vector<float>> detD2 = {
+			{ colors[0].color.r - colors[3].color.r, current.r - colors[3].color.r, colors[2].color.r - colors[3].color.r },
+			{ colors[0].color.g - colors[3].color.g, current.g - colors[3].color.g, colors[2].color.g - colors[3].color.g },
+			{ colors[0].color.b - colors[3].color.b, current.b - colors[3].color.b, colors[2].color.b - colors[3].color.b }, };
+		std::vector<std::vector<float>> detD3 = {
+			{ colors[0].color.r - colors[3].color.r, colors[1].color.r - colors[3].color.r, current.r - colors[3].color.r },
+			{ colors[0].color.g - colors[3].color.g, colors[1].color.g - colors[3].color.g, current.g - colors[3].color.g },
+			{ colors[0].color.b - colors[3].color.b, colors[1].color.b - colors[3].color.b, current.b - colors[3].color.b }, };
+		
+		float D = calcDet(detD);
+		float D1 = calcDet(detD1);
+		float D2 = calcDet(detD2);
+		float D3 = calcDet(detD3);
+		if (Equal(D, 0))
+			return false;
+		colors[0].percent = D1 / D;
+		colors[1].percent = D2 / D;
+		colors[2].percent = D3 / D;
+		colors[3].percent = 1 - colors[0].percent - colors[1].percent - colors[2].percent;
+		return true;
+	}
+	return false;
+}
+void linearSoftFillBoundary4(Point fillPoint, const std::vector<ColorMix>& sourceColors, const std::vector<Color3f>& newColors)
+{
+	assert(sourceColors.size() == newColors.size());
+
+	// 模拟出源填充
+	auto sourceColor = mixColors(sourceColors);
+	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
+	SHOW_DRAW = false;
+	boundaryFill4ByStack(fillPoint.x, fillPoint.y, sourceColor, { 1.0, 1.0, 1.0 });
+	
+	// 计算填充系数，并填充新颜色
+	std::vector<ColorMix> sourceColorsMix;
+	for (auto c : sourceColors)
+		sourceColorsMix.push_back({ c.color, 0.f });
+	assert(calcFillParam(getPixelColor(fillPoint.x, fillPoint.y), sourceColorsMix));
+	std::vector<ColorMix> newColorsMix;
+	for (int i = 0; i < newColors.size(); i++)
+		newColorsMix.push_back({ newColors[i], sourceColorsMix[i].percent });
+	auto newColor = mixColors(newColorsMix);
+	glColor3f(newColor.r, newColor.g, newColor.b);
+	SHOW_DRAW = true;
+	boundaryFill4ByStack(fillPoint.x, fillPoint.y, newColor, { 1.0, 1.0, 1.0 });
+}
+void linearSoftFillBoundary8(Point fillPoint, const std::vector<ColorMix>& sourceColors, const std::vector<Color3f>& newColors)
+{
+	assert(sourceColors.size() == newColors.size());
+
+	// 模拟出源填充
+	auto sourceColor = mixColors(sourceColors);
+	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
+	SHOW_DRAW = false;
+	boundaryFill8ByStack(fillPoint.x, fillPoint.y, sourceColor, { 1.0, 1.0, 1.0 });
+
+	// 计算填充系数，并填充新颜色
+	std::vector<ColorMix> sourceColorsMix;
+	for (auto c : sourceColors)
+		sourceColorsMix.push_back({ c.color, 0.f });
+	assert(calcFillParam(getPixelColor(fillPoint.x, fillPoint.y), sourceColorsMix));
+	std::vector<ColorMix> newColorsMix;
+	for (int i = 0; i < newColors.size(); i++)
+		newColorsMix.push_back({ newColors[i], sourceColorsMix[i].percent });
+	auto newColor = mixColors(newColorsMix);
+	glColor3f(newColor.r, newColor.g, newColor.b);
+	SHOW_DRAW = true;
+	boundaryFill8ByStack(fillPoint.x, fillPoint.y, newColor, { 1.0, 1.0, 1.0 });
+}
+void linearSoftFillFlood4(Point fillPoint, const std::vector<ColorMix>& sourceColors, const std::vector<Color3f>& newColors)
+{
+	assert(sourceColors.size() == newColors.size());
+
+	// 模拟出源填充
+	auto sourceColor = mixColors(sourceColors);
+	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
+	SHOW_DRAW = false;
+	floodFill4ByStack(fillPoint.x, fillPoint.y, sourceColor, { 0.0, 0.0, 0.0 });
+
+	// 计算填充系数，并填充新颜色
+	std::vector<ColorMix> sourceColorsMix;
+	for (auto c : sourceColors)
+		sourceColorsMix.push_back({ c.color, 0.f });
+	assert(calcFillParam(getPixelColor(fillPoint.x, fillPoint.y), sourceColorsMix));
+	std::vector<ColorMix> newColorsMix;
+	for (int i = 0; i < newColors.size(); i++)
+		newColorsMix.push_back({ newColors[i], sourceColorsMix[i].percent });
+	auto newColor = mixColors(newColorsMix);
+	glColor3f(newColor.r, newColor.g, newColor.b);
+	SHOW_DRAW = true;
+	floodFill4ByStack(fillPoint.x, fillPoint.y, newColor, sourceColor);
+}
+void linearSoftFillFlood8(Point fillPoint, const std::vector<ColorMix>& sourceColors, const std::vector<Color3f>& newColors)
+{
+	assert(sourceColors.size() == newColors.size());
+
+	// 模拟出源填充
+	auto sourceColor = mixColors(sourceColors);
+	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
+	SHOW_DRAW = false;
+	floodFill8ByStack(fillPoint.x, fillPoint.y, sourceColor, { 0.0, 0.0, 0.0 });
+
+	// 计算填充系数，并填充新颜色
+	std::vector<ColorMix> sourceColorsMix;
+	for (auto c : sourceColors)
+		sourceColorsMix.push_back({ c.color, 0.f });
+	assert(calcFillParam(getPixelColor(fillPoint.x, fillPoint.y), sourceColorsMix));
+	std::vector<ColorMix> newColorsMix;
+	for (int i = 0; i < newColors.size(); i++)
+		newColorsMix.push_back({ newColors[i], sourceColorsMix[i].percent });
+	auto newColor = mixColors(newColorsMix);
+	glColor3f(newColor.r, newColor.g, newColor.b);
+	SHOW_DRAW = false;
+	floodFill8ByStack(fillPoint.x, fillPoint.y, newColor, sourceColor);
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -11344,36 +11660,45 @@ void drawFunc()
 	std::vector<Point> points2 = { { 300, 350 },{ 351, 350 },{ 351, 399 },{ 400, 399 },{ 400, 450 },{ 350, 450 },{ 350, 400 },{ 300, 400 } };
 	std::vector<Point> points3 = { { 100, 150 },{ 151, 150 },{ 151, 199 },{ 200, 199 },{ 200, 250 },{ 150, 250 },{ 150, 200 },{ 100, 200 } };
 	std::vector<Point> points4 = { { 300, 150 },{ 351, 150 },{ 351, 199 },{ 400, 199 },{ 400, 250 },{ 350, 250 },{ 350, 200 },{ 300, 200 } };
+	std::vector<Point> points5 = { { 450, 150 },{ 501, 150 },{ 501, 199 },{ 550, 199 },{ 550, 250 },{ 500, 250 },{ 500, 200 },{ 450, 200 } };
+	std::vector<Point> points6 = { { 650, 150 },{ 701, 150 },{ 701, 199 },{ 750, 199 },{ 750, 250 },{ 700, 250 },{ 700, 200 },{ 650, 200 } };
+	
 	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ 0.f, 0.f, 1.f } };
 
-	// 边界填充
-	// 4联通
+	// 2种颜色（F+B）
 	//drawRect(points1);
-	//glColor3f(0.5, 0.5, 0.5);
-	//SHOW_DRAW = false;
-	//boundaryFill4ByStack(120, 370, { 0.5, 0.5, 0.5 }, { 1.0, 1.0, 1.0 });
+	//linearSoftFillBoundary4({ 120, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { {1.0, 0.0, 0.0},{ 0.0, 0.0, 0.0 } });
 
-	//ColorMix F = { { 1.0, 1.0, 1.0 },0 };
-	//ColorMix B = { { 0.0, 0.0, 0.0 },0 };
-	//calcFillParam(getPixelColor(120, 370), F, B);
-	//auto c = mixColors({ {{ 1.0, 0.0, 0.0 },F.percent},B });
-	//glColor3f(c.r, c.g, c.b);
-	//SHOW_DRAW = true;
-	//boundaryFill4ByStack(120, 370, c, { 1.0, 1.0, 1.0 });
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawRect(points2);
+	//linearSoftFillBoundary8({ 320, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { { 1.0, 0.0, 0.0 },{ 0.0, 0.0, 0.0 } });
 
-	drawRect(points1);
-	glColor3f(0.5, 0.5, 0.0);
-	SHOW_DRAW = false;
-	boundaryFill4ByStack(120, 370, { 0.5, 0.5, 0.0 }, { 1.0, 1.0, 1.0 });
+	//// 3种颜色（F+B1+B2或F1+F2+B）
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawRect(points3);
+	//linearSoftFillBoundary4(
+	//{ 120, 170 },
+	//{ { 1.0, 0.0, 0.0, 0.5 },{ 0.0, 1.0, 0.0, 0.5 }, { 0.0, 0.0, 0.0, 0 } },
+	//{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 }, { 0.0, 0.0, 0.0 } }
+	//);
 
-	ColorMix F1 = { { 1.0, 0.0, 0.0 },0 };
-	ColorMix F2 = { { 0.0, 1.0, 0.0 },0 };
-	ColorMix B = { { 0.0, 0.0, 0.0 },0 };
-	calcFillParam(getPixelColor(120, 370), F1, F2, B);
-	auto c = mixColors({ { { 0.0, 1.0, 0.0 },F1.percent },{ { 0.0, 0.0, 1.0 },F2.percent },B });
-	glColor3f(c.r, c.g, c.b);
-	SHOW_DRAW = true;
-	boundaryFill4ByStack(120, 370, c, { 1.0, 1.0, 1.0 });
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawRect(points4);
+	//linearSoftFillBoundary8(
+	//{ 320, 170 },
+	//{ { 1.0, 0.0, 0.0, 0.5 },{ 0.0, 1.0, 0.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } },
+	//{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 },{ 0.0, 0.0, 0.0 } }
+	//);
+
+	// 4种颜色（F+B1+B2+B3或F1+F2+B1+B2或F1+F2+F3+B）
+	drawRect(points5, colors);
+	linearSoftFillFlood4(
+	{ 470, 170 },
+	{ { 1.0, 1.0, 1.0, 0.3f },{ 0.5, 0.2f, 0.0, 0.2f },{ 0.0, 0.0, 1.0, 0.2f }, { 0.0, 0.0, 0.0, 0.3f } },
+	{ { 1.0f, 1.0f, 0.0f },{ 0.0f, 1.0f, 1.0f },{ 1.0f, 0.0f, 1.0f }, { 0.0, 0.0, 0.0 } }
+	);
+
+	drawRect(points6, colors);
 
 	glFlush();
 }
