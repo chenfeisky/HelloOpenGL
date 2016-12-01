@@ -11315,16 +11315,16 @@ void boundaryFill8ByStack(int x, int y, Color3f fillColor, Color3f borderColor)
 	pointStack.push_front(findLineBeginPoint({ x, y }, fillColor, borderColor));
 	fill8Connected(pointStack, fillColor, borderColor);
 }
-Point findLineBeginPointFlood(Point curPoint, const Color3f& interiorColor)
+Point findLineBeginPointFlood(Point begin, Point end, const Color3f& interiorColor)
 {
-	Point ret = curPoint;
+	Point ret = begin;
 	Color3f curColor = getPixelColor(ret.x, ret.y);
 	while (curColor == interiorColor)
 	{
 		ret.x--;
 		curColor = getPixelColor(ret.x, ret.y);
 	}
-	while (curColor != interiorColor)
+	while (curColor != interiorColor && ret.x <= end.x)
 	{
 		ret.x++;
 		curColor = getPixelColor(ret.x, ret.y);
@@ -11333,7 +11333,7 @@ Point findLineBeginPointFlood(Point curPoint, const Color3f& interiorColor)
 }
 void stackLinePointsFlood(Point begin, Point end, std::list<Point>& pointStack, const Color3f& interiorColor)
 {
-	Point curPoint = findLineBeginPointFlood(begin, interiorColor);
+	Point curPoint = findLineBeginPointFlood(begin, end, interiorColor);
 	if (curPoint.x <= end.x)
 	{
 		bool spaceRecording = false;
@@ -11388,7 +11388,7 @@ void fill4ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorCo
 void floodFill4ByStack(int x, int y, Color3f fillColor, Color3f interiorColor)
 {
 	std::list<Point> pointStack;
-	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor));
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, {9999, 9999}, interiorColor));
 	fill4ConnectedFlood(pointStack, interiorColor);
 }
 void fill8ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorColor)
@@ -11420,7 +11420,7 @@ void fill8ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorCo
 void floodFill8ByStack(int x, int y, Color3f fillColor, Color3f interiorColor)
 {
 	std::list<Point> pointStack;
-	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor));
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, {9999, 9999}, interiorColor));
 	fill8ConnectedFlood(pointStack, interiorColor);
 }
 
@@ -11648,7 +11648,7 @@ void linearSoftFillFlood8(Point fillPoint, const std::vector<ColorMix>& sourceCo
 		newColorsMix.push_back({ newColors[i], sourceColorsMix[i].percent });
 	auto newColor = mixColors(newColorsMix);
 	glColor3f(newColor.r, newColor.g, newColor.b);
-	SHOW_DRAW = false;
+	SHOW_DRAW = true;
 	floodFill8ByStack(fillPoint.x, fillPoint.y, newColor, sourceColor);
 }
 void drawFunc()
@@ -11666,31 +11666,31 @@ void drawFunc()
 	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ 0.f, 0.f, 1.f } };
 
 	// 2种颜色（F+B）
-	//drawRect(points1);
-	//linearSoftFillBoundary4({ 120, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { {1.0, 0.0, 0.0},{ 0.0, 0.0, 0.0 } });
+	drawRect(points1);
+	linearSoftFillBoundary4({ 120, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { {1.0, 0.0, 0.0},{ 0.0, 0.0, 0.0 } });
 
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawRect(points2);
-	//linearSoftFillBoundary8({ 320, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { { 1.0, 0.0, 0.0 },{ 0.0, 0.0, 0.0 } });
+	glColor3f(1.0, 1.0, 1.0);
+	drawRect(points2);
+	linearSoftFillBoundary8({ 320, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { { 1.0, 0.0, 0.0 },{ 0.0, 0.0, 0.0 } });
 
-	//// 3种颜色（F+B1+B2或F1+F2+B）
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawRect(points3);
-	//linearSoftFillBoundary4(
-	//{ 120, 170 },
-	//{ { 1.0, 0.0, 0.0, 0.5 },{ 0.0, 1.0, 0.0, 0.5 }, { 0.0, 0.0, 0.0, 0 } },
-	//{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 }, { 0.0, 0.0, 0.0 } }
-	//);
+	// 3种颜色（F+B1+B2或F1+F2+B）
+	glColor3f(1.0, 1.0, 1.0);
+	drawRect(points3);
+	linearSoftFillBoundary4(
+	{ 120, 170 },
+	{ { 1.0, 0.0, 0.0, 0.5 },{ 0.0, 1.0, 0.0, 0.5 }, { 0.0, 0.0, 0.0, 0 } },
+	{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 }, { 0.0, 0.0, 0.0 } }
+	);
 
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawRect(points4);
-	//linearSoftFillBoundary8(
-	//{ 320, 170 },
-	//{ { 1.0, 0.0, 0.0, 0.5 },{ 0.0, 1.0, 0.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } },
-	//{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 },{ 0.0, 0.0, 0.0 } }
-	//);
+	glColor3f(1.0, 1.0, 1.0);
+	drawRect(points4);
+	linearSoftFillBoundary8(
+	{ 320, 170 },
+	{ { 1.0, 0.0, 0.0, 0.5 },{ 0.0, 1.0, 0.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } },
+	{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 },{ 0.0, 0.0, 0.0 } }
+	);
 
-	// 4种颜色（F+B1+B2+B3或F1+F2+B1+B2或F1+F2+F3+B）
+	// 4种颜色（F + B1 + B2 + B3或F1 + F2 + B1 + B2或F1 + F2 + F3 + B）
 	drawRect(points5, colors);
 	linearSoftFillFlood4(
 	{ 470, 170 },
@@ -11699,6 +11699,11 @@ void drawFunc()
 	);
 
 	drawRect(points6, colors);
+	linearSoftFillFlood8(
+	{ 670, 170 },
+	{ { 1.0, 1.0, 1.0, 0.3f },{ 0.5, 0.2f, 0.0, 0.2f },{ 0.0, 0.0, 1.0, 0.2f },{ 0.0, 0.0, 0.0, 0.3f } },
+	{ { 1.0f, 1.0f, 0.0f },{ 0.0f, 1.0f, 1.0f },{ 1.0f, 0.0f, 1.0f },{ 0.0, 0.0, 0.0 } }
+	);
 
 	glFlush();
 }
