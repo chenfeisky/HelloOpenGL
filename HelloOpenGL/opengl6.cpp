@@ -10123,16 +10123,16 @@ void floodFill8(int x, int y, Color3f fillColor, Color3f interiorColor)
 		floodFill8(x - 1, y + 1, fillColor, interiorColor);
 	}
 }
-Point findLineBeginPoint(Point curPoint, const Color3f& interiorColor)
+Point findLineBeginPoint(Point begin, Point end, const Color3f& interiorColor)
 {
-	Point ret = curPoint;
+	Point ret = begin;
 	Color3f curColor = getPixelColor(ret.x, ret.y);
 	while (curColor == interiorColor)
 	{
 		ret.x--;
 		curColor = getPixelColor(ret.x, ret.y);
 	}
-	while (curColor != interiorColor)
+	while (curColor != interiorColor && ret.x <= end.x)
 	{
 		ret.x++;
 		curColor = getPixelColor(ret.x, ret.y);
@@ -10141,7 +10141,7 @@ Point findLineBeginPoint(Point curPoint, const Color3f& interiorColor)
 }
 void stackLinePoints(Point begin, Point end, std::list<Point>& pointStack, const Color3f& interiorColor)
 {
-	Point curPoint = findLineBeginPoint(begin, interiorColor);
+	Point curPoint = findLineBeginPoint(begin, end, interiorColor);
 	if (curPoint.x <= end.x)
 	{
 		bool spaceRecording = false;
@@ -10195,7 +10195,7 @@ void fill4Connected(std::list<Point>& pointStack, const Color3f& interiorColor)
 void floodFill4ByStack(int x, int y, Color3f fillColor, Color3f interiorColor)
 {
 	std::list<Point> pointStack;
-	pointStack.push_front(findLineBeginPoint({ x, y }, interiorColor));
+	pointStack.push_front(findLineBeginPoint({ x, y }, {9999, 9999}, interiorColor));
 	fill4Connected(pointStack, interiorColor);
 }
 void fill8Connected(std::list<Point>& pointStack, const Color3f& interiorColor)
@@ -10226,7 +10226,7 @@ void fill8Connected(std::list<Point>& pointStack, const Color3f& interiorColor)
 void floodFill8ByStack(int x, int y, Color3f fillColor, Color3f interiorColor)
 {
 	std::list<Point> pointStack;
-	pointStack.push_front(findLineBeginPoint({ x, y }, interiorColor));
+	pointStack.push_front(findLineBeginPoint({ x, y }, { 9999, 9999 }, interiorColor));
 	fill8Connected(pointStack, interiorColor);
 }
 void drawRect(const std::vector<Point>& points, const std::vector<Color3f>& colors)
@@ -10832,14 +10832,14 @@ bool newPixelFlood(int x, int y, const Color3f& interiorColor, std::map<int, std
 
 	return getPixelColor(x, y) == interiorColor;
 }
-Point findLineBeginPointFlood(Point curPoint, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord)
+Point findLineBeginPointFlood(Point begin, Point end, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord)
 {
-	Point ret = curPoint;
+	Point ret = begin;
 	while (newPixelFlood(ret.x, ret.y, interiorColor, lineRecord))
 	{
 		ret.x--;
 	}
-	while (!newPixelFlood(ret.x, ret.y, interiorColor, lineRecord))
+	while (!newPixelFlood(ret.x, ret.y, interiorColor, lineRecord) && ret.x <= end.x)
 	{
 		ret.x++;
 	}
@@ -10847,7 +10847,7 @@ Point findLineBeginPointFlood(Point curPoint, const Color3f& interiorColor, std:
 }
 void stackLinePointsFlood(Point begin, Point end, std::list<Point>& pointStack, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord)
 {
-	Point curPoint = findLineBeginPointFlood(begin, interiorColor, lineRecord);
+	Point curPoint = findLineBeginPointFlood(begin, end, interiorColor, lineRecord);
 	if (curPoint.x <= end.x)
 	{
 		bool spaceRecording = false;
@@ -10900,7 +10900,7 @@ void floodFill4ByStack(int x, int y, Color3f interiorColor, const Stencil& s, Po
 {
 	std::list<Point> pointStack;
 	std::map<int, std::vector<LineRecord>> lineRecord;
-	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor, lineRecord));
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, {9999, 9999}, interiorColor, lineRecord));
 	fill4ConnectedFlood(pointStack, interiorColor, lineRecord, s, zeroPoint);
 }
 void fill8ConnectedFlood(std::list<Point>& pointStack, const Color3f& interiorColor, std::map<int, std::vector<LineRecord>>& lineRecord, const Stencil& s, Point zeroPoint)
@@ -10929,7 +10929,7 @@ void floodFill8ByStack(int x, int y, Color3f interiorColor, const Stencil& s, Po
 {
 	std::list<Point> pointStack;
 	std::map<int, std::vector<LineRecord>> lineRecord;
-	pointStack.push_front(findLineBeginPointFlood({ x, y }, interiorColor, lineRecord));
+	pointStack.push_front(findLineBeginPointFlood({ x, y }, { 9999, 9999 }, interiorColor, lineRecord));
 	fill8ConnectedFlood(pointStack, interiorColor, lineRecord, s, zeroPoint);
 }
 void drawRect(const std::vector<Point>& points)
@@ -11453,41 +11453,73 @@ Color3f mixColors(const std::vector<ColorMix>& colors)
 	}
 	return ret;
 }
-bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2)
+int calcInverseNumberByBefore(const std::vector<int>& permutation)
 {
-	if (Equal(c1.color.r, c2.color.r))
-		return false;
-
-	c1.percent = (current.r - c2.color.r) / (c1.color.r - c2.color.r);
-	c2.percent = 1 - c1.percent;
-	return true;
-}
-bool calcFillParam(Color3f current, ColorMix& c1, ColorMix& c2, ColorMix& c3)
-{
-	float D = (c1.color.r - c3.color.r)*(c2.color.g - c3.color.g) - (c2.color.r - c3.color.r)*(c1.color.g - c3.color.g);
-	if (Equal(D, 0))
+	// 前向搜索更大数算法
+	int ret = 0;
+	for (int i = 0; i < permutation.size(); i++)
 	{
-		return false;
+		for (int j = 0; j < i; j++)
+		{
+			if (permutation[j] > permutation[i])
+				ret++;
+		}
 	}
-	float D1 = (current.r - c3.color.r)*(c2.color.g - c3.color.g) - (c2.color.r - c3.color.r)*(current.g - c3.color.g);
-	float D2 = (c1.color.r - c3.color.r)*(current.g - c3.color.g) - (current.r - c3.color.r)*(c1.color.g - c3.color.g);
-	c1.percent = D1 / D;
-	c2.percent = D2 / D;
-	c3.percent = 1 - c1.percent - c2.percent;
-	return true;
+	return ret;
+}
+int calcInverseNumberByAfter(const std::vector<int>& permutation)
+{
+	// 后向搜索更小数算法
+	int ret = 0;
+	for (int i = 0; i < permutation.size(); i++)
+	{
+		for (int j = i + 1; j < permutation.size(); j++)
+		{
+			if (permutation[j] < permutation[i])
+				ret++;
+		}
+	}
+	return ret;
+}
+void calcDetPermutations(std::map<int, bool>& info, std::vector<int>& current, std::vector<std::vector<int>>& result)
+{
+	for (int i = 0; i < info.size(); i++)
+	{
+		if (!info[i])
+		{
+			info[i] = true;
+
+			current.push_back(i);
+			if (current.size() >= info.size())
+				result.push_back(current);
+
+			calcDetPermutations(info, current, result);
+
+			info[i] = false;
+			current.pop_back();
+		}
+	}
 }
 float calcDet(const std::vector<std::vector<float>>& det)
 {
 	assert(det.size() && det.size() == det[0].size());
-	if (det.size() == 2)
+	std::vector<std::vector<int>> permutations;
+	std::map<int, bool> info;
+	for (int i = 0; i < det.size(); i++)
+		info[i] = false;
+	std::vector<int> current;
+	calcDetPermutations(info, current, permutations);
+
+	float ret = 0.f;
+	for (auto p : permutations)
 	{
-		return det[0][0] * det[1][1] - det[0][1] * det[1][0];
+		int t = calcInverseNumberByBefore(p);
+		float _ret = std::pow(-1, t);
+		for (int i = 0; i < p.size(); i++)
+			_ret *= det[i][p[i]];
+		ret += _ret;
 	}
-	else
-	{
-		return det[0][0] * det[1][1] * det[2][2] + det[0][1] * det[1][2] * det[2][0] + det[0][2] * det[1][0] * det[2][1]
-			- det[0][2] * det[1][1] * det[2][0] - det[0][1] * det[1][0] * det[2][2] - det[0][0] * det[1][2] * det[2][1];
-	}
+	return ret;
 }
 bool calcFillParam(Color3f current, std::vector<ColorMix>& colors)
 {
