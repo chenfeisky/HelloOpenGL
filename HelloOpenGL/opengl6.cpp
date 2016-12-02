@@ -11745,6 +11745,118 @@ void code_6_exercise_49()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_50
+struct Point { int x; int y; };
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+struct TextInfo
+{
+	int space;
+};
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void drawStencil(int x, int y, const Stencil& s)
+{
+	for (int i = 0; i < s.stencil.size(); i++)
+	{
+		for (int j = 0; j < s.stencil[i].size(); j++)
+		{
+			if(s.stencil[i][j] == 1)
+				setPixel(x + j, y + s.stencil.size() - 1 - i);
+		}
+	}
+}
+void drawString(int x, int y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+{
+	for (auto& c : str)
+	{
+		if(texts.find(c) != texts.end())
+		{
+			const Stencil& s = texts.find(c)->second;
+			drawStencil(x, y, s);
+			x += (s.stencil[0].size() + info.space);
+		}
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	Stencil A = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 0, 1, 0, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 1, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+		}, 0, 0 };
+	Stencil B = {
+		{
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+	Stencil C = {
+		{
+			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
+			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+
+	std::map<char, Stencil> texts;
+	texts['A'] = A;
+	texts['B'] = B;
+	texts['C'] = C;
+	TextInfo info = { 2 };
+	drawString(100, 100, "ABC", info, texts);
+
+	glFlush();
+}
+void code_6_exercise_50()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -11995,6 +12107,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_49
 	code_6_exercise_49();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_50
+	code_6_exercise_50();
 #endif
 
 	glutMainLoop();
