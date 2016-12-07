@@ -59,7 +59,8 @@
 //#define CHAPTER_6_EXERCISE_48	// 可指定图案填充起始点的 扫描线/边界/泛滥 填充算法 
 //#define CHAPTER_6_EXERCISE_49
 //#define CHAPTER_6_EXERCISE_50 // 字符图案填充
-#define CHAPTER_6_EXERCISE_51
+//#define CHAPTER_6_EXERCISE_51
+#define CHAPTER_6_EXERCISE_52
 
 
 #ifdef CHAPTER_6_1_2
@@ -295,5 +296,9 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_51
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_52
 #define CHAPTER_6_COMMON
 #endif

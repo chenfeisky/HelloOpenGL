@@ -11889,7 +11889,7 @@ inline int Round(const float a)
 	else
 		return int(a - 0.5);
 }
-void drawStencil(int x, int y, const Stencil& s, float rotate)
+void drawStencil(double x, double y, const Stencil& s, float rotate)
 {
 	float sin = std::sin(rotate);
 	float cos = std::cos(rotate);
@@ -11902,40 +11902,39 @@ void drawStencil(int x, int y, const Stencil& s, float rotate)
 				int curX = j;
 				int curY = s.stencil.size() - 1 - i;
 				
-				setPixel(x + Round(curX * cos - curY * sin), y + Round(curY * cos + curX * sin));
-			}
-				
+				setPixel(Round(x + curX * cos - curY * sin), Round(y + curY * cos + curX * sin));
+			}				
 		}
 	}
 }
 void drawString(int x, int y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
-	float rotate = -1 * PI / 2 + info.upVector;
-	float sin = std::sin(rotate);
-	float cos = std::cos(rotate);
+	double posX = x;
+	double posY = y;
+	float textRotate = -1 * PI / 2 + info.upVector;
 	for (auto& c : str)
 	{
 		if (texts.find(c) != texts.end())
 		{
 			const Stencil& s = texts.find(c)->second;
-			drawStencil(x, y, s, rotate);
+			drawStencil(posX, posY, s, textRotate);
 			switch (info.textPath)
 			{
 			case TextPath::UP:
-				x -= (s.stencil.size() + info.space) * sin;
-				y += (s.stencil.size() + info.space) * cos;
+				posX += (s.stencil.size() + info.space) * std::cos(info.upVector);
+				posY += (s.stencil.size() + info.space) * std::sin(info.upVector);
 				break;
 			case TextPath::DOWN:
-				x += (s.stencil.size() + info.space) * sin;
-				y -= (s.stencil.size() + info.space) * cos;
+				posX += (s.stencil.size() + info.space) * std::cos(info.upVector + PI);
+				posY += (s.stencil.size() + info.space) * std::sin(info.upVector + PI);
 				break;
 			case TextPath::LEFT:
-				x -= (s.stencil[0].size() + info.space) * cos;
-				y -= (s.stencil[0].size() + info.space) * sin;
+				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
+				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
 				break;
 			case TextPath::RIGHT:
-				x += (s.stencil[0].size() + info.space) * cos;
-				y += (s.stencil[0].size() + info.space) * sin;
+				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector - PI / 2);
+				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector - PI / 2);
 				break;
 			default:
 				break;
@@ -12072,6 +12071,268 @@ void drawFunc()
 	glFlush();
 }
 void code_6_exercise_51()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_52
+struct Point { int x; int y; };
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+enum class TextPath
+{
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+};
+struct TextInfo
+{
+	int spaceH;
+	int spaceV;
+	double upVector;
+	TextPath textPath;
+};
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void drawStencil(double x, double y, const Stencil& s, float rotate)
+{
+	float sin = std::sin(rotate);
+	float cos = std::cos(rotate);
+	for (int i = 0; i < s.stencil.size(); i++)
+	{
+		for (int j = 0; j < s.stencil[i].size(); j++)
+		{
+			if (s.stencil[i][j] == 1)
+			{
+				int curX = j;
+				int curY = s.stencil.size() - 1 - i;
+
+				setPixel(Round(x + curX * cos - curY * sin), Round(y + curY * cos + curX * sin));
+			}
+		}
+	}
+} 
+int getLineMaxHeight(int begin, const string& str, const std::map<char, Stencil>& texts)
+{
+	int ret = 0;
+	for (int i = begin; i < str.size(); i++)
+	{
+		if (str[i] == '\n')
+			return ret;
+
+		if (texts.find(str[i]) != texts.end())
+		{
+			const Stencil& s = texts.find(str[i])->second;
+			if (ret < s.stencil.size())
+				ret = s.stencil.size();
+		}
+	}
+	return ret;
+}
+void drawString(int x, int y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+{
+	double posX = x;
+	double posY = y;
+	double _x = x;
+	double _y = y;
+	float textRotate = -1 * PI / 2 + info.upVector;
+
+	int nextMaxHeight = getLineMaxHeight(0, str, texts);
+	_x += (nextMaxHeight) * std::cos(info.upVector + PI);
+	_y += (nextMaxHeight) * std::sin(info.upVector + PI);
+	posX = _x;
+	posY = _y;
+
+	for (int i = 0; i < str.size(); i++)
+	{
+		if (str[i] == '\n')
+		{
+			switch (info.textPath)
+			{
+			case TextPath::RIGHT:
+				int nextMaxHeight = getLineMaxHeight(i + 1, str, texts);
+				_x += (nextMaxHeight + info.spaceV) * std::cos(info.upVector + PI);
+				_y += (nextMaxHeight + info.spaceV) * std::sin(info.upVector + PI);
+				break;
+			}
+			posX = _x;
+			posY = _y;
+		}
+		else
+		{
+			if (texts.find(str[i]) != texts.end())
+			{
+				const Stencil& s = texts.find(str[i])->second;
+				drawStencil(posX, posY, s, textRotate);
+				switch (info.textPath)
+				{
+				case TextPath::UP:
+					posX += (s.stencil.size() + info.spaceH) * std::cos(info.upVector);
+					posY += (s.stencil.size() + info.spaceH) * std::sin(info.upVector);
+					break;
+				case TextPath::DOWN:
+					posX += (s.stencil.size() + info.spaceH) * std::cos(info.upVector + PI);
+					posY += (s.stencil.size() + info.spaceH) * std::sin(info.upVector + PI);
+					break;
+				case TextPath::LEFT:
+					posX += (s.stencil[0].size() + info.spaceH) * std::cos(info.upVector + PI / 2);
+					posY += (s.stencil[0].size() + info.spaceH) * std::sin(info.upVector + PI / 2);
+					break;
+				case TextPath::RIGHT:
+					posX += (s.stencil[0].size() + info.spaceH) * std::cos(info.upVector - PI / 2);
+					posY += (s.stencil[0].size() + info.spaceH) * std::sin(info.upVector - PI / 2);
+					break;
+				default:
+					break;
+				}
+			}
+		}		
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	Stencil A = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 0, 1, 0, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 1, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+		}, 0, 0 };
+	Stencil B = {
+		{
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+	Stencil C = {
+		{
+			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
+			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+
+	std::map<char, Stencil> texts;
+	texts['A'] = A;
+	texts['B'] = B;
+	texts['C'] = C;
+
+	// PI/2 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(120, 420, "ABC", { 2, PI / 2, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(120, 380, "ABC", { 2, PI / 2, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(100, 400, "ABC", { 2, PI / 2, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(140, 400, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::RIGHT }, texts);
+
+	// 0 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(340, 400, "ABC", { 2, 0, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(300, 400, "ABC", { 2, 0, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(320, 420, "ABC", { 2, 0, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(320, 380, "ABC\nAB\nC", { 3, 10, 0, TextPath::RIGHT }, texts);
+
+	// PI 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(500, 400, "ABC", { 2, PI, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(540, 400, "ABC", { 2, PI, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(520, 380, "ABC", { 2, PI, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(520, 420, "ABC\nAB\nC", { 3, 10, PI, TextPath::RIGHT }, texts);
+
+	// PI/6 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(120, 220, "ABC", { 2, PI / 6, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(120, 180, "ABC", { 2, PI / 6, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(100, 200, "ABC", { 2, PI / 6, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(140, 200, "ABC\nAB\nC", { 3, 10, PI / 6, TextPath::RIGHT }, texts);
+
+	// PI/4 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(320, 220, "ABC", { 2, PI / 4, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(320, 180, "ABC", { 2, PI / 4, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(300, 200, "ABC", { 2, PI / 4, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(340, 200, "ABC\nAB\nC", { 3, 10, PI / 4, TextPath::RIGHT }, texts);
+
+	// PI*3/4 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(520, 220, "ABC", { 2, PI * 3 / 4, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(520, 180, "ABC", { 2, PI * 3 / 4, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(500, 200, "ABC", { 2, PI * 3 / 4, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(540, 200, "ABC\nAB\nC", {3, 10, PI * 3 / 4, TextPath::RIGHT }, texts);
+
+	// -PI/4 向上向量
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//drawString(740, 200, "ABC", { 2, -PI / 4, TextPath::UP }, texts);
+	//glColor3f(0.0f, 1.0f, 0.0f);
+	//drawString(700, 200, "ABC", { 2, -PI / 4, TextPath::DOWN }, texts);
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//drawString(720, 220, "ABC", { 2, -PI / 4, TextPath::LEFT }, texts);
+	//glColor3f(1.0f, 1.0f, 1.0f);
+	drawString(720, 180, "ABC\nAB\nC", {3, 10,-PI / 4, TextPath::RIGHT }, texts);
+
+	glFlush();
+}
+void code_6_exercise_52()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -12336,6 +12597,11 @@ void main(int argc, char** argv)
 #ifdef CHAPTER_6_EXERCISE_51
 	code_6_exercise_51();
 #endif
+
+#ifdef CHAPTER_6_EXERCISE_52
+	code_6_exercise_52();
+#endif
+
 
 	glutMainLoop();
 }
