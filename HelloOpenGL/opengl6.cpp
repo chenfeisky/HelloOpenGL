@@ -12175,7 +12175,7 @@ int getLineMaxWidth(int begin, const string& str, const std::map<char, Stencil>&
 	}
 	return ret;
 }
-int getLineWidth(int begin, const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+int getLineDistance(int begin, const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
 	int ret = 0;
 	bool isCount = false;
@@ -12191,7 +12191,12 @@ int getLineWidth(int begin, const string& str, const TextInfo& info, const std::
 		if (texts.find(str[i]) != texts.end())
 		{
 			const Stencil& s = texts.find(str[i])->second;
-			ret += s.stencil[0].size();
+
+			if (info.textPath == TextPath::LEFT || info.textPath == TextPath::RIGHT)
+				ret += s.stencil[0].size();
+			else
+				ret += s.stencil.size();
+
 			ret += info.spaceChar;
 			isCount = true;
 		}
@@ -12201,17 +12206,17 @@ int getLineWidth(int begin, const string& str, const TextInfo& info, const std::
 		ret -= info.spaceChar;
 	return ret;
 }
-int getTextMaxWidth(const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+int getTextMaxDistance(const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
 	int ret = 0;
-	int curLineWidth = getLineWidth(0, str, info, texts);
+	int curLineWidth = getLineDistance(0, str, info, texts);
 	for (int i = 1; i < str.size(); i++)
 	{
 		if (str[i] == '\n')
 		{
 			if (curLineWidth > ret)
 				ret = curLineWidth;
-			curLineWidth = getLineWidth(i + 1, str, info, texts);
+			curLineWidth = getLineDistance(i + 1, str, info, texts);
 		}
 	}
 
@@ -12227,6 +12232,7 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 	double _x = x;
 	double _y = y;
 
+	// 左右初次定位到行底部
 	switch (info.textPath)
 	{
 	case TextPath::UP:
@@ -12242,7 +12248,7 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 	break;
 	}
 
-	double maxWidth = getTextMaxWidth(str, info, texts);
+	double maxWidth = getTextMaxDistance(str, info, texts);
 	double posX = _x;
 	double posY = _y;
 
@@ -12253,6 +12259,7 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 	{
 		if (str[i] == '\n')
 		{
+			// 换行定位
 			switch (info.textPath)
 			{
 			case TextPath::UP:
@@ -12281,19 +12288,81 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 		{
 			if (newLine)
 			{
+				// 对齐定位
+				double curLineWidth = getLineDistance(i, str, info, texts);
 				switch (info.textPath)
 				{
 				case TextPath::UP:
+				{
+					switch (info.vAlign)
+					{
+					case V_ALIGN::TOP:
+					{
+						double offset = maxWidth - curLineWidth;
+						posX += offset * std::cos(info.upVector);
+						posY += offset * std::sin(info.upVector);
+					}
+					break;
+					case V_ALIGN::CENTER:
+					{
+						double offset = (maxWidth - curLineWidth) / 2;
+						posX += offset * std::cos(info.upVector);
+						posY += offset * std::sin(info.upVector);
+					}
+					break;
+					case V_ALIGN::BOTTOM:
+						break;
+					}
+				}
+					break;
 				case TextPath::DOWN:
+				{
+					switch (info.vAlign)
+					{
+					case V_ALIGN::TOP:
+					break;
+					case V_ALIGN::CENTER:
+					{
+						double offset = (maxWidth - curLineWidth) / 2;
+						posX += offset * std::cos(info.upVector + PI);
+						posY += offset * std::sin(info.upVector + PI);
+					}
+					break;
+					case V_ALIGN::BOTTOM:
+					{
+						double offset = maxWidth - curLineWidth;
+						posX += offset * std::cos(info.upVector + PI);
+						posY += offset * std::sin(info.upVector + PI);
+					}
+						break;
+					}
+				}
 					break;
 				case TextPath::LEFT:
 				{
-
+					switch (info.hAlign)
+					{
+					case H_ALIGN::LEFT:
+					{
+						double offset = maxWidth - curLineWidth;
+						posX += offset * std::cos(info.upVector + PI / 2);
+						posY += offset * std::sin(info.upVector + PI / 2);
+					}
+					break;
+					case H_ALIGN::CENTER:
+					{
+						double offset = (maxWidth - curLineWidth) / 2;
+						posX += offset * std::cos(info.upVector + PI / 2);
+						posY += offset * std::sin(info.upVector + PI / 2);
+					}
+					break;
+					case H_ALIGN::RIGHT:
+					break;
+					}
 				}
-				break;
+					break;
 				case TextPath::RIGHT:
 				{
-					double curLineWidth = getLineWidth(i, str, info, texts);
 					switch (info.hAlign)
 					{
 					case H_ALIGN::LEFT:
@@ -12314,13 +12383,14 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 					break;
 					}
 				}
-				break;
+					break;
 				}
 			}			
 
 			if (texts.find(str[i]) != texts.end())
 			{
 				const Stencil& s = texts.find(str[i])->second;
+				// 每一个文字定位
 				switch (info.textPath)
 				{
 				case TextPath::DOWN:
@@ -12445,6 +12515,7 @@ void drawFunc()
 	texts['C'] = C;
 	texts['D'] = D;
 	texts['E'] = E;
+
 	// PI/2 向上向量
 	//glColor3f(1.0f, 0.0f, 0.0f);
 	//drawString(120, 420, "ABC", { 2, PI / 2, TextPath::UP }, texts);
@@ -12453,7 +12524,7 @@ void drawFunc()
 	//glColor3f(0.0f, 0.0f, 1.0f);
 	//drawString(100, 400, "ABC", { 2, PI / 2, TextPath::LEFT }, texts);
 	//glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(300, 300, "ABCDE\nEAB\nC", { 3, 10, PI / 4, TextPath::RIGHT, H_ALIGN::RIGHT, V_ALIGN::CENTER }, texts);
+	drawString(300, 300, "ABCDE\nEAB\nC", { 3, 10, 0, TextPath::DOWN, H_ALIGN::CENTER, V_ALIGN::CENTER }, texts);
 	//drawString(100, 100, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::LEFT }, texts);
 	//drawString(300, 100, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::UP }, texts);
 	//drawString(500, 500, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::DOWN }, texts);
