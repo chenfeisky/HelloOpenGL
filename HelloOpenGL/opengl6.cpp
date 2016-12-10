@@ -12175,7 +12175,7 @@ int getLineMaxWidth(int begin, const string& str, const std::map<char, Stencil>&
 	}
 	return ret;
 }
-int getLineDistance(int begin, const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+int getLineWidth(int begin, const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
 	int ret = 0;
 	bool isCount = false;
@@ -12206,17 +12206,17 @@ int getLineDistance(int begin, const string& str, const TextInfo& info, const st
 		ret -= info.spaceChar;
 	return ret;
 }
-int getTextMaxDistance(const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+int getTextMaxWidth(const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
 	int ret = 0;
-	int curLineWidth = getLineDistance(0, str, info, texts);
+	int curLineWidth = getLineWidth(0, str, info, texts);
 	for (int i = 1; i < str.size(); i++)
 	{
 		if (str[i] == '\n')
 		{
 			if (curLineWidth > ret)
 				ret = curLineWidth;
-			curLineWidth = getLineDistance(i + 1, str, info, texts);
+			curLineWidth = getLineWidth(i + 1, str, info, texts);
 		}
 	}
 
@@ -12224,6 +12224,28 @@ int getTextMaxDistance(const string& str, const TextInfo& info, const std::map<c
 		ret = curLineWidth;
 
 	return ret;
+}
+int getTextMaxHeight(const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+{
+	int total = 0;
+
+	if (info.textPath == TextPath::LEFT || info.textPath == TextPath::RIGHT)
+		total = getLineMaxWidth(0, str, texts);
+	else
+		total = getLineMaxHeight(0, str, texts);
+
+	for (int i = 1; i < str.size(); i++)
+	{
+		if (str[i] == '\n')
+		{
+			total += info.spaceLine;
+			if (info.textPath == TextPath::LEFT || info.textPath == TextPath::RIGHT)
+				total += getLineMaxWidth(i + 1, str, texts);
+			else
+				total += getLineMaxHeight(i + 1, str, texts);
+		}
+	}
+	return total;
 }
 void drawString(int x, int y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
@@ -12248,7 +12270,7 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 	break;
 	}
 
-	double maxWidth = getTextMaxDistance(str, info, texts);
+	double maxWidth = getTextMaxWidth(str, info, texts);
 	double posX = _x;
 	double posY = _y;
 
@@ -12289,7 +12311,7 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 			if (newLine)
 			{
 				// ¶ÔÆë¶¨Î»
-				double curLineWidth = getLineDistance(i, str, info, texts);
+				double curLineWidth = getLineWidth(i, str, info, texts);
 				switch (info.textPath)
 				{
 				case TextPath::UP:
@@ -12427,6 +12449,11 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 		}		
 	}
 }
+Point calcStartPointFromCenter(Point center, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+{
+	double width = getTextMaxWidth(str, info, texts);
+	double height = getTextMaxHeight(str, info, texts);
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -12524,7 +12551,7 @@ void drawFunc()
 	//glColor3f(0.0f, 0.0f, 1.0f);
 	//drawString(100, 400, "ABC", { 2, PI / 2, TextPath::LEFT }, texts);
 	//glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(300, 300, "ABCDE\nEAB\nC", { 3, 10, 0, TextPath::DOWN, H_ALIGN::CENTER, V_ALIGN::CENTER }, texts);
+	drawString(300, 300, "ABCDE\nEAB\nC", { 3, 10, PI / 2, TextPath::RIGHT, H_ALIGN::CENTER, V_ALIGN::CENTER }, texts);
 	//drawString(100, 100, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::LEFT }, texts);
 	//drawString(300, 100, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::UP }, texts);
 	//drawString(500, 500, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::DOWN }, texts);
