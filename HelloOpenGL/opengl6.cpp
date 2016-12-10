@@ -12078,6 +12078,13 @@ void code_6_exercise_51()
 
 #ifdef CHAPTER_6_EXERCISE_52
 struct Point { int x; int y; };
+struct Rect
+{
+	double x0;
+	double y0;
+	double width;
+	double height;
+};
 struct Color3f
 {
 	GLfloat r, g, b;
@@ -12175,7 +12182,7 @@ int getLineMaxWidth(int begin, const string& str, const std::map<char, Stencil>&
 	}
 	return ret;
 }
-int getLineWidth(int begin, const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+int getLineDistance(int begin, const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
 	int ret = 0;
 	bool isCount = false;
@@ -12209,14 +12216,14 @@ int getLineWidth(int begin, const string& str, const TextInfo& info, const std::
 int getTextMaxWidth(const string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
 	int ret = 0;
-	int curLineWidth = getLineWidth(0, str, info, texts);
+	int curLineWidth = getLineDistance(0, str, info, texts);
 	for (int i = 1; i < str.size(); i++)
 	{
 		if (str[i] == '\n')
 		{
 			if (curLineWidth > ret)
 				ret = curLineWidth;
-			curLineWidth = getLineWidth(i + 1, str, info, texts);
+			curLineWidth = getLineDistance(i + 1, str, info, texts);
 		}
 	}
 
@@ -12230,9 +12237,9 @@ int getTextMaxHeight(const string& str, const TextInfo& info, const std::map<cha
 	int total = 0;
 
 	if (info.textPath == TextPath::LEFT || info.textPath == TextPath::RIGHT)
-		total = getLineMaxWidth(0, str, texts);
-	else
 		total = getLineMaxHeight(0, str, texts);
+	else
+		total = getLineMaxWidth(0, str, texts);
 
 	for (int i = 1; i < str.size(); i++)
 	{
@@ -12240,17 +12247,15 @@ int getTextMaxHeight(const string& str, const TextInfo& info, const std::map<cha
 		{
 			total += info.spaceLine;
 			if (info.textPath == TextPath::LEFT || info.textPath == TextPath::RIGHT)
-				total += getLineMaxWidth(i + 1, str, texts);
-			else
 				total += getLineMaxHeight(i + 1, str, texts);
+			else
+				total += getLineMaxWidth(i + 1, str, texts);
 		}
 	}
 	return total;
 }
-void drawString(int x, int y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+void drawString(double x, double y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
-	setPixel(x, y);
-
 	double _x = x;
 	double _y = y;
 
@@ -12311,7 +12316,7 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 			if (newLine)
 			{
 				// 对齐定位
-				double curLineWidth = getLineWidth(i, str, info, texts);
+				double curLineWidth = getLineDistance(i, str, info, texts);
 				switch (info.textPath)
 				{
 				case TextPath::UP:
@@ -12449,10 +12454,149 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 		}		
 	}
 }
-Point calcStartPointFromCenter(Point center, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+void drawRect(const Rect& rect)
 {
+	int x0 = Round(rect.x0);
+	int y0 = Round(rect.y0);
+	int width = Round(rect.width);
+	int height = Round(rect.height);
+
+	for (int i = x0; i < x0 + width; i++)
+	{
+		setPixel(i, y0);
+		setPixel(i, y0 + height);
+	}
+	for (int i = y0; i < y0 + height; i++)
+	{
+		setPixel(x0, i);
+		setPixel(x0 + width, i);
+	}
+}
+void calcStartPointFromCenter(const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts, double& outX, double& outY)
+{
+	outX = 0;
+	outY = 0;
 	double width = getTextMaxWidth(str, info, texts);
 	double height = getTextMaxHeight(str, info, texts);
+	switch (info.textPath)
+	{
+	case TextPath::UP:
+	{
+		outX = width / 2 * std::cos(info.upVector + PI);
+		outY = width / 2 * std::sin(info.upVector + PI);
+		outX += height / 2 * std::cos(info.upVector + PI / 2);
+		outY += height / 2 * std::sin(info.upVector + PI / 2);
+	}
+	break;
+	case TextPath::DOWN:
+	{
+		outX = width / 2 * std::cos(info.upVector);
+		outY = width / 2 * std::sin(info.upVector);
+		outX += height / 2 * std::cos(info.upVector + PI / 2);
+		outY += height / 2 * std::sin(info.upVector + PI / 2);
+	}
+	break;
+	case TextPath::LEFT:
+	{
+		outX = height / 2 * std::cos(info.upVector);
+		outY = height / 2 * std::sin(info.upVector);
+		outX += width / 2 * std::cos(info.upVector - PI / 2);
+		outY += width / 2 * std::sin(info.upVector - PI / 2);
+	}
+	break;
+	case TextPath::RIGHT:
+	{
+		outX = height / 2 * std::cos(info.upVector);
+		outY = height / 2 * std::sin(info.upVector);
+		outX += width / 2 * std::cos(info.upVector + PI / 2);
+		outY += width / 2 * std::sin(info.upVector + PI / 2);
+	}
+	break;
+	}
+}
+void calcAlignBoundingBox(const Rect& outBoundingBox, Rect& innerBoundingBox, const TextInfo& info)
+{
+	if (outBoundingBox.width < innerBoundingBox.width)
+		printf("warning: out boundingbox width less than innner boundingbox width!\n");
+	switch (info.hAlign)
+	{
+	case H_ALIGN::LEFT:
+		innerBoundingBox.x0 = outBoundingBox.x0;
+		break;
+	case H_ALIGN::CENTER:
+		innerBoundingBox.x0 = outBoundingBox.x0 + (outBoundingBox.width - innerBoundingBox.width) / 2;
+		break;
+	case H_ALIGN::RIGHT:
+		innerBoundingBox.x0 = outBoundingBox.x0 + (outBoundingBox.width - innerBoundingBox.width);
+		break;
+	}
+
+	if (outBoundingBox.height < innerBoundingBox.height)
+		printf("warning: out boundingbox height less than innner boundingbox height!\n");
+	switch (info.vAlign)
+	{
+	case V_ALIGN::TOP:
+		innerBoundingBox.y0 = outBoundingBox.y0 + (outBoundingBox.height - innerBoundingBox.height);
+		break;
+	case V_ALIGN::CENTER:
+		innerBoundingBox.y0 = outBoundingBox.y0 + (outBoundingBox.height - innerBoundingBox.height) / 2;
+		break;
+	case V_ALIGN::BOTTOM:
+		innerBoundingBox.y0 = outBoundingBox.y0;
+		break;
+	}
+}
+void calcBoundingBox(const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts, double& outWidth, double& outHeight)
+{
+	double x1, y1;
+	double x2, y2;
+	double x3, y3;
+	double x4, y4;
+	double width;
+	double height;
+	if (info.textPath == TextPath::LEFT || info.textPath == TextPath::RIGHT)
+	{
+		width = getTextMaxWidth(str, info, texts);
+		height = getTextMaxHeight(str, info, texts);
+	}
+	else
+	{
+		width = getTextMaxHeight(str, info, texts);
+		height = getTextMaxWidth(str, info, texts);
+	}
+
+	double upX = height / 2 * std::cos(info.upVector);
+	double upY = height / 2 * std::sin(info.upVector);
+	double downX = height / 2 * std::cos(info.upVector + PI);
+	double downY = height / 2 * std::sin(info.upVector + PI);
+	
+	x1 = width / 2 * std::cos(info.upVector + PI / 2) + upX;
+	y1 = width / 2 * std::sin(info.upVector + PI / 2) + upY;
+	x2 = width / 2 * std::cos(info.upVector - PI / 2) + upX;
+	y2 = width / 2 * std::sin(info.upVector - PI / 2) + upY;
+	x3 = width / 2 * std::cos(info.upVector + PI / 2) + downX;
+	y3 = width / 2 * std::sin(info.upVector + PI / 2) + downY;
+	x4 = width / 2 * std::cos(info.upVector - PI / 2) + downX;
+	y4 = width / 2 * std::sin(info.upVector - PI / 2) + downY;
+
+	std::vector<double> vecx = { x1, x2, x3, x4 };
+	std::sort(vecx.begin(), vecx.end());
+	std::vector<double> vecy = { y1, y2, y3, y4 };
+	std::sort(vecy.begin(), vecy.end());
+	outWidth = std::fabs(vecx[3] - vecx[0]);
+	outHeight = std::fabs(vecy[3] - vecy[0]);
+}
+void stringAlign(const std::string& str, Rect rect, const TextInfo& info, const std::map<char, Stencil>& texts)
+{
+	double x, y;
+	double width, height;
+	calcBoundingBox(str, info, texts, width, height);
+	Rect textRect = {0, 0, width, height};
+	calcAlignBoundingBox(rect, textRect, info);
+	calcStartPointFromCenter(str, info, texts, x, y);
+	double xc = textRect.x0 + textRect.width / 2;
+	double yc = textRect.y0 + textRect.height / 2;
+	drawString(x + xc, y + yc, str, info, texts);
 }
 void drawFunc()
 {
@@ -12543,79 +12687,20 @@ void drawFunc()
 	texts['D'] = D;
 	texts['E'] = E;
 
-	// PI/2 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(120, 420, "ABC", { 2, PI / 2, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(120, 380, "ABC", { 2, PI / 2, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(100, 400, "ABC", { 2, PI / 2, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(300, 300, "ABCDE\nEAB\nC", { 3, 10, PI / 2, TextPath::RIGHT, H_ALIGN::CENTER, V_ALIGN::CENTER }, texts);
-	//drawString(100, 100, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::LEFT }, texts);
-	//drawString(300, 100, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::UP }, texts);
-	//drawString(500, 500, "ABC\nAB\nC", { 3, 10, PI / 2, TextPath::DOWN }, texts);
+	std::string str = "ABCDE\nECAB\nCD";
+	Rect rect = { 200, 200, 400, 300 };
+	drawRect(rect);
 
-	// 0 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(340, 400, "ABC", { 2, 0, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(300, 400, "ABC", { 2, 0, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(320, 420, "ABC", { 2, 0, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	//drawString(320, 380, "ABC\nAB\nC", { 3, 10, 0, TextPath::RIGHT }, texts);
-
-	// PI 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(500, 400, "ABC", { 2, PI, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(540, 400, "ABC", { 2, PI, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(520, 380, "ABC", { 2, PI, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	//drawString(520, 420, "ABC\nAB\nC", { 3, 10, PI, TextPath::RIGHT }, texts);
-
-	// PI/6 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(120, 220, "ABC", { 2, PI / 6, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(120, 180, "ABC", { 2, PI / 6, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(100, 200, "ABC", { 2, PI / 6, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	//drawString(140, 200, "ABC\nAB\nC", { 3, 10, PI / 6, TextPath::RIGHT }, texts);
-
-	// PI/4 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(320, 220, "ABC", { 2, PI / 4, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(320, 180, "ABC", { 2, PI / 4, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(300, 200, "ABC", { 2, PI / 4, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	//drawString(340, 200, "ABC\nAB\nC", { 3, 10, PI / 4, TextPath::RIGHT }, texts);
-
-	// PI*3/4 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(520, 220, "ABC", { 2, PI * 3 / 4, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(520, 180, "ABC", { 2, PI * 3 / 4, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(500, 200, "ABC", { 2, PI * 3 / 4, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	//drawString(540, 200, "ABC\nAB\nC", {3, 10, PI * 3 / 4, TextPath::RIGHT }, texts);
-
-	// -PI/4 向上向量
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//drawString(740, 200, "ABC", { 2, -PI / 4, TextPath::UP }, texts);
-	//glColor3f(0.0f, 1.0f, 0.0f);
-	//drawString(700, 200, "ABC", { 2, -PI / 4, TextPath::DOWN }, texts);
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//drawString(720, 220, "ABC", { 2, -PI / 4, TextPath::LEFT }, texts);
-	//glColor3f(1.0f, 1.0f, 1.0f);
-	//drawString(720, 180, "ABC\nAB\nC", {3, 10,-PI / 4, TextPath::RIGHT }, texts);
-
+	stringAlign(str, rect, { 3, 10, 0 , TextPath::UP, H_ALIGN::LEFT, V_ALIGN::TOP }, texts);
+	stringAlign(str, rect, { 3, 10, PI / 4 , TextPath::UP, H_ALIGN::CENTER, V_ALIGN::TOP }, texts);
+	stringAlign(str, rect, { 3, 10, PI , TextPath::DOWN, H_ALIGN::RIGHT, V_ALIGN::TOP }, texts);
+	stringAlign(str, rect, { 3, 10, PI * 3 / 2 , TextPath::DOWN, H_ALIGN::LEFT, V_ALIGN::CENTER }, texts);
+	stringAlign(str, rect, { 3, 10, PI / 2 , TextPath::RIGHT, H_ALIGN::CENTER, V_ALIGN::CENTER }, texts);
+	stringAlign(str, rect, { 3, 10, PI / 2 , TextPath::RIGHT, H_ALIGN::RIGHT, V_ALIGN::CENTER }, texts);
+	stringAlign(str, rect, { 3, 10, PI / 2 , TextPath::RIGHT, H_ALIGN::LEFT, V_ALIGN::BOTTOM }, texts);
+	stringAlign(str, rect, { 3, 10, - PI / 3 , TextPath::LEFT, H_ALIGN::CENTER, V_ALIGN::BOTTOM }, texts);
+	stringAlign(str, rect, { 3, 10, PI * 5 / 4 , TextPath::LEFT, H_ALIGN::RIGHT, V_ALIGN::BOTTOM }, texts);
+	
 	glFlush();
 }
 void code_6_exercise_52()
