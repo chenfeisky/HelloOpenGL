@@ -12709,6 +12709,214 @@ void code_6_exercise_52()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_53
+struct Point { int x; int y; };
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
+}
+
+void drawMarkerPoint(Point p, int size, Color3f c)
+{
+	glColor3f(c.r, c.g, c.b);
+	int beginX = p.x - (size - 1) / 2;
+	int endX = beginX + size - 1;
+	int beginY = p.y - (size - 1) / 2;
+	int endY = beginY + size - 1;
+	for (int y = beginY; y <= endY; y++)
+	{
+		lineBres(beginX, y, endX, y);
+	}
+	glColor3f(1.0, 1.0, 1.0);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	drawMarkerPoint({ 100, 520 }, 1, { 1.0, 1.0, 1.0 });
+	drawMarkerPoint({ 300, 520 }, 2, { 1.0, 0.0, 0.0 });
+	drawMarkerPoint({ 500, 520 }, 5, { 0.0, 1.0, 0.0 });
+	drawMarkerPoint({ 700, 520 }, 10, { 0.0, 0.0, 1.0 });
+
+	glFlush();
+}
+void code_6_exercise_53()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -12971,6 +13179,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_52
 	code_6_exercise_52();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_53
+	code_6_exercise_53();
 #endif
 
 
