@@ -12715,6 +12715,55 @@ struct Color3f
 {
 	GLfloat r, g, b;
 };
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void hLineRound(int y, int x0, int x1, int xc, int yc, int offset = 0)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(xc + x, yc + y);
+		setPixel(xc - x + offset, yc + y);
+		setPixel(xc + x, yc - y + offset);
+		setPixel(xc - x + offset, yc - y + offset);
+		setPixel(xc + y, yc + x);
+		setPixel(xc - y + offset, yc + x);
+		setPixel(xc + y, yc - x + offset);
+		setPixel(xc - y + offset, yc - x + offset);
+	}
+}
+void fillRound(int xc, int yc, float r)
+{
+	int xline = 0;
+	int xRound = r;
+
+	int d2x = 2 * r;
+	int d2y = 0;
+	int p = Round((float)5 / 4 - r);
+	double aa;
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // 如果是整数则偏移，保持几何特征.如果是小数(>=0.5)则不偏移
+	hLineRound(0, 0, xRound, xc, yc, offset);
+	int endY = Round(r / std::sqrt(2));
+	for (int curY = 1; curY <= endY; curY++)
+	{
+		d2y += 2;
+		if (p < 0)
+		{
+			p += d2y + 1;
+		}
+		else
+		{
+			xRound--;
+			d2x -= 2;
+			p += d2y + 1 - d2x;
+		}
+		hLineRound(curY, ++xline, xRound, xc, yc, offset);
+	}
+}
 void lineBres1(int x0, int y0, int xEnd, int yEnd)
 {
 	if (x0 > xEnd)
@@ -12899,15 +12948,71 @@ void drawMarkerPoint(Point p, int size, Color3f c)
 	}
 	glColor3f(1.0, 1.0, 1.0);
 }
+void drawMarkerRound(Point p, int size, Color3f c)
+{
+	glColor3f(c.r, c.g, c.b);
+	int baseR = 3;
+	float r = size * baseR;
+	fillRound(p.x, p.y, r);
+	glColor3f(1.0, 1.0, 1.0);
+}
+void drawMarkerCross(Point p, int size, Color3f c)
+{
+	glColor3f(c.r, c.g, c.b);
+	int baseR = 3;
+	float r = size * baseR;
+	lineBres(p.x - r, p.y, p.x + r, p.y);
+	lineBres(p.x, p.y - r, p.x, p.y + r);
+	glColor3f(1.0, 1.0, 1.0);
+}
+void drawMarkerCrossX(Point p, int size, Color3f c)
+{
+	glColor3f(c.r, c.g, c.b);
+	int baseR = 3;
+	float r = size * baseR;
+	lineBres(p.x - r, p.y + r, p.x + r, p.y - r);
+	lineBres(p.x - r, p.y - r, p.x + r, p.y + r);
+	glColor3f(1.0, 1.0, 1.0);
+}
+void drawMarkerStar(Point p, int size, Color3f c)
+{
+	drawMarkerCross(p, size, c);
+	drawMarkerCrossX(p, size, c);
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
+	// 点标记
 	drawMarkerPoint({ 100, 520 }, 1, { 1.0, 1.0, 1.0 });
 	drawMarkerPoint({ 300, 520 }, 2, { 1.0, 0.0, 0.0 });
 	drawMarkerPoint({ 500, 520 }, 5, { 0.0, 1.0, 0.0 });
 	drawMarkerPoint({ 700, 520 }, 10, { 0.0, 0.0, 1.0 });
+
+	// 圆标记
+	drawMarkerRound({ 100, 420 }, 1, { 1.0, 1.0, 1.0 });
+	drawMarkerRound({ 300, 420 }, 2, { 1.0, 0.0, 0.0 });
+	drawMarkerRound({ 500, 420 }, 5, { 0.0, 1.0, 0.0 });
+	drawMarkerRound({ 700, 420 }, 10, { 0.0, 0.0, 1.0 });
+
+	// 十字标记
+	drawMarkerCross({ 100, 320 }, 1, { 1.0, 1.0, 1.0 });
+	drawMarkerCross({ 300, 320 }, 2, { 1.0, 0.0, 0.0 });
+	drawMarkerCross({ 500, 320 }, 5, { 0.0, 1.0, 0.0 });
+	drawMarkerCross({ 700, 320 }, 10, { 0.0, 0.0, 1.0 });
+
+	// 十字X标记
+	drawMarkerCrossX({ 100, 220 }, 1, { 1.0, 1.0, 1.0 });
+	drawMarkerCrossX({ 300, 220 }, 2, { 1.0, 0.0, 0.0 });
+	drawMarkerCrossX({ 500, 220 }, 5, { 0.0, 1.0, 0.0 });
+	drawMarkerCrossX({ 700, 220 }, 10, { 0.0, 0.0, 1.0 });
+
+	// 星标记
+	drawMarkerStar({ 100, 120 }, 1, { 1.0, 1.0, 1.0 });
+	drawMarkerStar({ 300, 120 }, 2, { 1.0, 0.0, 0.0 });
+	drawMarkerStar({ 500, 120 }, 5, { 0.0, 1.0, 0.0 });
+	drawMarkerStar({ 700, 120 }, 10, { 0.0, 0.0, 1.0 });
 
 	glFlush();
 }
@@ -13154,7 +13259,7 @@ void main(int argc, char** argv)
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_46
-	code_6_exercise_46																	();
+	code_6_exercise_46();
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_47
