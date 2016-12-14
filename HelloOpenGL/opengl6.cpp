@@ -13023,11 +13023,76 @@ void code_6_exercise_53()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_54
-void setSubPixel(int subX, int subY)
+struct Point
 {
-	setPixel(subX, subY);
+	int x, y;
+};
+struct BaseInfo
+{
+	int x0;
+	int y0;
+	int xEnd;
+	int yEnd;
+	int level;
+};
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
 }
-void lineBres1(int x0, int y0, int xEnd, int yEnd)
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+}
+void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
+{
+	for (auto p : lastInfo)
+	{
+		float count = p.second;
+		if (count > baseInfo.level)
+			count = baseInfo.level;
+
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
+	}
+}
+void setSubPixelDX(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	printf("x=%d, y=%d\n", subX, subY);
+	int curX = subX / baseInfo.level;
+	int curY = subY / baseInfo.level;
+	if (curX != lastInfo.begin()->first.x)
+	{
+		refreshLastPoints(baseInfo, lastInfo);
+		lastInfo.clear();
+	}
+	lastInfo[{curX, curY}]++;
+
+	//setPixel(baseInfo.x0 + subX, baseInfo.y0 + subY);
+}
+//void setSubPixelDY(int subX, int subY)
+//{
+//	int curX = subX / baseInfo.level;
+//	int curY = subY / baseInfo.level;
+//	if (curX != lastInfo.begin()->first.x)
+//	{
+//		refreshLastPoints(baseInfo, lastInfo);
+//		lastInfo.clear();
+//	}
+//	lastInfo[{curX, curY}]++;
+//}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
 	{
@@ -13045,7 +13110,7 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd)
 
 	int x = x0;
 	int y = y0;
-	setSubPixel(x, y);
+	setSubPixelDX(x, y, baseInfo, lastInfo);
 	while (x < xEnd)
 	{
 		x++;
@@ -13056,11 +13121,11 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd)
 			y++;
 			p += twoDyMinusDx;
 		}
-		setSubPixel(x, y);
+		setSubPixelDX(x, y, baseInfo, lastInfo);
 	}
 }
 // m>1
-void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+void lineBres1M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
 	{
@@ -13078,7 +13143,7 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd)
 	int x = x0;
 	int y = y0;
 
-	setSubPixel(x, y);
+	//setSubPixel(x, y);
 	while (y < yEnd)
 	{
 		y++;
@@ -13089,11 +13154,11 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd)
 			x++;
 			p += twoDyMinusDx;
 		}
-		setSubPixel(x, y);
+		//setSubPixel(x, y);
 	}
 }
 // -1<m<0
-void lineBres2(int x0, int y0, int xEnd, int yEnd)
+void lineBres2(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
 	{
@@ -13112,7 +13177,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	int x = x0;
 	int y = y0;
 
-	setSubPixel(x, y);
+	//setSubPixel(x, y);
 	while (x < xEnd)
 	{
 		x++;
@@ -13123,11 +13188,11 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 			y--;
 			p += twoDyAddDx;
 		}
-		setSubPixel(x, y);
+		//setSubPixel(x, y);
 	}
 }
 // m<-1
-void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+void lineBres2M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
 	{
@@ -13146,7 +13211,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	int x = x0;
 	int y = y0;
 
-	setSubPixel(x, y);
+	//setSubPixel(x, y);
 	while (y > yEnd)
 	{
 		y--;
@@ -13157,10 +13222,10 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 			x++;
 			p += twoDyAddDx;
 		}
-		setSubPixel(x, y);
+		//setSubPixel(x, y);
 	}
 }
-void lineBres(int x0, int y0, int xEnd, int yEnd)
+void lineBres(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
 	{
@@ -13178,44 +13243,46 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres1M(x0, y0, xEnd, yEnd);
+			lineBres1M(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
 		}
 		else
 		{
-			lineBres1(x0, y0, xEnd, yEnd);
+			lineBres1(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
 		}
 	}
 	else
 	{
 		if (fabs((float)dy) > fabs((float)dx))
 		{
-			lineBres2M(x0, y0, xEnd, yEnd);
+			lineBres2M(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
 		}
 		else
 		{
-			lineBres2(x0, y0, xEnd, yEnd);
+			lineBres2(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
 		}
 	}
 }
 void lineBresAAbyCount(int x0, int y0, int xEnd, int yEnd, int level)
 {
-	int xSubEnd = x0 + (xEnd - x0 + 1) * level - 1;
-	int ySubEnd = y0 + (yEnd - y0 + 1) * level - 1;
-
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(x0, y0, xEnd, yEnd);
-	//lineBres(100, 20, 200, 150);
-
-	glColor3f(1.0, 0.0, 0.0);
-	lineBres(x0, y0, xSubEnd, ySubEnd);
-	//lineBres(100, 20, 402, 412);
+	int subX0 = (level - 1) / 2;
+	int subY0 = (level - 1) / 2;
+	int subXEnd = subX0 + (xEnd - x0) * level;
+	int SubYEnd = subY0 + (yEnd - y0) * level;
+	
+	std::map<Point, int> lastInfo;
+	BaseInfo baseInfo = { x0, y0, xEnd, yEnd, level };
+	lastInfo[{0, 0}] = level;
+	lineBres(subX0, subY0, subXEnd, SubYEnd, baseInfo, lastInfo);
+	lastInfo[{xEnd - x0, yEnd - y0}] = level;
+	refreshLastPoints(baseInfo, lastInfo);
+	lastInfo.clear();
 }
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresAAbyCount(100, 20, 200, 150, 3);
+	lineBresAAbyCount(100, 100, 200, 150, 3);
 
 	glFlush();
 }
