@@ -61,8 +61,8 @@
 //#define CHAPTER_6_EXERCISE_50 // ×Ö·ûÍ¼°¸Ìî³ä
 //#define CHAPTER_6_EXERCISE_51
 //#define CHAPTER_6_EXERCISE_52
-#define CHAPTER_6_EXERCISE_53
-
+//#define CHAPTER_6_EXERCISE_53
+#define CHAPTER_6_EXERCISE_54
 
 #ifdef CHAPTER_6_1_2
 #define CHAPTER_6_COMMON
@@ -305,5 +305,9 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_53
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_54
 #define CHAPTER_6_COMMON
 #endif
