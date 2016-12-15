@@ -13066,31 +13066,30 @@ void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& las
 		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
 	}
 }
-void setSubPixelDX(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+void setSubPixelDx(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	printf("x=%d, y=%d\n", subX, subY);
-	int curX = subX / baseInfo.level;
-	int curY = subY / baseInfo.level;
-	if (curX != lastInfo.begin()->first.x)
+	int curX = floor((float)subX / baseInfo.level);
+	int curY = floor((float)subY / baseInfo.level);
+	//if (curX != lastInfo.begin()->first.x)
+	//{
+	//	refreshLastPoints(baseInfo, lastInfo);
+	//	lastInfo.clear();
+	//}
+	lastInfo[{curX, curY}]++;
+}
+void setSubPixelDy(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	printf("x=%d, y=%d\n", subX, subY);
+	int curX = floor((float)subX / baseInfo.level);
+	int curY = floor((float)subY / baseInfo.level);
+	if (curY != lastInfo.begin()->first.y)
 	{
 		refreshLastPoints(baseInfo, lastInfo);
 		lastInfo.clear();
 	}
 	lastInfo[{curX, curY}]++;
-
-	//setPixel(baseInfo.x0 + subX, baseInfo.y0 + subY);
 }
-//void setSubPixelDY(int subX, int subY)
-//{
-//	int curX = subX / baseInfo.level;
-//	int curY = subY / baseInfo.level;
-//	if (curX != lastInfo.begin()->first.x)
-//	{
-//		refreshLastPoints(baseInfo, lastInfo);
-//		lastInfo.clear();
-//	}
-//	lastInfo[{curX, curY}]++;
-//}
 // 0<m<1
 void lineBres1(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
@@ -13110,7 +13109,7 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std
 
 	int x = x0;
 	int y = y0;
-	setSubPixelDX(x, y, baseInfo, lastInfo);
+	setSubPixelDx(x, y, baseInfo, lastInfo);
 	while (x < xEnd)
 	{
 		x++;
@@ -13121,7 +13120,7 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std
 			y++;
 			p += twoDyMinusDx;
 		}
-		setSubPixelDX(x, y, baseInfo, lastInfo);
+		setSubPixelDx(x, y, baseInfo, lastInfo);
 	}
 }
 // m>1
@@ -13143,7 +13142,7 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, st
 	int x = x0;
 	int y = y0;
 
-	//setSubPixel(x, y);
+	setSubPixelDy(x, y, baseInfo, lastInfo);
 	while (y < yEnd)
 	{
 		y++;
@@ -13154,7 +13153,7 @@ void lineBres1M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, st
 			x++;
 			p += twoDyMinusDx;
 		}
-		//setSubPixel(x, y);
+		setSubPixelDy(x, y, baseInfo, lastInfo);
 	}
 }
 // -1<m<0
@@ -13177,7 +13176,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std
 	int x = x0;
 	int y = y0;
 
-	//setSubPixel(x, y);
+	setSubPixelDx(x, y, baseInfo, lastInfo);
 	while (x < xEnd)
 	{
 		x++;
@@ -13188,7 +13187,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std
 			y--;
 			p += twoDyAddDx;
 		}
-		//setSubPixel(x, y);
+		setSubPixelDx(x, y, baseInfo, lastInfo);
 	}
 }
 // m<-1
@@ -13211,7 +13210,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, st
 	int x = x0;
 	int y = y0;
 
-	//setSubPixel(x, y);
+	setSubPixelDy(x, y, baseInfo, lastInfo);
 	while (y > yEnd)
 	{
 		y--;
@@ -13222,11 +13221,11 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, st
 			x++;
 			p += twoDyAddDx;
 		}
-		//setSubPixel(x, y);
+		setSubPixelDy(x, y, baseInfo, lastInfo);
 	}
 }
 void lineBres(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
+{ 
 	if (x0 > xEnd)
 	{
 		int tempx = x0;
@@ -13264,6 +13263,17 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std:
 }
 void lineBresAAbyCount(int x0, int y0, int xEnd, int yEnd, int level)
 {
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
 	int subX0 = (level - 1) / 2;
 	int subY0 = (level - 1) / 2;
 	int subXEnd = subX0 + (xEnd - x0) * level;
@@ -13282,8 +13292,14 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresAAbyCount(100, 100, 200, 150, 3);
+	lineBresAAbyCount(300, 100, 100, 100, 3);
+	lineBresAAbyCount(200, 200, 200, 400, 3);
+	lineBresAAbyCount(120, 120, 250, 250, 3);
 
+	lineBresAAbyCount(150, 150, 650, 400, 3);
+	lineBresAAbyCount(380, 180, 500, 400, 3);
+	lineBresAAbyCount(380, 580, 600, 500, 3);
+	lineBresAAbyCount(600, 250, 700, 10, 3);
 	glFlush();
 }
 void code_6_exercise_54()
