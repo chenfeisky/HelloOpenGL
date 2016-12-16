@@ -62,7 +62,8 @@
 //#define CHAPTER_6_EXERCISE_51
 //#define CHAPTER_6_EXERCISE_52
 //#define CHAPTER_6_EXERCISE_53
-#define CHAPTER_6_EXERCISE_54
+//#define CHAPTER_6_EXERCISE_54 // 过取样（Bresenham零宽）
+#define CHAPTER_6_EXERCISE_54_Test1 // 过取样（比例）
 
 #ifdef CHAPTER_6_1_2
 #define CHAPTER_6_COMMON
@@ -309,5 +310,9 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_54
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_54_Test1
 #define CHAPTER_6_COMMON
 #endif

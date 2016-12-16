@@ -13261,7 +13261,7 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std:
 		}
 	}
 }
-void lineBresAAbyCount(int x0, int y0, int xEnd, int yEnd, int level)
+void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
 {
 	if (x0 > xEnd)
 	{
@@ -13292,15 +13292,15 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresAAbyCount(300, 100, 100, 100, 3);
-	lineBresAAbyCount(200, 200, 200, 400, 3);
-	lineBresAAbyCount(120, 120, 250, 250, 3);
-	lineBresAAbyCount(250, 120, 120, 250, 3);
+	lineBresAA(300, 100, 100, 100, 3);
+	lineBresAA(200, 200, 200, 400, 3);
+	lineBresAA(120, 120, 250, 250, 3);
+	lineBresAA(250, 120, 120, 250, 3);
 
-	lineBresAAbyCount(150, 150, 650, 400, 3);
-	lineBresAAbyCount(380, 180, 500, 400, 3);
-	lineBresAAbyCount(380, 580, 600, 500, 3);
-	lineBresAAbyCount(600, 250, 700, 10, 3);
+	lineBresAA(150, 150, 650, 400, 3);
+	lineBresAA(380, 180, 500, 400, 3);
+	lineBresAA(380, 580, 600, 500, 3);
+	lineBresAA(600, 250, 700, 10, 3);
 	glFlush();
 }
 void code_6_exercise_54()
@@ -13309,6 +13309,37 @@ void code_6_exercise_54()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_54_Test1
+bool check(Point checkPoint, Point rayPoint, const std::vector<Point>& ploygon)
+{
+
+}
+void lineMSAA(int x0, int y0, int xEnd, int yEnd, int level)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	glFlush();
+}
+void code_6_exercise_54()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
@@ -13579,6 +13610,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_54
 	code_6_exercise_54();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_54_Test1
+	code_6_exercise_54_1();
 #endif
 
 
