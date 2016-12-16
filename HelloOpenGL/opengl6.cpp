@@ -13071,11 +13071,11 @@ void setSubPixelDx(int subX, int subY, const BaseInfo& baseInfo, std::map<Point,
 	printf("x=%d, y=%d\n", subX, subY);
 	int curX = floor((float)subX / baseInfo.level);
 	int curY = floor((float)subY / baseInfo.level);
-	//if (curX != lastInfo.begin()->first.x)
-	//{
-	//	refreshLastPoints(baseInfo, lastInfo);
-	//	lastInfo.clear();
-	//}
+	if (curX != lastInfo.begin()->first.x)
+	{
+		refreshLastPoints(baseInfo, lastInfo);
+		lastInfo.clear();
+	}
 	lastInfo[{curX, curY}]++;
 }
 void setSubPixelDy(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
@@ -13295,6 +13295,7 @@ void drawFunc()
 	lineBresAAbyCount(300, 100, 100, 100, 3);
 	lineBresAAbyCount(200, 200, 200, 400, 3);
 	lineBresAAbyCount(120, 120, 250, 250, 3);
+	lineBresAAbyCount(250, 120, 120, 250, 3);
 
 	lineBresAAbyCount(150, 150, 650, 400, 3);
 	lineBresAAbyCount(380, 180, 500, 400, 3);
