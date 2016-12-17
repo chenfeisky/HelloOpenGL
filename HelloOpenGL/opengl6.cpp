@@ -13310,14 +13310,270 @@ void code_6_exercise_54()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_54_Test1
-void hLine(int y, int x0, int x1)
+struct Point { int x; int y; };
+struct Color3f
 {
-	for (int x = x0; x <= x1; x++)
+	GLfloat r, g, b;
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+struct LineRecord
+{
+	int beginX;
+	int endX;
+};
+std::map<Point, int> lastInfo;
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
 	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
 		setPixel(x, y);
 	}
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p > 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
+}
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+}
+void refreshLastPoints()
+{
+	for (auto p : lastInfo)
+	{
+		float count = p.second;
+		if (count > 16)
+			count = 16;
+
+		setGrayPixel(p.first.x, p.first.y, count / 16);
+	}
+}
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0 ; x <= x1; x++)
+	{
+		printf("x=%d, y=%d\n", x, y);
+		int curX = floor((float)x / 4);
+		int curY = floor((float)y / 4);
+		lastInfo[{curX, curY}]++;
+		//setPixel(x, y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
@@ -13405,7 +13661,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
 {
-	std::vector<Point2> points;
+	std::vector<Point> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
@@ -13448,7 +13704,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point2>& points)
+void fillPolygon(const std::vector<Point>& points)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -13492,22 +13748,16 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 	int vertexX = Round(std::cos(sita) * (width / 2));
 	int vertexY = Round(std::sin(sita) * (width / 2));
 
-	std::vector<Point2> points;
+	std::vector<Point> points;
+	//points.push_back({ x0 + vertexX, y0 + vertexY });
+	//points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
+	//points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
+	//points.push_back({ xEnd + vertexX, yEnd + vertexY });
+
 	points.push_back({ x0 + vertexX, y0 + vertexY });
-	points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
-	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
-	points.push_back({ xEnd + vertexX, yEnd + vertexY });
-
-	// Ö±Ïß
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(x0, y0, xEnd, yEnd);
-
-	// Ïß¿ò
-	glColor3f(1.0, 1.0, 0.0);
-	lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
-	lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
-	lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
-	lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
+	points.push_back({ x0 - vertexX, y0 - vertexY });
+	points.push_back({ xEnd - vertexX, yEnd - vertexY});
+	points.push_back({ xEnd + vertexX, yEnd + vertexY});
 
 	// Ìî³ä
 	glColor3f(1.0, 1.0, 1.0);
@@ -13525,16 +13775,19 @@ void lineMSAA(int x0, int y0, int xEnd, int yEnd, int level)
 		xEnd = tempx;
 		yEnd = tempy;
 	}
-	
 }
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
+	lineBres(0, 200, 350, 380);
+	lineRect(0, 0, 350, 180, 4);
+	refreshLastPoints();
+
 	glFlush();
 }
-void code_6_exercise_54()
+void code_6_exercise_54_1()
 {
 	glutDisplayFunc(drawFunc);
 }
