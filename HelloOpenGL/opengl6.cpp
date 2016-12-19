@@ -13352,7 +13352,14 @@ struct LineRecord
 	int beginX;
 	int endX;
 };
-std::map<Point, int> lastInfo;
+struct BaseInfo
+{
+	int x0;
+	int y0;
+	int xEnd;
+	int yEnd;
+	int level;
+};
 inline int Round(const float a)
 {
 	if (a >= 0)
@@ -13374,6 +13381,34 @@ bool operator < (const Point& p1, const Point& p2)
 	{
 		return p1.y < p2.y;
 	}
+}
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+}
+void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
+{
+	for (auto p : lastInfo)
+	{
+		float count = p.second;
+		if (count > baseInfo.level)
+			count = baseInfo.level;
+
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
+	}
+}
+void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	printf("x=%d, y=%d\n", subX, subY);
+	int curX = floor((float)subX / baseInfo.level);
+	int curY = floor((float)subY / baseInfo.level);
+	if (curX != lastInfo.begin()->first.x)
+	{
+		refreshLastPoints(baseInfo, lastInfo);
+		lastInfo.clear();
+	}
+	lastInfo[{curX, curY}]++;
 }
 // 0<m<1
 void lineBres1(int x0, int y0, int xEnd, int yEnd)
@@ -13546,32 +13581,54 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		}
 	}
 }
-void setGrayPixel(int x, int y, float grayPercent)
-{
-	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
-	setPixel(x, y);
-}
+std::map<Point, int> lastInfo;
+int aap = 4;
+int aap2 = aap * aap;
 void refreshLastPoints()
 {
 	for (auto p : lastInfo)
 	{
 		float count = p.second;
-		if (count > 16)
-			count = 16;
+		if (count > aap2)
+			count = aap2;
 
-		setGrayPixel(p.first.x, p.first.y, count / 16);
+		//if (count == 16)
+		//	count = 14;
+
+		setGrayPixel(p.first.x, p.first.y, count / aap2);
 	}
+	lastInfo.clear();
 }
+
+bool AA = true;
+int last = -1000;
 void hLine(int y, int x0, int x1)
 {
-	for (int x = x0 ; x <= x1; x++)
+	//printf("beging x=%d, y=%d\n", x0, y);
+	for (int x = x0; x <= x1; x++)
 	{
-		printf("x=%d, y=%d\n", x, y);
-		int curX = floor((float)x / 4);
-		int curY = floor((float)y / 4);
-		lastInfo[{curX, curY}]++;
-		//setPixel(x, y);
+		if (AA)
+		{
+			//printf("x=%d, y=%d\n", x, y);
+			int curX = floor((float)x / aap);
+			int curY = floor((float)y / aap);
+			lastInfo[{curX, curY}]++;
+		}
+		else
+			setPixel(x, y);
 	}
+	//if (last != -1000)
+	//{
+	//	for (int x = last + 1; x <= x1; x++)
+	//	{
+	//		setPixel(x, y);
+	//	}
+	//}
+	//else
+	//{
+	//	setPixel(x1, y);
+	//}	
+	//last = x1;
 }
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
@@ -13733,7 +13790,7 @@ void fillPolygon(const std::vector<Point>& points)
 	}
 
 }
-void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
+void lineRect(int x0, int y0, int xEnd, int yEnd, float width)
 {
 	int dx = xEnd - x0;
 	int dy = yEnd - y0;
@@ -13754,14 +13811,26 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 	//points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
 	//points.push_back({ xEnd + vertexX, yEnd + vertexY });
 
+	//points.push_back({ x0 + vertexX +1 , y0 + vertexY });
+	//points.push_back({ x0 - vertexX , y0 - vertexY });
+	//points.push_back({ xEnd - vertexX , yEnd - vertexY});
+	//points.push_back({ xEnd + vertexX +1, yEnd + vertexY});
+
 	points.push_back({ x0 + vertexX, y0 + vertexY });
-	points.push_back({ x0 - vertexX, y0 - vertexY });
-	points.push_back({ xEnd - vertexX, yEnd - vertexY});
-	points.push_back({ xEnd + vertexX, yEnd + vertexY});
+	points.push_back({ x0 - vertexX , y0 - vertexY });
+	points.push_back({ xEnd - vertexX , yEnd - vertexY });
+	points.push_back({ xEnd + vertexX , yEnd + vertexY });
 
 	// Ìî³ä
 	glColor3f(1.0, 1.0, 1.0);
 	fillPolygon(points);
+
+	
+	glColor3f(1.0, 0.0, 0.0);
+	//lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
+	//lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
+	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
+	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 }
 void lineMSAA(int x0, int y0, int xEnd, int yEnd, int level)
 {
@@ -13781,8 +13850,15 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBres(0, 200, 350, 380);
-	lineRect(0, 0, 350, 180, 4);
+	// ÇøÓò
+	AA = false;
+	lineRect(0, 100, 30, 400, 20);
+	AA = true;
+	lineRect(0, 0, 30, 300, 20 * aap);
+
+	// Ö±Ïß
+	//lineBres(0, 200, 30, 500);
+	//lineRect(0, 0, 30, 300, aap);
 	refreshLastPoints();
 
 	glFlush();
