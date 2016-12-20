@@ -13060,34 +13060,34 @@ void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& las
 	for (auto p : lastInfo)
 	{
 		float count = p.second;
-		if (count > baseInfo.level)
-			count = baseInfo.level;
+		if (count > baseInfo.level * baseInfo.level)
+			count = baseInfo.level * baseInfo.level;
 
-		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / (baseInfo.level*baseInfo.level));
 	}
 }
 void setSubPixelDx(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	printf("x=%d, y=%d\n", subX, subY);
+	//printf("x=%d, y=%d\n", subX, subY);
 	int curX = floor((float)subX / baseInfo.level);
 	int curY = floor((float)subY / baseInfo.level);
-	if (curX != lastInfo.begin()->first.x)
+	/*if (curX != lastInfo.begin()->first.x)
 	{
 		refreshLastPoints(baseInfo, lastInfo);
 		lastInfo.clear();
-	}
+	}*/
 	lastInfo[{curX, curY}]++;
 }
 void setSubPixelDy(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	printf("x=%d, y=%d\n", subX, subY);
+	//printf("x=%d, y=%d\n", subX, subY);
 	int curX = floor((float)subX / baseInfo.level);
 	int curY = floor((float)subY / baseInfo.level);
-	if (curY != lastInfo.begin()->first.y)
+	/*if (curY != lastInfo.begin()->first.y)
 	{
 		refreshLastPoints(baseInfo, lastInfo);
 		lastInfo.clear();
-	}
+	}*/
 	lastInfo[{curX, curY}]++;
 }
 // 0<m<1
@@ -13282,7 +13282,15 @@ void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
 	std::map<Point, int> lastInfo;
 	BaseInfo baseInfo = { x0, y0, xEnd, yEnd, level };
 	lastInfo[{0, 0}] = level;
+	lineBres(subX0 - 4, subY0, subXEnd - 4, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 - 3, subY0, subXEnd - 3, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 - 2, subY0, subXEnd - 2, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 - 1, subY0, subXEnd - 1, SubYEnd, baseInfo, lastInfo);
 	lineBres(subX0, subY0, subXEnd, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 + 1, subY0, subXEnd + 1, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 + 2, subY0, subXEnd + 2, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 + 3, subY0, subXEnd + 3, SubYEnd, baseInfo, lastInfo);
+	lineBres(subX0 + 4, subY0, subXEnd + 4, SubYEnd, baseInfo, lastInfo);
 	lastInfo[{xEnd - x0, yEnd - y0}] = level;
 	refreshLastPoints(baseInfo, lastInfo);
 	lastInfo.clear();
@@ -13292,7 +13300,7 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresAA(300, 100, 100, 100, 3);
+	/*lineBresAA(300, 100, 100, 100, 3);
 	lineBresAA(200, 200, 200, 400, 3);
 	lineBresAA(120, 120, 250, 250, 3);
 	lineBresAA(250, 120, 120, 250, 3);
@@ -13300,7 +13308,10 @@ void drawFunc()
 	lineBresAA(150, 150, 650, 400, 3);
 	lineBresAA(380, 180, 500, 400, 3);
 	lineBresAA(380, 580, 600, 500, 3);
-	lineBresAA(600, 250, 700, 10, 3);
+	lineBresAA(600, 250, 700, 10, 3);*/
+
+	lineBresAA(100, 100, 130, 400, 4);
+
 	glFlush();
 }
 void code_6_exercise_54()
@@ -13358,57 +13369,20 @@ struct BaseInfo
 	int y0;
 	int xEnd;
 	int yEnd;
-	int level;
+	int AALevel;
 };
+//// 判断浮点数相等
+//bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
+//bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
+//bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
+//bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
+//bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 inline int Round(const float a)
 {
 	if (a >= 0)
 		return int(a + 0.5);
 	else
 		return int(a - 0.5);
-}
-bool operator < (const Point& p1, const Point& p2)
-{
-	if (p1.x < p2.x)
-	{
-		return true;
-	}
-	else if (p2.x < p1.x)
-	{
-		return false;
-	}
-	else
-	{
-		return p1.y < p2.y;
-	}
-}
-void setGrayPixel(int x, int y, float grayPercent)
-{
-	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
-	setPixel(x, y);
-}
-void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
-{
-	for (auto p : lastInfo)
-	{
-		float count = p.second;
-		if (count > baseInfo.level)
-			count = baseInfo.level;
-
-		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
-	}
-}
-void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
-	printf("x=%d, y=%d\n", subX, subY);
-	int curX = floor((float)subX / baseInfo.level);
-	int curY = floor((float)subY / baseInfo.level);
-	if (curX != lastInfo.begin()->first.x)
-	{
-		refreshLastPoints(baseInfo, lastInfo);
-		lastInfo.clear();
-	}
-	lastInfo[{curX, curY}]++;
 }
 // 0<m<1
 void lineBres1(int x0, int y0, int xEnd, int yEnd)
@@ -13581,39 +13555,61 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		}
 	}
 }
-std::map<Point, int> lastInfo;
-int aap = 4;
-int aap2 = aap * aap;
-void refreshLastPoints()
+bool operator < (const Point& p1, const Point& p2)
 {
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+}
+void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
+{
+	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
 	for (auto p : lastInfo)
 	{
 		float count = p.second;
-		if (count > aap2)
-			count = aap2;
+		if (count > squareAA)
+			count = squareAA;
 
-		//if (count == 16)
-		//	count = 14;
-
-		setGrayPixel(p.first.x, p.first.y, count / aap2);
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / squareAA);
 	}
-	lastInfo.clear();
 }
-
-bool AA = true;
-int last = -1000;
-void hLine(int y, int x0, int x1)
+void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	//printf("x=%d, y=%d\n", subX, subY);
+	int curX = floor((float)subX / baseInfo.AALevel);
+	int curY = floor((float)subY / baseInfo.AALevel);
+	if (!lastInfo.empty())
+	{
+		if (curY != lastInfo.begin()->first.y)
+		{
+			refreshLastPoints(baseInfo, lastInfo);
+			lastInfo.clear();
+		}
+	}
+	lastInfo[{curX, curY}]++;
+}
+void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	//printf("beging x=%d, y=%d\n", x0, y);
 	for (int x = x0; x <= x1; x++)
 	{
-		if (AA)
-		{
-			//printf("x=%d, y=%d\n", x, y);
-			int curX = floor((float)x / aap);
-			int curY = floor((float)y / aap);
-			lastInfo[{curX, curY}]++;
-		}
+		//printf("x=%d, y=%d\n", x, y);
+		if (baseInfo.AALevel > 1)
+			setSubPixel(x, y, baseInfo, lastInfo);
 		else
 			setPixel(x, y);
 	}
@@ -13716,7 +13712,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	std::vector<Point> points;
 	for (int curY = beginY; curY < endY; curY++)
@@ -13751,7 +13747,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, baseInfo, lastInfo);
 			}
 			else
 			{
@@ -13761,7 +13757,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point>& points)
+void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -13786,7 +13782,7 @@ void fillPolygon(const std::vector<Point>& points)
 			activeLines.back().counter = 0;
 			activeLines.back().currentX = _sortedLine.beginX;
 		}
-		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo);
 	}
 
 }
@@ -13817,13 +13813,13 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, float width)
 	//points.push_back({ xEnd + vertexX +1, yEnd + vertexY});
 
 	points.push_back({ x0 + vertexX, y0 + vertexY });
-	points.push_back({ x0 - vertexX , y0 - vertexY });
-	points.push_back({ xEnd - vertexX , yEnd - vertexY });
-	points.push_back({ xEnd + vertexX , yEnd + vertexY });
+	points.push_back({ x0 - vertexX, y0 - vertexY });
+	points.push_back({ xEnd - vertexX, yEnd - vertexY });
+	points.push_back({ xEnd + vertexX, yEnd + vertexY });
 
 	// 填充
 	glColor3f(1.0, 1.0, 1.0);
-	fillPolygon(points);
+	//fillPolygon(points);
 
 	
 	glColor3f(1.0, 0.0, 0.0);
@@ -13832,7 +13828,7 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, float width)
 	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
 	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 }
-void lineMSAA(int x0, int y0, int xEnd, int yEnd, int level)
+void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 {
 	if (x0 > xEnd)
 	{
@@ -13844,6 +13840,102 @@ void lineMSAA(int x0, int y0, int xEnd, int yEnd, int level)
 		xEnd = tempx;
 		yEnd = tempy;
 	}
+	
+	//int subX0 = (AAlevel - 1) / 2;
+	//int subY0 = (AAlevel - 1) / 2;
+	int subX0 = 0;
+	int subY0 = 0;
+	int subXEnd = subX0 + (xEnd - x0) * AAlevel;
+	int SubYEnd = subY0 + (yEnd - y0) * AAlevel;
+
+	BaseInfo baseInfo = { x0 , y0, xEnd, yEnd, AAlevel};
+	std::map<Point, int> lastInfo;
+
+	int dx = subXEnd - subX0;
+	int dy = SubYEnd - subY0;
+	float aa;
+	int offset = Round(std::modf(AAlevel / 2, &aa)) == 0 ? 1 : 0;
+
+	float sita;
+	if (dy)
+		sita = std::atan((float)-dx / dy);
+	else
+		sita = PI / 2;
+
+	int fixed = 0;
+	switch (AAlevel)
+	{
+	case 2:
+		fixed = 0;
+		break;
+	case 4:
+		fixed = 1;
+		break;
+	case 8:
+		fixed = 2;
+		break;
+	default:
+		break;
+	}
+	int vertexX = Round(std::cos(sita) * ((float)AAlevel / 2 + fixed));
+	int vertexY = Round(std::sin(sita) * ((float)AAlevel / 2 + fixed));
+
+	std::vector<Point> points;
+	//points.push_back({ x0 + vertexX, y0 + vertexY });
+	//points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
+	//points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
+	//points.push_back({ xEnd + vertexX, yEnd + vertexY });
+
+	//points.push_back({ x0 + vertexX +1 , y0 + vertexY });
+	//points.push_back({ x0 - vertexX , y0 - vertexY });
+	//points.push_back({ xEnd - vertexX , yEnd - vertexY});
+	//points.push_back({ xEnd + vertexX +1, yEnd + vertexY});
+
+	points.push_back({ subX0 + vertexX, subY0 + vertexY });
+	points.push_back({ subX0 - vertexX , subY0 - vertexY });
+	points.push_back({ subXEnd - vertexX , SubYEnd - vertexY });
+	points.push_back({ subXEnd + vertexX , SubYEnd + vertexY });
+	
+	// 填充
+	glColor3f(1.0, 1.0, 1.0);
+
+	lastInfo[{0, 0}] = AAlevel * AAlevel;
+	fillPolygon(points, baseInfo, lastInfo);
+	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel * AAlevel;
+	refreshLastPoints(baseInfo, lastInfo);
+
+	glColor3f(1.0, 0.0, 0.0);
+	//lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
+	//lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
+	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
+	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
+}
+void polygonMSAA(const std::vector<Point>& points, int AAlevel)
+{
+	std::vector<Point> subPoints;
+
+	for (int i = 0; i < points.size(); i++)
+	{
+		int subX0 = (points[i].x - points[0].x) * AAlevel;
+		int subY0 = (points[i].y - points[0].y) * AAlevel;
+
+		subPoints.push_back({ subX0, subY0 });
+	}
+
+	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
+	std::map<Point, int> lastInfo;
+
+	// 填充
+	glColor3f(1.0, 1.0, 1.0);
+
+	fillPolygon(subPoints, baseInfo, lastInfo);
+	refreshLastPoints(baseInfo, lastInfo);
+
+	glColor3f(1.0, 0.0, 0.0);
+	//lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
+	//lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
+	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
+	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 }
 void drawFunc()
 {
@@ -13851,15 +13943,26 @@ void drawFunc()
 	glColor3f(1.0, 1.0, 1.0);
 
 	// 区域
-	AA = false;
-	lineRect(0, 100, 30, 400, 20);
-	AA = true;
-	lineRect(0, 0, 30, 300, 20 * aap);
+	//lineRect(0, 100, 30, 400, 20);
+	//lineRect(0, 0, 30, 300, 20 * aap);
 
 	// 直线
-	//lineBres(0, 200, 30, 500);
 	//lineRect(0, 0, 30, 300, aap);
-	refreshLastPoints();
+	//lineBres(50, 100, 80, 400);
+	//lineMSAA(100, 100, 130, 400, 2);
+	//lineMSAA(150, 100, 180, 400, 4);
+	//lineMSAA(200, 100, 230, 400, 8);
+	//lineMSAA(200, 100, 280, 400, 8);
+	//lineMSAA(200, 100, 300, 400, 8);
+	//lineMSAA(200, 100, 350, 400, 8);
+	//lineMSAA(200, 100, 400, 400, 8);
+	//lineMSAA(200, 100, 450, 400, 8);
+	//lineMSAA(200, 100, 500, 400, 8);
+
+	fillPolygon({ { 52, 137 },{ 146, 161 },{ 125, 373 },{ 62, 391 } }, { 0,0,0,0,1 }, std::map<Point, int>());
+	polygonMSAA({ { 202, 137 },{ 296, 161 },{ 275, 373 },{ 212, 391 } }, 2);
+	polygonMSAA({ { 350, 137 },{ 440, 161 }, { 420, 373 }, { 360, 391 } }, 4);
+	polygonMSAA({ { 500, 137 },{ 590, 161 },{ 570, 373 },{ 510, 391 } }, 8);
 
 	glFlush();
 }
