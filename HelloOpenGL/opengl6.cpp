@@ -13341,22 +13341,22 @@ struct Line
 };
 struct SortedLine
 {
-	int maxY;
-	int minY;
-	int beginX;
+	int maxX;
+	int minX;
+	int beginY;
 	int dx;
 	int dy;
 };
 struct SortedLineSet
 {
-	int scanY;
+	int scanX;
 	std::vector<SortedLine> sortedLines;
 };
 struct ActiveLine
 {
 	SortedLine sortedLine;
 	int counter;
-	int currentX;
+	int currentY;
 };
 struct LineRecord
 {
@@ -13602,38 +13602,213 @@ void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, i
 	}
 	lastInfo[{curX, curY}]++;
 }
-void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+//void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+//{
+//	//printf("beging x=%d, y=%d\n", x0, y);
+//	for (int x = x0; x <= x1; x++)
+//	{
+//		//printf("x=%d, y=%d\n", x, y);
+//		if (baseInfo.AALevel > 1)
+//			setSubPixel(x, y, baseInfo, lastInfo);
+//		else
+//			setPixel(x, y);
+//	}
+//}
+//std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+//{
+//	std::vector<Line> lines;
+//	for (int i = 0; i < points.size(); i++)
+//	{
+//		int next = (i + 1) % points.size();
+//		// 跳过水平线
+//		if (points[i].y == points[next].y)
+//			continue;
+//
+//		lines.push_back(Line());
+//		lines.back().x0 = points[i].x;
+//		lines.back().y0 = points[i].y;
+//		lines.back().x1 = points[next].x;
+//		lines.back().y1 = points[next].y;
+//	}
+//
+//	for (int i = 0; i < lines.size(); i++)
+//	{
+//		int next = (i + 1) % lines.size();
+//		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+//			lines[i].y1--;
+//		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+//			lines[next].y0--;
+//	}
+//
+//	// 再次检查水平线
+//	for (auto it = lines.begin(); it != lines.end();)
+//	{
+//		if (it->y0 == it->y1)
+//		{
+//			it = lines.erase(it);
+//		}
+//		else
+//		{
+//			it++;
+//		}
+//	}
+//
+//	for (auto& line : lines)
+//	{
+//		if (line.y0 > line.y1)
+//		{
+//			std::swap(line.x0, line.x1);
+//			std::swap(line.y0, line.y1);
+//		}
+//	}
+//
+//	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+//	{
+//		if (a.y0 == b.y0)
+//		{
+//			if (a.x0 == b.x0)
+//			{
+//				if (a.x1 == b.x1)
+//					return a.y1 < b.y1;
+//				return a.x1 < b.x1;
+//			}
+//			return a.x0 < b.x0;
+//		}
+//		return a.y0 < b.y0;
+//	});
+//	std::vector<SortedLineSet> lineSet;
+//	int lastY = -99999;
+//	int maxY = -99999;
+//	for (auto& line : lines)
+//	{
+//		if (line.y0 != lastY)
+//		{
+//			lineSet.push_back(SortedLineSet());
+//		}
+//		lineSet.back().scanY = line.y0;
+//		lineSet.back().sortedLines.push_back(SortedLine());
+//		lineSet.back().sortedLines.back().beginX = line.x0;
+//		lineSet.back().sortedLines.back().maxY = line.y1;
+//		lineSet.back().sortedLines.back().minY = line.y0;
+//		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+//		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+//		lastY = line.y0;
+//
+//		if (maxY < line.y1)
+//			maxY = line.y1;
+//	}
+//	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+//	return lineSet;
+//}
+//void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+//{
+//	std::vector<Point> points;
+//	for (int curY = beginY; curY < endY; curY++)
+//	{
+//		for (auto& line : activeLines)
+//		{
+//			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+//			{
+//				points.push_back({ line.currentX , curY });
+//
+//				line.counter += std::abs(line.sortedLine.dx * 2);
+//				//if (line.counter >= line.sortedLine.dy)
+//				//{
+//				//	if(line.sortedLine.dx > 0)
+//				//		line.currentX++;
+//				//	else
+//				//		line.currentX--;
+//				//	line.counter -= line.sortedLine.dy * 2;
+//				//}
+//				while (line.counter >= line.sortedLine.dy)
+//				{
+//					if (line.sortedLine.dx > 0)
+//						line.currentX++;
+//					else
+//						line.currentX--;
+//					line.counter -= line.sortedLine.dy * 2;
+//				}
+//			}
+//		}
+//		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+//		for (int i = 0; ; i++)
+//		{
+//			if (2 * i < points.size() && 2 * i + 1 < points.size())
+//			{
+//				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, baseInfo, lastInfo);
+//			}
+//			else
+//			{
+//				points.clear();
+//				break;
+//			}
+//		}
+//	}
+//}
+//void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+//{
+//	std::vector<SortedLineSet> sortedLines = SortLines(points);
+//	std::vector<ActiveLine> activeLines;
+//	for (int i = 0; i < sortedLines.size() - 1; i++) 
+//	{
+//		int curY = sortedLines[i].scanY;
+//		for (auto it = activeLines.begin(); it != activeLines.end();)
+//		{
+//			if (curY > it->sortedLine.maxY)
+//			{
+//				it = activeLines.erase(it);
+//			}
+//			else
+//			{
+//				it++;
+//			}
+//		}
+//		for (auto& _sortedLine : sortedLines[i].sortedLines)
+//		{
+//			activeLines.push_back(ActiveLine());
+//			activeLines.back().sortedLine = _sortedLine;
+//			activeLines.back().counter = 0;
+//			activeLines.back().currentX = _sortedLine.beginX;
+//		}
+//		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo);
+//	}
+//
+//}
+void setSubPixelV(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	//printf("x=%d, y=%d\n", subX, subY);
+	int curX = floor((float)subX / baseInfo.AALevel);
+	int curY = floor((float)subY / baseInfo.AALevel);
+	if (!lastInfo.empty())
+	{
+		if (curX != lastInfo.begin()->first.x)
+		{
+			refreshLastPoints(baseInfo, lastInfo);
+			lastInfo.clear();
+		}
+	}
+	lastInfo[{curX, curY}]++;
+}
+void vLine(int x, int y0, int y1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	//printf("beging x=%d, y=%d\n", x0, y);
-	for (int x = x0; x <= x1; x++)
+	for (int y = y0; y <= y1; y++)
 	{
 		//printf("x=%d, y=%d\n", x, y);
 		if (baseInfo.AALevel > 1)
-			setSubPixel(x, y, baseInfo, lastInfo);
+			setSubPixelV(x, y, baseInfo, lastInfo);
 		else
 			setPixel(x, y);
 	}
-	//if (last != -1000)
-	//{
-	//	for (int x = last + 1; x <= x1; x++)
-	//	{
-	//		setPixel(x, y);
-	//	}
-	//}
-	//else
-	//{
-	//	setPixel(x1, y);
-	//}	
-	//last = x1;
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+std::vector<SortedLineSet> SortLinesV(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// 跳过水平线
-		if (points[i].y == points[next].y)
+		// 跳过垂直线
+		if (points[i].x == points[next].x)
 			continue;
 
 		lines.push_back(Line());
@@ -13646,16 +13821,16 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < lines.size(); i++)
 	{
 		int next = (i + 1) % lines.size();
-		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
-			lines[i].y1--;
-		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
-			lines[next].y0--;
+		if (lines[i].x1 - lines[i].x0 > 0 && lines[next].x1 - lines[next].x0 > 0)
+			lines[i].x1--;
+		else if (lines[i].x1 - lines[i].x0 < 0 && lines[next].x1 - lines[next].x0 < 0)
+			lines[next].x0--;
 	}
 
-	// 再次检查水平线
+	// 再次检查垂直线
 	for (auto it = lines.begin(); it != lines.end();)
 	{
-		if (it->y0 == it->y1)
+		if (it->x0 == it->x1)
 		{
 			it = lines.erase(it);
 		}
@@ -13667,7 +13842,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 
 	for (auto& line : lines)
 	{
-		if (line.y0 > line.y1)
+		if (line.x0 > line.x1)
 		{
 			std::swap(line.x0, line.x1);
 			std::swap(line.y0, line.y1);
@@ -13676,54 +13851,54 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 
 	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
 	{
-		if (a.y0 == b.y0)
+		if (a.x0 == b.x0)
 		{
-			if (a.x0 == b.x0)
+			if (a.y0 == b.y0)
 			{
-				if (a.x1 == b.x1)
-					return a.y1 < b.y1;
-				return a.x1 < b.x1;
+				if (a.y1 == b.y1)
+					return a.x1 < b.x1;
+				return a.y1 < b.y1;
 			}
-			return a.x0 < b.x0;
+			return a.y0 < b.y0;
 		}
-		return a.y0 < b.y0;
+		return a.x0 < b.x0;
 	});
 	std::vector<SortedLineSet> lineSet;
-	int lastY = -99999;
-	int maxY = -99999;
+	int lastX = -99999;
+	int maxX = -99999;
 	for (auto& line : lines)
 	{
-		if (line.y0 != lastY)
+		if (line.x0 != lastX)
 		{
 			lineSet.push_back(SortedLineSet());
 		}
-		lineSet.back().scanY = line.y0;
+		lineSet.back().scanX = line.x0;
 		lineSet.back().sortedLines.push_back(SortedLine());
-		lineSet.back().sortedLines.back().beginX = line.x0;
-		lineSet.back().sortedLines.back().maxY = line.y1;
-		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().beginY = line.y0;
+		lineSet.back().sortedLines.back().maxX = line.x1;
+		lineSet.back().sortedLines.back().minX = line.x0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
 		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
-		lastY = line.y0;
+		lastX = line.x0;
 
-		if (maxY < line.y1)
-			maxY = line.y1;
+		if (maxX < line.x1)
+			maxX = line.x1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	lineSet.push_back({ maxX + 1 ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+void fillWithActiveLinesV(int beginX, int endX, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	std::vector<Point> points;
-	for (int curY = beginY; curY < endY; curY++)
+	for (int curX = beginX; curX < endX; curX++)
 	{
 		for (auto& line : activeLines)
 		{
-			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			if (curX >= line.sortedLine.minX && curX <= line.sortedLine.maxX)
 			{
-				points.push_back({ line.currentX , curY });
+				points.push_back({ curX, line.currentY });
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
+				line.counter += std::abs(line.sortedLine.dy * 2);
 				//if (line.counter >= line.sortedLine.dy)
 				//{
 				//	if(line.sortedLine.dx > 0)
@@ -13732,22 +13907,22 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 				//		line.currentX--;
 				//	line.counter -= line.sortedLine.dy * 2;
 				//}
-				while (line.counter >= line.sortedLine.dy)
+				while (line.counter >= line.sortedLine.dx)
 				{
-					if (line.sortedLine.dx > 0)
-						line.currentX++;
+					if (line.sortedLine.dy > 0)
+						line.currentY++;
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						line.currentY--;
+					line.counter -= line.sortedLine.dx * 2;
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.y < b.y;});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, baseInfo, lastInfo);
+				vLine(points[2 * i].x, points[2 * i].y, points[2 * i + 1].y, baseInfo, lastInfo);
 			}
 			else
 			{
@@ -13757,16 +13932,16 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+void fillPolygonV(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<SortedLineSet> sortedLines = SortLinesV(points);
 	std::vector<ActiveLine> activeLines;
 	for (int i = 0; i < sortedLines.size() - 1; i++)
 	{
-		int curY = sortedLines[i].scanY;
+		int curX = sortedLines[i].scanX;
 		for (auto it = activeLines.begin(); it != activeLines.end();)
 		{
-			if (curY > it->sortedLine.maxY)
+			if (curX > it->sortedLine.maxX)
 			{
 				it = activeLines.erase(it);
 			}
@@ -13780,9 +13955,9 @@ void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std
 			activeLines.push_back(ActiveLine());
 			activeLines.back().sortedLine = _sortedLine;
 			activeLines.back().counter = 0;
-			activeLines.back().currentX = _sortedLine.beginX;
+			activeLines.back().currentY = _sortedLine.beginY;
 		}
-		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo);
+		fillWithActiveLinesV(curX, sortedLines[i + 1].scanX, activeLines, baseInfo, lastInfo);
 	}
 
 }
@@ -13820,13 +13995,14 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, float width)
 	// 填充
 	glColor3f(1.0, 1.0, 1.0);
 	//fillPolygon(points);
+	fillPolygonV(points, { 0, 0, 0, 0, 1 }, std::map<Point, int>());
 
 	
 	glColor3f(1.0, 0.0, 0.0);
 	//lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
 	//lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
 	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
-	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
+	lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 }
 void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 {
@@ -13900,7 +14076,7 @@ void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 	glColor3f(1.0, 1.0, 1.0);
 
 	lastInfo[{0, 0}] = AAlevel * AAlevel;
-	fillPolygon(points, baseInfo, lastInfo);
+	fillPolygonV(points, baseInfo, lastInfo);
 	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel * AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 
@@ -13928,7 +14104,7 @@ void polygonMSAA(const std::vector<Point>& points, int AAlevel)
 	// 填充
 	glColor3f(1.0, 1.0, 1.0);
 
-	fillPolygon(subPoints, baseInfo, lastInfo);
+	fillPolygonV(subPoints, baseInfo, lastInfo);
 	refreshLastPoints(baseInfo, lastInfo);
 
 	glColor3f(1.0, 0.0, 0.0);
@@ -13947,8 +14123,9 @@ void drawFunc()
 	//lineRect(0, 0, 30, 300, 20 * aap);
 
 	// 直线
-	//lineRect(0, 0, 30, 300, aap);
-	//lineBres(50, 100, 80, 400);
+	//lineBres(100, 100, 400, 130);
+	//lineMSAA(100, 50, 400, 80, 4);
+	
 	//lineMSAA(100, 100, 130, 400, 2);
 	//lineMSAA(150, 100, 180, 400, 4);
 	//lineMSAA(200, 100, 230, 400, 8);
@@ -13959,10 +14136,15 @@ void drawFunc()
 	//lineMSAA(200, 100, 450, 400, 8);
 	//lineMSAA(200, 100, 500, 400, 8);
 
-	fillPolygon({ { 52, 137 },{ 146, 161 },{ 125, 373 },{ 62, 391 } }, { 0,0,0,0,1 }, std::map<Point, int>());
-	polygonMSAA({ { 202, 137 },{ 296, 161 },{ 275, 373 },{ 212, 391 } }, 2);
-	polygonMSAA({ { 350, 137 },{ 440, 161 }, { 420, 373 }, { 360, 391 } }, 4);
-	polygonMSAA({ { 500, 137 },{ 590, 161 },{ 570, 373 },{ 510, 391 } }, 8);
+	//fillPolygon({ { 52, 137 },{ 146, 161 },{ 125, 373 },{ 62, 391 } }, { 0,0,0,0,1 }, std::map<Point, int>());
+	//polygonMSAA({ { 202, 137 },{ 296, 161 },{ 275, 373 },{ 212, 391 } }, 2);
+	//polygonMSAA({ { 350, 137 },{ 440, 161 }, { 420, 373 }, { 360, 391 } }, 4);
+	//polygonMSAA({ { 500, 137 },{ 590, 161 },{ 570, 373 },{ 510, 391 } }, 8);
+
+	fillPolygonV({ { 169, 487 },{ 372, 498 },{ 384, 526 },{ 181, 533 } }, { 0,0,0,0,1 }, std::map<Point, int>());
+	polygonMSAA({ { 169, 387 },{ 372, 398 },{ 384, 426 },{ 181, 433 } }, 2);
+	polygonMSAA({ { 169, 287 },{ 372, 298 },{ 384, 326 },{ 181, 333 } }, 4);
+	polygonMSAA({ { 169, 187 },{ 372, 198 },{ 384, 226 },{ 181, 233 } }, 8);
 
 	glFlush();
 }
