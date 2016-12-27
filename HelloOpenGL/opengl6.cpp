@@ -13363,6 +13363,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -13707,6 +13708,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -13733,8 +13735,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 					points.push_back({ line.currentX , curY });
 
 					line.counter += std::abs(line.sortedLine.dx * 2);
-
-					
+										
 					if (line.counter >= line.sortedLine.dy)
 					{
 						if (line.sortedLine.dx > 0)
@@ -13754,7 +13755,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 							line.currentX--;
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
-						if (line.counter >= line.sortedLine.dx || line.currentX > line.sortedLine.beginX // 结束条件)
+						if (line.counter >= line.sortedLine.dx || line.currentX > line.sortedLine.endX /* 结束条件*/)
 						{
 							line.counter -= line.sortedLine.dx * 2;
 							break;
