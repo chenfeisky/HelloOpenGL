@@ -13435,6 +13435,7 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd)
 			p += twoDyMinusDx;
 		}
 		setPixel(x, y);
+		printf("red x=%d, y=%d\n", x, y);
 	}
 }
 // m>1
@@ -13723,17 +13724,16 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	std::vector<Point> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{				
-				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dy))
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
 				{// |m|>1			
-					points.push_back({ line.currentX , curY });
-
+					points.push_back({ { line.currentX , curY } });
 					line.counter += std::abs(line.sortedLine.dx * 2);
 										
 					if (line.counter >= line.sortedLine.dy)
@@ -13747,6 +13747,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 				}				
 				else
 				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
 					while (true)
 					{
 						if (line.sortedLine.dx > 0)
@@ -13761,16 +13762,17 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 							break;
 						}
 					}
-					points.push_back({ line.currentX - 1, curY });
+					points.back().push_back({ line.currentX - 1, curY });
+					//printf("begin x=%d, y=%d                end x=%d, y=%d\n", points.back().front().x, points.back().front().y, points.back().back().x, points.back().back().y);
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.front().x < b.front().x;});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, baseInfo, lastInfo);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x, baseInfo, lastInfo);
 			}
 			else
 			{
@@ -14030,7 +14032,7 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, float width)
 	// 野割
 	glColor3f(1.0, 1.0, 1.0);
 	//fillPolygon(points);
-	fillPolygonV(points, { 0, 0, 0, 0, 1 }, std::map<Point, int>());
+	//fillPolygonV(points, { 0, 0, 0, 0, 1 }, std::map<Point, int>());
 
 	
 	glColor3f(1.0, 0.0, 0.0);
@@ -14111,7 +14113,7 @@ void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 	glColor3f(1.0, 1.0, 1.0);
 
 	lastInfo[{0, 0}] = AAlevel * AAlevel;
-	fillPolygonV(points, baseInfo, lastInfo);
+	//fillPolygonV(points, baseInfo, lastInfo);
 	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel * AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 
@@ -14139,7 +14141,7 @@ void polygonMSAA(const std::vector<Point>& points, int AAlevel)
 	// 野割
 	glColor3f(1.0, 1.0, 1.0);
 
-	fillPolygonV(subPoints, baseInfo, lastInfo);
+	//fillPolygonV(subPoints, baseInfo, lastInfo);
 	refreshLastPoints(baseInfo, lastInfo);
 
 	glColor3f(1.0, 0.0, 0.0);
@@ -14177,9 +14179,20 @@ void drawFunc()
 	//polygonMSAA({ { 500, 137 },{ 590, 161 },{ 570, 373 },{ 510, 391 } }, 8);
 
 	//fillPolygonV({ { 169, 487 },{ 372, 498 },{ 384, 526 },{ 181, 533 } }, { 0,0,0,0,1 }, std::map<Point, int>());
-	polygonMSAA({ { 169, 387 },{ 372, 398 },{ 384, 426 },{ 181, 433 } }, 2);
-	polygonMSAA({ { 169, 287 },{ 372, 298 },{ 384, 326 },{ 181, 333 } }, 4);
-	polygonMSAA({ { 169, 187 },{ 372, 198 },{ 384, 226 },{ 181, 233 } }, 8);
+	//polygonMSAA({ { 169, 387 },{ 372, 398 },{ 384, 426 },{ 181, 433 } }, 2);
+	//polygonMSAA({ { 169, 287 },{ 372, 298 },{ 384, 326 },{ 181, 333 } }, 4);
+	//polygonMSAA({ { 169, 187 },{ 372, 198 },{ 384, 226 },{ 181, 233 } }, 8);
+
+
+
+	glColor3f(1.0, 1.0, 1.0);
+	fillPolygon({ { 100, 100 }, { 200, 150 }, { 300, 300 }, {70, 200} }, { 0,0,0,0,1 }, std::map<Point, int>());
+	
+	glColor3f(1.0, 0.0, 0.0);
+	lineBres(100, 100, 200, 149);
+
+	glColor3f(1.0, 0.0, 0.0);
+	lineBres(100, 100, 70, 199);
 
 	glFlush();
 }
