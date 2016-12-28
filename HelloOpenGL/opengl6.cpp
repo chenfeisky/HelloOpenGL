@@ -4666,7 +4666,7 @@ void code_6_exercise_29()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_30
-struct Point2 { int x; int y; };
+struct Point { int x; int y; };
 struct Line
 {
 	int x0;
@@ -4679,6 +4679,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -4788,6 +4789,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	int y = y0;
 
 	setPixel(x, y);
+	printf("red x = %d, y = %d\n", x, y);
 	while (x < xEnd)
 	{
 		x++;
@@ -4799,6 +4801,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 			p += twoDyAddDx;
 		}
 		setPixel(x, y);
+		printf("red x = %d, y = %d\n", x, y);
 	}
 }
 // m<-1
@@ -4881,7 +4884,7 @@ void hLine(int y, int x0, int x1)
 		setPixel(x, y);
 	}
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
@@ -4955,6 +4958,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -4969,40 +4973,66 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
 {
-	std::vector<Point2> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				points.push_back({ line.currentX , curY });
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
+					line.counter += std::abs(line.sortedLine.dx * 2);
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
-				//if (line.counter >= line.sortedLine.dy)
-				//{
-				//	if(line.sortedLine.dx > 0)
-				//		line.currentX++;
-				//	else
-				//		line.currentX--;
-				//	line.counter -= line.sortedLine.dy * 2;
-				//}
-				while (line.counter >= line.sortedLine.dy)
-				{
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
 					if (line.sortedLine.dx > 0)
-						line.currentX++;
+						points.back().push_back({ line.currentX - 1, curY });
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
+					//printf("begin x=%d, y=%d                end x=%d, y=%d\n", points.back().front().x, points.back().front().y, points.back().back().x, points.back().back().y);
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) 
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
 			}
 			else
 			{
@@ -5012,7 +5042,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point2>& points)
+void fillPolygon(const std::vector<Point>& points)
 { 
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -5056,7 +5086,7 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 	int vertexX = Round(std::cos(sita) * (width / 2));
 	int vertexY = Round(std::sin(sita) * (width / 2));
 
-	std::vector<Point2> points;
+	std::vector<Point> points;
 	points.push_back({ x0 + vertexX, y0 + vertexY });
 	points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
 	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
@@ -5064,12 +5094,12 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 
 	// 直线
 	glColor3f(1.0, 1.0, 1.0);
-	lineBres(x0, y0, xEnd, yEnd);
+	//lineBres(x0, y0, xEnd, yEnd);
 
 	// 线框
-	glColor3f(1.0, 1.0, 0.0);
+	glColor3f(1.0, 0.0, 0.0);
 	lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
-	lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
+	lineBres(points[1].x, points[1].y - 1, points[2].x, points[2].y);
 	lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
 	lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 
@@ -5083,11 +5113,11 @@ void drawFunc()
 	glColor3f(1.0, 1.0, 1.0);
 	lineRect(53, 95, 706, 95, 10);		  // 水平线			
 	lineRect(495, 25, 495, 556, 10);	  // 垂直线
-	lineRect(30, 30, 340, 340,10);         // 45度斜线（m=1）
+	lineRect(30, 30, 340, 340, 10);         // 45度斜线（m=1）
 	lineRect(25, 575, 500, 100, 10);      // 45度斜线（m=-1)
 
 	lineRect(172, 134, 525, 243, 10);	  // 0<m<1
-	lineRect(222, 95, 521, 549,10);	  // m>1
+	lineRect(222, 95, 521, 549, 10);	  // m>1
 	lineRect(135, 300, 733, 139,10);	  // -1<m<0
 	lineRect(264, 487, 447, 47,10);	  // m<-1
 
@@ -13756,9 +13786,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 							line.currentX--;
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
-						if (line.counter >= line.sortedLine.dx || line.currentX > line.sortedLine.endX /* 结束条件*/)
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
 						{
-							line.counter -= line.sortedLine.dx * 2;
+							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
 						}
 					}
@@ -14113,7 +14144,7 @@ void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 	glColor3f(1.0, 1.0, 1.0);
 
 	lastInfo[{0, 0}] = AAlevel * AAlevel;
-	//fillPolygonV(points, baseInfo, lastInfo);
+	fillPolygon(points, baseInfo, lastInfo);
 	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel * AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 
@@ -14141,7 +14172,7 @@ void polygonMSAA(const std::vector<Point>& points, int AAlevel)
 	// 填充
 	glColor3f(1.0, 1.0, 1.0);
 
-	//fillPolygonV(subPoints, baseInfo, lastInfo);
+	fillPolygon(subPoints, baseInfo, lastInfo);
 	refreshLastPoints(baseInfo, lastInfo);
 
 	glColor3f(1.0, 0.0, 0.0);
@@ -14178,21 +14209,25 @@ void drawFunc()
 	//polygonMSAA({ { 350, 137 },{ 440, 161 }, { 420, 373 }, { 360, 391 } }, 4);
 	//polygonMSAA({ { 500, 137 },{ 590, 161 },{ 570, 373 },{ 510, 391 } }, 8);
 
-	//fillPolygonV({ { 169, 487 },{ 372, 498 },{ 384, 526 },{ 181, 533 } }, { 0,0,0,0,1 }, std::map<Point, int>());
+	//fillPolygon({ { 169, 487 },{ 372, 498 },{ 384, 526 },{ 181, 533 } }, { 0,0,0,0,1 }, std::map<Point, int>());
 	//polygonMSAA({ { 169, 387 },{ 372, 398 },{ 384, 426 },{ 181, 433 } }, 2);
 	//polygonMSAA({ { 169, 287 },{ 372, 298 },{ 384, 326 },{ 181, 333 } }, 4);
 	//polygonMSAA({ { 169, 187 },{ 372, 198 },{ 384, 226 },{ 181, 233 } }, 8);
 
+	//fillPolygon({ { 100, 100 },{ 200, 100 },{ 200, 300 },{ 100, 150 } }, { 0,0,0,0,1 }, std::map<Point, int>());
+	//polygonMSAA({ { 100, 100 },{ 200, 100 },{ 200, 300 },{ 100, 150 } }, 8);
+	//polygonMSAA({ { 169, 287 },{ 372, 298 },{ 384, 326 },{ 181, 333 } }, 4);
+	//polygonMSAA({ { 169, 187 },{ 372, 198 },{ 384, 226 },{ 181, 233 } }, 8);
 
 
 	glColor3f(1.0, 1.0, 1.0);
-	fillPolygon({ { 100, 100 }, { 200, 150 }, { 300, 300 }, {70, 200} }, { 0,0,0,0,1 }, std::map<Point, int>());
+	//fillPolygon({ { 100, 100 }, { 200, 150 }, { 300, 300 }, {70, 200} }, { 0,0,0,0,1 }, std::map<Point, int>());
 	
 	glColor3f(1.0, 0.0, 0.0);
-	lineBres(100, 100, 200, 149);
+	//lineBres(100, 100, 200, 149);
 
 	glColor3f(1.0, 0.0, 0.0);
-	lineBres(100, 100, 70, 199);
+	//lineBres(100, 100, 70, 199);
 
 	glFlush();
 }

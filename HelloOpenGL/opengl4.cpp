@@ -46,12 +46,6 @@ struct Vec
 	float y;
 };
 
-// 判断浮点数相等
-bool equal(float f1, float f2)
-{
-	return std::abs(f1 - f2) < 0.0001;
-}
-
 // 计算两直线的交点
 // 直线公式：AX+BY+C=0
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Vec& point)
