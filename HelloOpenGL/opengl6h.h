@@ -35,7 +35,7 @@
 //#define CHAPTER_6_EXERCISE_24
 //#define CHAPTER_6_EXERCISE_25
 //#define CHAPTER_6_EXERCISE_26
-#define CHAPTER_6_EXERCISE_27
+//#define CHAPTER_6_EXERCISE_27
 //#define CHAPTER_6_EXERCISE_28
 //#define CHAPTER_6_EXERCISE_29	// 简单线宽函数，不含端点处理
 //#define CHAPTER_6_EXERCISE_30
@@ -63,7 +63,7 @@
 //#define CHAPTER_6_EXERCISE_52
 //#define CHAPTER_6_EXERCISE_53
 //#define CHAPTER_6_EXERCISE_54 // 过取样（Bresenham零宽）
-//#define CHAPTER_6_EXERCISE_54_Test1 // 过取样（比例）
+#define CHAPTER_6_EXERCISE_54_Test1 // 过取样（比例）
 
 #ifdef CHAPTER_6_1_2
 #define CHAPTER_6_COMMON

@@ -5128,7 +5128,7 @@ void code_6_exercise_30()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_31
-struct Point2 { int x; int y; };
+struct Point { int x; int y; };
 struct Line
 {
 	int x0;
@@ -5141,6 +5141,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -5366,7 +5367,7 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, int width)
 		}
 	}
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
@@ -5439,6 +5440,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -5453,40 +5455,66 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
 {
-	std::vector<Point2> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				points.push_back({ line.currentX , curY });
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
-				//if (line.counter >= line.sortedLine.dy)
-				//{
-				//	if(line.sortedLine.dx > 0)
-				//		line.currentX++;
-				//	else
-				//		line.currentX--;
-				//	line.counter -= line.sortedLine.dy * 2;
-				//}
-				while (line.counter >= line.sortedLine.dy)
-				{
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
 					if (line.sortedLine.dx > 0)
-						line.currentX++;
+						points.back().push_back({ line.currentX - 1, curY });
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
 			}
 			else
 			{
@@ -5496,7 +5524,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point2>& points)
+void fillPolygon(const std::vector<Point>& points)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -5539,7 +5567,7 @@ void lineWithFillPolygon(int x0, int y0, int xEnd, int yEnd, int width)
 	int vertexX = Round(std::cos(sita) * (width / 2));
 	int vertexY = Round(std::sin(sita) * (width / 2));
 
-	std::vector<Point2> points;
+	std::vector<Point> points;
 	points.push_back({ x0 + vertexX, y0 + vertexY });
 	points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
 	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
@@ -6093,7 +6121,7 @@ void code_6_exercise_33()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_34
-struct Point2 { int x; int y; };
+struct Point { int x; int y; };
 struct Line
 {
 	int x0;
@@ -6106,6 +6134,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -6481,7 +6510,7 @@ void lineBresWithLineCap(int x0, int y0, int xEnd, int yEnd, float width, LineCa
 		fillRound(xEnd, yEnd, width / 2, RoundType::All);
 	}
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
@@ -6553,6 +6582,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -6567,40 +6597,66 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
 {
-	std::vector<Point2> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				points.push_back({ line.currentX , curY });
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
-				//if (line.counter >= line.sortedLine.dy)
-				//{
-				//	if(line.sortedLine.dx > 0)
-				//		line.currentX++;
-				//	else
-				//		line.currentX--;
-				//	line.counter -= line.sortedLine.dy * 2;
-				//}
-				while (line.counter >= line.sortedLine.dy)
-				{
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
 					if (line.sortedLine.dx > 0)
-						line.currentX++;
+						points.back().push_back({ line.currentX - 1, curY });
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
 			}
 			else
 			{
@@ -6610,7 +6666,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point2>& points)
+void fillPolygon(const std::vector<Point>& points)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -6666,7 +6722,7 @@ void lineFillPolygonWithLineCap(int x0, int y0, int xEnd, int yEnd, float width,
 	int vertexX = Round(std::cos(sita) * (width / 2));
 	int vertexY = Round(std::sin(sita) * (width / 2));
 
-	std::vector<Point2> points;
+	std::vector<Point> points;
 	points.push_back({ x0 + vertexX, y0 + vertexY });
 	points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
 	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
@@ -6707,7 +6763,7 @@ void code_6_exercise_34()
 
 #ifdef CHAPTER_6_EXERCISE_35
 float MinMiterAngel = PI / 6; // 最小的斜角连接角度（小于此值将切换为斜切连接）
-struct Point2 { int x; int y; };
+struct Point { int x; int y; };
 struct Line
 {
 	int x0;
@@ -6720,6 +6776,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -6842,7 +6899,7 @@ void fillRound(int xc, int yc, float r, RoundType type)
 		hLineRound(curY, ++xline, xRound, xc, yc, type, offset);
 	}
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
@@ -6914,6 +6971,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -6928,40 +6986,66 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
 {
-	std::vector<Point2> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				points.push_back({ line.currentX , curY });
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
-				//if (line.counter >= line.sortedLine.dy)
-				//{
-				//	if(line.sortedLine.dx > 0)
-				//		line.currentX++;
-				//	else
-				//		line.currentX--;
-				//	line.counter -= line.sortedLine.dy * 2;
-				//}
-				while (line.counter >= line.sortedLine.dy)
-				{
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
 					if (line.sortedLine.dx > 0)
-						line.currentX++;
+						points.back().push_back({ line.currentX - 1, curY });
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
 			}
 			else
 			{
@@ -6971,7 +7055,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point2>& points)
+void fillPolygon(const std::vector<Point>& points)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -7030,7 +7114,7 @@ void lineFillPolygonWithLineCap(int x0, int y0, int xEnd, int yEnd, float width,
 	int vertexX = Round(std::cos(sita) * (width / 2));
 	int vertexY = Round(std::sin(sita) * (width / 2));
 
-	std::vector<Point2> points;
+	std::vector<Point> points;
 	points.push_back({ x0 + vertexX, y0 + vertexY });
 	points.push_back({ x0 - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), y0 - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
 	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
@@ -7063,7 +7147,7 @@ float calcAngle(int x0, int y0, int x1, int y1, int x2, int y2)
 	}
 	return ret;
 }
-int crossProduct(const Point2& vector1, const Point2& vector2)
+int crossProduct(const Point& vector1, const Point& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
@@ -7148,7 +7232,7 @@ void drawbrokenLineJoin(int x0, int y0, int x1, int y1, int x2, int y2, float wi
 		}			
 	}
 }
-void brokenLineWithJoin(const std::vector<Point2>& points, float width, BrokenLineJoin join)
+void brokenLineWithJoin(const std::vector<Point>& points, float width, BrokenLineJoin join)
 {
 	for (int i = 0; i < points.size(); i++)
 	{
@@ -8265,7 +8349,7 @@ struct Stencil
 	int xc;
 	int yc;
 };
-struct Point2 { int x; int y; };
+struct Point { int x; int y; };
 struct Line
 {
 	int x0;
@@ -8278,6 +8362,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -8300,7 +8385,7 @@ inline int Round(const float a)
 	else
 		return int(a - 0.5);
 }
-void hLine(int y, int x0, int x1, const Stencil& s, Point2 zeroPoint)
+void hLine(int y, int x0, int x1, const Stencil& s, Point zeroPoint)
 {
 	for (int x = x0; x <= x1; x++)
 	{
@@ -8313,7 +8398,7 @@ void hLine(int y, int x0, int x1, const Stencil& s, Point2 zeroPoint)
 			setPixel(x, y);
 	}
 }
-std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
 	for (int i = 0; i < points.size(); i++)
@@ -8387,6 +8472,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -8399,42 +8485,68 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point2>& points)
 	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point2 zeroPoint)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point zeroPoint)
 {
-	std::vector<Point2> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				points.push_back({ line.currentX , curY });
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
-				//if (line.counter >= line.sortedLine.dy)
-				//{
-				//	if(line.sortedLine.dx > 0)
-				//		line.currentX++;
-				//	else
-				//		line.currentX--;
-				//	line.counter -= line.sortedLine.dy * 2;
-				//}
-				while (line.counter >= line.sortedLine.dy)
-				{
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
 					if (line.sortedLine.dx > 0)
-						line.currentX++;
+						points.back().push_back({ line.currentX - 1, curY });
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, s, zeroPoint);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x, s, zeroPoint);
 			}
 			else
 			{
@@ -8444,7 +8556,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
-void fillPolygon(const std::vector<Point2>& points, const Stencil& s)
+void fillPolygon(const std::vector<Point>& points, const Stencil& s)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -10339,6 +10451,7 @@ struct SortedLine
 	int maxY;
 	int minY;
 	int beginX;
+	int endX;
 	int dx;
 	int dy;
 };
@@ -10634,6 +10747,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		lineSet.back().scanY = line.y0;
 		lineSet.back().sortedLines.push_back(SortedLine());
 		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
 		lineSet.back().sortedLines.back().maxY = line.y1;
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
@@ -10648,40 +10762,66 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point zeroPoint)
 {
-	std::vector<Point> points;
+	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
 		for (auto& line : activeLines)
 		{
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				points.push_back({ line.currentX , curY });
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
 
-				line.counter += std::abs(line.sortedLine.dx * 2);
-				//if (line.counter >= line.sortedLine.dy)
-				//{
-				//	if(line.sortedLine.dx > 0)
-				//		line.currentX++;
-				//	else
-				//		line.currentX--;
-				//	line.counter -= line.sortedLine.dy * 2;
-				//}
-				while (line.counter >= line.sortedLine.dy)
-				{
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
 					if (line.sortedLine.dx > 0)
-						line.currentX++;
+						points.back().push_back({ line.currentX - 1, curY });
 					else
-						line.currentX--;
-					line.counter -= line.sortedLine.dy * 2;
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.x < b.x;});
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
 		for (int i = 0; ; i++)
 		{
 			if (2 * i < points.size() && 2 * i + 1 < points.size())
 			{
-				hLine(points[2 * i].y, points[2 * i].x, points[2 * i + 1].x, s, zeroPoint);
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x, s, zeroPoint);
 			}
 			else
 			{
