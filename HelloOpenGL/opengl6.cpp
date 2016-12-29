@@ -452,7 +452,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -486,7 +486,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -639,7 +639,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false, bool s
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -839,7 +839,7 @@ void lineBresMid2(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false)
 	while (x < xEnd)
 	{
 		x++;
-		if (p < 0)
+		if (p <= 0)
 			p -= twoDy;
 		else
 		{
@@ -1010,7 +1010,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -1044,7 +1044,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -1224,7 +1224,7 @@ inline int Round(const float a)
 //	while (x < xEnd)
 //	{
 //		x++;
-//		if (p > 0)
+//		if (p >= 0)
 //			p += twoDy;
 //		else
 //		{
@@ -1328,7 +1328,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -1362,7 +1362,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -1882,7 +1882,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	int i = x0;
 	while (i < xEnd)
 	{
-		if (p > 0)
+		if (p >= 0)
 		{
 			p += twoDy;
 			addr = addr + horizontalStep;
@@ -1924,7 +1924,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	int i = y0;
 	while (i > yEnd)
 	{
-		if (p > 0)
+		if (p >= 0)
 		{
 			p += twoDx;
 			addr = addr + verticalStep;
@@ -3527,7 +3527,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -3563,7 +3563,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeM
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -3845,7 +3845,7 @@ void lineBresMid2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTyp
 	while (x < xEnd)
 	{
 		x++;
-		if (p < 0)
+		if (p <= 0)
 			p -= twoDy;
 		else
 		{
@@ -4151,7 +4151,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -4187,7 +4187,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeM
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -4560,7 +4560,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, int width)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -4594,7 +4594,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, int width)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -4789,11 +4789,10 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	int y = y0;
 
 	setPixel(x, y);
-	printf("red x = %d, y = %d\n", x, y);
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -4801,7 +4800,6 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 			p += twoDyAddDx;
 		}
 		setPixel(x, y);
-		printf("red x = %d, y = %d\n", x, y);
 	}
 }
 // m<-1
@@ -4828,7 +4826,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -4983,6 +4981,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
 				{// |m|>1			
 					points.push_back({ { line.currentX , curY } });
+
 					line.counter += std::abs(line.sortedLine.dx * 2);
 
 					if (line.counter >= line.sortedLine.dy)
@@ -5018,7 +5017,6 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 						points.back().push_back({ line.currentX + 1, curY });
 
 					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
-					//printf("begin x=%d, y=%d                end x=%d, y=%d\n", points.back().front().x, points.back().front().y, points.back().back().x, points.back().back().y);
 				}
 			}
 		}
@@ -5069,7 +5067,6 @@ void fillPolygon(const std::vector<Point>& points)
 		}
 		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
 	}
-
 }
 void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 {
@@ -5093,20 +5090,21 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 	points.push_back({ xEnd + vertexX, yEnd + vertexY });
 
 	// Ö±Ïß
-	glColor3f(1.0, 1.0, 1.0);
+	//glColor3f(1.0, 1.0, 1.0);
 	//lineBres(x0, y0, xEnd, yEnd);
 
 	// Ïß¿ò
-	glColor3f(1.0, 0.0, 0.0);
-	lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
-	lineBres(points[1].x, points[1].y - 1, points[2].x, points[2].y);
-	lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
-	lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
+	//lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
+	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
+	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 
 	// Ìî³ä
 	glColor3f(1.0, 1.0, 1.0);
 	fillPolygon(points);
 }
+
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -5118,8 +5116,8 @@ void drawFunc()
 
 	lineRect(172, 134, 525, 243, 10);	  // 0<m<1
 	lineRect(222, 95, 521, 549, 10);	  // m>1
-	lineRect(135, 300, 733, 139,10);	  // -1<m<0
-	lineRect(264, 487, 447, 47,10);	  // m<-1
+	lineRect(135, 300, 733, 139, 10);	  // -1<m<0
+	lineRect(264, 487, 447, 47, 10);	  // m<-1
 
 	glFlush();
 }
@@ -5287,7 +5285,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, int width)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -5321,7 +5319,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, int width)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -5684,7 +5682,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -5720,7 +5718,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeM
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -5945,7 +5943,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -5981,7 +5979,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeM
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -6377,7 +6375,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, int width, float sita)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -6411,7 +6409,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, int width, float sita)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -7302,7 +7300,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<in
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -7336,7 +7334,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const Stencil& s, std::map<i
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -7503,7 +7501,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 	{
 		x++;
 		count++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -7543,7 +7541,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const Stencil& s)
 	{
 		y--;
 		count++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -7769,7 +7767,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -7816,7 +7814,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, bool antiAliasing)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -9044,7 +9042,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -9078,7 +9076,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -9377,7 +9375,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -9411,7 +9409,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -9958,7 +9956,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -9992,7 +9990,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -10458,7 +10456,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -10492,7 +10490,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -11140,7 +11138,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -11174,7 +11172,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -12794,6 +12792,7 @@ void fillRound(int xc, int yc, float r)
 		hLineRound(curY, ++xline, xRound, xc, yc, offset);
 	}
 }
+// 0<m<1
 void lineBres1(int x0, int y0, int xEnd, int yEnd)
 {
 	if (x0 > xEnd)
@@ -12883,7 +12882,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -12917,7 +12916,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -13210,7 +13209,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -13244,7 +13243,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, st
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
@@ -13525,7 +13524,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd)
 	while (x < xEnd)
 	{
 		x++;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDy;
 		else
 		{
@@ -13559,7 +13558,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	while (y > yEnd)
 	{
 		y--;
-		if (p > 0)
+		if (p >= 0)
 			p += twoDx;
 		else
 		{
