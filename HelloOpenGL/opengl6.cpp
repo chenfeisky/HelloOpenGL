@@ -13774,6 +13774,11 @@ void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, i
 }
 void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
+	int beginX = floor((float)x0 / baseInfo.AALevel);
+	int endX = floor((float)x1 / baseInfo.AALevel);
+	int curY = floor((float)y / baseInfo.AALevel);
+	printf("(x=%d, y=%d)->(x=%d, y=%d)\n", beginX, curY, endX, curY);
+
 	for (int x = x0; x <= x1; x++)
 	{
 		if (baseInfo.AALevel > 1)
@@ -13993,7 +13998,7 @@ void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std
 	}
 
 }
-void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
+void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = false)
 {
 	if (x0 > xEnd)
 	{
@@ -14050,7 +14055,7 @@ void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 	points.push_back({ subXEnd + vertexX , SubYEnd + vertexY });
 	
 	lastInfo[{0, 0}] = AAlevel * AAlevel;
-	fillPolygon(points, baseInfo, lastInfo);
+	fillPolygon(points, baseInfo, lastInfo, realPoint);
 	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel * AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 }
@@ -14078,43 +14083,735 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	// Bresenham直线边算法
-	lineBres(20, 568, 158, 573);
-	lineSSAA(20, 538, 158, 543, 2);
-	lineSSAA(20, 508, 158, 513, 4);
-	lineSSAA(20, 478, 158, 483, 8);
+	//// Bresenham直线边算法
+	//lineBres(20, 568, 158, 573);
+	//lineSSAA(20, 538, 158, 543, 2);
+	//lineSSAA(20, 508, 158, 513, 4);
+	//lineSSAA(20, 478, 158, 483, 8);
 
-	lineBres(210, 495, 218, 590);
-	lineSSAA(240, 495, 248, 590, 2);
-	lineSSAA(270, 495, 278, 590, 4);
-	lineSSAA(300, 495, 308, 590, 8);
+	//lineBres(210, 495, 218, 590);
+	//lineSSAA(240, 495, 248, 590, 2);
+	//lineSSAA(270, 495, 278, 590, 4);
+	//lineSSAA(300, 495, 308, 590, 8);
 
-	polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
-	polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
-	polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
-	polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
+	//polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
+	//polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
+	//polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
+	//polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
+
+	////auto time0 = clock();
+	////auto time1 = clock();
+	////auto aaa = time1 - time0;
+	//
+	//glColor3f(1.0, 1.0, 1.0);
+
+	//// 直接计算边，直接计算扫描线交点
+	//lineBres(420, 568, 558, 573);
+	//lineSSAA(420, 538, 558, 543, 2, true);
+	//lineSSAA(420, 508, 558, 513, 4, true);
+	//lineSSAA(420, 478, 558, 483, 8, true);
+
+	//lineBres(610, 495, 618, 590);
+	//lineSSAA(640, 495, 648, 590, 2, true);
+	//lineSSAA(670, 495, 678, 590, 4, true);
+	//lineSSAA(700, 495, 708, 590, 8, true);
+
+	//polygonSSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1, true);
+	//polygonSSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2, true);
+	//polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4, true);
+	//polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8, true);
+
+	auto time0 = clock();
+	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 4);
+	auto time1 = clock();
+	auto aaa = time1 - time0;
 	
-	glColor3f(1.0, 1.0, 1.0);
-
-	// 直接计算边，直接计算扫描线交点
-	lineBres(420, 568, 558, 573);
-	lineSSAA(420, 538, 558, 543, 2);
-	lineSSAA(420, 508, 558, 513, 4);
-	lineSSAA(420, 478, 558, 483, 8);
-
-	lineBres(610, 495, 618, 590);
-	lineSSAA(640, 495, 648, 590, 2);
-	lineSSAA(670, 495, 678, 590, 4);
-	lineSSAA(700, 495, 708, 590, 8);
-
-	polygonSSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1);
-	polygonSSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2);
-	polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4);
-	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8);
-
 	glFlush();
 }
 void code_6_exercise_54_1()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_54_Test2
+struct Point { int x; int y; };
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int endX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+struct LineRecord
+{
+	int beginX;
+	int endX;
+};
+struct BaseInfo
+{
+	int x0;
+	int y0;
+	int xEnd;
+	int yEnd;
+	int AALevel;
+};
+//// 判断浮点数相等
+//bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
+//bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
+//bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
+//bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
+//bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p >= 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p >= 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
+}
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+}
+void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	//printf("(x=%d, y=%d)->(x=%d, y=%d)\n", begin.x, begin.y, end.x, end.y);
+
+	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
+	for (int i = begin.x; i <= end.x; i++)
+	{
+		auto it = lastInfo.find({ i, begin.y });
+		if (it != lastInfo.end())
+		{
+			float count = it->second;
+			if (count > squareAA)
+				count = squareAA;
+
+			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, count / squareAA);
+		}
+		else
+		{
+			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, 1);
+		}
+	}
+	lastInfo.clear();
+}
+Point dealLeftPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	int curY = floor((float)points.front().y / baseInfo.AALevel);
+
+	int beginX = floor((float)points.front().x / baseInfo.AALevel);
+	int endX = floor((float)points.back().x / baseInfo.AALevel);
+	if (beginX > endX)
+		std::swap(beginX, endX);
+
+	for (auto p : points)
+	{
+		int curX = floor((float)p.x / baseInfo.AALevel);
+		for (int i = beginX; i <= endX; i++)
+		{
+			if (curX == i)
+			{
+				lastInfo[{i, curY}] += baseInfo.AALevel - (p.x % baseInfo.AALevel);
+			}
+			else if(i > curX)
+			{
+				lastInfo[{i, curY}] += baseInfo.AALevel;
+			}
+		}
+	}
+	return { min(beginX, endX), curY };
+}
+Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	int curY = floor((float)points.front().y / baseInfo.AALevel);
+
+	int beginX = floor((float)points.front().x / baseInfo.AALevel);
+	int endX = floor((float)points.back().x / baseInfo.AALevel);
+
+	if (beginX > endX)
+		std::swap(beginX, endX);
+
+	for (auto p : points)
+	{
+		int curX = floor((float)p.x / baseInfo.AALevel);
+		for (int i = beginX; i <= endX; i++)
+		{
+			if (curX == i)
+			{
+				lastInfo[{i, curY}] += (p.x % baseInfo.AALevel) + 1;
+			}
+			else if (i < curX)
+			{
+				lastInfo[{i, curY}] += baseInfo.AALevel;
+			}
+		}
+	}
+	return{ max(beginX, endX), curY };
+}
+void hLine(const std::vector<std::vector<Point>> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	std::vector<Point> lefts;
+	std::vector<Point> rights;
+	for (auto p : points)
+	{
+		lefts.push_back(p[0]);
+		rights.push_back(p[1]);
+	}
+	auto begin = dealLeftPoint(lefts, baseInfo, lastInfo);
+	auto end = dealRightPoint(rights, baseInfo, lastInfo);
+	setHLine(begin, end, baseInfo, lastInfo);
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint = false)
+{
+	if (realPoint)
+	{ 
+
+	}
+	else
+	{ // bres直线算法
+		std::vector<std::vector<Point>> points;
+		std::map<int, std::vector<std::vector<Point>>> pixelInfo;
+		for (int curY = beginY; curY < endY; curY++)
+		{
+			for (auto& line : activeLines)
+			{
+				if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+				{
+					if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+					{// |m|>1			
+						points.push_back({ { line.currentX , curY } });
+						line.counter += std::abs(line.sortedLine.dx * 2);
+
+						if (line.counter >= line.sortedLine.dy)
+						{
+							if (line.sortedLine.dx > 0)
+								line.currentX++;
+							else
+								line.currentX--;
+							line.counter -= line.sortedLine.dy * 2;
+						}
+					}
+					else
+					{// |m|<1
+						points.push_back({ { line.currentX, curY } });
+						while (true)
+						{
+							if (line.sortedLine.dx > 0)
+								line.currentX++;
+							else
+								line.currentX--;
+
+							line.counter += std::abs(line.sortedLine.dy * 2);
+							if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+								(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+							{
+								line.counter -= std::abs(line.sortedLine.dx * 2);
+								break;
+							}
+						}
+						points.back().push_back({ line.currentX - 1, curY });
+					}
+				}
+			}
+			std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.front().x < b.front().x;});
+			for (int i = 0; ; i++)
+			{
+				if (2 * i < points.size() && 2 * i + 1 < points.size())
+				{
+					if (pixelInfo.find(i) == pixelInfo.end())
+						pixelInfo[i] = std::vector<std::vector<Point>>();
+
+					pixelInfo[i].push_back({
+						{ points[2 * i].front().x , points[2 * i].front().y },
+						{ points[2 * i + 1].back().x , points[2 * i + 1].back().y } });
+					//hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x, baseInfo, lastInfo);
+				}
+				else
+				{
+					points.clear();
+					break;
+				}
+			}
+
+			for (auto& info : pixelInfo)
+			{
+				if (info.second.size() >= baseInfo.AALevel)
+				{
+					hLine(info.second, baseInfo, lastInfo);
+					info.second.clear();
+				}
+			}
+		}
+
+		for (auto& info : pixelInfo)
+		{
+			if (info.second.size())
+			{
+				hLine(info.second, baseInfo, lastInfo);
+				info.second.clear();
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint = false)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, realPoint);
+	}
+
+}
+void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = false)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int subX0 = 0;
+	int subY0 = 0;
+	int subXEnd = subX0 + (xEnd - x0) * AAlevel;
+	int SubYEnd = subY0 + (yEnd - y0) * AAlevel;
+
+	BaseInfo baseInfo = { x0 , y0, xEnd, yEnd, AAlevel };
+	std::map<Point, int> lastInfo;
+
+	int dx = subXEnd - subX0;
+	int dy = SubYEnd - subY0;
+	float aa;
+	int offset = Round(std::modf(AAlevel / 2, &aa)) == 0 ? 1 : 0;
+
+	float sita;
+	if (dy)
+		sita = std::atan((float)-dx / dy);
+	else
+		sita = PI / 2;
+
+	int fixed = 0;
+	switch (AAlevel)
+	{
+	case 2:
+		fixed = 0;
+		break;
+	case 4:
+		fixed = 1;
+		break;
+	case 8:
+		fixed = 2;
+		break;
+	default:
+		break;
+	}
+	int vertexX = Round(std::cos(sita) * ((float)AAlevel / 2 + fixed));
+	int vertexY = Round(std::sin(sita) * ((float)AAlevel / 2 + fixed));
+
+	std::vector<Point> points;
+	points.push_back({ subX0 + vertexX, subY0 + vertexY });
+	points.push_back({ subX0 - vertexX , subY0 - vertexY });
+	points.push_back({ subXEnd - vertexX , SubYEnd - vertexY });
+	points.push_back({ subXEnd + vertexX , SubYEnd + vertexY });
+
+	fillPolygon(points, baseInfo, lastInfo, realPoint);
+}
+void polygonSSAA(const std::vector<Point>& points, int AAlevel, bool realPoint = false)
+{
+	std::vector<Point> subPoints;
+
+	for (int i = 0; i < points.size(); i++)
+	{
+		int subX0 = (points[i].x - points[0].x) * AAlevel;
+		int subY0 = (points[i].y - points[0].y) * AAlevel;
+
+		subPoints.push_back({ subX0, subY0 });
+	}
+
+	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
+	std::map<Point, int> lastInfo;
+
+	fillPolygon(subPoints, baseInfo, lastInfo, realPoint);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	// Bresenham直线边算法
+	//lineBres(20, 568, 158, 573);
+	//lineSSAA(20, 538, 158, 543, 2);
+	//lineSSAA(20, 508, 158, 513, 4);
+	//lineSSAA(20, 478, 158, 483, 8);
+
+	//lineBres(210, 495, 218, 590);
+	//lineSSAA(240, 495, 248, 590, 2);
+	//lineSSAA(270, 495, 278, 590, 4);
+	//lineSSAA(300, 495, 308, 590, 8);
+
+	//polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
+	//polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
+	//polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
+	//polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
+
+	//glColor3f(1.0, 1.0, 1.0);
+
+	//// 直接计算边，直接计算扫描线交点
+	//lineBres(420, 568, 558, 573);
+	//lineSSAA(420, 538, 558, 543, 2, true);
+	//lineSSAA(420, 508, 558, 513, 4, true);
+	//lineSSAA(420, 478, 558, 483, 8, true);
+
+	//lineBres(610, 495, 618, 590);
+	//lineSSAA(640, 495, 648, 590, 2, true);
+	//lineSSAA(670, 495, 678, 590, 4, true);
+	//lineSSAA(700, 495, 708, 590, 8, true);
+
+	//polygonSSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1, true);
+	//polygonSSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2, true);
+	//polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4, true);
+	//polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8, true);
+
+
+	auto time0 = clock();
+	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8);
+	auto time1 = clock();
+	auto aaa = time1 - time0;
+
+	glFlush();
+}
+void code_6_exercise_54_2()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -14393,6 +15090,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_54_Test1
 	code_6_exercise_54_1();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_54_Test2
+	code_6_exercise_54_2();
 #endif
 
 
