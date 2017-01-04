@@ -13748,9 +13748,9 @@ void setGrayPixel(int x, int y, float grayPercent)
 }
 void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	int max = -1;
-	int min = 99999;
-	int  y = 0;
+	//int max = -1;
+	//int min = 99999;
+	//int  y = 0;
 	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
 	for (auto p : lastInfo)
 	{
@@ -13758,17 +13758,17 @@ void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 		if (count > squareAA)
 			count = squareAA;
 
-		if (p.first.x > max)
-			max = p.first.x;
+		//if (p.first.x > max)
+		//	max = p.first.x;
 
-		if (p.first.x < min)
-			min = p.first.x;
+		//if (p.first.x < min)
+		//	min = p.first.x;
 
-		y = p.first.y;
+		//y = p.first.y;
 
 		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / squareAA);
 	}
-	printf("%d,%d(%d) -> %d,%d(%d)\n", min, y, lastInfo[{min, y}],  max, y, lastInfo[{max, y}]);
+	//printf("%d,%d(%d) -> %d,%d(%d)\n", min, y, lastInfo[{min, y}],  max, y, lastInfo[{max, y}]);
 }
 void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
@@ -14008,6 +14008,7 @@ void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std
 }
 void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = false)
 {
+	glColor3f(1.0, 1.0, 1.0);
 	if (x0 > xEnd)
 	{
 		int tempx = x0;
@@ -14068,6 +14069,7 @@ void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = 
 }
 void polygonSSAA(const std::vector<Point>& points, int AAlevel, bool realPoint = false)
 {
+	glColor3f(1.0, 1.0, 1.0);
 	std::vector<Point> subPoints;
 
 	for (int i = 0; i < points.size(); i++)
@@ -14090,46 +14092,51 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	//// Bresenham直线边算法
-	//lineBres(20, 568, 158, 573);
-	//lineSSAA(20, 538, 158, 543, 2);
-	//lineSSAA(20, 508, 158, 513, 4);
-	//lineSSAA(20, 478, 158, 483, 8);
+	// Bresenham直线边算法
+	lineBres(20, 568, 158, 573);
+	lineSSAA(20, 538, 158, 543, 2);
+	lineSSAA(20, 508, 158, 513, 4);
+	lineSSAA(20, 478, 158, 483, 8);
 
-	//lineBres(210, 495, 218, 590);
-	//lineSSAA(240, 495, 248, 590, 2);
-	//lineSSAA(270, 495, 278, 590, 4);
-	//lineSSAA(300, 495, 308, 590, 8);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(210, 495, 218, 590);
+	lineSSAA(240, 495, 248, 590, 2);
+	lineSSAA(270, 495, 278, 590, 4);
+	lineSSAA(300, 495, 308, 590, 8);
 
-	//polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
-	//polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
-	//polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
-	//polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
+	glColor3f(1.0, 1.0, 1.0);
+	polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
+	polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
+	polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
+	polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
 
-	////auto time0 = clock();
-	////auto time1 = clock();
-	////auto aaa = time1 - time0;
-	//
-	//glColor3f(1.0, 1.0, 1.0);
+	//auto time0 = clock();
+	//auto time1 = clock();
+	//auto aaa = time1 - time0;
+	
+	// 直接计算边，直接计算扫描线交点
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(420, 568, 558, 573);
+	lineSSAA(420, 538, 558, 543, 2, true);
+	lineSSAA(420, 508, 558, 513, 4, true);
+	lineSSAA(420, 478, 558, 483, 8, true);
 
-	//// 直接计算边，直接计算扫描线交点
-	//lineBres(420, 568, 558, 573);
-	//lineSSAA(420, 538, 558, 543, 2, true);
-	//lineSSAA(420, 508, 558, 513, 4, true);
-	//lineSSAA(420, 478, 558, 483, 8, true);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(610, 495, 618, 590);
+	lineSSAA(640, 495, 648, 590, 2, true);
+	lineSSAA(670, 495, 678, 590, 4, true);
+	lineSSAA(700, 495, 708, 590, 8, true);
 
-	//lineBres(610, 495, 618, 590);
-	//lineSSAA(640, 495, 648, 590, 2, true);
-	//lineSSAA(670, 495, 678, 590, 4, true);
-	//lineSSAA(700, 495, 708, 590, 8, true);
-
-	//polygonSSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1, true);
-	//polygonSSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2, true);
-	//polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4, true);
-	//polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8, true);
+	glColor3f(1.0, 1.0, 1.0);
+	polygonSSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1, true);
+	polygonSSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2, true);
+	polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4, true);
+	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8, true);
 
 	auto time0 = clock();
-	lineSSAA(20, 538, 158, 543, 4);
+	//lineSSAA(20, 538, 158, 543, 8);
+	//lineSSAA(270, 495, 278, 590, 8);
+	//polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 8);
 	auto time1 = clock();
 	auto aaa = time1 - time0;
 	
@@ -14400,7 +14407,7 @@ void setGrayPixel(int x, int y, float grayPercent)
 }
 void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, int hCount)
 {
-	printf("%d,%d(%d) -> %d,%d(%d)\n", begin.x, begin.y, lastInfo[begin], end.x, end.y, lastInfo[end]);
+	//printf("%d,%d(%d) -> %d,%d(%d)\n", begin.x, begin.y, lastInfo[begin], end.x, end.y, lastInfo[end]);
 
 	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
 	for (int i = begin.x; i <= end.x; i++)
@@ -14440,7 +14447,17 @@ Point dealLeftPoint(const std::vector<Point> points, const BaseInfo& baseInfo, s
 		{
 			if (curX == i)
 			{
-				lastInfo[{i, curY}] += baseInfo.AALevel - (p.x % baseInfo.AALevel);
+				if (p.x < 0)
+				{
+					float remainder = (-1 * p.x) % baseInfo.AALevel;
+					if (remainder == 0)
+						remainder = baseInfo.AALevel;
+					lastInfo[{i, curY}] += remainder;
+				}
+				else
+				{
+					lastInfo[{i, curY}] += baseInfo.AALevel - (p.x % baseInfo.AALevel);
+				}				
 			}
 			else if(i > curX)
 			{
@@ -14467,7 +14484,17 @@ Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, 
 		{
 			if (curX == i)
 			{
-				lastInfo[{i, curY}] += (p.x % baseInfo.AALevel) + 1;
+				if (p.x < 0)
+				{
+					float remainder = (-1 * p.x) % baseInfo.AALevel;
+					if (remainder == 0)
+						remainder = baseInfo.AALevel;
+					lastInfo[{i, curY}] += baseInfo.AALevel - remainder + 1;
+				}
+				else
+				{
+					lastInfo[{i, curY}] += (p.x % baseInfo.AALevel) + 1;
+				}				
 			}
 			else if (i < curX)
 			{
@@ -14486,9 +14513,35 @@ void hLine(const std::vector<std::vector<Point>> points, const BaseInfo& baseInf
 		lefts.push_back(p[0]);
 		rights.push_back(p[1]);
 	}
-	auto begin = dealLeftPoint(lefts, baseInfo, lastInfo);
-	auto end = dealRightPoint(rights, baseInfo, lastInfo);
-	setHLine(begin, end, baseInfo, lastInfo, points.size());
+	int leftBeginX = floor((float)lefts.front().x / baseInfo.AALevel);
+	int leftEndX = floor((float)lefts.back().x / baseInfo.AALevel);
+	if (leftBeginX > leftEndX)
+		std::swap(leftBeginX, leftEndX);
+
+	int rightBeginX = floor((float)rights.front().x / baseInfo.AALevel);
+	int rightEndX = floor((float)rights.back().x / baseInfo.AALevel);
+	if (rightBeginX > rightEndX)
+		std::swap(rightBeginX, rightEndX);
+
+	if (leftEndX >= rightBeginX)
+	{
+		int y = floor((float)lefts.front().y / baseInfo.AALevel);
+		for (int i = 0 ; i < lefts.size(); i++)
+		{
+			for (int curX = lefts[i].x; curX <= rights[i].x; curX++)
+			{
+				int x = floor((float)curX / baseInfo.AALevel);
+				lastInfo[{x, y}] ++;
+			}
+		}
+		setHLine({ leftBeginX , y}, { rightEndX , y }, baseInfo, lastInfo, points.size());
+	}
+	else
+	{
+		auto begin = dealLeftPoint(lefts, baseInfo, lastInfo);
+		auto end = dealRightPoint(rights, baseInfo, lastInfo);
+		setHLine(begin, end, baseInfo, lastInfo, points.size());
+	}
 }
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
@@ -14577,94 +14630,96 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint, std::map<int, std::vector<std::vector<Point>>>& pixelInfo)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::map<int, std::vector<std::vector<Point>>>& pixelInfo, int& lastY)
 {
-	if (realPoint)
-	{ 
-
-	}
-	else
-	{ // bres直线算法
-		std::vector<std::vector<Point>> points;
-		
-		for (int curY = beginY; curY < endY; curY++)
+	std::vector<std::vector<Point>> points;
+	int currentY = 0;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
 		{
-			for (auto& line : activeLines)
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
-				if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
-				{
-					if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
-					{// |m|>1			
-						points.push_back({ { line.currentX , curY } });
-						line.counter += std::abs(line.sortedLine.dx * 2);
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
+					line.counter += std::abs(line.sortedLine.dx * 2);
 
-						if (line.counter >= line.sortedLine.dy)
-						{
-							if (line.sortedLine.dx > 0)
-								line.currentX++;
-							else
-								line.currentX--;
-							line.counter -= line.sortedLine.dy * 2;
-						}
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
 					}
-					else
-					{// |m|<1
-						points.push_back({ { line.currentX, curY } });
-						while (true)
-						{
-							if (line.sortedLine.dx > 0)
-								line.currentX++;
-							else
-								line.currentX--;
-
-							line.counter += std::abs(line.sortedLine.dy * 2);
-							if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-								(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
-							{
-								line.counter -= std::abs(line.sortedLine.dx * 2);
-								break;
-							}
-						}
-						points.back().push_back({ line.currentX - 1, curY });
-					}
-				}
-			}
-			std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.front().x < b.front().x;});
-			for (int i = 0; ; i++)
-			{
-				if (2 * i < points.size() && 2 * i + 1 < points.size())
-				{
-					if (pixelInfo.find(i) == pixelInfo.end())
-						pixelInfo[i] = std::vector<std::vector<Point>>();
-
-					pixelInfo[i].push_back({
-						{ points[2 * i].front().x , points[2 * i].front().y },
-						{ points[2 * i + 1].back().x , points[2 * i + 1].back().y } });
-					//hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x, baseInfo, lastInfo);
 				}
 				else
-				{
-					points.clear();
-					break;
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					points.back().push_back({ line.currentX - 1, curY });
 				}
 			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.front().x < b.front().x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{					
+				currentY = floor((float)points[2 * i].front().y / baseInfo.AALevel);
+					
+				if (lastY == -99999)
+					lastY = currentY;
 
-			for (auto& info : pixelInfo)
-			{
-				if (info.second.size() >= baseInfo.AALevel)
+				if (currentY != lastY)
 				{
-					hLine(info.second, baseInfo, lastInfo);
-					info.second.clear();
+					for (auto& info : pixelInfo)
+					{
+						if (info.second.size())
+						{
+							hLine(info.second, baseInfo, lastInfo);
+							info.second.clear();
+						}
+					}
+					lastY = currentY;
 				}
+
+				if (pixelInfo.find(i) == pixelInfo.end())
+					pixelInfo[i] = std::vector<std::vector<Point>>();
+
+				pixelInfo[i].push_back({
+					{ points[2 * i].front().x , points[2 * i].front().y },
+					{ points[2 * i + 1].back().x , points[2 * i + 1].back().y } });
+			}
+			else
+			{
+				points.clear();
+				break;
 			}
 		}
 	}
 }
-void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint = false)
+void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
 	std::map<int, std::vector<std::vector<Point>>> pixelInfo;
+	int lastY = -99999;
 
 	for (int i = 0; i < sortedLines.size() - 1; i++)
 	{
@@ -14688,12 +14743,21 @@ void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std
 			activeLines.back().currentX = _sortedLine.beginX;
 		}
 
-		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, realPoint, pixelInfo);
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, pixelInfo, lastY);
 	}
 
+	for (auto& info : pixelInfo)
+	{
+		if (info.second.size())
+		{
+			hLine(info.second, baseInfo, lastInfo);
+			info.second.clear();
+		}
+	}
 }
-void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = false)
+void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 {
+	glColor3f(1.0, 1.0, 1.0);
 	if (x0 > xEnd)
 	{
 		int tempx = x0;
@@ -14748,10 +14812,11 @@ void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = 
 	points.push_back({ subXEnd - vertexX , SubYEnd - vertexY });
 	points.push_back({ subXEnd + vertexX , SubYEnd + vertexY });
 
-	fillPolygon(points, baseInfo, lastInfo, realPoint);
+	fillPolygon(points, baseInfo, lastInfo);
 }
-void polygonSSAA(const std::vector<Point>& points, int AAlevel, bool realPoint = false)
+void polygonMSAA(const std::vector<Point>& points, int AAlevel)
 {
+	glColor3f(1.0, 1.0, 1.0);
 	std::vector<Point> subPoints;
 
 	for (int i = 0; i < points.size(); i++)
@@ -14765,7 +14830,7 @@ void polygonSSAA(const std::vector<Point>& points, int AAlevel, bool realPoint =
 	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
 	std::map<Point, int> lastInfo;
 
-	fillPolygon(subPoints, baseInfo, lastInfo, realPoint);
+	fillPolygon(subPoints, baseInfo, lastInfo);
 }
 void drawFunc()
 {
@@ -14773,43 +14838,27 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	// Bresenham直线边算法
-	//lineBres(20, 568, 158, 573);
-	//lineSSAA(20, 538, 158, 543, 2);
-	//lineSSAA(20, 508, 158, 513, 4);
-	//lineSSAA(20, 478, 158, 483, 8);
+	lineBres(20, 568, 158, 573);
+	lineMSAA(20, 538, 158, 543, 2);
+	lineMSAA(20, 508, 158, 513, 4);
+	lineMSAA(20, 478, 158, 483, 8);
 
-	//lineBres(210, 495, 218, 590);
-	//lineSSAA(240, 495, 248, 590, 2);
-	//lineSSAA(270, 495, 278, 590, 4);
-	//lineSSAA(300, 495, 308, 590, 8);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(210, 495, 218, 590);
+	lineMSAA(240, 495, 248, 590, 2);
+	lineMSAA(270, 495, 278, 590, 4);
+	lineMSAA(300, 495, 308, 590, 8);
 
-	//polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
-	//polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
-	//polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
-	//polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
-
-	//glColor3f(1.0, 1.0, 1.0);
-
-	//// 直接计算边，直接计算扫描线交点
-	//lineBres(420, 568, 558, 573);
-	//lineSSAA(420, 538, 558, 543, 2, true);
-	//lineSSAA(420, 508, 558, 513, 4, true);
-	//lineSSAA(420, 478, 558, 483, 8, true);
-
-	//lineBres(610, 495, 618, 590);
-	//lineSSAA(640, 495, 648, 590, 2, true);
-	//lineSSAA(670, 495, 678, 590, 4, true);
-	//lineSSAA(700, 495, 708, 590, 8, true);
-
-	//polygonSSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1, true);
-	//polygonSSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2, true);
-	//polygonSSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4, true);
-	//polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8, true);
-
+	glColor3f(1.0, 1.0, 1.0);
+	polygonMSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
+	polygonMSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
+	polygonMSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
+	polygonMSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
 
 	auto time0 = clock();
-	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 4);
+	//lineMSAA(20, 538, 158, 543, 8);
+	//lineMSAA(270, 495, 278, 590, 8);
+	//polygonMSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 8);
 	auto time1 = clock();
 	auto aaa = time1 - time0;
 
