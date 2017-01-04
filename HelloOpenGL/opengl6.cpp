@@ -13744,9 +13744,13 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
+	//printf("%d,%d(%f)\n", x, y, grayPercent);
 }
-void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
+void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
+	int max = -1;
+	int min = 99999;
+	int  y = 0;
 	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
 	for (auto p : lastInfo)
 	{
@@ -13754,8 +13758,17 @@ void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& las
 		if (count > squareAA)
 			count = squareAA;
 
+		if (p.first.x > max)
+			max = p.first.x;
+
+		if (p.first.x < min)
+			min = p.first.x;
+
+		y = p.first.y;
+
 		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / squareAA);
 	}
+	printf("%d,%d(%d) -> %d,%d(%d)\n", min, y, lastInfo[{min, y}],  max, y, lastInfo[{max, y}]);
 }
 void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
@@ -13774,11 +13787,6 @@ void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, i
 }
 void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	int beginX = floor((float)x0 / baseInfo.AALevel);
-	int endX = floor((float)x1 / baseInfo.AALevel);
-	int curY = floor((float)y / baseInfo.AALevel);
-	printf("(x=%d, y=%d)->(x=%d, y=%d)\n", beginX, curY, endX, curY);
-
 	for (int x = x0; x <= x1; x++)
 	{
 		if (baseInfo.AALevel > 1)
@@ -14054,9 +14062,8 @@ void lineSSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, bool realPoint = 
 	points.push_back({ subXEnd - vertexX , SubYEnd - vertexY });
 	points.push_back({ subXEnd + vertexX , SubYEnd + vertexY });
 	
-	lastInfo[{0, 0}] = AAlevel * AAlevel;
+	//lastInfo[{0, 0}] = AAlevel * AAlevel;
 	fillPolygon(points, baseInfo, lastInfo, realPoint);
-	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel * AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 }
 void polygonSSAA(const std::vector<Point>& points, int AAlevel, bool realPoint = false)
@@ -14122,7 +14129,7 @@ void drawFunc()
 	//polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8, true);
 
 	auto time0 = clock();
-	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 4);
+	lineSSAA(20, 538, 158, 543, 4);
 	auto time1 = clock();
 	auto aaa = time1 - time0;
 	
@@ -14389,10 +14396,11 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
+	//printf("%d,%d(%f)\n", x, y, grayPercent);
 }
-void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, int hCount)
 {
-	//printf("(x=%d, y=%d)->(x=%d, y=%d)\n", begin.x, begin.y, end.x, end.y);
+	printf("%d,%d(%d) -> %d,%d(%d)\n", begin.x, begin.y, lastInfo[begin], end.x, end.y, lastInfo[end]);
 
 	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
 	for (int i = begin.x; i <= end.x; i++)
@@ -14408,7 +14416,10 @@ void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, 
 		}
 		else
 		{
-			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, 1);
+			if (hCount != baseInfo.AALevel)
+				setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, (float)hCount / baseInfo.AALevel);
+			else
+				setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, 1);
 		}
 	}
 	lastInfo.clear();
@@ -14477,7 +14488,7 @@ void hLine(const std::vector<std::vector<Point>> points, const BaseInfo& baseInf
 	}
 	auto begin = dealLeftPoint(lefts, baseInfo, lastInfo);
 	auto end = dealRightPoint(rights, baseInfo, lastInfo);
-	setHLine(begin, end, baseInfo, lastInfo);
+	setHLine(begin, end, baseInfo, lastInfo, points.size());
 }
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
@@ -14566,7 +14577,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint = false)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint, std::map<int, std::vector<std::vector<Point>>>& pixelInfo)
 {
 	if (realPoint)
 	{ 
@@ -14575,7 +14586,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 	else
 	{ // bres直线算法
 		std::vector<std::vector<Point>> points;
-		std::map<int, std::vector<std::vector<Point>>> pixelInfo;
+		
 		for (int curY = beginY; curY < endY; curY++)
 		{
 			for (auto& line : activeLines)
@@ -14647,21 +14658,14 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 				}
 			}
 		}
-
-		for (auto& info : pixelInfo)
-		{
-			if (info.second.size())
-			{
-				hLine(info.second, baseInfo, lastInfo);
-				info.second.clear();
-			}
-		}
 	}
 }
 void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint = false)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
+	std::map<int, std::vector<std::vector<Point>>> pixelInfo;
+
 	for (int i = 0; i < sortedLines.size() - 1; i++)
 	{
 		int curY = sortedLines[i].scanY;
@@ -14684,7 +14688,7 @@ void fillPolygon(const std::vector<Point>& points, const BaseInfo& baseInfo, std
 			activeLines.back().currentX = _sortedLine.beginX;
 		}
 
-		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, realPoint);
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, realPoint, pixelInfo);
 	}
 
 }
@@ -14805,7 +14809,7 @@ void drawFunc()
 
 
 	auto time0 = clock();
-	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8);
+	polygonSSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 4);
 	auto time1 = clock();
 	auto aaa = time1 - time0;
 
