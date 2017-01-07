@@ -15490,33 +15490,67 @@ void polygonSSAA(const std::vector<Point>& points, int AAlevel, bool realPoint, 
 	fillPolygon(subPoints, baseInfo, lastInfo, realPoint, weightInfo);
 	refreshLastPoints(baseInfo, lastInfo, weightInfo);
 }
-void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, int hCount)
+void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, const WeightingMaskInfo& weightInfo)
 {
 	//printf("%d,%d(%d) -> %d,%d(%d)\n", begin.x, begin.y, lastInfo[begin], end.x, end.y, lastInfo[end]);
 
-	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
 	for (int i = begin.x; i <= end.x; i++)
 	{
 		auto it = lastInfo.find({ i, begin.y });
 		if (it != lastInfo.end())
 		{
 			float count = it->second;
-			if (count > squareAA)
-				count = squareAA;
+			if (count > weightInfo.total)
+				count = weightInfo.total;
 
-			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, count / squareAA);
+			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, count / weightInfo.total);
 		}
 		else
 		{
-			if (hCount != baseInfo.AALevel)
-				setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, (float)hCount / baseInfo.AALevel);
-			else
-				setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, 1);
+			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, 1);
 		}
 	}
 	lastInfo.clear();
 }
-Point dealLeftPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+int getWeightingLeft(int subx, int suby, const WeightingMaskInfo& weightInfo)
+{
+	int ret = 0;
+	int x = subx % (int)weightInfo.weightingMask.size();
+	if (x < 0)
+	{
+		x += weightInfo.weightingMask.size();
+	}
+	int y = suby % (int)weightInfo.weightingMask.size();
+	if (y < 0)
+	{
+		y += weightInfo.weightingMask.size();
+	}
+	for (int i = x; i < weightInfo.weightingMask.size(); i++)
+	{
+		ret += weightInfo.weightingMask[weightInfo.weightingMask.size() - 1 - y][i];
+	}
+	return ret;
+}
+int getWeightingRight(int subx, int suby, const WeightingMaskInfo& weightInfo)
+{
+	int ret = 0;
+	int x = subx % (int)weightInfo.weightingMask.size();
+	if (x < 0)
+	{
+		x += weightInfo.weightingMask.size();
+	}
+	int y = suby % (int)weightInfo.weightingMask.size();
+	if (y < 0)
+	{
+		y += weightInfo.weightingMask.size();
+	}
+	for (int i = 0; i <= x; i++)
+	{
+		ret += weightInfo.weightingMask[weightInfo.weightingMask.size() - 1 - y][i];
+	}
+	return ret;
+}
+Point dealLeftPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, const WeightingMaskInfo& weightInfo)
 {
 	int curY = floor((float)points.front().y / baseInfo.AALevel);
 
@@ -15532,27 +15566,17 @@ Point dealLeftPoint(const std::vector<Point> points, const BaseInfo& baseInfo, s
 		{
 			if (curX == i)
 			{
-				if (p.x < 0)
-				{
-					float remainder = (-1 * p.x) % baseInfo.AALevel;
-					if (remainder == 0)
-						remainder = baseInfo.AALevel;
-					lastInfo[{i, curY}] += remainder;
-				}
-				else
-				{
-					lastInfo[{i, curY}] += baseInfo.AALevel - (p.x % baseInfo.AALevel);
-				}
+				lastInfo[{i, curY}] += getWeightingLeft(p.x, p.y, weightInfo);
 			}
 			else if (i > curX)
 			{
-				lastInfo[{i, curY}] += baseInfo.AALevel;
+				lastInfo[{i, curY}] += getWeightingLeft(0, p.y, weightInfo);
 			}
 		}
 	}
 	return{ min(beginX, endX), curY };
 }
-Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, const WeightingMaskInfo& weightInfo)
 {
 	int curY = floor((float)points.front().y / baseInfo.AALevel);
 
@@ -15569,27 +15593,17 @@ Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, 
 		{
 			if (curX == i)
 			{
-				if (p.x < 0)
-				{
-					float remainder = (-1 * p.x) % baseInfo.AALevel;
-					if (remainder == 0)
-						remainder = baseInfo.AALevel;
-					lastInfo[{i, curY}] += baseInfo.AALevel - remainder + 1;
-				}
-				else
-				{
-					lastInfo[{i, curY}] += (p.x % baseInfo.AALevel) + 1;
-				}
+				lastInfo[{i, curY}] += getWeightingRight(p.x, p.y, weightInfo);
 			}
 			else if (i < curX)
 			{
-				lastInfo[{i, curY}] += baseInfo.AALevel;
+				lastInfo[{i, curY}] += getWeightingLeft(0, p.y, weightInfo);
 			}
 		}
 	}
 	return{ max(beginX, endX), curY };
 }
-void hLineMSAA(const std::vector<std::vector<Point>> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+void hLineMSAA(const std::vector<std::vector<Point>> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, const WeightingMaskInfo& weightInfo)
 {
 	std::vector<Point> lefts;
 	std::vector<Point> rights;
@@ -15616,19 +15630,35 @@ void hLineMSAA(const std::vector<std::vector<Point>> points, const BaseInfo& bas
 			for (int curX = lefts[i].x; curX <= rights[i].x; curX++)
 			{
 				int x = floor((float)curX / baseInfo.AALevel);
-				lastInfo[{x, y}] ++;
+				lastInfo[{x, y}] += getWeighting(curX, lefts[i].y, weightInfo);
 			}
 		}
-		setHLine({ leftBeginX , y }, { rightEndX , y }, baseInfo, lastInfo, points.size());
+		setHLine({ leftBeginX , y }, { rightEndX , y }, baseInfo, lastInfo, weightInfo);
 	}
 	else
 	{
-		auto begin = dealLeftPoint(lefts, baseInfo, lastInfo);
-		auto end = dealRightPoint(rights, baseInfo, lastInfo);
-		setHLine(begin, end, baseInfo, lastInfo, points.size());
+		auto begin = dealLeftPoint(lefts, baseInfo, lastInfo, weightInfo);
+		auto end = dealRightPoint(rights, baseInfo, lastInfo, weightInfo);
+		if (points.size() < baseInfo.AALevel)
+		{
+			int weight = 0;
+			for (int j = 0; j < lefts.size(); j++)
+			{
+				weight += getWeightingLeft(0, lefts[j].y, weightInfo);
+			}
+
+			for (int i = begin.x; i <= end.x; i++)
+			{
+				if (lastInfo.find({ i, begin.y }) == lastInfo.end())
+				{
+					lastInfo[{i, begin.y}] = weight;
+				}
+			}
+		}
+		setHLine(begin, end, baseInfo, lastInfo, weightInfo);
 	}
 }
-void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::map<int, std::vector<std::vector<Point>>>& pixelInfo, int& lastY)
+void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::map<int, std::vector<std::vector<Point>>>& pixelInfo, int& lastY, const WeightingMaskInfo& weightInfo)
 {
 	std::vector<std::vector<Point>> points;
 	int currentY = 0;
@@ -15690,7 +15720,7 @@ void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& acti
 					{
 						if (info.second.size())
 						{
-							hLineMSAA(info.second, baseInfo, lastInfo);
+							hLineMSAA(info.second, baseInfo, lastInfo, weightInfo);
 							info.second.clear();
 						}
 					}
@@ -15712,7 +15742,7 @@ void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& acti
 		}
 	}
 }
-void fillPolygonMSAA(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+void fillPolygonMSAA(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, const WeightingMaskInfo& weightInfo)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
 	std::vector<ActiveLine> activeLines;
@@ -15741,19 +15771,19 @@ void fillPolygonMSAA(const std::vector<Point>& points, const BaseInfo& baseInfo,
 			activeLines.back().currentX = _sortedLine.beginX;
 		}
 
-		fillWithActiveLinesMSAA(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, pixelInfo, lastY);
+		fillWithActiveLinesMSAA(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, pixelInfo, lastY, weightInfo);
 	}
 
 	for (auto& info : pixelInfo)
 	{
 		if (info.second.size())
 		{
-			hLineMSAA(info.second, baseInfo, lastInfo);
+			hLineMSAA(info.second, baseInfo, lastInfo, weightInfo);
 			info.second.clear();
 		}
 	}
 }
-void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
+void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel, WeightingMaskInfo& weightInfo)
 {
 	glColor3f(1.0, 1.0, 1.0);
 	if (x0 > xEnd)
@@ -15810,26 +15840,27 @@ void lineMSAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 	points.push_back({ subXEnd - vertexX , SubYEnd - vertexY });
 	points.push_back({ subXEnd + vertexX , SubYEnd + vertexY });
 
-	fillPolygonMSAA(points, baseInfo, lastInfo);
+	calcWeightingTotal(weightInfo);
+	fillPolygonMSAA(points, baseInfo, lastInfo, weightInfo);
 }
-void polygonMSAA(const std::vector<Point>& points, int AAlevel)
-{
-	glColor3f(1.0, 1.0, 1.0);
-	std::vector<Point> subPoints;
-
-	for (int i = 0; i < points.size(); i++)
-	{
-		int subX0 = (points[i].x - points[0].x) * AAlevel;
-		int subY0 = (points[i].y - points[0].y) * AAlevel;
-
-		subPoints.push_back({ subX0, subY0 });
-	}
-
-	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
-	std::map<Point, int> lastInfo;
-
-	fillPolygonMSAA(subPoints, baseInfo, lastInfo);
-}
+//void polygonMSAA(const std::vector<Point>& points, int AAlevel)
+//{
+//	glColor3f(1.0, 1.0, 1.0);
+//	std::vector<Point> subPoints;
+//
+//	for (int i = 0; i < points.size(); i++)
+//	{
+//		int subX0 = (points[i].x - points[0].x) * AAlevel;
+//		int subY0 = (points[i].y - points[0].y) * AAlevel;
+//
+//		subPoints.push_back({ subX0, subY0 });
+//	}
+//
+//	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
+//	std::map<Point, int> lastInfo;
+//
+//	fillPolygonMSAA(subPoints, baseInfo, lastInfo);
+//}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -15867,42 +15898,42 @@ void drawFunc()
 
 
 	// 超采样
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(20, 568, 158, 573);
-	lineSSAA(20, 538, 158, 543, 3, false, weightInfo3);
-	lineSSAA(20, 508, 158, 513, 4, false, weightInfo4);
-	lineSSAA(20, 478, 158, 483, 8, false, weightInfo8);
-
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(210, 495, 218, 590);
-	lineSSAA(240, 495, 248, 590, 3, false, weightInfo3);
-	lineSSAA(270, 495, 278, 590, 4, false, weightInfo4);
-	lineSSAA(300, 495, 308, 590, 8, false, weightInfo8);
-
-	glColor3f(1.0, 1.0, 1.0);
-	polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1, false, weightInfo3);
-	polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 3, false, weightInfo3);
-	polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4, false, weightInfo4);
-	polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8, false, weightInfo8);
-
-	//// 多重采样
 	//glColor3f(1.0, 1.0, 1.0);
-	//lineBres(420, 568, 558, 573);
+	//lineBres(20, 568, 158, 573);
+	//lineSSAA(20, 538, 158, 543, 3, false, weightInfo3);
+	//lineSSAA(20, 508, 158, 513, 4, false, weightInfo4);
+	//lineSSAA(20, 478, 158, 483, 8, false, weightInfo8);
+	//
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(210, 495, 218, 590);
+	//lineSSAA(240, 495, 248, 590, 3, false, weightInfo3);
+	//lineSSAA(270, 495, 278, 590, 4, false, weightInfo4);
+	//lineSSAA(300, 495, 308, 590, 8, false, weightInfo8);
+	//
+	//glColor3f(1.0, 1.0, 1.0);
+	//polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1, false, weightInfo3);
+	//polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 3, false, weightInfo3);
+	//polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4, false, weightInfo4);
+	//polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8, false, weightInfo8);
+
+	// 多重采样
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(420, 568, 558, 573);
 	//lineMSAA(420, 538, 558, 543, 2);
-	//lineMSAA(420, 508, 558, 513, 4);
+	lineMSAA(420, 508, 558, 513, 4, weightInfo4);
 	//lineMSAA(420, 478, 558, 483, 8);
 
-	//glColor3f(1.0, 1.0, 1.0);
-	//lineBres(610, 495, 618, 590);
-	//lineMSAA(640, 495, 648, 590, 2);
-	//lineMSAA(670, 495, 678, 590, 4);
-	//lineMSAA(700, 495, 708, 590, 8);
+	/*glColor3f(1.0, 1.0, 1.0);
+	lineBres(610, 495, 618, 590);
+	lineMSAA(640, 495, 648, 590, 2);
+	lineMSAA(670, 495, 678, 590, 4);
+	lineMSAA(700, 495, 708, 590, 8);
 
-	//glColor3f(1.0, 1.0, 1.0);
-	//polygonMSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1);
-	//polygonMSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2);
-	//polygonMSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4);
-	//polygonMSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8);
+	glColor3f(1.0, 1.0, 1.0);
+	polygonMSAA({ { 519, 387 },{ 722, 398 },{ 677, 450 },{ 545, 443 } }, 1);
+	polygonMSAA({ { 519, 287 },{ 722, 298 },{ 677, 350 },{ 545, 343 } }, 2);
+	polygonMSAA({ { 519, 187 },{ 722, 198 },{ 677, 250 },{ 545, 243 } }, 4);
+	polygonMSAA({ { 519, 87 },{ 722, 98 },{ 677, 150 },{ 545, 143 } }, 8);*/
 
 	glFlush();
 }
