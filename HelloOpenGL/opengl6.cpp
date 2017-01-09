@@ -222,12 +222,19 @@ void code_6_test_1()
 #endif
 
 #ifdef CHAPTER_6_5_2
-inline int Round(const float a)
+//inline int Round(const float a)
+//{
+//	if (a >= 0)
+//		return int(a + 0.5);
+//	else
+//		return int(a - 0.5);
+//}
+inline int64_t Round(const double a)
 {
 	if (a >= 0)
-		return int(a + 0.5);
+		return int64_t(a + 0.5);
 	else
-		return int(a - 0.5);
+		return int64_t(a - 0.5);
 }
 void ellipseMidpoint(int xCenter, int yCenter, int Rx, int Ry)
 {
@@ -235,21 +242,22 @@ void ellipseMidpoint(int xCenter, int yCenter, int Rx, int Ry)
 	int Ry2 = Ry*Ry;
 	int twoRx2 = 2 * Rx2;
 	int twoRy2 = 2 * Ry2;
-	int p;
+	int64_t p;
 	int x = 0;
 	int y = Ry;
-	int px = 0;
-	int py = twoRx2*y;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
 	void ellipsePlotPoints(int, int, int, int);
 	ellipsePlotPoints(xCenter, yCenter, x, y);
 	/*Region 1*/
-	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
 	int debugIndex = 0;
 	printf("Region 1\n");
 	while (px < py)
 	{
 		printf("k=%d,", debugIndex);
-		printf("p=%d,", p);
+		printf("p=%I64d,", p);
 		x++;
 		px += twoRy2;
 		if (p < 0)
@@ -261,18 +269,19 @@ void ellipseMidpoint(int xCenter, int yCenter, int Rx, int Ry)
 			p += Ry2 + px - py;
 		}
 		printf("x=%d,y=%d,", x, y);
-		printf("px=%d,py=%d\n,", px, py);
+		printf("px=%I64d,py=%I64d\n,", px, py);
 		ellipsePlotPoints(xCenter, yCenter, x, y);
 		debugIndex++;
 	}
 	/*Region 2*/
 	debugIndex = 0;
-	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
 	printf("Region 2\n");
 	while (y>0)
 	{
 		printf("k=%d,", debugIndex);
-		printf("p=%d,", p);
+		printf("p=%I64d,", p);
 		y--;
 		py -= twoRx2;
 		if (p > 0)
@@ -284,7 +293,7 @@ void ellipseMidpoint(int xCenter, int yCenter, int Rx, int Ry)
 			p += Rx2 - py + px;
 		}
 		printf("x=%d,y=%d,", x, y);
-		printf("px=%d,py=%d\n,", px, py);
+		printf("px=%I64d,py=%I64d\n,", px, py);
 		ellipsePlotPoints(xCenter, yCenter, x, y);
 		debugIndex++;
 	}
@@ -300,7 +309,7 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	ellipseMidpoint(300, 300, 80, 60);
+	ellipseMidpoint(0, 0, 800, 480);
 	glFlush();
 }
 void code_6_5_2()
@@ -13202,7 +13211,7 @@ struct BaseInfo
 	int y0;
 	int xEnd;
 	int yEnd;
-	int level;
+	int AAlevel;
 };
 bool operator < (const Point& p1, const Point& p2)
 {
@@ -13223,45 +13232,41 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
+	//printf("%d, %d, %f\n", x, y, grayPercent);
 }
 void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
 {
 	for (auto p : lastInfo)
 	{
-		/*float count = p.second;
-		if (count > baseInfo.level * baseInfo.level)
-			count = baseInfo.level * baseInfo.level;
-
-		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / (baseInfo.level*baseInfo.level));*/
 		float count = p.second;
-		if (count > baseInfo.level)
-			count = baseInfo.level;
+		if (count > baseInfo.AAlevel)
+			count = baseInfo.AAlevel;
 
-		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.AAlevel);
 	}
 }
 void setSubPixelDx(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	//printf("x=%d, y=%d\n", subX, subY);
-	int curX = floor((float)subX / baseInfo.level);
-	int curY = floor((float)subY / baseInfo.level);
-	/*if (curX != lastInfo.begin()->first.x)
+	int curX = floor((float)subX / baseInfo.AAlevel);
+	int curY = floor((float)subY / baseInfo.AAlevel);
+	if (curX != lastInfo.begin()->first.x)
 	{
 		refreshLastPoints(baseInfo, lastInfo);
 		lastInfo.clear();
-	}*/
+	}
 	lastInfo[{curX, curY}]++;
 }
 void setSubPixelDy(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	//printf("x=%d, y=%d\n", subX, subY);
-	int curX = floor((float)subX / baseInfo.level);
-	int curY = floor((float)subY / baseInfo.level);
-	/*if (curY != lastInfo.begin()->first.y)
+	int curX = floor((float)subX / baseInfo.AAlevel);
+	int curY = floor((float)subY / baseInfo.AAlevel);
+	if (curY != lastInfo.begin()->first.y)
 	{
 		refreshLastPoints(baseInfo, lastInfo);
 		lastInfo.clear();
-	}*/
+	}
 	lastInfo[{curX, curY}]++;
 }
 // 0<m<1
@@ -13435,7 +13440,7 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std:
 		}
 	}
 }
-void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
+void lineBresAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 {
 	if (x0 > xEnd)
 	{
@@ -13448,14 +13453,14 @@ void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
 		yEnd = tempy;
 	}
 
-	int subX0 = (level - 1) / 2;
-	int subY0 = (level - 1) / 2;
-	int subXEnd = subX0 + (xEnd - x0) * level;
-	int SubYEnd = subY0 + (yEnd - y0) * level;
+	int subX0 = 0;
+	int subY0 = 0;
+	int subXEnd = subX0 + (xEnd - x0) * AAlevel;
+	int SubYEnd = subY0 + (yEnd - y0) * AAlevel;
 	
 	std::map<Point, int> lastInfo;
-	BaseInfo baseInfo = { x0, y0, xEnd, yEnd, level };
-	lastInfo[{0, 0}] = level;
+	BaseInfo baseInfo = { x0, y0, xEnd, yEnd, AAlevel };
+	lastInfo[{0, 0}] = AAlevel;
 	//lineBres(subX0 - 4, subY0, subXEnd - 4, SubYEnd, baseInfo, lastInfo);
 	//lineBres(subX0 - 3, subY0, subXEnd - 3, SubYEnd, baseInfo, lastInfo);
 	//lineBres(subX0 - 2, subY0, subXEnd - 2, SubYEnd, baseInfo, lastInfo);
@@ -13465,7 +13470,7 @@ void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
 	//lineBres(subX0 + 2, subY0, subXEnd + 2, SubYEnd, baseInfo, lastInfo);
 	//lineBres(subX0 + 3, subY0, subXEnd + 3, SubYEnd, baseInfo, lastInfo);
 	//lineBres(subX0 + 4, subY0, subXEnd + 4, SubYEnd, baseInfo, lastInfo);
-	lastInfo[{xEnd - x0, yEnd - y0}] = level;
+	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 	lastInfo.clear();
 }
@@ -13474,18 +13479,26 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresAA(300, 100, 100, 100, 3);
-	lineBresAA(200, 200, 200, 400, 3);
-	lineBresAA(120, 120, 250, 250, 3);
-	lineBresAA(250, 120, 120, 250, 3);
+	lineBresAA(70, 464, 385, 527, 2);
+	lineBresAA(70, 414, 385, 477, 3);
+	lineBresAA(70, 364, 385, 427, 4);
+	lineBresAA(70, 314, 385, 377, 8);
 
-	lineBresAA(150, 150, 650, 400, 3);
-	lineBresAA(380, 180, 500, 400, 3);
-	lineBresAA(380, 580, 600, 500, 3);
-	lineBresAA(600, 250, 700, 10, 3);
+	lineBresAA(74, 223, 388, 231, 2);
+	lineBresAA(74, 173, 388, 181, 3);
+	lineBresAA(74, 123, 388, 131, 4);
+	lineBresAA(74, 73, 388, 81, 8);
 
-	//lineBresAA(100, 100, 130, 400, 4);
+	lineBresAA(492, 360, 509, 556, 2);
+	lineBresAA(542, 360, 559, 556, 3);
+	lineBresAA(592, 360, 609, 556, 4);
+	lineBresAA(642, 360, 659, 556, 8);
 
+	lineBresAA(511, 67, 517, 272, 2);
+	lineBresAA(561, 67, 567, 272, 3);
+	lineBresAA(611, 67, 617, 272, 4);
+	lineBresAA(661, 67, 667, 272, 8);
+	
 	glFlush();
 }
 void code_6_exercise_54()
@@ -15960,7 +15973,7 @@ struct BaseInfo
 	int y0;
 	int xEnd;
 	int yEnd;
-	int level;
+	int AAlevel;
 };
 bool operator < (const Point& p1, const Point& p2)
 {
@@ -15981,40 +15994,41 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
+	//printf("%d, %d, %f\n", x, y, grayPercent);
 }
 void refreshLastPoints(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
 {
 	for (auto p : lastInfo)
 	{
 		float count = p.second;
-		if (count > baseInfo.level)
-			count = baseInfo.level;
+		if (count > baseInfo.AAlevel)
+			count = baseInfo.AAlevel;
 
-		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.level);
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / baseInfo.AAlevel);
 	}
 }
 void setSubPixelDx(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	//printf("x=%d, y=%d\n", subX, subY);
-	int curX = floor((float)subX / baseInfo.level);
-	int curY = floor((float)subY / baseInfo.level);
-	/*if (curX != lastInfo.begin()->first.x)
+	int curX = floor((float)subX / baseInfo.AAlevel);
+	int curY = floor((float)subY / baseInfo.AAlevel);
+	if (curX != lastInfo.begin()->first.x)
 	{
-	refreshLastPoints(baseInfo, lastInfo);
-	lastInfo.clear();
-	}*/
+		refreshLastPoints(baseInfo, lastInfo);
+		lastInfo.clear();
+	}
 	lastInfo[{curX, curY}]++;
 }
 void setSubPixelDy(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	//printf("x=%d, y=%d\n", subX, subY);
-	int curX = floor((float)subX / baseInfo.level);
-	int curY = floor((float)subY / baseInfo.level);
-	/*if (curY != lastInfo.begin()->first.y)
+	int curX = floor((float)subX / baseInfo.AAlevel);
+	int curY = floor((float)subY / baseInfo.AAlevel);
+	if (curY != lastInfo.begin()->first.y)
 	{
-	refreshLastPoints(baseInfo, lastInfo);
-	lastInfo.clear();
-	}*/
+		refreshLastPoints(baseInfo, lastInfo);
+		lastInfo.clear();
+	}
 	lastInfo[{curX, curY}]++;
 }
 // 0<m<1(m>1)
@@ -16038,9 +16052,9 @@ void lineBresMid1(int x0, int y0, int xEnd, int yEnd, bool XYmirror, const BaseI
 	int y = y0;
 
 	if (XYmirror)
-		setPixel(y, x);
+		setSubPixelDy(y, x, baseInfo, lastInfo);
 	else
-		setPixel(x, y);
+		setSubPixelDx(x, y, baseInfo, lastInfo);
 
 	while (x < xEnd)
 	{
@@ -16094,9 +16108,9 @@ void lineBresMid2(int x0, int y0, int xEnd, int yEnd, bool XYmirror, const BaseI
 			p += twoDxMinusDy;
 		}
 		if (XYmirror)
-			setPixel(y, x);
+			setSubPixelDy(y, x, baseInfo, lastInfo);
 		else
-			setPixel(x, y);
+			setSubPixelDx(x, y, baseInfo, lastInfo);
 	}
 }
 void lineBresMid(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
@@ -16136,178 +16150,7 @@ void lineBresMid(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, s
 		}
 	}
 }
-// 0<m<1
-void lineBres1(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
-	int p = 2 * dy - dx;
-	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
-
-	int x = x0;
-	int y = y0;
-	setSubPixelDx(x, y, baseInfo, lastInfo);
-	while (x < xEnd)
-	{
-		x++;
-		if (p < 0)
-			p += twoDy;
-		else
-		{
-			y++;
-			p += twoDyMinusDx;
-		}
-		setSubPixelDx(x, y, baseInfo, lastInfo);
-	}
-}
-// m>1
-void lineBres1M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
-	int p = dy - 2 * dx;
-	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
-	int x = x0;
-	int y = y0;
-
-	setSubPixelDy(x, y, baseInfo, lastInfo);
-	while (y < yEnd)
-	{
-		y++;
-		if (p > 0)
-			p += twoDx;
-		else
-		{
-			x++;
-			p += twoDyMinusDx;
-		}
-		setSubPixelDy(x, y, baseInfo, lastInfo);
-	}
-}
-// -1<m<0
-void lineBres2(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
-	int p = 2 * dy + dx;
-	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
-
-	int x = x0;
-	int y = y0;
-
-	setSubPixelDx(x, y, baseInfo, lastInfo);
-	while (x < xEnd)
-	{
-		x++;
-		if (p >= 0)
-			p += twoDy;
-		else
-		{
-			y--;
-			p += twoDyAddDx;
-		}
-		setSubPixelDx(x, y, baseInfo, lastInfo);
-	}
-}
-// m<-1
-void lineBres2M(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-
-	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
-	int p = -2 * dx - dy;
-	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
-
-	int x = x0;
-	int y = y0;
-
-	setSubPixelDy(x, y, baseInfo, lastInfo);
-	while (y > yEnd)
-	{
-		y--;
-		if (p >= 0)
-			p += twoDx;
-		else
-		{
-			x++;
-			p += twoDyAddDx;
-		}
-		setSubPixelDy(x, y, baseInfo, lastInfo);
-	}
-}
-void lineBres(int x0, int y0, int xEnd, int yEnd, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
-{
-	if (x0 > xEnd)
-	{
-		int tempx = x0;
-		int tempy = y0;
-		x0 = xEnd;
-
-		y0 = yEnd;
-		xEnd = tempx;
-		yEnd = tempy;
-	}
-	int dx = xEnd - x0;
-	int dy = yEnd - y0;
-	if (dy > 0)
-	{
-		if (fabs((float)dy) > fabs((float)dx))
-		{
-			lineBres1M(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
-		}
-		else
-		{
-			lineBres1(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
-		}
-	}
-	else
-	{
-		if (fabs((float)dy) > fabs((float)dx))
-		{
-			lineBres2M(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
-		}
-		else
-		{
-			lineBres2(x0, y0, xEnd, yEnd, baseInfo, lastInfo);
-		}
-	}
-}
-void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
+void lineBresAA(int x0, int y0, int xEnd, int yEnd, int AAlevel)
 {
 	if (x0 > xEnd)
 	{
@@ -16320,24 +16163,24 @@ void lineBresAA(int x0, int y0, int xEnd, int yEnd, int level)
 		yEnd = tempy;
 	}
 
-	int subX0 = (level - 1) / 2;
-	int subY0 = (level - 1) / 2;
-	int subXEnd = subX0 + (xEnd - x0) * level;
-	int SubYEnd = subY0 + (yEnd - y0) * level;
-
+	int subX0 = 0;
+	int subY0 = 0;
+	int subXEnd = subX0 + (xEnd - x0) * AAlevel;
+	int SubYEnd = subY0 + (yEnd - y0) * AAlevel;
+	
 	std::map<Point, int> lastInfo;
-	BaseInfo baseInfo = { x0, y0, xEnd, yEnd, level };
-	lastInfo[{0, 0}] = level;
-	//lineBres(subX0 - 4, subY0, subXEnd - 4, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 - 3, subY0, subXEnd - 3, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 - 2, subY0, subXEnd - 2, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 - 1, subY0, subXEnd - 1, SubYEnd, baseInfo, lastInfo);
-	lineBres(subX0, subY0, subXEnd, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 + 1, subY0, subXEnd + 1, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 + 2, subY0, subXEnd + 2, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 + 3, subY0, subXEnd + 3, SubYEnd, baseInfo, lastInfo);
-	//lineBres(subX0 + 4, subY0, subXEnd + 4, SubYEnd, baseInfo, lastInfo);
-	lastInfo[{xEnd - x0, yEnd - y0}] = level;
+	BaseInfo baseInfo = { x0, y0, xEnd, yEnd, AAlevel };
+	lastInfo[{0, 0}] = AAlevel;
+	//lineBresMid(subX0 - 4, subY0, subXEnd - 4, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 - 3, subY0, subXEnd - 3, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 - 2, subY0, subXEnd - 2, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 - 1, subY0, subXEnd - 1, SubYEnd, baseInfo, lastInfo);
+	lineBresMid(subX0, subY0, subXEnd, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 + 1, subY0, subXEnd + 1, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 + 2, subY0, subXEnd + 2, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 + 3, subY0, subXEnd + 3, SubYEnd, baseInfo, lastInfo);
+	//lineBresMid(subX0 + 4, subY0, subXEnd + 4, SubYEnd, baseInfo, lastInfo);
+	lastInfo[{xEnd - x0, yEnd - y0}] = AAlevel;
 	refreshLastPoints(baseInfo, lastInfo);
 	lastInfo.clear();
 }
@@ -16346,21 +16189,244 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresAA(300, 100, 100, 100, 3);
-	lineBresAA(200, 200, 200, 400, 3);
-	lineBresAA(120, 120, 250, 250, 3);
-	lineBresAA(250, 120, 120, 250, 3);
+	lineBresAA(70, 464, 385, 527, 2);
+	lineBresAA(70, 414, 385, 477, 3);
+	lineBresAA(70, 364, 385, 427, 4);
+	lineBresAA(70, 314, 385, 377, 8);
 
-	lineBresAA(150, 150, 650, 400, 3);
-	lineBresAA(380, 180, 500, 400, 3);
-	lineBresAA(380, 580, 600, 500, 3);
-	lineBresAA(600, 250, 700, 10, 3);
+	lineBresAA(74, 223, 388, 231, 2);
+	lineBresAA(74, 173, 388, 181, 3);
+	lineBresAA(74, 123, 388, 131, 4);
+	lineBresAA(74, 73, 388, 81, 8);
 
-	//lineBresAA(100, 100, 130, 400, 4);
+	lineBresAA(492, 360, 509, 556, 2);
+	lineBresAA(542, 360, 559, 556, 3);
+	lineBresAA(592, 360, 609, 556, 4);
+	lineBresAA(642, 360, 659, 556, 8);
+
+	lineBresAA(511, 67, 517, 272, 2);
+	lineBresAA(561, 67, 567, 272, 3);
+	lineBresAA(611, 67, 617, 272, 4);
+	lineBresAA(661, 67, 667, 272, 8);
 
 	glFlush();
 }
 void code_6_exercise_55()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_56
+struct Point { int x; int y; };
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+	printf("%d, %d, %f\n", x, y, grayPercent);
+}
+void plotGrayPixels(int xCenter, int yCenter, int x, int y, float grayPercent)
+{
+	setGrayPixel(xCenter + x, yCenter + y, grayPercent);
+	setGrayPixel(xCenter - x, yCenter + y, grayPercent);
+	setGrayPixel(xCenter + x, yCenter - y, grayPercent);
+	setGrayPixel(xCenter - x, yCenter - y, grayPercent);
+}
+void refreshLastPoints(int xCenter, int yCenter, int AAlevel, const std::map<Point, int>& lastInfo)
+{
+	for (auto p : lastInfo)
+	{
+		float count = p.second;
+		if (count > AAlevel)
+			count = AAlevel;
+
+		plotGrayPixels(xCenter, yCenter, p.first.x, p.first.y, count / AAlevel);
+	}
+}
+void plotSubPixelsDx(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
+{
+	int curX = floor((float)x / AAlevel);
+	int curY = floor((float)y / AAlevel);
+	//if (!lastInfo.empty())
+	//{
+	//	if (curX != lastInfo.begin()->first.x)
+	//	{
+	//		refreshLastPoints(xCenter, yCenter, AAlevel, lastInfo);
+	//		lastInfo.clear();
+	//	}
+	//}
+	//lastInfo[{curX, curY}]++;
+	lastInfo[{x, y}]++;
+}
+void plotSubPixelsDy(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
+{
+	int curX = floor((float)x / AAlevel);
+	int curY = floor((float)y / AAlevel);
+	/*if (!lastInfo.empty())
+	{
+		if (curY != lastInfo.begin()->first.y)
+		{
+			refreshLastPoints(xCenter, yCenter, AAlevel, lastInfo);
+			lastInfo.clear();
+		}
+	}*/
+	//lastInfo[{curX, curY}]++;
+	lastInfo[{x, y}]++;
+}
+void ellipseMidpoint(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
+{
+	std::map<Point, int> lastInfo;
+	//Rx = Rx * AAlevel;
+	//Ry = Ry * AAlevel;
+
+	Rx = 200;
+	Ry = 10;
+	
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = Ry;
+	int px = 0;
+	int py = twoRx2*y;
+	plotSubPixelsDx(xCenter, yCenter, x, y,AAlevel, lastInfo);
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		plotSubPixelsDx(xCenter, yCenter, x, y, AAlevel, lastInfo);
+	}
+	/*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		plotSubPixelsDy(xCenter, yCenter, x, y, AAlevel, lastInfo);
+	}
+	refreshLastPoints(xCenter, yCenter, AAlevel, lastInfo);
+	lastInfo.clear();
+}
+void ellipsePoints(int Rx, int Ry, std::map<int, std::vector<Point>>& points)
+{
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = Ry;
+	int px = 0;
+	int py = twoRx2*y;
+	points[y].push_back({ x, y });
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		points[y].push_back({ x, y });
+	}
+	/*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		points[y].push_back({ x, y });
+	}
+}
+void hLineRound(int y, int x0, int x1, int xc, int yc)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(xc + x, yc + y);
+		setPixel(xc - x, yc + y);
+		setPixel(xc + x, yc - y);
+		setPixel(xc - x, yc - y);
+	}
+}
+void ellipseFillRect(int xCenter, int yCenter, int Rx, int Ry, int width)
+{
+	std::map<int, std::vector<Point>> ellipseOuter;
+	std::map<int, std::vector<Point>> ellipseInner;
+	ellipsePoints(Rx + width / 2, Ry + width / 2, ellipseOuter);
+	ellipsePoints(Rx - (width - 1) / 2, Ry - (width - 1) / 2, ellipseInner);
+	for (int i = 0; i <= Ry + width / 2; i++)
+	{
+		assert(ellipseOuter.find(i) != ellipseOuter.end());
+		hLineRound(i,
+			ellipseInner.find(i) != ellipseInner.end() ? ellipseInner[i][0].x : 0,
+			ellipseOuter[i][ellipseOuter[i].size() - 1].x,
+			xCenter, yCenter);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	ellipseMidpoint(300, 300, 100, 60, 4);
+	glFlush();
+}
+void code_6_exercise_56()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -16651,6 +16717,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_55
 	code_6_exercise_55();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_56
+	code_6_exercise_56();
 #endif
 
 
