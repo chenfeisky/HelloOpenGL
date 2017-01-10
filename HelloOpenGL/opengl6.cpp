@@ -309,7 +309,7 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	ellipseMidpoint(0, 0, 800, 480);
+	ellipseMidpoint(300, 300, 100, 60);
 	glFlush();
 }
 void code_6_5_2()
@@ -15918,22 +15918,22 @@ void drawFunc()
 
 	// 超采样
 	glColor3f(1.0, 1.0, 1.0);
-	//lineBres(20, 568, 158, 573);
-	//lineSSAA(20, 538, 158, 543, 3, false, weightInfo3);
-	//lineSSAA(20, 508, 158, 513, 4, false, weightInfo4);
-	//lineSSAA(20, 478, 158, 483, 8, false, weightInfo8);
-	//
-	//glColor3f(1.0, 1.0, 1.0);
-	//lineBres(210, 495, 218, 590);
-	//lineSSAA(240, 495, 248, 590, 3, false, weightInfo3);
-	//lineSSAA(270, 495, 278, 590, 4, false, weightInfo4);
-	//lineSSAA(300, 495, 308, 590, 8, false, weightInfo8);
-	//
-	//glColor3f(1.0, 1.0, 1.0);
-	//polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1, false, weightInfo3);
-	//polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 3, false, weightInfo3);
-	//polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4, false, weightInfo4);
-	//polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8, false, weightInfo8);
+	lineBres(20, 568, 158, 573);
+	lineSSAA(20, 538, 158, 543, 3, false, weightInfo3);
+	lineSSAA(20, 508, 158, 513, 4, false, weightInfo4);
+	lineSSAA(20, 478, 158, 483, 8, false, weightInfo8);
+
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(210, 495, 218, 590);
+	lineSSAA(240, 495, 248, 590, 3, false, weightInfo3);
+	lineSSAA(270, 495, 278, 590, 4, false, weightInfo4);
+	lineSSAA(300, 495, 308, 590, 8, false, weightInfo8);
+
+	glColor3f(1.0, 1.0, 1.0);
+	polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1, false, weightInfo3);
+	polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 3, false, weightInfo3);
+	polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4, false, weightInfo4);
+	polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8, false, weightInfo8);
 
 	// 多重采样
 	glColor3f(1.0, 1.0, 1.0);
@@ -16219,12 +16219,25 @@ void code_6_exercise_55()
 
 #ifdef CHAPTER_6_EXERCISE_56
 struct Point { int x; int y; };
-inline int Round(const float a)
+struct BaseInfo
+{
+	int xc;
+	int yc;
+	int AAlevel;
+};
+//inline int Round(const float a)
+//{
+//	if (a >= 0)
+//		return int(a + 0.5);
+//	else
+//		return int(a - 0.5);
+//}
+inline int64_t Round(const double a)
 {
 	if (a >= 0)
-		return int(a + 0.5);
+		return int64_t(a + 0.5);
 	else
-		return int(a - 0.5);
+		return int64_t(a - 0.5);
 }
 bool operator < (const Point& p1, const Point& p2)
 {
@@ -16247,183 +16260,388 @@ void setGrayPixel(int x, int y, float grayPercent)
 	setPixel(x, y);
 	printf("%d, %d, %f\n", x, y, grayPercent);
 }
-void plotGrayPixels(int xCenter, int yCenter, int x, int y, float grayPercent)
+void plotGrayPixels(int x, int y, float grayPercent, const BaseInfo& baseInfo)
 {
-	setGrayPixel(xCenter + x, yCenter + y, grayPercent);
-	setGrayPixel(xCenter - x, yCenter + y, grayPercent);
-	setGrayPixel(xCenter + x, yCenter - y, grayPercent);
-	setGrayPixel(xCenter - x, yCenter - y, grayPercent);
+	setGrayPixel(baseInfo.xc + x, baseInfo.yc + y, grayPercent);
+	setGrayPixel(baseInfo.xc - x, baseInfo.yc + y, grayPercent);
+	setGrayPixel(baseInfo.xc + x, baseInfo.yc - y, grayPercent);
+	setGrayPixel(baseInfo.xc - x, baseInfo.yc - y, grayPercent);
 }
-void refreshLastPoints(int xCenter, int yCenter, int AAlevel, const std::map<Point, int>& lastInfo)
+//void refreshLastPoints0(int xCenter, int yCenter, int AAlevel, const std::map<Point, int>& lastInfo)
+//{
+//	for (auto p : lastInfo)
+//	{
+//		float count = p.second;
+//		if (count > AAlevel)
+//			count = AAlevel;
+//
+//		plotGrayPixels(xCenter, yCenter, p.first.x, p.first.y, count / AAlevel);
+//	}
+//}
+//void plotSubPixelsDx(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
+//{
+//	int curX = floor((float)x / AAlevel);
+//	int curY = floor((float)y / AAlevel);
+//	if (!lastInfo.empty())
+//	{
+//		if (curX != lastInfo.begin()->first.x)
+//		{
+//			refreshLastPoints0(xCenter, yCenter, AAlevel, lastInfo);
+//			lastInfo.clear();
+//		}
+//	}
+//	lastInfo[{curX, curY}]++;
+//}
+//void plotSubPixelsDy(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
+//{
+//	int curX = floor((float)x / AAlevel);
+//	int curY = floor((float)y / AAlevel);
+//	if (!lastInfo.empty())
+//	{
+//		if (curY != lastInfo.begin()->first.y)
+//		{
+//			refreshLastPoints0(xCenter, yCenter, AAlevel, lastInfo);
+//			lastInfo.clear();
+//		}
+//	}
+//	lastInfo[{curX, curY}]++;
+//}
+//void ellipse0SSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
+//{
+//	std::map<Point, int> lastInfo;
+//	Rx = Rx * AAlevel;
+//	Ry = Ry * AAlevel;
+//		
+//	int Rx2 = Rx*Rx;
+//	int Ry2 = Ry*Ry;
+//	int twoRx2 = 2 * Rx2;
+//	int twoRy2 = 2 * Ry2;
+//	int64_t p;
+//	int x = 0;
+//	int y = Ry;
+//	int64_t px = 0;
+//	int64_t py = twoRx2*y;
+//	plotSubPixelsDx(xCenter, yCenter, x, y,AAlevel, lastInfo);
+//	/*Region 1*/
+//	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+//	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+//	while (px < py)
+//	{
+//		x++;
+//		px += twoRy2;
+//		if (p < 0)
+//			p += Ry2 + px;
+//		else
+//		{
+//			y--;
+//			py -= twoRx2;
+//			p += Ry2 + px - py;
+//		}
+//		plotSubPixelsDx(xCenter, yCenter, x, y, AAlevel, lastInfo);
+//	}
+//	/*Region 2*/
+//	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+//	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+//	while (y > 0)
+//	{
+//		y--;
+//		py -= twoRx2;
+//		if (p > 0)
+//			p += Rx2 - py;
+//		else
+//		{
+//			x++;
+//			px += twoRy2;
+//			p += Rx2 - py + px;
+//		}
+//		plotSubPixelsDy(xCenter, yCenter, x, y, AAlevel, lastInfo);
+//	}
+//	refreshLastPoints0(xCenter, yCenter, AAlevel, lastInfo);
+//	lastInfo.clear();
+//}
+void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
+	int aa2 = baseInfo.AAlevel * baseInfo.AAlevel;
 	for (auto p : lastInfo)
 	{
 		float count = p.second;
-		if (count > AAlevel)
-			count = AAlevel;
+		if (count > aa2)
+			count = aa2;
 
-		plotGrayPixels(xCenter, yCenter, p.first.x, p.first.y, count / AAlevel);
+		plotGrayPixels(p.first.x, p.first.y, count / aa2, baseInfo);
 	}
 }
-void plotSubPixelsDx(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
+void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	int curX = floor((float)x / AAlevel);
-	int curY = floor((float)y / AAlevel);
-	//if (!lastInfo.empty())
-	//{
-	//	if (curX != lastInfo.begin()->first.x)
-	//	{
-	//		refreshLastPoints(xCenter, yCenter, AAlevel, lastInfo);
-	//		lastInfo.clear();
-	//	}
-	//}
-	//lastInfo[{curX, curY}]++;
-	lastInfo[{x, y}]++;
-}
-void plotSubPixelsDy(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
-{
-	int curX = floor((float)x / AAlevel);
-	int curY = floor((float)y / AAlevel);
+	int curX = floor((float)subX / baseInfo.AAlevel);
+	int curY = floor((float)subY / baseInfo.AAlevel);
 	/*if (!lastInfo.empty())
 	{
 		if (curY != lastInfo.begin()->first.y)
 		{
-			refreshLastPoints(xCenter, yCenter, AAlevel, lastInfo);
+			refreshLastPoints(baseInfo, lastInfo);
 			lastInfo.clear();
 		}
 	}*/
-	//lastInfo[{curX, curY}]++;
-	lastInfo[{x, y}]++;
+	lastInfo[{curX, curY}]++;
 }
-void ellipseMidpoint(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
-{
-	std::map<Point, int> lastInfo;
-	//Rx = Rx * AAlevel;
-	//Ry = Ry * AAlevel;
-
-	Rx = 200;
-	Ry = 10;
-	
-	int Rx2 = Rx*Rx;
-	int Ry2 = Ry*Ry;
-	int twoRx2 = 2 * Rx2;
-	int twoRy2 = 2 * Ry2;
-	int p;
-	int x = 0;
-	int y = Ry;
-	int px = 0;
-	int py = twoRx2*y;
-	plotSubPixelsDx(xCenter, yCenter, x, y,AAlevel, lastInfo);
-	/*Region 1*/
-	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
-	while (px < py)
-	{
-		x++;
-		px += twoRy2;
-		if (p < 0)
-			p += Ry2 + px;
-		else
-		{
-			y--;
-			py -= twoRx2;
-			p += Ry2 + px - py;
-		}
-		plotSubPixelsDx(xCenter, yCenter, x, y, AAlevel, lastInfo);
-	}
-	/*Region 2*/
-	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
-	while (y > 0)
-	{
-		y--;
-		py -= twoRx2;
-		if (p > 0)
-			p += Rx2 - py;
-		else
-		{
-			x++;
-			px += twoRy2;
-			p += Rx2 - py + px;
-		}
-		plotSubPixelsDy(xCenter, yCenter, x, y, AAlevel, lastInfo);
-	}
-	refreshLastPoints(xCenter, yCenter, AAlevel, lastInfo);
-	lastInfo.clear();
-}
-void ellipsePoints(int Rx, int Ry, std::map<int, std::vector<Point>>& points)
-{
-	int Rx2 = Rx*Rx;
-	int Ry2 = Ry*Ry;
-	int twoRx2 = 2 * Rx2;
-	int twoRy2 = 2 * Ry2;
-	int p;
-	int x = 0;
-	int y = Ry;
-	int px = 0;
-	int py = twoRx2*y;
-	points[y].push_back({ x, y });
-	/*Region 1*/
-	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
-	while (px < py)
-	{
-		x++;
-		px += twoRy2;
-		if (p < 0)
-			p += Ry2 + px;
-		else
-		{
-			y--;
-			py -= twoRx2;
-			p += Ry2 + px - py;
-		}
-		points[y].push_back({ x, y });
-	}
-	/*Region 2*/
-	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
-	while (y > 0)
-	{
-		y--;
-		py -= twoRx2;
-		if (p > 0)
-			p += Rx2 - py;
-		else
-		{
-			x++;
-			px += twoRy2;
-			p += Rx2 - py + px;
-		}
-		points[y].push_back({ x, y });
-	}
-}
-void hLineRound(int y, int x0, int x1, int xc, int yc)
+void hLineRound(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	for (int x = x0; x <= x1; x++)
 	{
-		setPixel(xc + x, yc + y);
-		setPixel(xc - x, yc + y);
-		setPixel(xc + x, yc - y);
-		setPixel(xc - x, yc - y);
+		setSubPixel(x, y, baseInfo, lastInfo);
 	}
 }
-void ellipseFillRect(int xCenter, int yCenter, int Rx, int Ry, int width)
+void ellipsePoints(int Rx, int Ry, const BaseInfo& baseInfo, std::map<int, std::vector<Point>>& points)
 {
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	points[y].push_back({ x, y });
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		points[y].push_back({ x, y });
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		points[y].push_back({ x, y });
+	}
+}
+void ellipseSSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
+{
+	std::map<Point, int> lastInfo;
 	std::map<int, std::vector<Point>> ellipseOuter;
 	std::map<int, std::vector<Point>> ellipseInner;
-	ellipsePoints(Rx + width / 2, Ry + width / 2, ellipseOuter);
-	ellipsePoints(Rx - (width - 1) / 2, Ry - (width - 1) / 2, ellipseInner);
+	BaseInfo baseInfo = { xCenter, yCenter, AAlevel };
+
+	Rx = Rx * baseInfo.AAlevel;
+	Ry = Ry * baseInfo.AAlevel;
+
+	int fixed = 0;
+	switch (AAlevel)
+	{
+	case 2:
+		fixed = 0;
+		break;
+	case 4:
+		fixed = 1;
+		break;
+	case 8:
+		fixed = 2;
+		break;
+	default:
+		break;
+	}
+
+	int width = AAlevel / 2 + fixed;
+	ellipsePoints(Rx + width, Ry + width, baseInfo, ellipseOuter);
+	ellipsePoints(Rx - width, Ry - width, baseInfo, ellipseInner);
 	for (int i = 0; i <= Ry + width / 2; i++)
 	{
 		assert(ellipseOuter.find(i) != ellipseOuter.end());
 		hLineRound(i,
 			ellipseInner.find(i) != ellipseInner.end() ? ellipseInner[i][0].x : 0,
 			ellipseOuter[i][ellipseOuter[i].size() - 1].x,
-			xCenter, yCenter);
+			baseInfo, lastInfo);
+	}
+	if (!lastInfo.empty())
+	{
+		refreshLastPoints(baseInfo, lastInfo);
+		lastInfo.clear();
 	}
 }
+
+//---
+void plotPoint(int x, int y, float grayPercent, const BaseInfo& baseInfo)
+{
+	setGrayPixel(baseInfo.xc + x, baseInfo.yc + y, grayPercent);
+	setGrayPixel(baseInfo.xc - x, baseInfo.yc + y, grayPercent);
+	setGrayPixel(baseInfo.xc + x, baseInfo.yc - y, grayPercent);
+	setGrayPixel(baseInfo.xc - x, baseInfo.yc - y, grayPercent);
+}
+void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, int hCount)
+{
+	float squareAA = baseInfo.AAlevel * baseInfo.AAlevel;
+	for (int i = begin.x; i <= end.x; i++)
+	{
+		auto it = lastInfo.find({ i, begin.y });
+		if (it != lastInfo.end())
+		{
+			float count = it->second;
+			if (count > squareAA)
+				count = squareAA;
+
+			plotPoint(i, begin.y, count / squareAA, baseInfo);
+		}
+		else
+		{
+			if (hCount != baseInfo.AAlevel)
+				plotPoint(i, begin.y, (float)hCount / baseInfo.AAlevel, baseInfo);
+			else
+				plotPoint(i, begin.y, 1, baseInfo);
+		}
+	}
+	lastInfo.clear();
+}
+Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	int curY = floor((float)points.front().y / baseInfo.AAlevel);
+
+	int beginX = floor((float)points.front().x / baseInfo.AAlevel);
+	int endX = floor((float)points.back().x / baseInfo.AAlevel);
+
+	if (beginX > endX)
+		std::swap(beginX, endX);
+
+	for (auto p : points)
+	{
+		int curX = floor((float)p.x / baseInfo.AAlevel);
+		for (int i = beginX; i <= endX; i++)
+		{
+			if (curX == i)
+			{
+				if (p.x < 0)
+				{
+					float remainder = (-1 * p.x) % baseInfo.AAlevel;
+					if (remainder == 0)
+						remainder = baseInfo.AAlevel;
+					lastInfo[{i, curY}] += baseInfo.AAlevel - remainder + 1;
+				}
+				else
+				{
+					lastInfo[{i, curY}] += (p.x % baseInfo.AAlevel) + 1;
+				}
+			}
+			else if (i < curX)
+			{
+				lastInfo[{i, curY}] += baseInfo.AAlevel;
+			}
+		}
+	}
+	return{ max(beginX, endX), curY };
+}
+void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::vector<Point>& pointInfo, int& lastY)
+{
+	int currentY = floor((float)y / baseInfo.AAlevel);
+	if (lastY == -99999)
+		lastY = currentY;
+
+	if (currentY != lastY)
+	{
+		if (pointInfo.size())
+		{
+			auto p = dealRightPoint(pointInfo, baseInfo, lastInfo);
+			setHLine({ 0, p.y }, p, baseInfo, lastInfo, pointInfo.size());
+			pointInfo.clear();
+		}
+		lastY = currentY;
+	}
+	pointInfo.push_back({ x1, y });
+
+}
+void ellipseMSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
+{
+	std::map<Point, int> lastInfo;
+	BaseInfo baseInfo = { xCenter, yCenter, AAlevel };
+	std::vector<Point> pointInfo;
+	int lastY = -99999;
+
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			hLine(y, 0, x - 1, baseInfo, lastInfo, pointInfo, lastY);
+
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+	}
+	hLine(y, 0, x , baseInfo, lastInfo, pointInfo, lastY);
+
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		hLine(y, 0, x, baseInfo, lastInfo, pointInfo, lastY);
+	}
+
+	if (pointInfo.size())
+	{
+		auto p = dealRightPoint(pointInfo, baseInfo, lastInfo);
+		setHLine({ 0, p.y }, p, baseInfo, lastInfo, pointInfo.size());
+		pointInfo.clear();
+	}
+}
+
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	ellipseMidpoint(300, 300, 100, 60, 4);
+	//ellipse0SSAA(300, 300, 100, 60, 4);
+
+	ellipseSSAA(300, 450, 100, 60, 2);
+	ellipseSSAA(300, 300, 100, 60, 4);
+	ellipseSSAA(300, 150, 100, 60, 8);
 	glFlush();
 }
 void code_6_exercise_56()

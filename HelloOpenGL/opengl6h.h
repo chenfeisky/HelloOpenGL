@@ -5,7 +5,7 @@
 //#define CHAPTER_6_1_2
 //#define CHAPTER_6_1_3
 //#define CHAPTER_6_4_2
-#define CHAPTER_6_5_2
+//#define CHAPTER_6_5_2
 //#define CHAPTER_6_EXERCISE_1
 //#define CHAPTER_6_EXERCISE_2
 //#define CHAPTER_6_EXERCISE_3
@@ -67,7 +67,7 @@
 //#define CHAPTER_6_EXERCISE_54_Test2 // 过取样（多重采样,即边缘采样）
 //#define CHAPTER_6_EXERCISE_54_Test3 // 过取样（加权,超采样,多重采样）
 //#define CHAPTER_6_EXERCISE_55 // 中点线 零宽
-//#define CHAPTER_6_EXERCISE_56
+#define CHAPTER_6_EXERCISE_56
 
 #ifdef CHAPTER_6_1_2
 #define CHAPTER_6_COMMON
