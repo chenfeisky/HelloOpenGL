@@ -63,11 +63,12 @@
 //#define CHAPTER_6_EXERCISE_52
 //#define CHAPTER_6_EXERCISE_53
 //#define CHAPTER_6_EXERCISE_54 // Bresenham 零宽
-//#define CHAPTER_6_EXERCISE_54_Test1 // 过取样（超采样）
+//#define CHAPTER_6_EXERCISE_54_Test1 // 过取样（即超采样）
 //#define CHAPTER_6_EXERCISE_54_Test2 // 过取样（多重采样,即边缘采样）
 //#define CHAPTER_6_EXERCISE_54_Test3 // 过取样（加权,超采样,多重采样）
 //#define CHAPTER_6_EXERCISE_55 // 中点线 零宽
-#define CHAPTER_6_EXERCISE_56
+//#define CHAPTER_6_EXERCISE_56 // 零宽椭圆线 / 过采样椭圆线 / 多重采样椭圆填充
+#define CHAPTER_6_EXERCISE_57 // 超采样/多重采样填充,同CHAPTER_6_EXERCISE_54_Test1和CHAPTER_6_EXERCISE_54_Test2
 
 #ifdef CHAPTER_6_1_2
 #define CHAPTER_6_COMMON
@@ -334,5 +335,9 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_56
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_57
 #define CHAPTER_6_COMMON
 #endif

@@ -16223,6 +16223,8 @@ struct BaseInfo
 {
 	int xc;
 	int yc;
+	int Rx;
+	int Ry;
 	int AAlevel;
 };
 //inline int Round(const float a)
@@ -16258,107 +16260,124 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
-	printf("%d, %d, %f\n", x, y, grayPercent);
+	//printf("%d, %d, %f\n", x, y, grayPercent);
 }
-void plotGrayPixels(int x, int y, float grayPercent, const BaseInfo& baseInfo)
+void plotPoint(int x, int y, float grayPercent, const BaseInfo& baseInfo)
 {
 	setGrayPixel(baseInfo.xc + x, baseInfo.yc + y, grayPercent);
 	setGrayPixel(baseInfo.xc - x, baseInfo.yc + y, grayPercent);
 	setGrayPixel(baseInfo.xc + x, baseInfo.yc - y, grayPercent);
 	setGrayPixel(baseInfo.xc - x, baseInfo.yc - y, grayPercent);
 }
-//void refreshLastPoints0(int xCenter, int yCenter, int AAlevel, const std::map<Point, int>& lastInfo)
-//{
-//	for (auto p : lastInfo)
-//	{
-//		float count = p.second;
-//		if (count > AAlevel)
-//			count = AAlevel;
-//
-//		plotGrayPixels(xCenter, yCenter, p.first.x, p.first.y, count / AAlevel);
-//	}
-//}
-//void plotSubPixelsDx(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
-//{
-//	int curX = floor((float)x / AAlevel);
-//	int curY = floor((float)y / AAlevel);
-//	if (!lastInfo.empty())
-//	{
-//		if (curX != lastInfo.begin()->first.x)
-//		{
-//			refreshLastPoints0(xCenter, yCenter, AAlevel, lastInfo);
-//			lastInfo.clear();
-//		}
-//	}
-//	lastInfo[{curX, curY}]++;
-//}
-//void plotSubPixelsDy(int xCenter, int yCenter, int x, int y, int AAlevel, std::map<Point, int>& lastInfo)
-//{
-//	int curX = floor((float)x / AAlevel);
-//	int curY = floor((float)y / AAlevel);
-//	if (!lastInfo.empty())
-//	{
-//		if (curY != lastInfo.begin()->first.y)
-//		{
-//			refreshLastPoints0(xCenter, yCenter, AAlevel, lastInfo);
-//			lastInfo.clear();
-//		}
-//	}
-//	lastInfo[{curX, curY}]++;
-//}
-//void ellipse0SSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
-//{
-//	std::map<Point, int> lastInfo;
-//	Rx = Rx * AAlevel;
-//	Ry = Ry * AAlevel;
-//		
-//	int Rx2 = Rx*Rx;
-//	int Ry2 = Ry*Ry;
-//	int twoRx2 = 2 * Rx2;
-//	int twoRy2 = 2 * Ry2;
-//	int64_t p;
-//	int x = 0;
-//	int y = Ry;
-//	int64_t px = 0;
-//	int64_t py = twoRx2*y;
-//	plotSubPixelsDx(xCenter, yCenter, x, y,AAlevel, lastInfo);
-//	/*Region 1*/
-//	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
-//	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
-//	while (px < py)
-//	{
-//		x++;
-//		px += twoRy2;
-//		if (p < 0)
-//			p += Ry2 + px;
-//		else
-//		{
-//			y--;
-//			py -= twoRx2;
-//			p += Ry2 + px - py;
-//		}
-//		plotSubPixelsDx(xCenter, yCenter, x, y, AAlevel, lastInfo);
-//	}
-//	/*Region 2*/
-//	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
-//	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
-//	while (y > 0)
-//	{
-//		y--;
-//		py -= twoRx2;
-//		if (p > 0)
-//			p += Rx2 - py;
-//		else
-//		{
-//			x++;
-//			px += twoRy2;
-//			p += Rx2 - py + px;
-//		}
-//		plotSubPixelsDy(xCenter, yCenter, x, y, AAlevel, lastInfo);
-//	}
-//	refreshLastPoints0(xCenter, yCenter, AAlevel, lastInfo);
-//	lastInfo.clear();
-//}
+void refreshLastPoints0(const BaseInfo& baseInfo, const std::map<Point, int>& lastInfo)
+{
+	for (auto p : lastInfo)
+	{
+		float count = p.second;
+		if (count > baseInfo.AAlevel)
+			count = baseInfo.AAlevel;
+
+		plotPoint(p.first.x, p.first.y, count / baseInfo.AAlevel, baseInfo);
+	}
+}
+void setSubPixelsDx(int x, int y, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	if (baseInfo.AAlevel == 1)
+	{
+		plotPoint(x, y, 1, baseInfo);
+	}
+	else
+	{
+		int curX = floor((float)x / baseInfo.AAlevel);
+		int curY = floor((float)y / baseInfo.AAlevel);
+		if (!lastInfo.empty())
+		{
+			if (curX != lastInfo.begin()->first.x)
+			{
+				refreshLastPoints0(baseInfo, lastInfo);
+				lastInfo.clear();
+			}
+		}
+		lastInfo[{curX, curY}]++;
+	}
+}
+void setSubPixelsDy(int x, int y, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	if (baseInfo.AAlevel == 1)
+	{
+		plotPoint(x, y, 1, baseInfo);
+	}
+	else
+	{
+		int curX = floor((float)x / baseInfo.AAlevel);
+		int curY = floor((float)y / baseInfo.AAlevel);
+		if (!lastInfo.empty())
+		{
+			if (curY != lastInfo.begin()->first.y)
+			{
+				refreshLastPoints0(baseInfo, lastInfo);
+				lastInfo.clear();
+			}
+		}
+		lastInfo[{curX, curY}]++;
+	}
+}
+void ellipse0SSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
+{
+	std::map<Point, int> lastInfo;
+	BaseInfo baseInfo = { xCenter, yCenter, Rx, Ry, AAlevel };
+
+	Rx = Rx * AAlevel;
+	Ry = Ry * AAlevel;
+		
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	setSubPixelsDx(x, y, baseInfo, lastInfo);
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		setSubPixelsDx(x, y, baseInfo, lastInfo);
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		setSubPixelsDy(x, y, baseInfo, lastInfo);
+	}
+	refreshLastPoints0(baseInfo, lastInfo);
+	lastInfo.clear();
+}
+
 void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	int aa2 = baseInfo.AAlevel * baseInfo.AAlevel;
@@ -16368,21 +16387,21 @@ void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 		if (count > aa2)
 			count = aa2;
 
-		plotGrayPixels(p.first.x, p.first.y, count / aa2, baseInfo);
+		plotPoint(p.first.x, p.first.y, count / aa2, baseInfo);
 	}
 }
 void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	int curX = floor((float)subX / baseInfo.AAlevel);
 	int curY = floor((float)subY / baseInfo.AAlevel);
-	/*if (!lastInfo.empty())
+	if (!lastInfo.empty())
 	{
 		if (curY != lastInfo.begin()->first.y)
 		{
 			refreshLastPoints(baseInfo, lastInfo);
 			lastInfo.clear();
 		}
-	}*/
+	}
 	lastInfo[{curX, curY}]++;
 }
 void hLineRound(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
@@ -16444,7 +16463,7 @@ void ellipseSSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
 	std::map<Point, int> lastInfo;
 	std::map<int, std::vector<Point>> ellipseOuter;
 	std::map<int, std::vector<Point>> ellipseInner;
-	BaseInfo baseInfo = { xCenter, yCenter, AAlevel };
+	BaseInfo baseInfo = { xCenter, yCenter, Rx, Ry, AAlevel };
 
 	Rx = Rx * baseInfo.AAlevel;
 	Ry = Ry * baseInfo.AAlevel;
@@ -16483,14 +16502,6 @@ void ellipseSSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
 	}
 }
 
-//---
-void plotPoint(int x, int y, float grayPercent, const BaseInfo& baseInfo)
-{
-	setGrayPixel(baseInfo.xc + x, baseInfo.yc + y, grayPercent);
-	setGrayPixel(baseInfo.xc - x, baseInfo.yc + y, grayPercent);
-	setGrayPixel(baseInfo.xc + x, baseInfo.yc - y, grayPercent);
-	setGrayPixel(baseInfo.xc - x, baseInfo.yc - y, grayPercent);
-}
 void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, int hCount)
 {
 	float squareAA = baseInfo.AAlevel * baseInfo.AAlevel;
@@ -16554,29 +16565,41 @@ Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, 
 }
 void hLine(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::vector<Point>& pointInfo, int& lastY)
 {
-	int currentY = floor((float)y / baseInfo.AAlevel);
-	if (lastY == -99999)
-		lastY = currentY;
-
-	if (currentY != lastY)
+	if (baseInfo.AAlevel == 1)
 	{
-		if (pointInfo.size())
+		for (int x = x0; x <= x1; x++)
 		{
-			auto p = dealRightPoint(pointInfo, baseInfo, lastInfo);
-			setHLine({ 0, p.y }, p, baseInfo, lastInfo, pointInfo.size());
-			pointInfo.clear();
+			plotPoint(x, y, 1, baseInfo);
 		}
-		lastY = currentY;
 	}
-	pointInfo.push_back({ x1, y });
+	else
+	{
+		int currentY = floor((float)y / baseInfo.AAlevel);
+		if (lastY == -99999)
+			lastY = currentY;
 
+		if (currentY != lastY)
+		{
+			if (pointInfo.size())
+			{
+				auto p = dealRightPoint(pointInfo, baseInfo, lastInfo);
+				setHLine({ 0, p.y }, p, baseInfo, lastInfo, pointInfo.size());
+				pointInfo.clear();
+			}
+			lastY = currentY;
+		}
+		pointInfo.push_back({ x1, y });
+	}
 }
-void ellipseMSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
+void ellipseFillMSAA(int xCenter, int yCenter, int Rx, int Ry, int AAlevel)
 {
 	std::map<Point, int> lastInfo;
-	BaseInfo baseInfo = { xCenter, yCenter, AAlevel };
+	BaseInfo baseInfo = { xCenter, yCenter, Rx, Ry, AAlevel };
 	std::vector<Point> pointInfo;
 	int lastY = -99999;
+
+	Rx = Rx * baseInfo.AAlevel;
+	Ry = Ry * baseInfo.AAlevel;
 
 	int Rx2 = Rx*Rx;
 	int Ry2 = Ry*Ry;
@@ -16637,14 +16660,633 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	//ellipse0SSAA(300, 300, 100, 60, 4);
+	
+	ellipse0SSAA(150, 520, 100, 60, 1);
+	ellipse0SSAA(150, 370, 100, 60, 2);
+	ellipse0SSAA(150, 220, 100, 60, 4);
+	ellipse0SSAA(150, 70, 100, 60, 8);
 
-	ellipseSSAA(300, 450, 100, 60, 2);
-	ellipseSSAA(300, 300, 100, 60, 4);
-	ellipseSSAA(300, 150, 100, 60, 8);
+	ellipseSSAA(400, 370, 100, 60, 2);
+	ellipseSSAA(400, 220, 100, 60, 4);
+	ellipseSSAA(400, 70, 100, 60, 8);
+
+	ellipseFillMSAA(650, 520, 100, 60, 1);
+	ellipseFillMSAA(650, 370, 100, 60, 2);
+	ellipseFillMSAA(650, 220, 100, 60, 4);
+	ellipseFillMSAA(650, 70, 100, 60, 8);
+
 	glFlush();
 }
 void code_6_exercise_56()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_57
+struct Point { int x; int y; };
+struct Color3f
+{
+	GLfloat r, g, b;
+};
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int endX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+struct LineRecord
+{
+	int beginX;
+	int endX;
+};
+struct BaseInfo
+{
+	int x0;
+	int y0;
+	int xEnd;
+	int yEnd;
+	int AALevel;
+};
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+	//printf("%d,%d(%f)\n", x, y, grayPercent);
+}
+void refreshLastPoints(const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
+	for (auto p : lastInfo)
+	{
+		float count = p.second;
+		if (count > squareAA)
+			count = squareAA;
+
+		setGrayPixel(baseInfo.x0 + p.first.x, baseInfo.y0 + p.first.y, count / squareAA);
+	}
+}
+void setSubPixel(int subX, int subY, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	int curX = floor((float)subX / baseInfo.AALevel);
+	int curY = floor((float)subY / baseInfo.AALevel);
+	if (!lastInfo.empty())
+	{
+		if (curY != lastInfo.begin()->first.y)
+		{
+			refreshLastPoints(baseInfo, lastInfo);
+			lastInfo.clear();
+		}
+	}
+	lastInfo[{curX, curY}]++;
+}
+void hLineSSAA(int y, int x0, int x1, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		if (baseInfo.AALevel > 1)
+			setSubPixel(x, y, baseInfo, lastInfo);
+		else
+			setPixel(baseInfo.x0 + x, baseInfo.y0 + y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLinesSSAA(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	// bres直线算法
+	std::vector<std::vector<Point>> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					points.back().push_back({ line.currentX - 1, curY });
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.front().x < b.front().x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLineSSAA(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x, baseInfo, lastInfo);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}	
+}
+void fillPolygonSSAA(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+
+		fillWithActiveLinesSSAA(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo);
+	}
+}
+void polygonSSAA(const std::vector<Point>& points, int AAlevel)
+{
+	glColor3f(1.0, 1.0, 1.0);
+	std::vector<Point> subPoints;
+
+	for (int i = 0; i < points.size(); i++)
+	{
+		int subX0 = (points[i].x - points[0].x) * AAlevel;
+		int subY0 = (points[i].y - points[0].y) * AAlevel;
+
+		subPoints.push_back({ subX0, subY0 });
+	}
+
+	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
+	std::map<Point, int> lastInfo;
+
+	fillPolygonSSAA(subPoints, baseInfo, lastInfo);
+	refreshLastPoints(baseInfo, lastInfo);
+}
+void setHLine(Point begin, Point end, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, int hCount)
+{
+	float squareAA = baseInfo.AALevel * baseInfo.AALevel;
+	for (int i = begin.x; i <= end.x; i++)
+	{
+		auto it = lastInfo.find({ i, begin.y });
+		if (it != lastInfo.end())
+		{
+			float count = it->second;
+			if (count > squareAA)
+				count = squareAA;
+
+			setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, count / squareAA);
+		}
+		else
+		{
+			if (hCount != baseInfo.AALevel)
+				setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, (float)hCount / baseInfo.AALevel);
+			else
+				setGrayPixel(baseInfo.x0 + i, baseInfo.y0 + begin.y, 1);
+		}
+	}
+	lastInfo.clear();
+}
+Point dealLeftPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	int curY = floor((float)points.front().y / baseInfo.AALevel);
+
+	int beginX = floor((float)points.front().x / baseInfo.AALevel);
+	int endX = floor((float)points.back().x / baseInfo.AALevel);
+	if (beginX > endX)
+		std::swap(beginX, endX);
+
+	for (auto p : points)
+	{
+		int curX = floor((float)p.x / baseInfo.AALevel);
+		for (int i = beginX; i <= endX; i++)
+		{
+			if (curX == i)
+			{
+				if (p.x < 0)
+				{
+					float remainder = (-1 * p.x) % baseInfo.AALevel;
+					if (remainder == 0)
+						remainder = baseInfo.AALevel;
+					lastInfo[{i, curY}] += remainder;
+				}
+				else
+				{
+					lastInfo[{i, curY}] += baseInfo.AALevel - (p.x % baseInfo.AALevel);
+				}
+			}
+			else if (i > curX)
+			{
+				lastInfo[{i, curY}] += baseInfo.AALevel;
+			}
+		}
+	}
+	return{ min(beginX, endX), curY };
+}
+Point dealRightPoint(const std::vector<Point> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	int curY = floor((float)points.front().y / baseInfo.AALevel);
+
+	int beginX = floor((float)points.front().x / baseInfo.AALevel);
+	int endX = floor((float)points.back().x / baseInfo.AALevel);
+
+	if (beginX > endX)
+		std::swap(beginX, endX);
+
+	for (auto p : points)
+	{
+		int curX = floor((float)p.x / baseInfo.AALevel);
+		for (int i = beginX; i <= endX; i++)
+		{
+			if (curX == i)
+			{
+				if (p.x < 0)
+				{
+					float remainder = (-1 * p.x) % baseInfo.AALevel;
+					if (remainder == 0)
+						remainder = baseInfo.AALevel;
+					lastInfo[{i, curY}] += baseInfo.AALevel - remainder + 1;
+				}
+				else
+				{
+					lastInfo[{i, curY}] += (p.x % baseInfo.AALevel) + 1;
+				}
+			}
+			else if (i < curX)
+			{
+				lastInfo[{i, curY}] += baseInfo.AALevel;
+			}
+		}
+	}
+	return{ max(beginX, endX), curY };
+}
+void hLineMSAA(const std::vector<std::vector<Point>> points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	std::vector<Point> lefts;
+	std::vector<Point> rights;
+	for (auto p : points)
+	{
+		lefts.push_back(p[0]);
+		rights.push_back(p[1]);
+	}
+	int leftBeginX = floor((float)lefts.front().x / baseInfo.AALevel);
+	int leftEndX = floor((float)lefts.back().x / baseInfo.AALevel);
+	if (leftBeginX > leftEndX)
+		std::swap(leftBeginX, leftEndX);
+
+	int rightBeginX = floor((float)rights.front().x / baseInfo.AALevel);
+	int rightEndX = floor((float)rights.back().x / baseInfo.AALevel);
+	if (rightBeginX > rightEndX)
+		std::swap(rightBeginX, rightEndX);
+
+	if (leftEndX >= rightBeginX)
+	{
+		int y = floor((float)lefts.front().y / baseInfo.AALevel);
+		for (int i = 0; i < lefts.size(); i++)
+		{
+			for (int curX = lefts[i].x; curX <= rights[i].x; curX++)
+			{
+				int x = floor((float)curX / baseInfo.AALevel);
+				lastInfo[{x, y}] ++;
+			}
+		}
+		setHLine({ leftBeginX , y }, { rightEndX , y }, baseInfo, lastInfo, points.size());
+	}
+	else
+	{
+		auto begin = dealLeftPoint(lefts, baseInfo, lastInfo);
+		auto end = dealRightPoint(rights, baseInfo, lastInfo);
+		setHLine(begin, end, baseInfo, lastInfo, points.size());
+	}
+}
+void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::map<int, std::vector<std::vector<Point>>>& pixelInfo, int& lastY)
+{
+	std::vector<std::vector<Point>> points;
+	int currentY = 0;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					points.back().push_back({ line.currentX - 1, curY });
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b) {return a.front().x < b.front().x;});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				currentY = floor((float)points[2 * i].front().y / baseInfo.AALevel);
+
+				if (lastY == -99999)
+					lastY = currentY;
+
+				if (currentY != lastY)
+				{
+					for (auto& info : pixelInfo)
+					{
+						if (info.second.size())
+						{
+							hLineMSAA(info.second, baseInfo, lastInfo);
+							info.second.clear();
+						}
+					}
+					lastY = currentY;
+				}
+
+				if (pixelInfo.find(i) == pixelInfo.end())
+					pixelInfo[i] = std::vector<std::vector<Point>>();
+
+				pixelInfo[i].push_back({
+					{ points[2 * i].front().x , points[2 * i].front().y },
+					{ points[2 * i + 1].back().x , points[2 * i + 1].back().y } });
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygonMSAA(const std::vector<Point>& points, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	std::map<int, std::vector<std::vector<Point>>> pixelInfo;
+	int lastY = -99999;
+
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+
+		fillWithActiveLinesMSAA(curY, sortedLines[i + 1].scanY, activeLines, baseInfo, lastInfo, pixelInfo, lastY);
+	}
+
+	for (auto& info : pixelInfo)
+	{
+		if (info.second.size())
+		{
+			hLineMSAA(info.second, baseInfo, lastInfo);
+			info.second.clear();
+		}
+	}
+}
+void polygonMSAA(const std::vector<Point>& points, int AAlevel)
+{
+	glColor3f(1.0, 1.0, 1.0);
+	std::vector<Point> subPoints;
+
+	for (int i = 0; i < points.size(); i++)
+	{
+		int subX0 = (points[i].x - points[0].x) * AAlevel;
+		int subY0 = (points[i].y - points[0].y) * AAlevel;
+
+		subPoints.push_back({ subX0, subY0 });
+	}
+
+	BaseInfo baseInfo = { points[0].x , points[0].y, points[points.size() - 1].x, points[points.size() - 1].y, AAlevel };
+	std::map<Point, int> lastInfo;
+
+	fillPolygonMSAA(subPoints, baseInfo, lastInfo);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	polygonSSAA({ { 119, 387 },{ 322, 398 },{ 277, 450 },{ 145, 443 } }, 1);
+	polygonSSAA({ { 119, 287 },{ 322, 298 },{ 277, 350 },{ 145, 343 } }, 2);
+	polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4);
+	polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8);
+
+	polygonMSAA({ { 419, 387 },{ 622, 398 },{ 577, 450 },{ 445, 443 } }, 1);
+	polygonMSAA({ { 419, 287 },{ 622, 298 },{ 577, 350 },{ 445, 343 } }, 2);
+	polygonMSAA({ { 419, 187 },{ 622, 198 },{ 577, 250 },{ 445, 243 } }, 4);
+	polygonMSAA({ { 419, 87 },{ 622, 98 },{ 577, 150 },{ 445, 143 } }, 8);
+
+	glFlush();
+}
+void code_6_exercise_57()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -16939,6 +17581,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_56
 	code_6_exercise_56();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_57
+	code_6_exercise_57();
 #endif
 
 
