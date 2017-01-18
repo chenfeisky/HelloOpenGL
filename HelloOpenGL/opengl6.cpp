@@ -17292,6 +17292,228 @@ void code_6_exercise_57()
 }
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_58
+struct Point { int x; int y; };
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int endX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(x, y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<std::vector<Point>> points;
+	for (int curY = beginY; curY <= endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { line.currentX , curY } });
+
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { line.currentX, curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					if (line.sortedLine.dx > 0)
+						points.back().push_back({ line.currentX - 1, curY });
+					else
+						points.back().push_back({ line.currentX + 1, curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point>& points)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY >= it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	glFlush();
+}
+void code_6_exercise_58()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_6_COMMON
 
@@ -17585,6 +17807,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_6_EXERCISE_57
 	code_6_exercise_57();
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_58
+	code_6_exercise_58();
 #endif
 
 
