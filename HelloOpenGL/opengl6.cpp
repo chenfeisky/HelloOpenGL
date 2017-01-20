@@ -17309,6 +17309,7 @@ struct SortedLine
 	int endX;
 	int dx;
 	int dy;
+	float m;
 };
 struct SortedLineSet
 {
@@ -17320,6 +17321,7 @@ struct ActiveLine
 	SortedLine sortedLine;
 	int counter;
 	int currentX;
+	float counterX;
 };
 
 inline int Round(const float a)
@@ -17393,6 +17395,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		lineSet.back().sortedLines.back().minY = line.y0;
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
 		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lineSet.back().sortedLines.back().m = (float)lineSet.back().sortedLines.back().dy / lineSet.back().sortedLines.back().dx;
 		lastY = line.y0;
 
 		if (maxY < line.y1)
@@ -17412,18 +17415,19 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 			{
 				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
 				{// |m|>1			
-					points.push_back({ { line.currentX , curY } });
-
-					line.counter += std::abs(line.sortedLine.dx * 2);
-
-					if (line.counter >= line.sortedLine.dy)
+					float s = 0.f;
+					if (curY == beginY)
 					{
-						if (line.sortedLine.dx > 0)
-							line.currentX++;
-						else
-							line.currentX--;
-						line.counter -= line.sortedLine.dy * 2;
+						// 初始点
+						line.counter += line.sortedLine.dy;
+						line.counterX += 0.5 + 0.5 / line.sortedLine.m;
+						s = 0.25*(0.5 + line.counterX);
 					}
+					else
+					{
+						// 正常点
+					}
+					//  记录面积信息
 				}
 				else
 				{// |m|<1
@@ -17496,6 +17500,7 @@ void fillPolygon(const std::vector<Point>& points)
 			activeLines.back().sortedLine = _sortedLine;
 			activeLines.back().counter = 0;
 			activeLines.back().currentX = _sortedLine.beginX;
+			activeLines.back().counterX = 0;
 		}
 		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
 	}
