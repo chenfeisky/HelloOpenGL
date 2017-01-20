@@ -17309,7 +17309,9 @@ struct SortedLine
 	int endX;
 	int dx;
 	int dy;
-	float m;
+	float m; // 斜率
+	float m_inverse; // 效率的倒数
+	int two_dy_minus_two_dx; // 2dy - 2dx
 };
 struct SortedLineSet
 {
@@ -17322,6 +17324,7 @@ struct ActiveLine
 	int counter;
 	int currentX;
 	float counterX;
+	bool x_add; // x是否增加
 };
 
 inline int Round(const float a)
@@ -17422,11 +17425,38 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 						line.counter += line.sortedLine.dy;
 						line.counterX += 0.5 + 0.5 / line.sortedLine.m;
 						s = 0.25*(0.5 + line.counterX);
+						if (line.counter > line.sortedLine.two_dy_minus_two_dx)
+						{
+							line.counterX++;
+							line.x_add = true;
+						}
+						else
+						{
+							line.x_add = false;
+						}
 					}
 					else
 					{
-						// 正常点
+						line.counterX += line.sortedLine.m_inverse;
+						if (line.counterX > 1)
+						{
+							if (line.counter > line.sortedLine.two_dy_minus_two_dx)
+							{
+								line.counter += line.counter + 2 * line.sortedLine.dx - 2 * line.sortedLine.dy;
+								line.counterX++;
+								s = line.counter + 2 * line.sortedLine.dy;
+								// 算另外一个s
+							}
+							else
+							{
+								line.counter += line.counter + 2 * line.sortedLine.dx;
+								s = line.counter;
+								// 算另外一个s
+							}
+						}
+
 					}
+
 					//  记录面积信息
 				}
 				else
