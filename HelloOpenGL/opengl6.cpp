@@ -17294,6 +17294,21 @@ void code_6_exercise_57()
 
 #ifdef CHAPTER_6_EXERCISE_58
 struct Point { int x; int y; };
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
 struct Line
 {
 	int x0;
@@ -17322,9 +17337,8 @@ struct ActiveLine
 {
 	SortedLine sortedLine;
 	int counter;
-	int currentX;
+	int curX;
 	float counterX;
-	bool x_add; // x是否增加
 };
 
 inline int Round(const float a)
@@ -17344,7 +17358,8 @@ void hLine(int y, int x0, int x1)
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
 	std::vector<Line> lines;
-	for (int i = 0; i < points.size(); i++)
+	//for (int i = 0; i < points.size(); i++)
+	for (int i = 0; i < points.size() - 1; i++)
 	{
 		int next = (i + 1) % points.size();
 		// 跳过水平线
@@ -17399,6 +17414,8 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
 		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
 		lineSet.back().sortedLines.back().m = (float)lineSet.back().sortedLines.back().dy / lineSet.back().sortedLines.back().dx;
+		lineSet.back().sortedLines.back().m_inverse = 1 / lineSet.back().sortedLines.back().m;
+		lineSet.back().sortedLines.back().two_dy_minus_two_dx = 2 * lineSet.back().sortedLines.back().dy - 2 * lineSet.back().sortedLines.back().dx;
 		lastY = line.y0;
 
 		if (maxY < line.y1)
@@ -17407,7 +17424,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY ,{} }); // 结尾
 	return lineSet;
 }
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, std::map<Point,float>& pointInfo)
 {
 	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY <= endY; curY++)
@@ -17425,64 +17442,58 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 						line.counter += line.sortedLine.dy;
 						line.counterX += 0.5 + 0.5 / line.sortedLine.m;
 						s = 0.25*(0.5 + line.counterX);
-						if (line.counter > line.sortedLine.two_dy_minus_two_dx)
-						{
-							line.counterX++;
-							line.x_add = true;
-						}
-						else
-						{
-							line.x_add = false;
-						}
+						pointInfo[{line.curX, curY}] = s;
 					}
 					else
 					{
 						line.counterX += line.sortedLine.m_inverse;
 						if (line.counterX > 1)
 						{
+							line.counterX -= 1;
+							
 							if (line.counter > line.sortedLine.two_dy_minus_two_dx)
 							{
-								line.counter += line.counter + 2 * line.sortedLine.dx - 2 * line.sortedLine.dy;
-								line.counterX++;
-								s = line.counter + 2 * line.sortedLine.dy;
-								// 算另外一个s
+								s = line.counter + 2 * line.sortedLine.dx;
+								float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
+								s = s - s1 * 2 * line.sortedLine.dy;
+								pointInfo[{line.curX, curY}] = s / 2 * line.sortedLine.dy;
+								pointInfo[{line.curX + 1, curY}] = s1;
+
+								line.counter += 2 * line.sortedLine.dx - 2 * line.sortedLine.dy;
+								line.curX++;
 							}
 							else
 							{
-								line.counter += line.counter + 2 * line.sortedLine.dx;
+								line.counter += 2 * line.sortedLine.dx;
 								s = line.counter;
-								// 算另外一个s
+								float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
+								s = s - s1 * 2 * line.sortedLine.dy;
+								pointInfo[{line.curX, curY}] = s / 2 * line.sortedLine.dy;
+								pointInfo[{line.curX + 1, curY}] = s1;
 							}
 						}
+						else
+						{
+							if (line.counter > line.sortedLine.two_dy_minus_two_dx)
+							{
+								line.counter += 2 * line.sortedLine.dx - 2 * line.sortedLine.dy;
+								s = line.counter;
+								pointInfo[{line.curX + 1, curY}] = s / 2 * line.sortedLine.dy;
 
+								line.curX++;
+							}
+							else
+							{
+								line.counter += 2 * line.sortedLine.dx;
+								s = line.counter;
+								pointInfo[{line.curX, curY}] = s / 2 * line.sortedLine.dy;
+							}
+						}
 					}
-
-					//  记录面积信息
+					printf("(%d, %d)\n", line.curX, curY);
 				}
 				else
 				{// |m|<1
-					points.push_back({ { line.currentX, curY } });
-					while (true)
-					{
-						if (line.sortedLine.dx > 0)
-							line.currentX++;
-						else
-							line.currentX--;
-
-						line.counter += std::abs(line.sortedLine.dy * 2);
-						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
-						{
-							line.counter -= std::abs(line.sortedLine.dx * 2);
-							break;
-						}
-					}
-					if (line.sortedLine.dx > 0)
-						points.back().push_back({ line.currentX - 1, curY });
-					else
-						points.back().push_back({ line.currentX + 1, curY });
-
-					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
 				}
 			}
 		}
@@ -17529,10 +17540,15 @@ void fillPolygon(const std::vector<Point>& points)
 			activeLines.push_back(ActiveLine());
 			activeLines.back().sortedLine = _sortedLine;
 			activeLines.back().counter = 0;
-			activeLines.back().currentX = _sortedLine.beginX;
+			activeLines.back().curX = _sortedLine.beginX;
 			activeLines.back().counterX = 0;
 		}
-		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+		std::map<Point, float> pointInfo;
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, pointInfo);
+		for (auto it : pointInfo)
+		{
+			printf("(%d, %d) %f\n", it.first.x, it.first.y, it.second);
+		}
 	}
 }
 void drawFunc()
@@ -17540,7 +17556,7 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-
+	fillPolygon({ {100, 100}, {200, 300} });
 	glFlush();
 }
 void code_6_exercise_58()
