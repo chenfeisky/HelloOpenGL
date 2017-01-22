@@ -17326,6 +17326,8 @@ struct SortedLine
 	int dy;
 	float m; // 斜率
 	float m_inverse; // 效率的倒数
+	int two_dx; // 2dx
+	int two_dy; // 2dy
 	int two_dy_minus_two_dx; // 2dy - 2dx
 };
 struct SortedLineSet
@@ -17340,13 +17342,192 @@ struct ActiveLine
 	int curX;
 	float counterX;
 };
-
+void setGrayPixel(int x, int y, float grayPercent)
+{
+	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
+	setPixel(x, y);
+	if (grayPercent != 1.f)
+		printf("%d, %d(%f)\n", x, y, grayPercent);
+}
 inline int Round(const float a)
 {
 	if (a >= 0)
 		return int(a + 0.5);
 	else
 		return int(a - 0.5);
+}
+// 0<m<1
+void lineBres1(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = 2 * dy - dx;
+	int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+
+	int x = x0;
+	int y = y0;
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p < 0)
+			p += twoDy;
+		else
+		{
+			y++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m>1
+void lineBres1M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = fabs((float)xEnd - x0), dy = fabs((float)yEnd - y0);
+	int p = dy - 2 * dx;
+	int twoDx = -2 * dx, twoDyMinusDx = 2 * (dy - dx);
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	printf("(%d, %d)\n", x, y);
+	while (y < yEnd)
+	{
+		y++;
+		if (p > 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyMinusDx;
+		}
+		setPixel(x, y);
+		printf("(%d, %d)\n", x, y);
+	}
+}
+// -1<m<0
+void lineBres2(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = 2 * dy + dx;
+	int twoDy = 2 * dy, twoDyAddDx = 2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (x < xEnd)
+	{
+		x++;
+		if (p >= 0)
+			p += twoDy;
+		else
+		{
+			y--;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+// m<-1
+void lineBres2M(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+
+	int dx = (float)xEnd - x0, dy = (float)yEnd - y0;
+	int p = -2 * dx - dy;
+	int twoDx = -2 * dx, twoDyAddDx = -2 * (dy + dx);
+
+	int x = x0;
+	int y = y0;
+
+	setPixel(x, y);
+	while (y > yEnd)
+	{
+		y--;
+		if (p >= 0)
+			p += twoDx;
+		else
+		{
+			x++;
+			p += twoDyAddDx;
+		}
+		setPixel(x, y);
+	}
+}
+void lineBres(int x0, int y0, int xEnd, int yEnd)
+{
+	if (x0 > xEnd)
+	{
+		int tempx = x0;
+		int tempy = y0;
+		x0 = xEnd;
+
+		y0 = yEnd;
+		xEnd = tempx;
+		yEnd = tempy;
+	}
+	int dx = xEnd - x0;
+	int dy = yEnd - y0;
+	if (dy > 0)
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres1M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres1(x0, y0, xEnd, yEnd);
+		}
+	}
+	else
+	{
+		if (fabs((float)dy) > fabs((float)dx))
+		{
+			lineBres2M(x0, y0, xEnd, yEnd);
+		}
+		else
+		{
+			lineBres2(x0, y0, xEnd, yEnd);
+		}
+	}
 }
 void hLine(int y, int x0, int x1)
 {
@@ -17415,7 +17596,9 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
 		lineSet.back().sortedLines.back().m = (float)lineSet.back().sortedLines.back().dy / lineSet.back().sortedLines.back().dx;
 		lineSet.back().sortedLines.back().m_inverse = 1 / lineSet.back().sortedLines.back().m;
-		lineSet.back().sortedLines.back().two_dy_minus_two_dx = 2 * lineSet.back().sortedLines.back().dy - 2 * lineSet.back().sortedLines.back().dx;
+		lineSet.back().sortedLines.back().two_dx = 2 * lineSet.back().sortedLines.back().dx;
+		lineSet.back().sortedLines.back().two_dy = 2 * lineSet.back().sortedLines.back().dy;
+		lineSet.back().sortedLines.back().two_dy_minus_two_dx = lineSet.back().sortedLines.back().two_dy - lineSet.back().sortedLines.back().two_dx;
 		lastY = line.y0;
 
 		if (maxY < line.y1)
@@ -17440,8 +17623,8 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 					{
 						// 初始点
 						line.counter += line.sortedLine.dy;
-						line.counterX += 0.5 + 0.5 / line.sortedLine.m;
-						s = 0.25*(0.5 + line.counterX);
+						line.counterX += 0.5 + 0.5 * line.sortedLine.m_inverse;
+						s = 0.25 * (0.5 + line.counterX);
 						pointInfo[{line.curX, curY}] = s;
 					}
 					else
@@ -17451,42 +17634,54 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 						{
 							line.counterX -= 1;
 							
-							if (line.counter > line.sortedLine.two_dy_minus_two_dx)
+							if (line.counter >= line.sortedLine.two_dy_minus_two_dx)
 							{
-								s = line.counter + 2 * line.sortedLine.dx;
+								s = line.counter + line.sortedLine.two_dx;
 								float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
 								s = s - s1 * 2 * line.sortedLine.dy;
-								pointInfo[{line.curX, curY}] = s / 2 * line.sortedLine.dy;
+								pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
 								pointInfo[{line.curX + 1, curY}] = s1;
 
-								line.counter += 2 * line.sortedLine.dx - 2 * line.sortedLine.dy;
+								line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
 								line.curX++;
 							}
 							else
 							{
-								line.counter += 2 * line.sortedLine.dx;
+								line.counter += line.sortedLine.two_dx;
 								s = line.counter;
 								float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
-								s = s - s1 * 2 * line.sortedLine.dy;
-								pointInfo[{line.curX, curY}] = s / 2 * line.sortedLine.dy;
+								s = s - s1 * line.sortedLine.two_dy;
+								pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
 								pointInfo[{line.curX + 1, curY}] = s1;
 							}
 						}
 						else
 						{
-							if (line.counter > line.sortedLine.two_dy_minus_two_dx)
+							if (line.counter >= line.sortedLine.two_dy_minus_two_dx)
 							{
-								line.counter += 2 * line.sortedLine.dx - 2 * line.sortedLine.dy;
+								line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
 								s = line.counter;
-								pointInfo[{line.curX + 1, curY}] = s / 2 * line.sortedLine.dy;
+
+								if (curY == endY)
+								{
+									s -= line.sortedLine.dx / 2;
+									s /= 2;
+								}									
+
+								pointInfo[{line.curX + 1, curY}] = s / line.sortedLine.two_dy;
 
 								line.curX++;
 							}
 							else
 							{
-								line.counter += 2 * line.sortedLine.dx;
+								line.counter += line.sortedLine.two_dx;
 								s = line.counter;
-								pointInfo[{line.curX, curY}] = s / 2 * line.sortedLine.dy;
+								if (curY == endY)
+								{
+									s -= line.sortedLine.dx / 2;
+									s /= 2;
+								}
+								pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
 							}
 						}
 					}
@@ -17497,24 +17692,24 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 				}
 			}
 		}
-		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
-		{
-			if (a.front().x == b.front().x)
-				return a.back().x < b.back().x;
-			return a.front().x < b.front().x;
-		});
-		for (int i = 0; ; i++)
-		{
-			if (2 * i < points.size() && 2 * i + 1 < points.size())
-			{
-				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
-			}
-			else
-			{
-				points.clear();
-				break;
-			}
-		}
+		//std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		//{
+		//	if (a.front().x == b.front().x)
+		//		return a.back().x < b.back().x;
+		//	return a.front().x < b.front().x;
+		//});
+		//for (int i = 0; ; i++)
+		//{
+		//	if (2 * i < points.size() && 2 * i + 1 < points.size())
+		//	{
+		//		hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
+		//	}
+		//	else
+		//	{
+		//		points.clear();
+		//		break;
+		//	}
+		//}
 	}
 }
 void fillPolygon(const std::vector<Point>& points)
@@ -17545,9 +17740,30 @@ void fillPolygon(const std::vector<Point>& points)
 		}
 		std::map<Point, float> pointInfo;
 		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, pointInfo);
-		for (auto it : pointInfo)
+		//for (auto it : pointInfo)
+		//{
+		//	printf("%d, %d(%f)\n", it.first.x, it.first.y, it.second);
+		//}
+
+		for (int i = 100; i <= 300; i++)
 		{
-			printf("(%d, %d) %f\n", it.first.x, it.first.y, it.second);
+			int max = -1;
+			for (auto it : pointInfo)
+			{
+				if (it.first.y == i)
+					max = it.first.x > max ? it.first.x : max;
+			}
+			for (int j = 50; j <= max; j++)
+			{
+				if (pointInfo.find({ j, i }) != pointInfo.end())
+				{
+					setGrayPixel(j, i, pointInfo[{j, i}]);
+				}
+				else
+				{
+					setGrayPixel(j, i, 1.f);
+				}
+			}
 		}
 	}
 }
@@ -17557,6 +17773,7 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 	fillPolygon({ {100, 100}, {200, 300} });
+	//lineBres(100, 100, 200, 300);
 	glFlush();
 }
 void code_6_exercise_58()
