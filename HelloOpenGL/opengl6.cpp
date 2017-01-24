@@ -17479,6 +17479,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 	int y = y0;
 
 	setPixel(x, y);
+	printf("(%d, %d)\n", x, y);
 	while (y > yEnd)
 	{
 		y--;
@@ -17490,6 +17491,7 @@ void lineBres2M(int x0, int y0, int xEnd, int yEnd)
 			p += twoDyAddDx;
 		}
 		setPixel(x, y);
+		printf("(%d, %d)\n", x, y);
 	}
 }
 void lineBres(int x0, int y0, int xEnd, int yEnd)
@@ -17607,6 +17609,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY ,{} }); // 结尾
 	return lineSet;
 }
+std::vector<Point> _points;
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, std::map<Point,float>& pointInfo)
 {
 	std::vector<std::vector<Point>> points;
@@ -17617,75 +17620,154 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
 			{
 				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
-				{// |m|>1			
-					float s = 0.f;
-					if (curY == beginY)
-					{
-						// 初始点
-						line.counter += line.sortedLine.dy;
-						line.counterX += 0.5 + 0.5 * line.sortedLine.m_inverse;
-						s = 0.25 * (0.5 + line.counterX);
-						pointInfo[{line.curX, curY}] = s;
-					}
-					else
-					{
-						line.counterX += line.sortedLine.m_inverse;
-						if (line.counterX > 1)
-						{
-							line.counterX -= 1;
-							
-							if (line.counter >= line.sortedLine.two_dy_minus_two_dx)
-							{
-								s = line.counter + line.sortedLine.two_dx;
-								float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
-								s = s - s1 * 2 * line.sortedLine.dy;
-								pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
-								pointInfo[{line.curX + 1, curY}] = s1;
+				{	
+					if (line.sortedLine.dx > 0)
+					{// m>1
+						float s = 0.f;
+						if (curY == beginY)
+						{// 初始点
+							line.counter += line.sortedLine.dy;
+							line.counterX += 0.5 + 0.5 * line.sortedLine.m_inverse;
 
-								line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
-								line.curX++;
-							}
-							else
-							{
-								line.counter += line.sortedLine.two_dx;
-								s = line.counter;
-								float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
-								s = s - s1 * line.sortedLine.two_dy;
-								pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
-								pointInfo[{line.curX + 1, curY}] = s1;
-							}
+							s = line.counter + (float)line.sortedLine.dx / 2;
+							s /= 2;
+							pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
 						}
 						else
 						{
-							if (line.counter >= line.sortedLine.two_dy_minus_two_dx)
+							line.counterX += line.sortedLine.m_inverse;
+							if (line.counterX > 1)
 							{
-								line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
-								s = line.counter;
+								line.counterX -= 1;
 
-								if (curY == endY)
+								if (line.counter >= line.sortedLine.two_dy_minus_two_dx)
 								{
-									s -= line.sortedLine.dx / 2;
-									s /= 2;
-								}									
+									s = line.counter + line.sortedLine.two_dx;
+									float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
+									s = s - s1 * 2 * line.sortedLine.dy;
+									pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
+									pointInfo[{line.curX + 1, curY}] = s1;
 
-								pointInfo[{line.curX + 1, curY}] = s / line.sortedLine.two_dy;
-
-								line.curX++;
+									line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
+									line.curX++;
+								}
+								else
+								{
+									line.counter += line.sortedLine.two_dx;
+									s = line.counter;
+									float s1 = 0.5 * line.counterX * line.counterX * line.sortedLine.m;
+									s = s - s1 * line.sortedLine.two_dy;
+									pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
+									pointInfo[{line.curX + 1, curY}] = s1;
+								}
 							}
 							else
 							{
-								line.counter += line.sortedLine.two_dx;
-								s = line.counter;
-								if (curY == endY)
+								if (line.counter >= line.sortedLine.two_dy_minus_two_dx)
 								{
-									s -= line.sortedLine.dx / 2;
-									s /= 2;
+									line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
+									s = line.counter;
+
+									if (curY == endY)
+									{// 终点
+										s -= (float)line.sortedLine.dx / 2;
+										s /= 2;
+									}
+
+									pointInfo[{line.curX + 1, curY}] = s / line.sortedLine.two_dy;
+
+									line.curX++;
 								}
-								pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
+								else
+								{
+									line.counter += line.sortedLine.two_dx;
+									s = line.counter;
+									if (curY == endY)
+									{// 终点
+										s -= (float)line.sortedLine.dx / 2;
+										s /= 2;
+									}
+									pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
+								}
 							}
 						}
+						printf("(%d, %d)\n", line.curX, curY);
 					}
-					printf("(%d, %d)\n", line.curX, curY);
+					else
+					{// m<-1
+						float s = 0.f;
+						if (curY == beginY)
+						{// 初始点
+							line.counter += line.sortedLine.dy;
+							line.counterX += 0.5 + 0.5 * std::fabs(line.sortedLine.m_inverse);
+
+							s = line.counter + (float)line.sortedLine.dx / 2;
+							s /= 2;
+							pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
+						}
+						else
+						{
+							float lastCounterX = 1 - line.counterX;
+							line.counterX += std::fabs(line.sortedLine.m_inverse);
+							if (line.counterX > 1)
+							{
+								line.counterX -= 1;
+
+								if (line.counter <= -1 * line.sortedLine.two_dx)
+								{
+									line.counter += line.sortedLine.two_dx + line.sortedLine.two_dy;
+									s = line.counter;
+									float s1 = std::fabs(0.5 * lastCounterX * lastCounterX * line.sortedLine.m);
+									s = s - s1 * line.sortedLine.two_dy;
+									pointInfo[{line.curX - 1, curY}] = s / line.sortedLine.two_dy;
+									pointInfo[{line.curX, curY}] = s1;
+
+									line.curX--;
+								}
+								else
+								{
+									s = line.counter + line.sortedLine.two_dx + line.sortedLine.two_dy;
+									float s1 = std::fabs(0.5 * lastCounterX * lastCounterX * line.sortedLine.m);
+									s = s - s1 * line.sortedLine.two_dy;
+									pointInfo[{line.curX - 1, curY}] = s / line.sortedLine.two_dy;
+									pointInfo[{line.curX, curY}] = s1;
+
+									line.counter += line.sortedLine.two_dx;
+								}
+							}
+							else
+							{
+								if (line.counter <= -1 * line.sortedLine.two_dx)
+								{
+									line.counter += line.sortedLine.two_dx + line.sortedLine.two_dy;
+									s = line.counter;
+
+									if (curY == endY)
+									{// 终点
+										s -= (float)line.sortedLine.dx / 2;
+										s /= 2;
+									}
+
+									pointInfo[{line.curX - 1, curY}] = s / line.sortedLine.two_dy;
+
+									line.curX--;
+								}
+								else
+								{
+									line.counter += line.sortedLine.two_dx;
+									s = line.counter;
+									if (curY == endY)
+									{// 终点
+										s -= (float)line.sortedLine.dx / 2;
+										s /= 2;
+									}
+									pointInfo[{line.curX, curY}] = s / line.sortedLine.two_dy;
+								}
+							}
+						}
+						//printf("(%d, %d)\n", line.curX, curY);
+						_points.push_back({ line.curX, curY });
+					}
 				}
 				else
 				{// |m|<1
@@ -17740,12 +17822,20 @@ void fillPolygon(const std::vector<Point>& points)
 		}
 		std::map<Point, float> pointInfo;
 		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, pointInfo);
+		std::sort(_points.begin(), _points.end(), [](auto& a, auto&b)
+		{
+			return a.y > b.y;
+		});
+		for (auto p : _points)
+		{
+			printf("(%d, %d)\n", p.x, p.y);
+		}
 		//for (auto it : pointInfo)
 		//{
 		//	printf("%d, %d(%f)\n", it.first.x, it.first.y, it.second);
 		//}
 
-		for (int i = 100; i <= 300; i++)
+		for (int i = points[0].y; i <= points[1].y; i++)
 		{
 			int max = -1;
 			for (auto it : pointInfo)
@@ -17772,8 +17862,12 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	fillPolygon({ {100, 100}, {200, 300} });
+	//fillPolygon({ {100, 100}, {200, 300} });
 	//lineBres(100, 100, 200, 300);
+
+	fillPolygon({ {200, 200}, {100, 400} });
+	//lineBres(200, 200, 100, 400);
+
 	glFlush();
 }
 void code_6_exercise_58()
