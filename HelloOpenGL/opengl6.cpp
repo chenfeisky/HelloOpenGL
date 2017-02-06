@@ -17355,6 +17355,8 @@ void setGrayPixel(int x, int y, float grayPercent)
 	if (grayPercent != 1.f)
 		printf("%d, %d(%f)\n", x, y, grayPercent);
 }
+// 判断浮点数相等
+bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 inline int Round(const float a)
 {
 	if (a >= 0)
@@ -18067,8 +18069,17 @@ void fillPolygon(const std::vector<Point>& points)
 			activeLines.back().curX = _sortedLine.beginX;
 			activeLines.back().counterStep = 0;
 		}
+		int nextY = sortedLines[i + 1].scanY;
+		std::sort(activeLines.begin(), activeLines.end(), [curY, nextY](auto& a, auto&b)
+		{
+			float ax = curY * a.sortedLine.m_inverse;
+			float bx = curY * b.sortedLine.m_inverse;
+			if (Equal(ax, bx))
+				return  nextY * a.sortedLine.m_inverse < nextY * b.sortedLine.m_inverse;
+			return ax < bx;
+		});
 		std::map<Point, float> pointInfo;
-		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines, pointInfo);
+		fillWithActiveLines(curY, nextY, activeLines, pointInfo);
 		std::sort(_points.begin(), _points.end(), [](auto& a, auto&b)
 		{
 			return a.y > b.y; // m<-1
