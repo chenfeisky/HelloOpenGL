@@ -17697,6 +17697,10 @@ void setPointPercent(int x, int y, float p, std::vector<PointInfo>& pointInfo)
 		p = 1.f;
 	pointInfo.push_back({ x, y, p });
 }
+void setNormalPointPercent(int x, int y, float p, std::vector<PointInfo>& pointInfo)
+{
+	
+}
 std::vector<Point> _points;
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, std::map<Point,float>& pointInfo)
 {
@@ -18043,6 +18047,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 }
+float clacLineX(int y, const SortedLine& line)
+{
+	return (y - line.minY) * line.m_inverse + line.beginX;
+}
 void fillPolygon(const std::vector<Point>& points)
 {
 	std::vector<SortedLineSet> sortedLines = SortLines(points);
@@ -18072,11 +18080,11 @@ void fillPolygon(const std::vector<Point>& points)
 		int nextY = sortedLines[i + 1].scanY;
 		std::sort(activeLines.begin(), activeLines.end(), [curY, nextY](auto& a, auto&b)
 		{
-			float ax = curY * a.sortedLine.m_inverse;
-			float bx = curY * b.sortedLine.m_inverse;
-			if (Equal(ax, bx))
-				return  nextY * a.sortedLine.m_inverse < nextY * b.sortedLine.m_inverse;
-			return ax < bx;
+			float aCurX = clacLineX(curY, a.sortedLine);
+			float bCurX = clacLineX(curY, b.sortedLine);
+			if (Equal(aCurX bCurX))
+				return clacLineX(nextY, a.sortedLine) < clacLineX(nextY, b.sortedLine);
+			return aCurX < bCurX;
 		});
 		std::map<Point, float> pointInfo;
 		fillWithActiveLines(curY, nextY, activeLines, pointInfo);
