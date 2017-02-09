@@ -17348,6 +17348,19 @@ struct PointInfo
 	int y;
 	float percent;
 };
+struct ScanLineInfo
+{
+	std::map<Point, float> points;
+	float totalPercent;
+	int beginX;
+	int endX;
+};
+struct ScanInfo
+{
+	std::vector<ScanLineInfo> scanLinesInfo;
+	int beginX;
+	int endX;
+};
 void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
@@ -17543,27 +17556,55 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		}
 	}
 }
-void clacHLinePoints(int curY, std::vector<PointInfo>& leftPoints, std::vector<PointInfo>& rightPoints)
+void hLine(ScanInfo& scanInfo, int y)
 {
-	std::sort(leftPoints.begin(), leftPoints.end(), [](auto& a, auto&b)
+	for (int x = scanInfo.beginX; x <= scanInfo.endX; x++)
 	{
-		if (a.x == b.x)
-			return a.y > b.y;
-		return a.x < b.x;
-	});
-	std::sort(rightPoints.begin(), rightPoints.end(), [](auto& a, auto&b)
-	{
-		if (a.x == b.x)
-			return a.y < b.y;
-		return a.x < b.x;
-	});
-	static std::vector<PointInfo> tempLeft;
-	static std::vector<PointInfo> tempRight;
-	for (std::vector<PointInfo>::iterator it = leftPoints.begin(); it != leftPoints.end();)
-	{
-		if (it->y == curY)
+		float percent = 0.f;
+		for (auto& line:scanInfo.scanLinesInfo)
 		{
-			tempLeft.push_back(*it);
+			if (x >= line.beginX && x <= line.endX)
+			{
+				if (line.points.find({ x, y }) != line.points.end())
+				{
+					percent += line.points[{ x, y }];
+				}
+				else
+				{
+					percent += line.totalPercent;
+				}
+			}
+		}
+		setGrayPixel(x, y, percent);
+	}
+}
+void clacHLinePoints(int curY, float totalPercent, std::map<Point, float>& leftPoints, std::map<Point, float>& rightPoints, ScanLineInfo& lineInfo, int& scanLineBeginX, int& scanLineEndX)
+{
+	lineInfo.beginX = leftPoints.begin()->first.x;
+	lineInfo.endX = leftPoints.begin()->first.x;
+	
+	for (std::map<Point, float>::iterator it = leftPoints.begin(); it != leftPoints.end();)
+	{
+		if (it->first.y == curY)
+		{
+			if (lineInfo.points.find(it->first) != lineInfo.points.end())
+			{
+				lineInfo.points[it->first] = lineInfo.points[it->first] + it->second - totalPercent;
+			}
+			else
+			{
+				lineInfo.points[it->first] = it->second;
+			}
+
+			if (it->first.x < lineInfo.beginX)
+			{
+				lineInfo.beginX = it->first.x;
+			}
+			if (it->first.x > lineInfo.endX)
+			{
+				lineInfo.endX = it->first.x;
+			}
+
 			it = leftPoints.erase(it);
 		}
 		else
@@ -17571,53 +17612,104 @@ void clacHLinePoints(int curY, std::vector<PointInfo>& leftPoints, std::vector<P
 			it++;
 		}
 	}
-	for (std::vector<PointInfo>::iterator it = rightPoints.begin(); it != rightPoints.end();)
+	for (std::map<Point, float>::iterator it = rightPoints.begin(); it != rightPoints.end();)
 	{
-		if (it->y == curY)
+		if (it->first.y == curY)
 		{
-			tempRight.push_back(*it);
-			it = tempRight.erase(it);
+			if (lineInfo.points.find(it->first) != lineInfo.points.end())
+			{
+				lineInfo.points[it->first] = lineInfo.points[it->first] + it->second - totalPercent;
+			}
+			else
+			{
+				lineInfo.points[it->first] = it->second;
+			}
+
+			if (it->first.x < lineInfo.beginX)
+			{
+				lineInfo.beginX = it->first.x;
+			}
+			if (it->first.x > lineInfo.endX)
+			{
+				lineInfo.endX = it->first.x;
+			}
+
+			it = rightPoints.erase(it);
 		}
 		else
 		{
 			it++;
 		}
 	}
-	int crossX = tempLeft.back().x - tempRight.front().x + 1;
-	if (crossX > 0)
-	{
-		for (int i = 0; i <= tempLeft.size() - 1 - crossX; i ++)
-		{
-			setGrayPixel(tempLeft[i].x, tempLeft[i].y, tempLeft[i].percent);
-		}
-		int j = 0;
-		for (int i = tempLeft.size() - crossX; i < tempLeft.size(); i++)
-		{
-			float crossPercent = tempLeft[i].percent + tempRight[j++].percent - 1;
-			setGrayPixel(tempLeft[i].x, tempLeft[i].y, crossPercent);
-		}
-		for (int i = j; i < tempRight.size(); i++)
-		{
-			setGrayPixel(tempRight[i].x, tempRight[i].y, tempRight[i].percent);
-		}
-	}
-	else
-	{
-		for (int i = 0; i < tempLeft.size(); i++)
-		{
-			setGrayPixel(tempLeft[i].x, tempLeft[i].y, tempLeft[i].percent);
-		}
-		for (int i = tempLeft.back().x + 1; i <= tempRight.front().x - 1; i++)
-		{
-			setGrayPixel(i, curY, 1.f);
-		}
-		for (int i = 0; i < tempRight.size(); i++)
-		{
-			setGrayPixel(tempRight[i].x, tempRight[i].y, tempRight[i].percent);
-		}
-	}
-	tempLeft.clear();
-	tempRight.clear();
+	if (lineInfo.beginX < scanLineBeginX)
+		scanLineBeginX = lineInfo.beginX;
+
+	if (lineInfo.endX > scanLineEndX)
+		scanLineEndX = lineInfo.endX;
+
+	lineInfo.totalPercent = totalPercent;
+
+	//static std::vector<PointInfo> tempLeft;
+	//static std::vector<PointInfo> tempRight;
+	//for (std::vector<PointInfo>::iterator it = leftPoints.begin(); it != leftPoints.end();)
+	//{
+	//	if (it->y == curY)
+	//	{
+	//		tempLeft.push_back(*it);
+	//		it = leftPoints.erase(it);
+	//	}
+	//	else
+	//	{
+	//		it++;
+	//	}
+	//}
+	//for (std::vector<PointInfo>::iterator it = rightPoints.begin(); it != rightPoints.end();)
+	//{
+	//	if (it->y == curY)
+	//	{
+	//		tempRight.push_back(*it);
+	//		it = tempRight.erase(it);
+	//	}
+	//	else
+	//	{
+	//		it++;
+	//	}
+	//}
+	//int crossX = tempLeft.back().x - tempRight.front().x + 1;
+	//if (crossX > 0)
+	//{
+	//	for (int i = 0; i <= tempLeft.size() - 1 - crossX; i ++)
+	//	{
+	//		setGrayPixel(tempLeft[i].x, tempLeft[i].y, tempLeft[i].percent);
+	//	}
+	//	int j = 0;
+	//	for (int i = tempLeft.size() - crossX; i < tempLeft.size(); i++)
+	//	{
+	//		float crossPercent = tempLeft[i].percent + tempRight[j++].percent - 1;
+	//		setGrayPixel(tempLeft[i].x, tempLeft[i].y, crossPercent);
+	//	}
+	//	for (int i = j; i < tempRight.size(); i++)
+	//	{
+	//		setGrayPixel(tempRight[i].x, tempRight[i].y, tempRight[i].percent);
+	//	}
+	//}
+	//else
+	//{
+	//	for (int i = 0; i < tempLeft.size(); i++)
+	//	{
+	//		setGrayPixel(tempLeft[i].x, tempLeft[i].y, tempLeft[i].percent);
+	//	}
+	//	for (int i = tempLeft.back().x + 1; i <= tempRight.front().x - 1; i++)
+	//	{
+	//		setGrayPixel(i, curY, 1.f);
+	//	}
+	//	for (int i = 0; i < tempRight.size(); i++)
+	//	{
+	//		setGrayPixel(tempRight[i].x, tempRight[i].y, tempRight[i].percent);
+	//	}
+	//}
+	//tempLeft.clear();
+	//tempRight.clear();
 }
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
@@ -17690,28 +17782,28 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	lineSet.push_back({ maxY ,{} }); // 结尾
 	return lineSet;
 }
-void setPointPercent(int x, int y, int lineIndex, float total, float p, std::vector<PointInfo>& pointInfo)
+void setPointPercent(Point point, int lineIndex, float total, float p, std::map<Point, float>& pointInfo)
 {
 	float real = 0.f;
 	if (lineIndex % 2 == 0)
 	{
 		real = total - p;
-		if (real > 1.f)
-			real = 1.f;
-		pointInfo.push_back({ x, y, real });
 	}
 	else
 	{
 		real = p;
-		if (real > 1.f)
-			real = 1.f;
-		pointInfo.push_back({ x, y, real });
 	}
+	if (real > 1.f)
+		real = 1.f;
+	pointInfo[point] = real;
 }
 std::vector<Point> _points;
-void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, std::map<Point,float>& pointInfo)
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, ScanInfo& scanInfo)
 {
-	std::vector<std::vector<PointInfo>> points(activeLines.size());
+	std::vector<std::map<Point, float>> pointsInfo(activeLines.size());
+	ScanInfo linesInfo;
+	linesInfo.scanLinesInfo.assign(activeLines.size() / 2);
+
 	for (int curY = beginY; curY <= endY; curY++)
 	{
 		for(int index = 0; index < activeLines.size(); index++)
@@ -17732,7 +17824,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 							s = line.counter + (float)line.sortedLine.dx / 2;
 							s /= 2;
-							setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
+							setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
 						}
 						else
 						{
@@ -17754,13 +17846,13 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 									if (curY == endY)
 									{
-										setPointPercent(line.curX, curY, index, 0.5, 0.5, points[index]);
-										setPointPercent(line.curX, curY, index, 0.5, sp - 0.5, points[index]);
+										setPointPercent({ line.curX, curY }, index, 0.5, 0.5, pointsInfo[index]);
+										setPointPercent({line.curX, curY}, index, 0.5, sp - 0.5, pointsInfo[index]);
 									}
 									else
 									{
-										setPointPercent(line.curX, curY, index, 1.f, sp, points[index]);
-										setPointPercent(line.curX + 1, curY, index, 1.f, s1p, points[index]);
+										setPointPercent({ line.curX, curY }, index, 1.f, sp, pointsInfo[index]);
+										setPointPercent({ line.curX + 1, curY }, index, 1.f, s1p, pointsInfo[index]);
 									}
 								}
 								else
@@ -17769,8 +17861,8 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									s = line.counter;
 									float s1 = 0.5 * line.counterStep * line.counterStep * line.sortedLine.m;
 									s = s - s1 * line.sortedLine.two_dy;
-									setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
-									setPointPercent(line.curX + 1, curY, index, 1.f, s1, points[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
+									setPointPercent({ line.curX + 1, curY}, index, 1.f, s1, pointsInfo[index]);
 								}
 							}
 							else
@@ -17786,7 +17878,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										s /= 2;
 									}
 
-									setPointPercent(line.curX + 1, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
+									setPointPercent({ line.curX + 1, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
 									line.curX++;
 								}
 								else
@@ -17798,7 +17890,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										s -= (float)line.sortedLine.dx / 2;
 										s /= 2;
 									}
-									setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
 								}
 							}
 						}
@@ -17814,7 +17906,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 							s = line.counter + (float)line.sortedLine.dx / 2;
 							s /= 2;
-							setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
+							setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
 						}
 						else
 						{
@@ -17831,8 +17923,8 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									float s1 = std::fabs(0.5 * lastCounterX * lastCounterX * line.sortedLine.m);
 									s = s - s1 * line.sortedLine.two_dy;
 	
-									setPointPercent(line.curX - 1, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
-									setPointPercent(line.curX, curY, index, 1.f, s1, points[index]);
+									setPointPercent({ line.curX - 1, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s1, pointsInfo[index]);
 
 									line.curX--;
 								}
@@ -17842,8 +17934,8 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									float s1 = std::fabs(0.5 * lastCounterX * lastCounterX * line.sortedLine.m);
 									s = s - s1 * line.sortedLine.two_dy;
 
-									setPointPercent(line.curX - 1, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
-									setPointPercent(line.curX, curY, index, 1.f, s1, points[index]);
+									setPointPercent({ line.curX - 1, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s1, pointsInfo[index]);
 
 									line.counter += line.sortedLine.two_dx;
 								}
@@ -17861,7 +17953,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										s /= 2;
 									}
 
-									setPointPercent(line.curX - 1, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
+									setPointPercent({ line.curX - 1, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
 
 									line.curX--;
 								}
@@ -17874,7 +17966,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										s -= (float)line.sortedLine.dx / 2;
 										s /= 2;
 									}
-									setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dy, points[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dy, pointsInfo[index]);
 								}
 							}
 						}
@@ -17896,7 +17988,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 								s = line.counter + line.sortedLine.dx - (float)line.sortedLine.dy / 2;
 								s /= 2;
-								setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+								setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 								printf("(%d, %d)\n", line.curX, curY);
 								line.curX++;
 							}
@@ -17912,8 +18004,8 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									float s1 = 0.5 * lastCounterStep * lastCounterStep * line.sortedLine.m_inverse;
 									s = s - s1 * line.sortedLine.two_dx;
 								
-									setPointPercent(line.curX, curY + 1, index, 1.f, s / line.sortedLine.two_dx, points[index]);
-									setPointPercent(line.curX, curY, index, 1.f, s1, points[index]);
+									setPointPercent({ line.curX, curY + 1 }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s1, pointsInfo[index]);
 
 									if (line.counter <= line.sortedLine.two_dy)
 									{
@@ -17942,10 +18034,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										{// 终点
 											s += (float)line.sortedLine.dy / 2 - line.sortedLine.dx;
 											s /= 2;
-											setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+											setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 											break;
 										}
-										setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+										setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 									}
 									else
 									{
@@ -17955,10 +18047,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										{// 终点
 											s += (float)line.sortedLine.dy / 2 - line.sortedLine.dx;
 											s /= 2;
-											setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+											setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 											break;
 										}
-										setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+										setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 									}
 									line.curX++;
 								}
@@ -17978,7 +18070,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 								s = line.counter - line.sortedLine.dx - (float)line.sortedLine.dy / 2;
 								s /= 2;
-								setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+								setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 								//printf("(%d, %d)\n", line.curX, curY);
 								_points.push_back({ line.curX, curY });
 								line.curX --;
@@ -17993,8 +18085,8 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									s = line.counter - line.sortedLine.two_dy;
 									float s1 = 0.5 * line.counterStep * line.counterStep * std::fabs(line.sortedLine.m_inverse);
 									s = s - s1 * line.sortedLine.two_dx;
-									setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
-									setPointPercent(line.curX, curY + 1, index, 1.f, s1, points[index]);
+									setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
+									setPointPercent({ line.curX, curY + 1 }, index, 1.f, s1, pointsInfo[index]);
 
 									if (line.counter <= line.sortedLine.two_dx + line.sortedLine.two_dy)
 									{
@@ -18026,10 +18118,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										{// 终点
 											s += (float)line.sortedLine.dy / 2 + line.sortedLine.dx;
 											s /= 2;
-											setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+											setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 											break;
 										}
-										setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+										setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 									}
 									else
 									{
@@ -18039,10 +18131,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										{// 终点
 											s += (float)line.sortedLine.dy / 2 + line.sortedLine.dx;
 											s /= 2;
-											setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+											setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 											break;
 										}
-										setPointPercent(line.curX, curY, index, 1.f, s / line.sortedLine.two_dx, points[index]);
+										setPointPercent({ line.curX, curY }, index, 1.f, s / line.sortedLine.two_dx, pointsInfo[index]);
 									}
 									line.curX--;
 								}
@@ -18054,14 +18146,19 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}		
 		for (int i = 0; ; i++)
 		{
-			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			if (2 * i < pointsInfo.size() && 2 * i + 1 < pointsInfo.size())
 			{
-				clacHLinePoints(curY, points[2 * i], points[2 * i + 1]);
+				clacHLinePoints(curY, 1.f, pointsInfo[2 * i], pointsInfo[2 * i + 1], linesInfo.scanLinesInfo[i], linesInfo.beginX, linesInfo.endX);
 			}
 			else
 			{
 				break;
 			}
+		}
+		hLine(linesInfo, curY);
+		for (auto& line : linesInfo.scanLinesInfo)
+		{
+			line.points.clear();
 		}
 	}
 }
