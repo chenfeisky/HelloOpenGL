@@ -18081,6 +18081,10 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 				{
 					if (line.sortedLine.dx > 0)
 					{// 0<m<1
+						if(curY == beginY && beginY != line.sortedLine.minY)
+						{ // 上一次断电处理}
+						else
+						{ // 处理下面的while循环}
 						while (1)
 						{
 							float s = 0.f;
