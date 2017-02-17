@@ -17368,8 +17368,6 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
-	if (grayPercent != 1.f)
-		printf("%d, %d(%f)\n", x, y, grayPercent);
 }
 // 判断浮点数相等
 bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
@@ -18508,7 +18506,10 @@ void drawFunc()
 	//lineBres(350, 200, 100, 270);
 
 	//fillPolygon({ { 100, 100 },{ 200, 100 },{ 200, 300 },{ 100, 300 } });
-	fillPolygon({ { 228, 153 },{ 521, 176 },{ 337, 219 },{ 321, 377 } });
+	
+	//fillPolygon({ { 228, 153 },{ 521, 176 },{ 337, 219 },{ 321, 377 } });
+	//fillPolygon({ { 487, 399 },{ 721, 404 },{ 721, 490 },{ 607, 490 }, {544, 550},{494, 550} });
+	fillPolygon({ { 63, 343 },{ 136, 421 },{ 184, 348 },{ 185, 470 },{ 96, 508 }});
 
 	glFlush();
 }
