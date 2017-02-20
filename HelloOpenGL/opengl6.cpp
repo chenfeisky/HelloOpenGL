@@ -17368,6 +17368,9 @@ void setGrayPixel(int x, int y, float grayPercent)
 {
 	glColor3f(1.0 * grayPercent, 1.0 * grayPercent, 1.0 * grayPercent);
 	setPixel(x, y);
+
+	//if (grayPercent != 1.f)
+		//printf("(%d, %d) %f\n", x, y, grayPercent);
 }
 // 判断浮点数相等
 bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
@@ -17763,7 +17766,7 @@ void clacHLineSegment(int curY, float totalPercent, std::map<Point, float>& left
 }
 std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 {
-	std::vector<Line> lines;
+	std::map<int, std::vector<Line>> lines;
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
@@ -17771,69 +17774,63 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (points[i].y == points[next].y)
 			continue;
 
-		lines.push_back(Line());
-		lines.back().x0 = points[i].x;
-		lines.back().y0 = points[i].y;
-		lines.back().x1 = points[next].x;
-		lines.back().y1 = points[next].y;
-	}
-
-	for (auto& line : lines)
-	{
-		if (line.y0 > line.y1)
+		int minY = points[i].y < points[next].y ? points[i].y : points[next].y;
+		lines[minY].push_back(Line());
+		if (points[i].y < points[next].y)
 		{
-			std::swap(line.x0, line.x1);
-			std::swap(line.y0, line.y1);
+			lines[minY].back().x0 = points[i].x;
+			lines[minY].back().y0 = points[i].y;
+			lines[minY].back().x1 = points[next].x;
+			lines[minY].back().y1 = points[next].y;
+		}
+		else
+		{
+			lines[minY].back().x0 = points[next].x;
+			lines[minY].back().y0 = points[next].y;
+			lines[minY].back().x1 = points[i].x;
+			lines[minY].back().y1 = points[i].y;
 		}
 	}
-
-	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	auto sortedPoints = points;
+	std::sort(sortedPoints.begin(), sortedPoints.end(), [](auto& a, auto& b)
 	{
-		if (a.y0 == b.y0)
-		{
-			if (a.x0 == b.x0)
-			{
-				if (a.x1 == b.x1)
-					return a.y1 < b.y1;
-				return a.x1 < b.x1;
-			}
-			return a.x0 < b.x0;
-		}
-		return a.y0 < b.y0;
+		return a.y < b.y;
 	});
+
 	std::vector<SortedLineSet> lineSet;
 	int lastY = -99999;
-	int maxY = -99999;
-	for (auto& line : lines)
+	for (auto& p : sortedPoints)
 	{
-		if (line.y0 != lastY)
+		if (p.y == lastY)
+			continue;
+
+		lineSet.push_back({ p.y ,{} });
+		auto it = lines.find(p.y);
+		if (it != lines.end())
 		{
-			lineSet.push_back(SortedLineSet());
+			for (auto& line : it->second)
+			{
+				lineSet.back().sortedLines.push_back(SortedLine());
+				lineSet.back().sortedLines.back().beginX = line.x0;
+				lineSet.back().sortedLines.back().endX = line.x1;
+				lineSet.back().sortedLines.back().maxY = line.y1;
+				lineSet.back().sortedLines.back().minY = line.y0;
+				lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+				lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+				if (lineSet.back().sortedLines.back().dx == 0)
+					lineSet.back().sortedLines.back().m = 999999;
+				else
+					lineSet.back().sortedLines.back().m = (float)lineSet.back().sortedLines.back().dy / lineSet.back().sortedLines.back().dx;
+
+				lineSet.back().sortedLines.back().m_inverse = (float)lineSet.back().sortedLines.back().dx / lineSet.back().sortedLines.back().dy;
+				lineSet.back().sortedLines.back().two_dx = 2 * lineSet.back().sortedLines.back().dx;
+				lineSet.back().sortedLines.back().two_dy = 2 * lineSet.back().sortedLines.back().dy;
+				lineSet.back().sortedLines.back().two_dy_minus_two_dx = lineSet.back().sortedLines.back().two_dy - lineSet.back().sortedLines.back().two_dx;
+				lineSet.back().sortedLines.back().two_dy_add_two_dx = lineSet.back().sortedLines.back().two_dy + lineSet.back().sortedLines.back().two_dx;
+			}
 		}
-		lineSet.back().scanY = line.y0;
-		lineSet.back().sortedLines.push_back(SortedLine());
-		lineSet.back().sortedLines.back().beginX = line.x0;
-		lineSet.back().sortedLines.back().endX = line.x1;
-		lineSet.back().sortedLines.back().maxY = line.y1;
-		lineSet.back().sortedLines.back().minY = line.y0;
-		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
-		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
-		if (lineSet.back().sortedLines.back().dx == 0)
-			lineSet.back().sortedLines.back().m = 999999;
-		else
-			lineSet.back().sortedLines.back().m = (float)lineSet.back().sortedLines.back().dy / lineSet.back().sortedLines.back().dx;
-
-		lineSet.back().sortedLines.back().m_inverse = (float)lineSet.back().sortedLines.back().dx / lineSet.back().sortedLines.back().dy;
-		lineSet.back().sortedLines.back().two_dx = 2 * lineSet.back().sortedLines.back().dx;
-		lineSet.back().sortedLines.back().two_dy = 2 * lineSet.back().sortedLines.back().dy;
-		lineSet.back().sortedLines.back().two_dy_minus_two_dx = lineSet.back().sortedLines.back().two_dy - lineSet.back().sortedLines.back().two_dx;
-		lineSet.back().sortedLines.back().two_dy_add_two_dx = lineSet.back().sortedLines.back().two_dy + lineSet.back().sortedLines.back().two_dx;
-		lastY = line.y0;
-
-		if (maxY < line.y1)
-			maxY = line.y1;
+		lastY = p.y;
 	}
-	lineSet.push_back({ maxY ,{} }); // 结尾
 	return lineSet;
 }
 void setPointPercent(Point point, int lineIndex, float total, float p, std::map<Point, float>& pointInfo)
@@ -18510,6 +18507,7 @@ void drawFunc()
 	//fillPolygon({ { 228, 153 },{ 521, 176 },{ 337, 219 },{ 321, 377 } });
 	//fillPolygon({ { 487, 399 },{ 721, 404 },{ 721, 490 },{ 607, 490 }, {544, 550},{494, 550} });
 	fillPolygon({ { 63, 343 },{ 136, 421 },{ 184, 348 },{ 185, 470 },{ 96, 508 }});
+	//fillPolygon({ { 554, 53 },{ 677, 235 },{ 574, 141 },{ 504, 196 }});
 
 	glFlush();
 }
