@@ -17848,6 +17848,8 @@ void setPointPercent(Point point, int lineIndex, float total, float p, std::map<
 	}
 	if (real > 1.f)
 		real = 1.f;
+	else if (real < 0.f)
+		real = 0.f;
 	pointInfo[point] = real;
 }
 //std::vector<Point> _debugPoints;
@@ -18147,7 +18149,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									s = s / line.sortedLine.two_dx;
 
 									setPointPercent({ line.curX, curY }, index, 0.5, s, pointsInfo[index]);
-									//printf("(%d, %d)\n", line.curX, curY);
+									printf("(%d, %d)\n", line.curX, line.lastY);
 									line.curX++;
 								}
 								else
@@ -18222,12 +18224,12 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 										{
 											line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
 											line.lastY++;
-											//printf("(%d, %d)\n", line.curX, curY + 1);
+											printf("(%d, %d)\n", line.curX, line.lastY);
 										}
 										else
 										{
 											line.counter -= line.sortedLine.two_dy;
-											//printf("(%d, %d)\n", line.curX, curY);
+											printf("(%d, %d)\n", line.curX, line.lastY);
 										}
 
 										// ’‚¿Ô…®√Ëœﬂ+1
@@ -18237,15 +18239,16 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 									}
 									else
 									{
-										//printf("(%d, %d)\n", line.curX, curY);
 										if (line.counter <= line.sortedLine.two_dy)
 										{
 											line.counter += line.sortedLine.two_dx - line.sortedLine.two_dy;
 											line.lastY++;
+											printf("(%d, %d)\n", line.curX, line.lastY);
 										}
 										else
 										{
 											line.counter -= line.sortedLine.two_dy;
+											printf("(%d, %d)\n", line.curX, line.lastY);
 										}
 										s = line.counter;
 										s = s / line.sortedLine.two_dx;
@@ -18552,8 +18555,8 @@ void drawFunc()
 	//fillPolygon({ { 63, 343 },{ 136, 421 },{ 184, 348 },{ 185, 470 },{ 96, 508 }});
 	//fillPolygon({ { 554, 53 },{ 677, 235 },{ 574, 141 },{ 504, 196 }});
 	
-	fillPolygon({ { 100, 100 },{ 150, 100 },{ 203, 150 },{ 100, 150 } });
-	//lineBres(150, 100, 200, 150);
+	//fillPolygon({ { 100, 100 },{ 150, 100 },{ 250, 103 },{ 100, 103 } });
+	lineBres(150, 100, 250, 103);
 
 	glFlush();
 }
