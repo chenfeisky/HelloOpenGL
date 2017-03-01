@@ -69,7 +69,9 @@
 //#define CHAPTER_6_EXERCISE_55 // 中点线 零宽
 //#define CHAPTER_6_EXERCISE_56 // 零宽椭圆线 / 过采样椭圆线 / 多重采样椭圆填充
 //#define CHAPTER_6_EXERCISE_57 // 超采样/多重采样填充,同CHAPTER_6_EXERCISE_54_Test1和CHAPTER_6_EXERCISE_54_Test2
-#define CHAPTER_6_EXERCISE_58 // 区域取样
+//#define CHAPTER_6_EXERCISE_58 // 区域取样
+//#define CHAPTER_6_EXERCISE_ADD_1
+#define CHAPTER_6_EXERCISE_ADD_2
 
 #ifdef CHAPTER_6_1_2
 #define CHAPTER_6_COMMON
@@ -344,5 +346,13 @@
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_58
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_ADD_1
+#define CHAPTER_6_COMMON
+#endif
+
+#ifdef CHAPTER_6_EXERCISE_ADD_2
 #define CHAPTER_6_COMMON
 #endif
