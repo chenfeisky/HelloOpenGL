@@ -88,12 +88,14 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClInclude Include="opengl4h.h" />
     <ClInclude Include="opengl5h.h" />
     <ClInclude Include="opengl6h.h" />
+    <ClInclude Include="opengl7h.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl3.cpp" />
     <ClCompile Include="opengl4.cpp" />
     <ClCompile Include="opengl5.cpp" />
     <ClCompile Include="opengl6.cpp" />
+    <ClCompile Include="opengl7.cpp" />
     <ClCompile Include="openglTools.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

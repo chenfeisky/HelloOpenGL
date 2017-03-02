@@ -23,7 +23,7 @@
 using std::vector;
 
 //#define TOOLS
-#define CHAPTER_6
+#define CHAPTER_7
 #define WIN_DEBUG
 
 using namespace std;
