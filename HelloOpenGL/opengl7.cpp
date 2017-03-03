@@ -90,6 +90,48 @@ void code_7_1_2()
 }
 #endif
 
+#ifdef CHAPTER_7_1_3
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+void scalePolygon(wcPt2D* verts, GLint nVerts, wcPt2D fixedPt, GLfloat sx, GLfloat sy)
+{
+	wcPt2D* vertsNew = new wcPt2D[nVerts];
+	GLint k;
+	for (k = 0; k < nVerts; k++)
+	{
+		vertsNew[k].x = verts[k].x * sx + fixedPt.x * (1 - sx);
+		vertsNew[k].y = verts[k].y * sy + fixedPt.y * (1 - sy);
+	}
+	glBegin(GL_POLYGON);
+	for (k = 0; k < nVerts; k++)
+		glVertex2f(vertsNew[k].x, vertsNew[k].y);
+	glEnd();
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	wcPt2D verts[] = { { 120, 172 },{ 186, 104 },{ 300, 150 } ,{ 182, 224 } };
+	glBegin(GL_POLYGON);
+	for (int k = 0; k < 4; k++)
+		glVertex2f(verts[k].x, verts[k].y);
+	glEnd();
+
+	scalePolygon(verts, 4, { 100, 100 }, 3, 3);
+
+	glFlush();
+}
+void code_7_1_3()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -120,6 +162,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_1_2
 	code_7_1_2();
+#endif
+
+#ifdef CHAPTER_7_1_3
+	code_7_1_3();
 #endif
 
 	glutMainLoop();
