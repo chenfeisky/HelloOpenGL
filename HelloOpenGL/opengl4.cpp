@@ -940,11 +940,14 @@ void winReshapeFcn(int newWidth, int newHeight)
 	glLoadIdentity();
 
 	//将（newWidth， newHeight）映射到（winWidth， winHeight），再按（newWidth， newHeight）裁切
-	gluOrtho2D(0.0, (GLdouble)newWidth, 0.0, (GLdouble)newHeight);
+	//gluOrtho2D(0.0, (GLdouble)newWidth, 0.0, (GLdouble)newHeight);
 
 	// 不改变形状，只按（newWidth， newHeight）裁切
 	//gluOrtho2D(0.0, (GLdouble)winWidth, 0.0, (GLdouble)winHeight);
 
+	// 保持图形与窗口的尺寸比例(只能缩小)
+	gluOrtho2D(0.0, (GLdouble)winWidth * ((GLdouble)winWidth / (GLdouble)newWidth), 0.0, (GLdouble)winHeight * ((GLdouble)winHeight / (GLdouble)newHeight));
+	
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 void main(int argc, char** argv)

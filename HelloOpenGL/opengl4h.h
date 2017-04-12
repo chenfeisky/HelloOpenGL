@@ -3,7 +3,7 @@
 // 选择一个，注释掉其他的
 //#define CHAPTER_4_Test
 //#define CHAPTER_4_15_2
-//#define CHAPTER_4_16
+#define CHAPTER_4_16
 //#define CHAPTER_4_EXAMPLE_1
 //#define CHAPTER_4_EXAMPLE_2
 //#define CHAPTER_4_EXAMPLE_3
@@ -28,7 +28,7 @@
 //#define CHAPTER_4_EXERCISE_18
 //#define CHAPTER_4_EXERCISE_19
 //#define CHAPTER_4_EXERCISE_20
-#define CHAPTER_4_EXERCISE_21
+//#define CHAPTER_4_EXERCISE_21
 //#define CHAPTER_4_EXERCISE_22
 //#define CHAPTER_4_EXERCISE_23
 //#define CHAPTER_4_EXERCISE_24
