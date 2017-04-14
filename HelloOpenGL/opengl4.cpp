@@ -945,7 +945,7 @@ void winReshapeFcn(int newWidth, int newHeight)
 	// 不改变形状，只按（newWidth， newHeight）裁切
 	//gluOrtho2D(0.0, (GLdouble)winWidth, 0.0, (GLdouble)winHeight);
 
-	// 保持图形与窗口的尺寸比例(只能缩小)
+	// 保持图形与窗口的尺寸比例(只能缩小,放大的话因为映射区域的限制，将不能显示完全，参见书上注释)
 	gluOrtho2D(0.0, (GLdouble)winWidth * ((GLdouble)winWidth / (GLdouble)newWidth), 0.0, (GLdouble)winHeight * ((GLdouble)winHeight / (GLdouble)newHeight));
 	
 	glClear(GL_COLOR_BUFFER_BIT);
