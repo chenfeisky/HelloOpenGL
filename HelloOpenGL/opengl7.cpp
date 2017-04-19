@@ -259,6 +259,38 @@ void code_7_4_11()
 }
 #endif
 
+#ifdef CHAPTER_7_10
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	
+	glColor3f(0.0, 0.0, 1.0);
+	glRecti(50, 100, 200, 150);
+
+	glColor3f(1.0, 0.0, 0.0);
+	glTranslatef(-200.0, -50.0, 0.0);
+	glRecti(50, 100, 200, 150);
+
+	glLoadIdentity();
+	glRotatef(90.0, 0.0, 0.0, 1.0);
+	glRecti(50, 100, 200, 150);
+
+	glLoadIdentity();
+	glScalef(-0.5, 1.0, 1.0);
+	glRecti(50, 100, 200, 150);
+
+	glFlush();
+}
+void code_7_10()
+{
+	glLoadIdentity();
+	gluOrtho2D(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2);
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
@@ -298,6 +330,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_4_11
 	code_7_4_11();
+#endif
+
+#ifdef CHAPTER_7_10
+	code_7_10();
 #endif
 
 	glutMainLoop();
