@@ -291,6 +291,36 @@ void code_7_10()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_1
+float smallSin()
+{
+	return 0.f;
+}
+float smallCos()
+{
+	return 0.f;
+}
+void displayFcn(void)
+{
+	printf("xxxxx\n");
+	glClear(GL_COLOR_BUFFER_BIT);
+	glFlush();
+}
+void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+	//printf("onTimer: %d\n", dwTime);
+	displayFcn();
+}
+void code_7_exercise_1()
+{
+	SetTimer(NULL, NULL, 1000, onTimer);
+
+	glutDisplayFunc(displayFcn);
+
+}
+#endif
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
@@ -334,6 +364,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_10
 	code_7_10();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_1
+	code_7_exercise_1();
 #endif
 
 	glutMainLoop();
