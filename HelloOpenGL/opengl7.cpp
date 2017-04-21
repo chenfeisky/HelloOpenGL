@@ -292,34 +292,180 @@ void code_7_10()
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_1
+struct Point { float x; float y; };
+float angle = 5 * PI / 180;
+int loopCount = 0;
+std::vector<Point> originalPoints = { {150, 0},{ 200, 0 },{ 175, 100 } };
+std::vector<Point> curPoints;
+bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
+bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
+bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
 float smallSin()
 {
-	return 0.f;
+	return angle;
+	//return std::sin(angle);
 }
 float smallCos()
 {
-	return 0.f;
+	return 1.f;
+	//return std::cos(angle);
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+		glVertex2i(-winWidth / 2, 0);
+		glVertex2i(winWidth / 2, 0);
+		glVertex2i(0, -winHeight / 2);
+		glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void triangle(const std::vector<Point>& points)
+{
+	glBegin(GL_TRIANGLES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
 }
 void displayFcn(void)
 {
-	printf("xxxxx\n");
 	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	triangle(curPoints);
 	glFlush();
 }
 void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
 	//printf("onTimer: %d\n", dwTime);
+	loopCount++;
+	if (GreaterQ(loopCount, 2 * PI / angle))
+	{
+		curPoints = originalPoints;
+		loopCount = 0;
+	}
+	else
+	{
+		float tempX = 0.f, tempY = 0.f;
+		for (auto & p : curPoints)
+		{
+			tempX = p.x * smallCos() - p.y * smallSin();
+			tempY = p.x * smallSin() + p.y * smallCos();
+			p.x = tempX;
+			p.y = tempY;
+		}
+	}
+
 	displayFcn();
 }
 void code_7_exercise_1()
 {
-	SetTimer(NULL, NULL, 1000, onTimer);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2);
+
+	SetTimer(NULL, NULL, 100, onTimer);
+
+	curPoints = originalPoints;
 
 	glutDisplayFunc(displayFcn);
-
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_2
+struct Point { float x; float y; };
+void triangle(const std::vector<Point>& points)
+{
+	glBegin(GL_TRIANGLES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void transformVerts2D(GLint nVerts, wcPt2D* verts)
+{
+	GLint k;
+	GLfloat temp;
+	for (k = 0; k < nVerts; k++)
+	{
+		temp = matComposite[0][0] * verts[k].x + matComposite[0][1] * verts[k].y + matComposite[0][2];
+		verts[k].y = matComposite[1][0] * verts[k].x + matComposite[1][1] * verts[k].y + matComposite[1][2];
+		verts[k].x = temp;
+	}
+}
+void matrix3x3SetIdentity(Matrix3x3& matIdent3x3)
+{
+	GLint row, col;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			matIdent3x3[row][col] = (row == col);
+}
+void matrix3x3PreMultiply(Matrix3x3& m1, Matrix3x3& m2)
+{
+	GLint row, col;
+	Matrix3x3 matTemp;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+		{
+			matTemp[row][col] = m1[row][0] * m2[0][col] + m1[row][1] * m2[1][col] + m1[row][2] * m2[2][col];
+		}
+
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			m2[row][col] = matTemp[row][col];
+}
+void rotate2D(wcPt2D pivotPt, GLfloat theta)
+{
+	Matrix3x3 matRot;
+	matrix3x3SetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	matrix3x3PreMultiply(matRot, matComposite);
+}
+void rotate(float angle, std::vector<Point>& points)
+{
+	float tempX = 0.f, tempY = 0.f;
+	for (auto & p : points)
+	{
+		tempX = p.x * std::cos(angle) - p.y * std::sin(angle);
+		tempY = p.x * std::sin(angle) + p.y * std::cos(angle);
+		p.x = tempX;
+		p.y = tempY;
+	}
+}
+
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> originalPoints = { { 150, 0 },{ 200, 0 },{ 175, 100 } };
+	
+	// 连续变换两次 
+	std::vector<Point> curPoints = originalPoints;
+	rotate(10 * PI / 180, curPoints);
+	rotate(20 * PI / 180, curPoints);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(100.0, 200.0, 0.0);
+	triangle(curPoints);
+
+	// 变换一次
+	curPoints = originalPoints;
+	rotate(30 * PI / 180, curPoints);
+	glLoadIdentity();
+	glTranslatef(300.0, 200.0, 0.0);
+	triangle(curPoints);
+
+	glFlush();
+}
+void code_7_exercise_2()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -368,6 +514,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_1
 	code_7_exercise_1();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_2
+	code_7_exercise_2();
 #endif
 
 	glutMainLoop();
