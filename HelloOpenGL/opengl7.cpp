@@ -373,6 +373,22 @@ void code_7_exercise_1()
 
 #ifdef CHAPTER_7_EXERCISE_2
 struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
 void triangle(const std::vector<Point>& points)
 {
 	glBegin(GL_TRIANGLES);
@@ -380,83 +396,113 @@ void triangle(const std::vector<Point>& points)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void transformVerts2D(GLint nVerts, wcPt2D* verts)
+void matrixSetIdentity(Matrix& m)
 {
-	GLint k;
-	GLfloat temp;
-	for (k = 0; k < nVerts; k++)
-	{
-		temp = matComposite[0][0] * verts[k].x + matComposite[0][1] * verts[k].y + matComposite[0][2];
-		verts[k].y = matComposite[1][0] * verts[k].x + matComposite[1][1] * verts[k].y + matComposite[1][2];
-		verts[k].x = temp;
-	}
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
 }
-void matrix3x3SetIdentity(Matrix3x3& matIdent3x3)
+Matrix operator *(Matrix& m1, Matrix& m2)
 {
-	GLint row, col;
-	for (row = 0; row < 3; row++)
-		for (col = 0; col < 3; col++)
-			matIdent3x3[row][col] = (row == col);
-}
-void matrix3x3PreMultiply(Matrix3x3& m1, Matrix3x3& m2)
-{
-	GLint row, col;
-	Matrix3x3 matTemp;
-	for (row = 0; row < 3; row++)
-		for (col = 0; col < 3; col++)
-		{
-			matTemp[row][col] = m1[row][0] * m2[0][col] + m1[row][1] * m2[1][col] + m1[row][2] * m2[2][col];
-		}
+	assert(m1._col == m2._row);
 
-	for (row = 0; row < 3; row++)
-		for (col = 0; col < 3; col++)
-			m2[row][col] = matTemp[row][col];
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
 }
-void rotate2D(wcPt2D pivotPt, GLfloat theta)
+Matrix rotateMatrix(Point pivotPt, float theta)
 {
-	Matrix3x3 matRot;
-	matrix3x3SetIdentity(matRot);
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
 	matRot[0][0] = cos(theta);
 	matRot[0][1] = -sin(theta);
 	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
 	matRot[1][0] = sin(theta);
 	matRot[1][1] = cos(theta);
 	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
-	matrix3x3PreMultiply(matRot, matComposite);
+	return matRot;
 }
-void rotate(float angle, std::vector<Point>& points)
+void transformPoints(Matrix& m, std::vector<Point>& points)
 {
-	float tempX = 0.f, tempY = 0.f;
-	for (auto & p : points)
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
 	{
-		tempX = p.x * std::cos(angle) - p.y * std::sin(angle);
-		tempY = p.x * std::sin(angle) + p.y * std::cos(angle);
-		p.x = tempX;
-		p.y = tempY;
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
 	}
 }
-
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0, 1.0, 1.0);
-
 	std::vector<Point> originalPoints = { { 150, 0 },{ 200, 0 },{ 175, 100 } };
+
+	glColor3f(1.0, 1.0, 1.0);
 	
 	// 连续变换两次 
 	std::vector<Point> curPoints = originalPoints;
-	rotate(10 * PI / 180, curPoints);
-	rotate(20 * PI / 180, curPoints);
+	auto m1 = rotateMatrix({ 0, 0 }, 10 * PI / 180);
+	auto m2 = rotateMatrix({ 0, 0 }, 20 * PI / 180);
+	transformPoints(m1, curPoints);
+	transformPoints(m2, curPoints);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(100.0, 200.0, 0.0);
+	glTranslatef(50.0, 300.0, 0.0);
 	triangle(curPoints);
 
-	// 变换一次
+	// 复合矩阵
 	curPoints = originalPoints;
-	rotate(30 * PI / 180, curPoints);
+	auto m = m2 * m1;
+	transformPoints(m, curPoints);
 	glLoadIdentity();
-	glTranslatef(300.0, 200.0, 0.0);
+	glTranslatef(250.0, 300.0, 0.0);
+	triangle(curPoints);
+
+	// 变换一次(两角之和)
+	curPoints = originalPoints;
+	transformPoints(rotateMatrix({ 0, 0 }, 30 * PI / 180), curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 300.0, 0.0);
+	triangle(curPoints);
+
+	glColor3f(1.0, 0.0, 0.0);
+	// 连续变换两次 
+	curPoints = originalPoints;
+	m1 = rotateMatrix({ 50, 50 }, 10 * PI / 180);
+	m2 = rotateMatrix({ 50, 50 }, 20 * PI / 180);
+	transformPoints(m1, curPoints);
+	transformPoints(m2, curPoints);
+	glLoadIdentity();
+	glTranslatef(50.0, 100.0, 0.0);
+	triangle(curPoints);
+
+	// 复合矩阵
+	curPoints = originalPoints;
+	m = m2 * m1;
+	transformPoints(m, curPoints);
+	glLoadIdentity();
+	glTranslatef(250.0, 100.0, 0.0);
+	triangle(curPoints);
+	
+	// 变换一次(两角之和)
+	curPoints = originalPoints;
+	transformPoints(rotateMatrix({ 50, 50 }, 30 * PI / 180), curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 100.0, 0.0);
 	triangle(curPoints);
 
 	glFlush();
