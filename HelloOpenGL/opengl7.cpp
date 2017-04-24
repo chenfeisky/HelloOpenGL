@@ -389,19 +389,6 @@ struct Matrix
 	int _row;
 	int _col;
 };
-void triangle(const std::vector<Point>& points)
-{
-	glBegin(GL_TRIANGLES);
-	for (auto & p : points)
-		glVertex2f(p.x, p.y);
-	glEnd();
-}
-void matrixSetIdentity(Matrix& m)
-{
-	for (int row = 0; row < m._row; row++)
-		for (int col = 0; col < m._col; col++)
-			m[row][col] = (row == col);
-}
 Matrix operator *(Matrix& m1, Matrix& m2)
 {
 	assert(m1._col == m2._row);
@@ -419,6 +406,19 @@ Matrix operator *(Matrix& m1, Matrix& m2)
 		}
 	}
 	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void triangle(const std::vector<Point>& points)
+{
+	glBegin(GL_TRIANGLES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
 }
 Matrix rotateMatrix(Point pivotPt, float theta)
 {
@@ -513,6 +513,304 @@ void code_7_exercise_2()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_3
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void square(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix dirScaleMatrix(float s1, float s2, float theta)
+{
+	// 基于原点的定向旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = s1 * std::pow(cos(theta), 2) + s2 * std::pow(sin(theta), 2);
+	ret[0][1] = (s2 - s1) * cos(theta) * sin(theta);
+	ret[1][0] = (s2 - s1) * cos(theta) * sin(theta);
+	ret[1][1] = s1 * std::pow(sin(theta), 2) + s2 * std::pow(cos(theta), 2);
+	return ret;
+}
+Matrix dirScaleByPointMatrix(float tx, float ty, float s1, float s2, float theta)
+{
+	// 基于指定点的定向旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = s1 * std::pow(cos(theta), 2) + s2 * std::pow(sin(theta), 2);
+	ret[0][1] = (s2 - s1) * cos(theta) * sin(theta);
+	ret[0][2] = -tx * (s1 * std::pow(cos(theta), 2) + s2 * std::pow(sin(theta), 2)) 
+		-ty * (s2 - s1) * cos(theta) * sin(theta)
+		+ tx;
+	ret[1][0] = (s2 - s1) * cos(theta) * sin(theta);
+	ret[1][1] = s1 * std::pow(sin(theta), 2) + s2 * std::pow(cos(theta), 2);
+	ret[1][2] = -tx * (s2 - s1) * cos(theta) * sin(theta)
+		- ty * (s1 * std::pow(sin(theta), 2) + s2 * std::pow(cos(theta), 2))
+		+ ty;
+	return ret;
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	std::vector<Point> curPoints;
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	// 原点的定向缩放
+	curPoints = originalPoints;
+	transformPoints(dirScaleMatrix(1, 2, 45 * PI / 180), curPoints);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(150.0, 350.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	glColor3f(1.0, 0.0, 0.0);
+
+	// 由一系列变换而成的 指定点定向缩放
+	curPoints = originalPoints;
+	transformPoints(translateMatrix(-50, -50), curPoints);
+	transformPoints(dirScaleMatrix(1, 2, 45 * PI / 180), curPoints);
+	transformPoints(translateMatrix(50, 50), curPoints);
+	glLoadIdentity();
+	glTranslatef(550.0, 350.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 由一系列变换生成的复合 指定点定向缩放
+	curPoints = originalPoints;
+	auto compound = translateMatrix(50, 50) * dirScaleMatrix(1, 2, 45 * PI / 180) * translateMatrix(-50, -50);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(150.0, 150.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 计算所得的复合 指定点定向缩放
+	curPoints = originalPoints;
+	transformPoints(dirScaleByPointMatrix(50, 50, 1, 2, 45 * PI / 180), curPoints);
+	glLoadIdentity();
+	glTranslatef(550.0, 150.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+	
+	glFlush();
+}
+void code_7_exercise_3()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_4
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void square(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	std::vector<Point> curPoints;
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	// 连续两次平移
+	curPoints = originalPoints;
+	transformPoints(translateMatrix(50, 0), curPoints);
+	transformPoints(translateMatrix(0, 50), curPoints);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(20.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 连续两次平移，交换次序
+	curPoints = originalPoints;
+	transformPoints(translateMatrix(0, 50), curPoints);
+	transformPoints(translateMatrix(50, 0), curPoints);
+	glLoadIdentity();
+	glTranslatef(220.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 复合平移
+	curPoints = originalPoints;
+	auto compound = translateMatrix(0, 50) * translateMatrix(50, 0);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(420.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 复合平移，交换次序
+	curPoints = originalPoints;
+	compound = translateMatrix(50, 0) * translateMatrix(0, 50);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(620.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+	
+	glFlush();
+}
+
+void code_7_exercise_4()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
@@ -564,6 +862,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_2
 	code_7_exercise_2();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_3
+	code_7_exercise_3();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_4
+	code_7_exercise_4();
 #endif
 
 	glutMainLoop();

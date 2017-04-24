@@ -6,8 +6,10 @@
 //#define CHAPTER_7_1_3 // 二维缩放
 //#define CHAPTER_7_4_11 // 二维复合矩阵
 //#define CHAPTER_7_10 // OpenGL几何变换
-#define CHAPTER_7_EXERCISE_1
+//#define CHAPTER_7_EXERCISE_1
 //#define CHAPTER_7_EXERCISE_2
+//#define CHAPTER_7_EXERCISE_3
+#define CHAPTER_7_EXERCISE_4
 
 
 #ifdef CHAPTER_7_1_1
@@ -35,5 +37,13 @@
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_2
+#define CHAPTER_7_COMMON
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_3
+#define CHAPTER_7_COMMON
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_4
 #define CHAPTER_7_COMMON
 #endif
