@@ -734,6 +734,50 @@ Matrix translateMatrix(float tx, float ty)
 	ret[1][2] = ty;
 	return ret;
 }
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix rotateByPointMatrix(Point p, float theta)
+{
+	// 基于指定点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
+	return ret;
+}
+Matrix scaleMatrix(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix scaleByPointMatrix(Point p, float sx, float sy)
+{
+	// 基于指定点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
 void transformPoints(Matrix& m, std::vector<Point>& points)
 {
 	Matrix point(3, 1);
@@ -760,45 +804,103 @@ void drawCoordinate()
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
-	std::vector<Point> curPoints;
-
 	glColor3f(1.0, 1.0, 1.0);
 
-	// 连续两次平移
-	curPoints = originalPoints;
-	transformPoints(translateMatrix(50, 0), curPoints);
-	transformPoints(translateMatrix(0, 50), curPoints);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(20.0, 400.0, 0.0);
-	drawCoordinate();
-	square(curPoints);
-
-	// 连续两次平移，交换次序
-	curPoints = originalPoints;
-	transformPoints(translateMatrix(0, 50), curPoints);
-	transformPoints(translateMatrix(50, 0), curPoints);
-	glLoadIdentity();
-	glTranslatef(220.0, 400.0, 0.0);
-	drawCoordinate();
-	square(curPoints);
-
+	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	std::vector<Point> curPoints;
+	Matrix compound(3, 3);
+	
+	// 平移
 	// 复合平移
 	curPoints = originalPoints;
-	auto compound = translateMatrix(0, 50) * translateMatrix(50, 0);
+	compound = translateMatrix(0, 30) * translateMatrix(30, 0);
 	transformPoints(compound, curPoints);
+	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(420.0, 400.0, 0.0);
+	glTranslatef(250.0, 400.0, 0.0);
 	drawCoordinate();
 	square(curPoints);
 
 	// 复合平移，交换次序
 	curPoints = originalPoints;
-	compound = translateMatrix(50, 0) * translateMatrix(0, 50);
+	compound = translateMatrix(30, 0) * translateMatrix(0, 30);
 	transformPoints(compound, curPoints);
 	glLoadIdentity();
-	glTranslatef(620.0, 400.0, 0.0);
+	glTranslatef(450.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 旋转
+	// 基于原点复合旋转
+	curPoints = originalPoints;
+	compound = rotateMatrix(20 * PI / 180) * rotateMatrix(10 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(50.0, 250.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于原点复合旋转, 交换次序 
+	curPoints = originalPoints;
+	compound = rotateMatrix(10 * PI / 180) * rotateMatrix(20 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(250.0, 250.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于指定点复合旋转
+	curPoints = originalPoints;
+	compound = rotateByPointMatrix({50, 50}, 20 * PI / 180) * rotateByPointMatrix({ 50, 50 }, 10 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 250.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于指定点复合旋转, 交换次序 
+	curPoints = originalPoints;
+	compound = rotateByPointMatrix({ 50, 50 }, 10 * PI / 180) * rotateByPointMatrix({ 50, 50 }, 20 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(650.0, 250.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 缩放
+	// 基于原点复合缩放
+	curPoints = originalPoints;
+	compound = scaleMatrix(0.8, 0.4) * scaleMatrix(0.5, 0.5);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(50.0, 100.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于原点复合缩放, 交换次序 
+	curPoints = originalPoints;
+	compound = scaleMatrix(0.5, 0.5) * scaleMatrix(0.8, 0.4);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(250.0, 100.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于指定点复合缩放
+	curPoints = originalPoints;
+	compound = scaleByPointMatrix({ 50, 50 }, 0.8, 0.4) * scaleByPointMatrix({ 50, 50 }, 0.5, 0.5);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 100.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于指定点复合缩放, 交换次序 
+	curPoints = originalPoints;
+	compound = scaleByPointMatrix({ 50, 50 }, 0.5, 0.5) * scaleByPointMatrix({ 50, 50 }, 0.8, 0.4);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(650.0, 100.0, 0.0);
 	drawCoordinate();
 	square(curPoints);
 	
@@ -811,6 +913,216 @@ void code_7_exercise_4()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_5
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void square(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix rotateByPointMatrix(Point p, float theta)
+{
+	// 基于指定点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
+	return ret;
+}
+Matrix scaleMatrix(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix scaleByPointMatrix(Point p, float sx, float sy)
+{
+	// 基于指定点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	std::vector<Point> curPoints;
+	Matrix compound(3, 3);
+
+	// 基于原点
+	// 一致缩放+旋转
+	curPoints = originalPoints;
+	compound = rotateMatrix(30 * PI / 180) * scaleMatrix(0.5, 0.5);
+	transformPoints(compound, curPoints);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(50.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 旋转+一致缩放
+	curPoints = originalPoints;
+	compound = scaleMatrix(0.5, 0.5) * rotateMatrix(30 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(250.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 非一致缩放+旋转
+	curPoints = originalPoints;
+	compound = rotateMatrix(30 * PI / 180) * scaleMatrix(1, 0.5);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 旋转+非一致缩放
+	curPoints = originalPoints;
+	compound = scaleMatrix(1, 0.5) * rotateMatrix(30 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(650.0, 400.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 基于指定点
+	// 一致缩放+旋转
+	curPoints = originalPoints;
+	compound = rotateByPointMatrix({ 50, 50 }, 30 * PI / 180) * scaleByPointMatrix({50, 50}, 0.5, 0.5);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(50.0, 150.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 旋转+一致缩放
+	curPoints = originalPoints;
+	compound = scaleByPointMatrix({ 50, 50 }, 0.5, 0.5) * rotateByPointMatrix({ 50, 50 }, 30 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(250.0, 150.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 非一致缩放+旋转
+	curPoints = originalPoints;
+	compound = rotateByPointMatrix({ 50, 50 }, 30 * PI / 180) * scaleByPointMatrix({ 50, 50 }, 1, 0.5);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 150.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	// 旋转+非一致缩放
+	curPoints = originalPoints;
+	compound = scaleByPointMatrix({ 50, 50 }, 1, 0.5) * rotateByPointMatrix({ 50, 50 }, 30 * PI / 180);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(650.0, 150.0, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	
+	
+	glFlush();
+}
+
+void code_7_exercise_5()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
@@ -870,6 +1182,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_4
 	code_7_exercise_4();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_5
+	code_7_exercise_5();
 #endif
 
 	glutMainLoop();
