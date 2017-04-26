@@ -1124,6 +1124,159 @@ void code_7_exercise_5()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_6
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void square(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateByPointMatrix(Point p, float theta)
+{
+	// 基于指定点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
+	return ret;
+}
+Matrix scaleByPointMatrix(Point p, float sx, float sy)
+{
+	// 基于指定点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+Matrix TRSMatrix(Point p, float tx, float ty, float theta, float sx, float sy)
+{
+	// 平移，旋转，缩放复合矩阵
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx * std::cos(theta);
+	ret[0][1] = -sy * std::sin(theta);
+	ret[0][2] = p.x * (1 - sx * std::cos(theta)) + p.y * sy * std::sin(theta) + tx;
+	ret[1][0] = sx * std::sin(theta);
+	ret[1][1] = sy * std::cos(theta);
+	ret[1][2] = p.y * (1 - sy * std::cos(theta)) - p.x * sx * std::sin(theta) + ty;
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	std::vector<Point> curPoints;
+	Matrix compound(3, 3);
+
+	curPoints = originalPoints;
+	compound = translateMatrix(50, 100) * rotateByPointMatrix({ 50, 50 }, 45 * PI / 180) * scaleByPointMatrix({ 50, 50 }, 0.5, 0.5);
+	transformPoints(compound, curPoints);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(50.0, 250, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	curPoints = originalPoints;
+	compound = TRSMatrix({ 50, 50 }, 50, 100, 45 * PI / 180, 0.5, 0.5);
+	transformPoints(compound, curPoints);
+	glLoadIdentity();
+	glTranslatef(450.0, 250, 0.0);
+	drawCoordinate();
+	square(curPoints);
+
+	glFlush();
+}
+
+void code_7_exercise_6()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -1186,6 +1339,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_5
 	code_7_exercise_5();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_6
+	code_7_exercise_6();
 #endif
 
 	glutMainLoop();
