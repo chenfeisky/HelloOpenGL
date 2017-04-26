@@ -1277,6 +1277,428 @@ void code_7_exercise_6()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_7
+// 改为1:1等比例投影，方便查看变换效果，否则将产生拉伸形变
+GLfloat xwcMin = 0.0, xwcMax = 225.0;
+GLfloat ywcMin = 0.0, ywcMax = 225.0;
+float sx = 0.f, sy = 0.f, theta = 0.f, tx = 0.f, ty = 0.f;
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+typedef GLfloat Matrix3x3[3][3];
+Matrix3x3 matComposite;
+void inputParam()
+{
+	printf("input scale parameter (sx,sy):");
+	scanf_s("%f,%f", &sx, &sy);
+	printf("input rotate parameter (theta):");
+	scanf_s("%f", &theta);
+	theta = theta * PI / 180;
+	printf("input translate parameter (tx,ty):");
+	scanf_s("%f,%f", &tx, &ty);
+}
+void matrix3x3SetIdentity(Matrix3x3& matIdent3x3)
+{
+	GLint row, col;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			matIdent3x3[row][col] = (row == col);
+}
+void matrix3x3PreMultiply(Matrix3x3& m1, Matrix3x3& m2)
+{
+	GLint row, col;
+	Matrix3x3 matTemp;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+		{
+			matTemp[row][col] = m1[row][0] * m2[0][col] + m1[row][1] * m2[1][col] + m1[row][2] * m2[2][col];
+		}
+
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			m2[row][col] = matTemp[row][col];
+}
+void translate2D(GLfloat tx, GLfloat ty)
+{
+	Matrix3x3 matTransl;
+	matrix3x3SetIdentity(matTransl);
+	matTransl[0][2] = tx;
+	matTransl[1][2] = ty;
+	matrix3x3PreMultiply(matTransl, matComposite);
+}
+void rotate2D(wcPt2D pivotPt, GLfloat theta)
+{
+	Matrix3x3 matRot;
+	matrix3x3SetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	matrix3x3PreMultiply(matRot, matComposite);
+}
+void scale2D(GLfloat sx, GLfloat sy, wcPt2D fixedPt)
+{
+	Matrix3x3 matScale;
+	matrix3x3SetIdentity(matScale);
+	matScale[0][0] = sx;
+	matScale[0][2] = (1 - sx) * fixedPt.x;
+	matScale[1][1] = sy;
+	matScale[1][2] = (1 - sy) * fixedPt.y;
+	matrix3x3PreMultiply(matScale, matComposite);
+}
+void transformVerts2D(GLint nVerts, wcPt2D* verts)
+{
+	GLint k;
+	GLfloat temp;
+	for (k = 0; k < nVerts; k++)
+	{
+		temp = matComposite[0][0] * verts[k].x + matComposite[0][1] * verts[k].y + matComposite[0][2];
+		verts[k].y = matComposite[1][0] * verts[k].x + matComposite[1][1] * verts[k].y + matComposite[1][2];
+		verts[k].x = temp;
+	}
+}
+void triangle(wcPt2D* verts)
+{
+	GLint k;
+	glBegin(GL_TRIANGLES);
+	for (k = 0; k < 3; k++)
+		glVertex2f(verts[k].x, verts[k].y);
+	glEnd();
+}
+void displayFcn(void)
+{
+	GLint nVerts = 3;
+	wcPt2D verts[3] = { { 50.0, 25.0 },{ 150.0, 25.0 },{ 100.0, 100.0 } };
+	wcPt2D centroidPt;
+	GLint k, xSum = 0, ySum = 0;
+	for (k = 0; k < nVerts; k++)
+	{
+		xSum += verts[k].x;
+		ySum += verts[k].y;
+	}
+	centroidPt.x = GLfloat(xSum) / GLfloat(nVerts);
+	centroidPt.y = GLfloat(ySum) / GLfloat(nVerts);
+	wcPt2D pivPt, fixedPt;
+	pivPt = centroidPt;
+	fixedPt = centroidPt;
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 0.0, 1.0);
+	triangle(verts);
+	matrix3x3SetIdentity(matComposite);
+	scale2D(sx, sy, fixedPt);
+	rotate2D(pivPt, theta);
+	translate2D(tx, ty);
+	transformVerts2D(nVerts, verts);
+	glColor3f(1.0, 0.0, 0.0);
+	triangle(verts);
+	glFlush();
+}
+void winReshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+void code_7_exercise_7()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glutDisplayFunc(displayFcn);
+	glutReshapeFunc(winReshapeFcn);
+
+	inputParam();
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_8
+// 改为1:1等比例投影，方便查看变换效果，否则将产生拉伸形变
+GLfloat xwcMin = 0.0, xwcMax = 225.0;
+GLfloat ywcMin = 0.0, ywcMax = 225.0;
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+typedef GLfloat Matrix3x3[3][3];
+std::vector<wcPt2D> points;
+Matrix3x3 matComposite;
+void inputParam()
+{
+	std::string inputStr;
+	while(1)
+	{
+		printf("input polygon points (x,y), input \"exit\" to end:");
+		std::cin >> inputStr;
+		if (inputStr == "exit")
+			break;
+		else
+		{
+			points.push_back({});
+			sscanf_s(inputStr.c_str(), "%f, %f", &points.back().x, &points.back().y);
+		}
+	}
+}
+void matrix3x3SetIdentity(Matrix3x3& matIdent3x3)
+{
+	GLint row, col;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			matIdent3x3[row][col] = (row == col);
+}
+void matrix3x3PreMultiply(Matrix3x3& m1, Matrix3x3& m2)
+{
+	GLint row, col;
+	Matrix3x3 matTemp;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+		{
+			matTemp[row][col] = m1[row][0] * m2[0][col] + m1[row][1] * m2[1][col] + m1[row][2] * m2[2][col];
+		}
+
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			m2[row][col] = matTemp[row][col];
+}
+void translate2D(GLfloat tx, GLfloat ty)
+{
+	Matrix3x3 matTransl;
+	matrix3x3SetIdentity(matTransl);
+	matTransl[0][2] = tx;
+	matTransl[1][2] = ty;
+	matrix3x3PreMultiply(matTransl, matComposite);
+}
+void rotate2D(wcPt2D pivotPt, GLfloat theta)
+{
+	Matrix3x3 matRot;
+	matrix3x3SetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	matrix3x3PreMultiply(matRot, matComposite);
+}
+void scale2D(GLfloat sx, GLfloat sy, wcPt2D fixedPt)
+{
+	Matrix3x3 matScale;
+	matrix3x3SetIdentity(matScale);
+	matScale[0][0] = sx;
+	matScale[0][2] = (1 - sx) * fixedPt.x;
+	matScale[1][1] = sy;
+	matScale[1][2] = (1 - sy) * fixedPt.y;
+	matrix3x3PreMultiply(matScale, matComposite);
+}
+void transformVerts2D(std::vector<wcPt2D>& points)
+{
+	GLfloat temp;
+	for (auto& p : points)
+	{
+		temp = matComposite[0][0] * p.x + matComposite[0][1] * p.y + matComposite[0][2];
+		p.y = matComposite[1][0] * p.x + matComposite[1][1] * p.y + matComposite[1][2];
+		p.x = temp;
+	}
+}
+void polygon(const std::vector<wcPt2D>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto& p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void displayFcn(void)
+{
+	wcPt2D centroidPt;
+	GLint xSum = 0, ySum = 0;
+	for (auto& p : points)
+	{
+		xSum += p.x;
+		ySum += p.y;
+	}
+	centroidPt.x = GLfloat(xSum) / GLfloat(points.size());
+	centroidPt.y = GLfloat(ySum) / GLfloat(points.size());
+	wcPt2D pivPt, fixedPt;
+	pivPt = centroidPt;
+	fixedPt = centroidPt;
+	GLfloat tx = 0.0, ty = 100.0;
+	GLfloat sx = 0.5, sy = 0.5;
+	GLdouble theta = PI / 2.0;
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 0.0, 1.0);
+	polygon(points);
+	matrix3x3SetIdentity(matComposite);
+	scale2D(sx, sy, fixedPt);
+	rotate2D(pivPt, theta);
+	translate2D(tx, ty);
+	transformVerts2D(points);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(points);
+	glFlush();
+}
+void winReshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+void code_7_exercise_8()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glutDisplayFunc(displayFcn);
+	glutReshapeFunc(winReshapeFcn);
+
+	inputParam();
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_9
+// 改为1:1等比例投影，方便查看变换效果，否则将产生拉伸形变
+GLfloat xwcMin = 0.0, xwcMax = 225.0;
+GLfloat ywcMin = 0.0, ywcMax = 225.0;
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+typedef GLfloat Matrix3x3[3][3];
+std::string inputStr;
+Matrix3x3 matComposite;
+void inputParam()
+{
+	printf("input transform [(T)ranslate, (R)otate, (S)cale]:");
+	std::cin >> inputStr;
+}
+void matrix3x3SetIdentity(Matrix3x3& matIdent3x3)
+{
+	GLint row, col;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			matIdent3x3[row][col] = (row == col);
+}
+void matrix3x3PreMultiply(Matrix3x3& m1, Matrix3x3& m2)
+{
+	GLint row, col;
+	Matrix3x3 matTemp;
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+		{
+			matTemp[row][col] = m1[row][0] * m2[0][col] + m1[row][1] * m2[1][col] + m1[row][2] * m2[2][col];
+		}
+
+	for (row = 0; row < 3; row++)
+		for (col = 0; col < 3; col++)
+			m2[row][col] = matTemp[row][col];
+}
+void translate2D(GLfloat tx, GLfloat ty)
+{
+	Matrix3x3 matTransl;
+	matrix3x3SetIdentity(matTransl);
+	matTransl[0][2] = tx;
+	matTransl[1][2] = ty;
+	matrix3x3PreMultiply(matTransl, matComposite);
+}
+void rotate2D(wcPt2D pivotPt, GLfloat theta)
+{
+	Matrix3x3 matRot;
+	matrix3x3SetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	matrix3x3PreMultiply(matRot, matComposite);
+}
+void scale2D(GLfloat sx, GLfloat sy, wcPt2D fixedPt)
+{
+	Matrix3x3 matScale;
+	matrix3x3SetIdentity(matScale);
+	matScale[0][0] = sx;
+	matScale[0][2] = (1 - sx) * fixedPt.x;
+	matScale[1][1] = sy;
+	matScale[1][2] = (1 - sy) * fixedPt.y;
+	matrix3x3PreMultiply(matScale, matComposite);
+}
+void transformVerts2D(GLint nVerts, wcPt2D* verts)
+{
+	GLint k;
+	GLfloat temp;
+	for (k = 0; k < nVerts; k++)
+	{
+		temp = matComposite[0][0] * verts[k].x + matComposite[0][1] * verts[k].y + matComposite[0][2];
+		verts[k].y = matComposite[1][0] * verts[k].x + matComposite[1][1] * verts[k].y + matComposite[1][2];
+		verts[k].x = temp;
+	}
+}
+void triangle(wcPt2D* verts)
+{
+	GLint k;
+	glBegin(GL_TRIANGLES);
+	for (k = 0; k < 3; k++)
+		glVertex2f(verts[k].x, verts[k].y);
+	glEnd();
+}
+void displayFcn(void)
+{
+	GLint nVerts = 3;
+	wcPt2D verts[3] = { { 50.0, 25.0 },{ 150.0, 25.0 },{ 100.0, 100.0 } };
+	wcPt2D centroidPt;
+	GLint k, xSum = 0, ySum = 0;
+	for (k = 0; k < nVerts; k++)
+	{
+		xSum += verts[k].x;
+		ySum += verts[k].y;
+	}
+	centroidPt.x = GLfloat(xSum) / GLfloat(nVerts);
+	centroidPt.y = GLfloat(ySum) / GLfloat(nVerts);
+	wcPt2D pivPt, fixedPt;
+	pivPt = centroidPt;
+	fixedPt = centroidPt;
+	GLfloat tx = 0.0, ty = 100.0;
+	GLfloat sx = 0.5, sy = 0.5;
+	GLdouble theta = PI / 2.0;
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 0.0, 1.0);
+	triangle(verts);
+	matrix3x3SetIdentity(matComposite);
+	for (auto& c : inputStr)
+	{
+		if (c == 'T')
+			translate2D(tx, ty);
+		else if (c == 'R')
+			rotate2D(pivPt, theta);
+		else if (c == 'S')
+			scale2D(sx, sy, fixedPt);
+		else
+			printf("invalid transform parameter : %c\n", c);
+	}	
+	transformVerts2D(nVerts, verts);
+	glColor3f(1.0, 0.0, 0.0);
+	triangle(verts);
+	glFlush();
+}
+void winReshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+void code_7_exercise_9()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glutDisplayFunc(displayFcn);
+	glutReshapeFunc(winReshapeFcn);
+
+	inputParam();
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -1343,6 +1765,18 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_6
 	code_7_exercise_6();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_7
+	code_7_exercise_7();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_8
+	code_7_exercise_8();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_9
+	code_7_exercise_9();
 #endif
 
 	glutMainLoop();
