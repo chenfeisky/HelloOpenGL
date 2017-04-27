@@ -1958,7 +1958,7 @@ void drawCoordinate()
 	glVertex2i(0, -winHeight / 2);
 	glVertex2i(0, winHeight / 2);
 	glVertex2i(0, 0);
-	glVertex2i(winWidth / 2, winWidth / 2);
+	glVertex2i(-winWidth / 2, winWidth / 2);
 	glEnd();
 }
 void displayFcn(void)
@@ -1966,7 +1966,7 @@ void displayFcn(void)
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> originalPoints = { { 140, 95 },{ 164, 22 },{ 216, 77 } };
+	std::vector<Point> originalPoints = { { -75, 20 },{ -100, 80 },{ -150, 20 } };
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
@@ -1974,7 +1974,7 @@ void displayFcn(void)
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(50.0, 250, 0.0);
+	glTranslatef(250.0, 250, 0.0);
 	glColor3f(1.0, 1.0, 1.0);
 	drawCoordinate();
 	polygon(curPoints);
@@ -1982,26 +1982,26 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// À≥ ±’Î45 - x÷·∑¥…‰ - ƒÊ ±’Î45
+	// À≥ ±’Î45 - y÷·∑¥…‰ - ƒÊ ±’Î45
 	curPoints = originalPoints;
 	glLoadIdentity();
-	glTranslatef(300, 250, 0.0);
+	glTranslatef(500, 250, 0.0);
 	glColor3f(1.0, 1.0, 1.0);
 	drawCoordinate();
 	polygon(curPoints);
-	compound = rotateMatrix(45 * PI / 180) * reflectionXMatrix() * rotateMatrix(-45 * PI / 180);
+	compound = rotateMatrix(45 * PI / 180) * reflectionYMatrix() * rotateMatrix(-45 * PI / 180);
 	transformPoints(compound, curPoints);
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// x÷·∑¥…‰ - ƒÊ ±’Î90
+	// y÷·∑¥…‰ - ƒÊ ±’Î90
 	curPoints = originalPoints;
 	glLoadIdentity();
-	glTranslatef(550, 250, 0.0);
+	glTranslatef(750, 250, 0.0);
 	glColor3f(1.0, 1.0, 1.0);
 	drawCoordinate();
 	polygon(curPoints);
-	compound = rotateMatrix(90 * PI / 180) * reflectionXMatrix();
+	compound = rotateMatrix(90 * PI / 180) * reflectionYMatrix();
 	transformPoints(compound, curPoints);
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
