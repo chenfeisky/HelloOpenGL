@@ -1699,6 +1699,322 @@ void code_7_exercise_9()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_10
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void polygon(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix reflectionXMatrix()
+{
+	// 基于x轴反射
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[1][1] = -1;
+	return ret;
+}
+Matrix reflectionYXMatrix()
+{
+	// 基于y=x反射
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = 0;
+	ret[0][1] = 1;
+	ret[1][0] = 1;
+	ret[1][1] = 0;
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glVertex2i(0, 0);
+	glVertex2i(winWidth / 2, winWidth / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> originalPoints = { { 140, 95 },{ 164, 22 },{ 216, 77 } };
+	std::vector<Point> curPoints;
+	Matrix compound(3, 3);
+
+	// 直接给出反射矩阵
+	curPoints = originalPoints;
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(50.0, 250, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	transformPoints(reflectionYXMatrix(), curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// 顺时针45 - x轴反射 - 逆时针45
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(300, 250, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = rotateMatrix(45 * PI / 180) * reflectionXMatrix() * rotateMatrix(-45 * PI / 180);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// x轴反射 - 逆时针90
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(550, 250, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = rotateMatrix(90 * PI / 180) * reflectionXMatrix();
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	glFlush();
+}
+
+void code_7_exercise_10()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_11
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void polygon(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix reflectionYMatrix()
+{
+	// 基于y轴反射
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = -1;
+	return ret;
+}
+Matrix reflectionY_XMatrix()
+{
+	// 基于y=-x反射
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = 0;
+	ret[0][1] = -1;
+	ret[1][0] = -1;
+	ret[1][1] = 0;
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glVertex2i(0, 0);
+	glVertex2i(winWidth / 2, winWidth / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> originalPoints = { { 140, 95 },{ 164, 22 },{ 216, 77 } };
+	std::vector<Point> curPoints;
+	Matrix compound(3, 3);
+
+	// 直接给出反射矩阵
+	curPoints = originalPoints;
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(50.0, 250, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	transformPoints(reflectionY_XMatrix(), curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// 顺时针45 - x轴反射 - 逆时针45
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(300, 250, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = rotateMatrix(45 * PI / 180) * reflectionXMatrix() * rotateMatrix(-45 * PI / 180);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// x轴反射 - 逆时针90
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(550, 250, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = rotateMatrix(90 * PI / 180) * reflectionXMatrix();
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	glFlush();
+}
+
+void code_7_exercise_11()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -1777,6 +2093,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_9
 	code_7_exercise_9();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_10
+	code_7_exercise_10();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_11
+	code_7_exercise_11();
 #endif
 
 	glutMainLoop();
