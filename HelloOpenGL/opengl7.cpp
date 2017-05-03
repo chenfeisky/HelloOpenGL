@@ -2653,7 +2653,7 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 		point[0][0] = p.x;
 		point[1][0] = p.y;
 		point[2][0] = 1;
-		auto temp = m * point;
+		temp = m * point;
 		p.x = temp[0][0];
 		p.y = temp[1][0];
 	}
@@ -2671,6 +2671,25 @@ void drawCoordinate(float m1, float m2)
 	glVertex2i(200, m2 * 200);
 	glEnd();
 }
+void transformPoint(Matrix& m, Point& p)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+
+	point[0][0] = p.x;
+	point[1][0] = p.y;
+	point[2][0] = 1;
+	temp = m * point;
+	p.x = temp[0][0];
+	p.y = temp[1][0];
+}
+void drawLine(Point p)
+{
+	glBegin(GL_LINES);
+	glVertex2i(0, 0);
+	glVertex2i(p.x, p.y);
+	glEnd();
+}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -2680,21 +2699,49 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	float theta1 = 30 * PI / 180;
-	float m1 = std::tan(theta1);
-	float theta2 = 45 * PI / 180;
-	float m2 = std::tan(theta2);
-
+	Point p = { 100, 0 };
 	// 直接给出反射矩阵
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(100, 300, 0.0);
+
 	glColor3f(1.0, 1.0, 1.0);
-	drawCoordinate(m1, m2);
-	//polygon(curPoints);
-	compound = scaleMatrix(0.5, 2) * rotateMatrix(30 * PI / 180);
+	polygon(curPoints);
+	//compound = scaleMatrix(1, 2) * rotateMatrix(15 * PI / 180);
+	//transformPoint(compound, p);
+	//transformPoints(compound, curPoints);
+
+	//auto a = std::atan(p.y / p.x);
+	//compound = rotateMatrix(-a);
+	//transformPoint(compound, p);
+	//transformPoints(compound, curPoints);
+
+	//compound = scaleMatrix(100 / p.x, 1);
+	//transformPoint(compound, p);
+	//transformPoints(compound, curPoints);
+
+	//float shx = 0.9;
+	//float sy = sqrt(1 / (1 - shx));
+	//float sx = sqrt(1 / (1 + shx));
+	//auto e = std::atan(sy / sx);
+	//auto s = sin(e);
+	//auto c = cos(e);
+	//Matrix m(3, 3);
+	//matrixSetIdentity(m);
+	//m[0][0] = 1;
+	//m[0][1] = (-sx * cos(e) + sy * sin(e)) / (sx * cos(e) + sy * sin(e));
+	//m[1][0] = sqrt(2) / 2 * (-sx * sin(e) + sy * cos(e));
+	//m[1][1] = sqrt(2) / 2 * (sx * sin(e) + sy * cos(e));
+	//transformPoints(m, curPoints);
+
+	float shx = 0.3;
+	float sy = sqrt(1 / (1 - shx));
+	float sx = sqrt(1 / (1 + shx));
+	auto e = std::atan(sy / sx);
+	compound = scaleMatrix(1 / (sqrt(2) / 2 * (sx * cos(e) + sy * sin(e))), 1) * rotateMatrix(-e) * scaleMatrix(sx, sy) * rotateMatrix(45 * PI / 180);
 	transformPoints(compound, curPoints);
+
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
