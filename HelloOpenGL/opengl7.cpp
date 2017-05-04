@@ -2708,15 +2708,16 @@ void displayFcn(void)
 
 	glColor3f(1.0, 1.0, 1.0);
 	polygon(curPoints);
-	//compound = scaleMatrix(1, 2) * rotateMatrix(15 * PI / 180);
+	//compound = scaleMatrix(sqrt((float)2 / 3), sqrt(2)) * rotateMatrix(15  * PI / 180);
+	//compound = scaleMatrix(0.34372375, 1.4678898) * rotateMatrix(15 * PI / 180);
 	//transformPoint(compound, p);
 	//transformPoints(compound, curPoints);
-
+	
 	//auto a = std::atan(p.y / p.x);
 	//compound = rotateMatrix(-a);
 	//transformPoint(compound, p);
 	//transformPoints(compound, curPoints);
-
+	//
 	//compound = scaleMatrix(100 / p.x, 1);
 	//transformPoint(compound, p);
 	//transformPoints(compound, curPoints);
@@ -2735,13 +2736,39 @@ void displayFcn(void)
 	//m[1][1] = sqrt(2) / 2 * (sx * sin(e) + sy * cos(e));
 	//transformPoints(m, curPoints);
 
-	float shx = 0.3;
-	float sy = sqrt(1 / (1 - shx));
-	float sx = sqrt(1 / (1 + shx));
-	auto e = std::atan(sy / sx);
-	compound = scaleMatrix(1 / (sqrt(2) / 2 * (sx * cos(e) + sy * sin(e))), 1) * rotateMatrix(-e) * scaleMatrix(sx, sy) * rotateMatrix(45 * PI / 180);
-	transformPoints(compound, curPoints);
+	//float shx = 0.5;
+	//float sy = sqrt(1 / (1 - shx));
+	//float sx = sqrt(1 / (1 + shx));
+	//auto e = std::atan(sy / sx);
+	//compound = scaleMatrix(1 / (sqrt(2) / 2 * (sx * cos(e) + sy * sin(e))), 1) * rotateMatrix(-e) * scaleMatrix(sx, sy) * rotateMatrix(45 * PI / 180);
+	//transformPoints(compound, curPoints);
 
+	float shx = 2;
+	float theta1 = 15 * PI / 180;
+
+	float cos1 = cos(theta1);
+	float sin1 = sin(theta1);
+
+	if (cos1 < shx * sin1)
+	{
+		printf("wrong ");
+		return;
+	}
+
+	float cos2_2 = pow(cos(theta1), 2) - shx * cos(theta1) * sin(theta1);
+	float sin2_2 = 1 - cos2_2;
+
+	float cos2 = sqrt(cos2_2);
+	float sin2 = sqrt(sin2_2);
+	
+	float sx = sin(theta1) / sin2;
+	float sy = cos(theta1) / cos2;
+
+	auto e = acos(cos2);
+
+	compound = scaleMatrix(1 / (cos(theta1) * cos2 * sx + sin(theta1) * sin2 * sy), 1) * rotateMatrix(-e) * scaleMatrix(sx, sy) * rotateMatrix(theta1);
+	transformPoints(compound, curPoints);
+	
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
