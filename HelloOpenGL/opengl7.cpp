@@ -2620,28 +2620,21 @@ Matrix scaleMatrix(float sx, float sy)
 	ret[1][1] = sy;
 	return ret;
 }
-Matrix reflectionOLineMatrix(float m)
+Matrix shearXMatrix(float shx)
 {
-	// 基于y=mx直线反射
-	float theta = std::atan(m);
+	// 基于原点的x方向错切
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
-	ret[0][0] = std::cos(2 * theta);
-	ret[0][1] = std::sin(2 * theta);
-	ret[1][0] = std::sin(2 * theta);
-	ret[1][1] = -std::cos(2 * theta);
+	ret[0][1] = shx;
 	return ret;
 }
-Matrix reflection2LineMatrix(float m1, float m2)
+Matrix shearXByParallelXLineMatrix(float shx, float y_ref)
 {
-	// 基于两条过原点直线的连续反射,先m1,然后m2
+	// 基于平行于x轴直线（即y=y_ref）的x方向错切
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
-	float theta = 2 * (std::atan(m2) - std::atan(m1));
-	ret[0][0] = std::cos(theta);
-	ret[0][1] = -std::sin(theta);
-	ret[1][0] = std::sin(theta);
-	ret[1][1] = std::cos(theta);
+	ret[0][1] = shx;
+	ret[0][2] = -shx * y_ref;
 	return ret;
 }
 void transformPoints(Matrix& m, std::vector<Point>& points)
@@ -2658,17 +2651,13 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 		p.y = temp[1][0];
 	}
 }
-void drawCoordinate(float m1, float m2)
+void drawCoordinate()
 {
 	glBegin(GL_LINES);
 	glVertex2i(-winWidth / 2, 0);
 	glVertex2i(winWidth / 2, 0);
 	glVertex2i(0, -winHeight / 2);
 	glVertex2i(0, winHeight / 2);
-	glVertex2i(0, 0);
-	glVertex2i(200, m1 * 200);
-	glVertex2i(0, 0);
-	glVertex2i(200, m2 * 200);
 	glEnd();
 }
 void transformPoint(Matrix& m, Point& p)
@@ -2683,12 +2672,239 @@ void transformPoint(Matrix& m, Point& p)
 	p.x = temp[0][0];
 	p.y = temp[1][0];
 }
-void drawLine(Point p)
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	std::vector<Point> curPoints;
+	Matrix compound(3, 3);
+
+	// 基于原点的错切
+	float shx = 2;
+
+	// 直接给出错切矩阵
+	curPoints = originalPoints;
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(100, 400, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = shearXMatrix(shx);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+	
+	// 一系列基本变换:旋转theta,缩放(sx,sy),旋转-theta2,缩放(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1)
+	float theta = 15 * PI / 180; // 由用户指定
+	float cos1 = cos(theta);
+	float sin1 = sin(theta);
+	float tan1 = tan(theta);
+
+	assert(tan1 <= 1 / shx && "tan theta must less than 1 / shx");
+	
+	float cos2 = sqrt(cos1 * cos1 - shx * cos1 * sin1);
+	float sin2 = sqrt(1 - cos2 * cos2);
+
+	float sx = sin1 / sin2;
+	float sy = cos1 / cos2;
+
+	float theta2 = acos(cos2);
+
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(450, 400, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = scaleMatrix(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1) * rotateMatrix(-theta2) * scaleMatrix(sx, sy) * rotateMatrix(theta);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// 基于平行于x轴参考线的错切
+	shx = 0.5;
+	float y_ref = -100;
+
+	// 直接给出错切矩阵
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(100, 150, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = shearXByParallelXLineMatrix(shx, y_ref);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// 一系列基本变换:平移-y_ref,旋转theta,缩放(sx,sy),旋转-theta2,缩放(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1),平移y_ref
+	theta = 15 * PI / 180; // 由用户指定
+	cos1 = cos(theta);
+	sin1 = sin(theta);
+	tan1 = tan(theta);
+
+	assert(tan1 <= 1 / shx && "tan theta must less than 1 / shx");
+
+	cos2 = sqrt(cos1 * cos1 - shx * cos1 * sin1);
+	sin2 = sqrt(1 - cos2 * cos2);
+
+	sx = sin1 / sin2;
+	sy = cos1 / cos2;
+
+	theta2 = acos(cos2);
+
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(450, 150, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = translateMatrix(0, y_ref) * scaleMatrix(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1) * rotateMatrix(-theta2) * scaleMatrix(sx, sy) * rotateMatrix(theta) * translateMatrix(0, -y_ref);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	glFlush();
+}
+
+void code_7_exercise_15()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_16
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+void polygon(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix scaleMatrix(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix shearYMatrix(float shy)
+{
+	// 基于原点的y方向错切
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[1][0] = shy;
+	return ret;
+}
+//Matrix shearXByParallelXLineMatrix(float shx, float y_ref)
+//{
+//	// 基于平行于x轴直线（即y=y_ref）的x方向错切
+//	Matrix ret(3, 3);
+//	matrixSetIdentity(ret);
+//	ret[0][1] = shx;
+//	ret[0][2] = -shx * y_ref;
+//	return ret;
+//}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawCoordinate()
 {
 	glBegin(GL_LINES);
-	glVertex2i(0, 0);
-	glVertex2i(p.x, p.y);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
 	glEnd();
+}
+void transformPoint(Matrix& m, Point& p)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+
+	point[0][0] = p.x;
+	point[1][0] = p.y;
+	point[2][0] = 1;
+	temp = m * point;
+	p.x = temp[0][0];
+	p.y = temp[1][0];
 }
 void displayFcn(void)
 {
@@ -2699,84 +2915,53 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	Point p = { 100, 0 };
-	// 直接给出反射矩阵
+	// 基于原点的错切
+	float shy = 2;
+
+	// 直接给出错切矩阵
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(100, 300, 0.0);
-
+	glTranslatef(50, 200, 0.0);
 	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
 	polygon(curPoints);
-	//compound = scaleMatrix(sqrt((float)2 / 3), sqrt(2)) * rotateMatrix(15  * PI / 180);
-	//compound = scaleMatrix(0.34372375, 1.4678898) * rotateMatrix(15 * PI / 180);
-	//transformPoint(compound, p);
-	//transformPoints(compound, curPoints);
-	
-	//auto a = std::atan(p.y / p.x);
-	//compound = rotateMatrix(-a);
-	//transformPoint(compound, p);
-	//transformPoints(compound, curPoints);
-	//
-	//compound = scaleMatrix(100 / p.x, 1);
-	//transformPoint(compound, p);
-	//transformPoints(compound, curPoints);
-
-	//float shx = 0.9;
-	//float sy = sqrt(1 / (1 - shx));
-	//float sx = sqrt(1 / (1 + shx));
-	//auto e = std::atan(sy / sx);
-	//auto s = sin(e);
-	//auto c = cos(e);
-	//Matrix m(3, 3);
-	//matrixSetIdentity(m);
-	//m[0][0] = 1;
-	//m[0][1] = (-sx * cos(e) + sy * sin(e)) / (sx * cos(e) + sy * sin(e));
-	//m[1][0] = sqrt(2) / 2 * (-sx * sin(e) + sy * cos(e));
-	//m[1][1] = sqrt(2) / 2 * (sx * sin(e) + sy * cos(e));
-	//transformPoints(m, curPoints);
-
-	//float shx = 0.5;
-	//float sy = sqrt(1 / (1 - shx));
-	//float sx = sqrt(1 / (1 + shx));
-	//auto e = std::atan(sy / sx);
-	//compound = scaleMatrix(1 / (sqrt(2) / 2 * (sx * cos(e) + sy * sin(e))), 1) * rotateMatrix(-e) * scaleMatrix(sx, sy) * rotateMatrix(45 * PI / 180);
-	//transformPoints(compound, curPoints);
-
-	float shx = 2;
-	float theta1 = 15 * PI / 180;
-
-	float cos1 = cos(theta1);
-	float sin1 = sin(theta1);
-
-	if (cos1 < shx * sin1)
-	{
-		printf("wrong ");
-		return;
-	}
-
-	float cos2_2 = pow(cos(theta1), 2) - shx * cos(theta1) * sin(theta1);
-	float sin2_2 = 1 - cos2_2;
-
-	float cos2 = sqrt(cos2_2);
-	float sin2 = sqrt(sin2_2);
-	
-	float sx = sin(theta1) / sin2;
-	float sy = cos(theta1) / cos2;
-
-	auto e = acos(cos2);
-
-	compound = scaleMatrix(1 / (cos(theta1) * cos2 * sx + sin(theta1) * sin2 * sy), 1) * rotateMatrix(-e) * scaleMatrix(sx, sy) * rotateMatrix(theta1);
+	compound = shearYMatrix(shy);
 	transformPoints(compound, curPoints);
-	
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	
+	// 一系列基本变换:旋转theta,缩放(sx,sy),旋转-theta2,缩放(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1)
+	//float theta = 15 * PI / 180; // 由用户指定
+	//float cos1 = cos(theta);
+	//float sin1 = sin(theta);
+	//float tan1 = tan(theta);
+	//
+	//assert(tan1 <= 1 / shx && "tan theta must less than 1 / shx");
+	//
+	//float cos2 = sqrt(cos1 * cos1 - shx * cos1 * sin1);
+	//float sin2 = sqrt(1 - cos2 * cos2);
+	//
+	//float sx = sin1 / sin2;
+	//float sy = cos1 / cos2;
+	//
+	//float theta2 = acos(cos2);
+	//
+	//curPoints = originalPoints;
+	//glLoadIdentity();
+	//glTranslatef(450, 400, 0.0);
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawCoordinate();
+	//polygon(curPoints);
+	//compound = scaleMatrix(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1) * rotateMatrix(-theta2) * scaleMatrix(sx, sy) * rotateMatrix(theta);
+	//transformPoints(compound, curPoints);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygon(curPoints);
+
 	glFlush();
 }
 
-void code_7_exercise_15()
+void code_7_exercise_16()
 {
 	glutDisplayFunc(displayFcn);
 }
@@ -2884,6 +3069,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_15
 	code_7_exercise_15();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_16
+	code_7_exercise_16();
 #endif
 
 	glutMainLoop();
