@@ -2916,7 +2916,7 @@ void displayFcn(void)
 	Matrix compound(3, 3);
 
 	// 基于原点的错切
-	float shy = 2;
+	float shy = 1;
 
 	// 直接给出错切矩阵
 	curPoints = originalPoints;
@@ -2931,32 +2931,32 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// 一系列基本变换:旋转theta,缩放(sx,sy),旋转-theta2,缩放(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1)
-	//float theta = 15 * PI / 180; // 由用户指定
-	//float cos1 = cos(theta);
-	//float sin1 = sin(theta);
-	//float tan1 = tan(theta);
-	//
-	//assert(tan1 <= 1 / shx && "tan theta must less than 1 / shx");
-	//
-	//float cos2 = sqrt(cos1 * cos1 - shx * cos1 * sin1);
-	//float sin2 = sqrt(1 - cos2 * cos2);
-	//
-	//float sx = sin1 / sin2;
-	//float sy = cos1 / cos2;
-	//
-	//float theta2 = acos(cos2);
-	//
-	//curPoints = originalPoints;
-	//glLoadIdentity();
-	//glTranslatef(450, 400, 0.0);
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawCoordinate();
-	//polygon(curPoints);
-	//compound = scaleMatrix(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1) * rotateMatrix(-theta2) * scaleMatrix(sx, sy) * rotateMatrix(theta);
-	//transformPoints(compound, curPoints);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygon(curPoints);
+	// 一系列基本变换:旋转-theta,缩放(sx,sy),旋转theta2,缩放(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy))
+	float theta = 45 * PI / 180; // 由用户指定
+	float cos1 = cos(theta);
+	float sin1 = sin(theta);
+	float tan1 = tan(theta);
+	
+	assert(tan1 <= 1 / shy && "tan theta must less than 1 / shy");
+	
+	float cos2 = sqrt(cos1 * cos1 - shy * cos1 * sin1);
+	float sin2 = sqrt(1 - cos2 * cos2);
+	
+	float sx = cos1 / cos2;
+	float sy = sin1 / sin2;
+	
+	float theta2 = acos(cos2);
+	
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(200, 200, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = scaleMatrix(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)) * rotateMatrix(theta2) * scaleMatrix(sx, sy) * rotateMatrix(-theta);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
 
 	glFlush();
 }
