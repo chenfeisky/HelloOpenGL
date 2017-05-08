@@ -2741,7 +2741,7 @@ void displayFcn(void)
 	polygon(curPoints);
 
 	// 一系列基本变换:平移-y_ref,旋转theta,缩放(sx,sy),旋转-theta2,缩放(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1),平移y_ref
-	theta = 15 * PI / 180; // 由用户指定
+	theta = 45 * PI / 180; // 由用户指定
 	cos1 = cos(theta);
 	sin1 = sin(theta);
 	tan1 = tan(theta);
@@ -2862,15 +2862,15 @@ Matrix shearYMatrix(float shy)
 	ret[1][0] = shy;
 	return ret;
 }
-//Matrix shearXByParallelXLineMatrix(float shx, float y_ref)
-//{
-//	// 基于平行于x轴直线（即y=y_ref）的x方向错切
-//	Matrix ret(3, 3);
-//	matrixSetIdentity(ret);
-//	ret[0][1] = shx;
-//	ret[0][2] = -shx * y_ref;
-//	return ret;
-//}
+Matrix shearYByParallelYLineMatrix(float shy, float x_ref)
+{
+	// 基于平行于y轴直线（即x=x_ref）的y方向错切
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[1][0] = shy;
+	ret[1][2] = -shy * x_ref;
+	return ret;
+}
 void transformPoints(Matrix& m, std::vector<Point>& points)
 {
 	Matrix point(3, 1);
@@ -2916,7 +2916,7 @@ void displayFcn(void)
 	Matrix compound(3, 3);
 
 	// 基于原点的错切
-	float shy = 1;
+	float shy = 2;
 
 	// 直接给出错切矩阵
 	curPoints = originalPoints;
@@ -2932,7 +2932,7 @@ void displayFcn(void)
 	polygon(curPoints);
 
 	// 一系列基本变换:旋转-theta,缩放(sx,sy),旋转theta2,缩放(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy))
-	float theta = 45 * PI / 180; // 由用户指定
+	float theta = 15 * PI / 180; // 由用户指定
 	float cos1 = cos(theta);
 	float sin1 = sin(theta);
 	float tan1 = tan(theta);
@@ -2949,11 +2949,54 @@ void displayFcn(void)
 	
 	curPoints = originalPoints;
 	glLoadIdentity();
-	glTranslatef(200, 200, 0.0);
+	glTranslatef(250, 200, 0.0);
 	glColor3f(1.0, 1.0, 1.0);
 	drawCoordinate();
 	polygon(curPoints);
 	compound = scaleMatrix(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)) * rotateMatrix(theta2) * scaleMatrix(sx, sy) * rotateMatrix(-theta);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// 基于平行于y轴参考线的错切
+	shy = 0.5;
+	float x_ref = -100;
+
+	// 直接给出错切矩阵
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(450, 200, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = shearYByParallelYLineMatrix(shy, x_ref);
+	transformPoints(compound, curPoints);
+	glColor3f(1.0, 0.0, 0.0);
+	polygon(curPoints);
+
+	// 一系列基本变换:平移-x_ref,旋转-theta,缩放(sx,sy),旋转theta2,缩放(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)),平移x_ref
+	theta = 45 * PI / 180; // 由用户指定
+	cos1 = cos(theta);
+	sin1 = sin(theta);
+	tan1 = tan(theta);
+
+	assert(tan1 <= 1 / shy && "tan theta must less than 1 / shy");
+
+	cos2 = sqrt(cos1 * cos1 - shy * cos1 * sin1);
+	sin2 = sqrt(1 - cos2 * cos2);
+
+	sx = cos1 / cos2;
+	sy = sin1 / sin2;
+
+	theta2 = acos(cos2);
+
+	curPoints = originalPoints;
+	glLoadIdentity();
+	glTranslatef(650, 200, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate();
+	polygon(curPoints);
+	compound = translateMatrix(x_ref, 0) * scaleMatrix(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)) * rotateMatrix(theta2) * scaleMatrix(sx, sy) * rotateMatrix(-theta) * translateMatrix(-x_ref, 0);
 	transformPoints(compound, curPoints);
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
