@@ -2660,18 +2660,6 @@ void drawCoordinate()
 	glVertex2i(0, winHeight / 2);
 	glEnd();
 }
-void transformPoint(Matrix& m, Point& p)
-{
-	Matrix point(3, 1);
-	Matrix temp(3, 1);
-
-	point[0][0] = p.x;
-	point[1][0] = p.y;
-	point[2][0] = 1;
-	temp = m * point;
-	p.x = temp[0][0];
-	p.y = temp[1][0];
-}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -2894,18 +2882,6 @@ void drawCoordinate()
 	glVertex2i(0, winHeight / 2);
 	glEnd();
 }
-void transformPoint(Matrix& m, Point& p)
-{
-	Matrix point(3, 1);
-	Matrix temp(3, 1);
-
-	point[0][0] = p.x;
-	point[1][0] = p.y;
-	point[2][0] = 1;
-	temp = m * point;
-	p.x = temp[0][0];
-	p.y = temp[1][0];
-}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -3005,6 +2981,137 @@ void displayFcn(void)
 }
 
 void code_7_exercise_16()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_17
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix shearXMatrix(float shx)
+{
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][1] = shx;
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void transformPoint(Matrix& m, Point& p)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+
+	point[0][0] = p.x;
+	point[1][0] = p.y;
+	point[2][0] = 1;
+	temp = m * point;
+	p.x = temp[0][0];
+	p.y = temp[1][0];
+}
+void drawChar(const std::vector<Point>& points)
+{
+	glBegin(GL_LINES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> X = { { 5, 5 },{ 65, 100 },{ 5, 100 },{ 65, 5 } };
+	std::vector<Point> Y = { { 42, 118 },{ 78, 68 },{ 110, 118 },{ 78, 68 },{ 78, 68 },{ 78, 22 } };
+	std::vector<Point> Z = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
+	
+	float shx = 0.3;
+
+	glMatrixMode(GL_MODELVIEW);
+	glColor3f(1.0, 1.0, 1.0);
+	glLoadIdentity();
+	glTranslatef(50, 250, 0.0);
+	drawChar(X);
+	//glLoadIdentity();
+	//glTranslatef(120, 200, 0.0);
+	//drawChar(Y);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glLoadIdentity();
+	glTranslatef(50, 100, 0.0);
+	transformPoints(shearXMatrix(shx), X);
+	drawChar(X);
+	
+	
+	
+	//curPoints = originalPoints;
+	//glLoadIdentity();
+	//glTranslatef(250, 200, 0.0);
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawCoordinate();
+	//polygon(curPoints);
+	//compound = scaleMatrix(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)) * rotateMatrix(theta2) * scaleMatrix(sx, sy) * rotateMatrix(-theta);
+	//transformPoints(compound, curPoints);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygon(curPoints);
+
+	
+	glFlush();
+}
+
+void code_7_exercise_17()
 {
 	glutDisplayFunc(displayFcn);
 }
@@ -3116,6 +3223,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_16
 	code_7_exercise_16();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_17
+	code_7_exercise_17();
 #endif
 
 	glutMainLoop();
