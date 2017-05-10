@@ -3049,18 +3049,6 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 		p.y = temp[1][0];
 	}
 }
-void transformPoint(Matrix& m, Point& p)
-{
-	Matrix point(3, 1);
-	Matrix temp(3, 1);
-
-	point[0][0] = p.x;
-	point[1][0] = p.y;
-	point[2][0] = 1;
-	temp = m * point;
-	p.x = temp[0][0];
-	p.y = temp[1][0];
-}
 void drawChar(const std::vector<Point>& points)
 {
 	glBegin(GL_LINES);
@@ -3073,45 +3061,192 @@ void displayFcn(void)
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> X = { { 5, 5 },{ 65, 100 },{ 5, 100 },{ 65, 5 } };
-	std::vector<Point> Y = { { 42, 118 },{ 78, 68 },{ 110, 118 },{ 78, 68 },{ 78, 68 },{ 78, 22 } };
-	std::vector<Point> Z = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
-	
-	float shx = 0.3;
+	std::vector<Point> X = { { 5, 5 },{ 70, 100 },{ 5, 100 },{ 70, 5 } };
+	std::vector<Point> Y = { { 5, 100 },{ 37, 50 },{ 70, 100 },{ 37, 50 },{ 37, 50 },{ 37, 5 } };
+	std::vector<Point> Z = { { 5, 100 },{ 70, 100 },{ 70, 100 },{ 5, 5 },{ 5, 5 },{ 70, 5 } };
+	std::vector<Point> curChar;
 
 	glMatrixMode(GL_MODELVIEW);
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
-	glTranslatef(50, 250, 0.0);
+	glTranslatef(250, 400, 0.0);
 	drawChar(X);
-	//glLoadIdentity();
-	//glTranslatef(120, 200, 0.0);
-	//drawChar(Y);
-
-	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
-	glTranslatef(50, 100, 0.0);
-	transformPoints(shearXMatrix(shx), X);
-	drawChar(X);
-	
-	
-	
-	//curPoints = originalPoints;
-	//glLoadIdentity();
-	//glTranslatef(250, 200, 0.0);
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawCoordinate();
-	//polygon(curPoints);
-	//compound = scaleMatrix(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)) * rotateMatrix(theta2) * scaleMatrix(sx, sy) * rotateMatrix(-theta);
-	//transformPoints(compound, curPoints);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygon(curPoints);
+	glTranslatef(320, 400, 0.0);
+	drawChar(Y);
+	glLoadIdentity();
+	glTranslatef(390, 400, 0.0);
+	drawChar(Z);
 
-	
+	Matrix m = shearXMatrix(0.35);
+	curChar = X;
+	glLoadIdentity();
+	glTranslatef(250, 250, 0.0);
+	transformPoints(m, curChar);
+	drawChar(curChar);
+	curChar = Y;
+	glLoadIdentity();
+	glTranslatef(320, 250, 0.0);
+	transformPoints(m, curChar);
+	drawChar(curChar);
+	curChar = Z;
+	glLoadIdentity();
+	glTranslatef(390, 250, 0.0);
+	transformPoints(m, curChar);
+	drawChar(curChar);
+
+	m = shearXMatrix(1);
+	curChar = X;
+	glLoadIdentity();
+	glTranslatef(250, 100, 0.0);
+	transformPoints(m, curChar);
+	drawChar(curChar);
+	curChar = Y;
+	glLoadIdentity();
+	glTranslatef(320, 100, 0.0);
+	transformPoints(m, curChar);
+	drawChar(curChar);
+	curChar = Z;
+	glLoadIdentity();
+	glTranslatef(390, 100, 0.0);
+	transformPoints(m, curChar);
+	drawChar(curChar);
+		
 	glFlush();
 }
 
 void code_7_exercise_17()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_18
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawPoints(const std::vector<Point>& points)
+{
+	glBegin(GL_POINTS);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> P = { { 100, 100 }};
+	std::vector<Point> curP;
+	float thetaD = 30;
+	float thetaA = 30 * PI / 180;
+
+	glMatrixMode(GL_MODELVIEW);
+	
+	// 顺时针旋转变换
+	curP = P;
+	glColor3f(1.0, 1.0, 1.0);
+	glLoadIdentity();
+	glTranslatef(250, 250, 0.0);
+	drawCoordinate();
+	drawPoints(curP);
+	glColor3f(1.0, 0.0, 0.0);
+	transformPoints(rotateMatrix(-thetaA), curP);
+	glRotatef(thetaD, 0.0, 0.0, 1.0);
+	drawCoordinate();
+	drawPoints(curP);
+
+	// 根据计算所得
+	curP = P;
+	glColor3f(1.0, 1.0, 1.0);
+	glLoadIdentity();
+	glTranslatef(550, 250, 0.0);
+	drawCoordinate();
+	drawPoints(curP);
+	glColor3f(1.0, 0.0, 0.0);
+	curP[0].x = P[0].x * cos(thetaA) + P[0].y * sin(thetaA);
+	curP[0].y = P[0].y * cos(thetaA) - P[0].x * sin(thetaA);
+	glRotatef(thetaD, 0.0, 0.0, 1.0);
+	drawCoordinate();
+	drawPoints(curP);
+
+	glFlush();
+}
+
+void code_7_exercise_18()
 {
 	glutDisplayFunc(displayFcn);
 }
@@ -3227,6 +3362,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_17
 	code_7_exercise_17();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_18
+	code_7_exercise_18();
 #endif
 
 	glutMainLoop();
