@@ -3258,6 +3258,165 @@ void code_7_exercise_18()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_19
+struct Point { float x; float y; };
+struct Vector { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void drawPoints(const std::vector<Point>& points)
+{
+	glBegin(GL_POINTS);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> P = { { 100, 100 } };
+	std::vector<Point> curP;
+	Matrix compound(3, 3);
+
+	Point P0 = { 100, 50 };
+	Vector V = { -70, 100 };
+
+	float distanceV = sqrt(V.x * V.x + V.y * V.y);
+	Vector v = { V.x / distanceV, V.y / distanceV };
+	Vector u = { v.y, -v.x };
+
+	glMatrixMode(GL_MODELVIEW);
+
+	// 通过旋转矩阵得到变换矩阵
+
+	float thetaA = atan(u.y / u.x);
+	float thetaD = thetaA * 180 / PI;
+	curP = P;
+	glColor3f(1.0, 1.0, 1.0);
+	glLoadIdentity();
+	glTranslatef(200, 250, 0.0);
+	drawCoordinate();
+	drawPoints(curP);
+	glColor3f(1.0, 0.0, 0.0);
+	compound = rotateMatrix(-thetaA) * translateMatrix(-P0.x, -P0.y);
+	transformPoints(compound, curP);
+	glTranslatef(P0.x, P0.y, 0.0);
+	glRotatef(thetaD, 0.0, 0.0, 1.0);
+	drawCoordinate();
+	drawPoints(curP);
+
+	// 通过旋转矩阵得到变换矩阵
+	curP = P;
+	glColor3f(1.0, 1.0, 1.0);
+	glLoadIdentity();
+	glTranslatef(550, 250, 0.0);
+	drawCoordinate();
+	drawPoints(curP);
+	glColor3f(1.0, 0.0, 0.0);
+	Matrix r(3, 3);
+	matrixSetIdentity(r);
+	r[0][0] = u.x;
+	r[0][1] = u.y;
+	r[1][0] = v.x;
+	r[1][1] = v.y;
+	compound = r * translateMatrix(-P0.x, -P0.y);
+	transformPoints(compound, curP);
+	glTranslatef(P0.x, P0.y, 0.0);
+	glRotatef(thetaD, 0.0, 0.0, 1.0);
+	drawCoordinate();
+	drawPoints(curP);
+	
+	glFlush();
+}
+
+void code_7_exercise_19()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -3372,6 +3531,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_18
 	code_7_exercise_18();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_19
+	code_7_exercise_19();
 #endif
 
 	glutMainLoop();
