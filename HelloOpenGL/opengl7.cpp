@@ -3122,6 +3122,12 @@ void code_7_exercise_17()
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_18
+// 设点P与OX的夹角为theta1，与OX'的夹角为theta2，theta为坐标系旋转度数，即
+// OX'与OX的夹角，则有theta2 = theta1 - theta，设OP = r，根据三角关系有：
+// sin1 = y / r, cos1 = x / r, sin2 = y' / r, cos2 = x' / r,则x' = rcos2 =
+// r(cos1cos + sin1sin) = rcos1cos + rsin1sin = xcos + ysin，而y' = rsin2
+// = r(sin1cos - sincos1) = rsin1cos - rsincos1 = ycos - xsin
+
 struct Point { float x; float y; };
 struct Matrix
 {
