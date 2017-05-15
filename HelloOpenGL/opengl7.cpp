@@ -3417,6 +3417,97 @@ void code_7_exercise_19()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_20
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	////glPixelStorei和glDrawPixels共同使用时要注意内存对齐问题
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	//glRasterPos2i(100, 100);
+	//GLubyte colorShape[60] = { 0 };
+	//for (int i = 0; i < 58; i++)
+	//{
+	//	colorShape[i] = 0xFF;
+	//}
+	//glDrawPixels(5, 4, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+
+	//GLubyte colorShape1[80] = { 0 };
+	//memset(colorShape1, 0xaa, 80);
+	//glReadPixels(100, 100, 5, 4, GL_RGB, GL_UNSIGNED_BYTE, colorShape1);
+	//glRasterPos2i(200, 100);
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // 这里若不为4字节对齐，将出错，因为glReadPixels是按照4字节对齐读取的
+	//glDrawPixels(5, 4, GL_RGB, GL_UNSIGNED_BYTE, colorShape1);
+
+	glBegin(GL_POLYGON);
+	glVertex2f(100, 100);
+	glVertex2f(200, 100);
+	glVertex2f(200, 200);
+	glVertex2f(100, 200);
+	glEnd();
+
+	// 读取-写入像素
+	GLubyte colorShape[100 * 100 * 3 + 100] = { 0 };
+	glReadPixels(100, 100, 100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+
+	glRasterPos2i(100, 300);
+	glDrawPixels(100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+
+	// 直接拷贝像素
+	glRasterPos2i(400, 300);
+	glCopyPixels(100, 100, 100, 100, GL_COLOR);
+
+	glFlush();
+}
+
+void code_7_exercise_20()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_21
+struct Point { float x; float y; };
+void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
+{
+	glColor3f(r, g, b);
+
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	drawPolygon({ {100, 100} ,{ 200, 100 }, { 200, 200 }, { 100, 200 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ {300, 100 } ,{ 400, 100 },{ 400, 200 },{ 300, 200 } }, 1.0, 1.0, 1.0);
+
+
+	//// 读取-写入像素
+	//GLubyte colorShape[100 * 100 * 3 + 100] = { 0 };
+	//glReadPixels(100, 100, 100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+
+	//glRasterPos2i(100, 300);
+	//glDrawPixels(100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+
+	glEnable(GL_COLOR_LOGIC_OP);
+	glLogicOp(GL_AND);
+	//// 直接拷贝像素
+	glRasterPos2i(300, 100);
+	glCopyPixels(100, 100, 100, 100, GL_COLOR);
+
+	glFlush();
+}
+
+void code_7_exercise_21()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -3535,6 +3626,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_19
 	code_7_exercise_19();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_20
+	code_7_exercise_20();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_21
+	code_7_exercise_21();
 #endif
 
 	glutMainLoop();
