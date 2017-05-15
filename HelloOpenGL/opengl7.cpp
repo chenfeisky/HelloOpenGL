@@ -3448,11 +3448,11 @@ void displayFcn(void)
 	glEnd();
 
 	// ¶ÁÈ¡-Ð´ÈëÏñËØ
-	GLubyte colorShape[100 * 100 * 3 + 100] = { 0 };
-	glReadPixels(100, 100, 100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+	//GLubyte colorShape[100 * 100 * 3 + 100 * 3] = { 0 };
+	//glReadPixels(100, 100, 100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
 
-	glRasterPos2i(100, 300);
-	glDrawPixels(100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
+	//glRasterPos2i(100, 300);
+	//glDrawPixels(100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
 
 	// Ö±½Ó¿½±´ÏñËØ
 	glRasterPos2i(400, 300);
@@ -3478,27 +3478,234 @@ void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
+GLubyte pixelsTemp[30 * 50 * 3 + 50 * 3] = { 0 };
+void readAndDrawPixels(float readX, float readY, float readWidth, float readHeight, float drawX, float drawY, int logicOP)
+{
+	memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	glReadPixels(readX, readY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+	
+	glRasterPos2i(drawX, drawY);
+	glLogicOp(logicOP);
+	glDrawPixels(readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+	glLogicOp(GL_COPY);
+
+	// dubug
+	//memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	//glReadPixels(drawX, drawY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
+void copyPixels(float readX, float readY, float readWidth, float readHeight, float drawX, float drawY, int logicOP)
+{
+	glRasterPos2i(drawX, drawY);
+
+	glLogicOp(logicOP);
+	glCopyPixels(readX, readY, readWidth, readHeight, GL_COLOR);
+	glLogicOp(GL_COPY);
+
+	// dubug
+	//memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	//glReadPixels(drawX, drawY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	drawPolygon({ {100, 100} ,{ 200, 100 }, { 200, 200 }, { 100, 200 } }, 1.0, 1.0, 1.0);
-	drawPolygon({ {300, 100 } ,{ 400, 100 },{ 400, 200 },{ 300, 200 } }, 1.0, 1.0, 1.0);
-
-
-	//// ¶ÁÈ¡-Ð´ÈëÏñËØ
-	//GLubyte colorShape[100 * 100 * 3 + 100] = { 0 };
-	//glReadPixels(100, 100, 100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
-
-	//glRasterPos2i(100, 300);
-	//glDrawPixels(100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
-
 	glEnable(GL_COLOR_LOGIC_OP);
-	glLogicOp(GL_AND);
-	//// Ö±½Ó¿½±´ÏñËØ
-	glRasterPos2i(300, 100);
-	glCopyPixels(100, 100, 100, 100, GL_COLOR);
+	
+	// AND²Ù×÷
+	drawPolygon({ { 30, 500 } ,{ 60, 500 },{ 60, 550 },{ 30, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 500 } ,{ 100, 500 },{ 100, 550 },{ 70, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 500 } ,{ 140, 500 },{ 140, 550 },{ 110, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 500 } ,{ 180, 500 },{ 180, 550 },{ 150, 550 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(30, 500, 30, 50, 110, 500, GL_AND);
+	readAndDrawPixels(30, 500, 30, 50, 150, 500, GL_AND);
+	readAndDrawPixels(30, 500, 30, 50, 150, 500, GL_AND);
 
+	drawPolygon({ { 230, 500 } ,{ 260, 500 },{ 260, 550 },{ 230, 550 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, 500 } ,{ 300, 500 },{ 300, 550 },{ 270, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, 500 } ,{ 340, 500 },{ 340, 550 },{ 310, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, 500 } ,{ 380, 500 },{ 380, 550 },{ 350, 550 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(230, 500, 30, 50, 310, 500, GL_AND);
+	readAndDrawPixels(230, 500, 30, 50, 350, 500, GL_AND);
+	readAndDrawPixels(230, 500, 30, 50, 350, 500, GL_AND);
+
+	drawPolygon({ { 430, 500 } ,{ 460, 500 },{ 460, 550 },{ 430, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, 500 } ,{ 500, 500 },{ 500, 550 },{ 470, 550 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, 500 } ,{ 540, 500 },{ 540, 550 },{ 510, 550 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, 500 } ,{ 580, 500 },{ 580, 550 },{ 550, 550 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(430, 500, 30, 50, 510, 500, GL_AND);
+	readAndDrawPixels(430, 500, 30, 50, 550, 500, GL_AND);
+	readAndDrawPixels(430, 500, 30, 50, 550, 500, GL_AND);
+
+	drawPolygon({ { 630, 500 } ,{ 660, 500 },{ 660, 550 },{ 630, 550 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, 500 } ,{ 700, 500 },{ 700, 550 },{ 670, 550 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, 500 } ,{ 740, 500 },{ 740, 550 },{ 710, 550 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, 500 } ,{ 780, 500 },{ 780, 550 },{ 750, 550 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(630, 500, 30, 50, 710, 500, GL_AND);
+	readAndDrawPixels(630, 500, 30, 50, 750, 500, GL_AND);
+	readAndDrawPixels(630, 500, 30, 50, 750, 500, GL_AND);
+
+	drawPolygon({ { 30, 400 } ,{ 60, 400 },{ 60, 450 },{ 30, 450 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 400 } ,{ 100, 400 },{ 100, 450 },{ 70, 450 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 400 } ,{ 140, 400 },{ 140, 450 },{ 110, 450 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 400 } ,{ 180, 400 },{ 180, 450 },{ 150, 450 } }, 0.0, 0.0, 0.0);
+	copyPixels(30, 400, 30, 50, 110, 400, GL_AND);
+	copyPixels(30, 400, 30, 50, 150, 400, GL_AND);
+	copyPixels(30, 400, 30, 50, 150, 400, GL_AND);
+
+	drawPolygon({ { 230, 400 } ,{ 260, 400 },{ 260, 450 },{ 230, 450 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, 400 } ,{ 300, 400 },{ 300, 450 },{ 270, 450 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, 400 } ,{ 340, 400 },{ 340, 450 },{ 310, 450 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, 400 } ,{ 380, 400 },{ 380, 450 },{ 350, 450 } }, 0.0, 0.0, 0.0);
+	copyPixels(230, 400, 30, 50, 310, 400, GL_AND);
+	copyPixels(230, 400, 30, 50, 350, 400, GL_AND);
+	copyPixels(230, 400, 30, 50, 350, 400, GL_AND);
+
+	drawPolygon({ { 430, 400 } ,{ 460, 400 },{ 460, 450 },{ 430, 450 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, 400 } ,{ 500, 400 },{ 500, 450 },{ 470, 450 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, 400 } ,{ 540, 400 },{ 540, 450 },{ 510, 450 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, 400 } ,{ 580, 400 },{ 580, 450 },{ 550, 450 } }, 1.0, 1.0, 1.0);
+	copyPixels(430, 400, 30, 50, 510, 400, GL_COPY);
+	copyPixels(430, 400, 30, 50, 550, 400, GL_COPY);
+	copyPixels(430, 400, 30, 50, 550, 400, GL_COPY);
+
+	drawPolygon({ { 630, 400 } ,{ 660, 400 },{ 660, 450 },{ 630, 450 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, 400 } ,{ 700, 400 },{ 700, 450 },{ 670, 450 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, 400 } ,{ 740, 400 },{ 740, 450 },{ 710, 450 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, 400 } ,{ 780, 400 },{ 780, 450 },{ 750, 450 } }, 1.0, 1.0, 1.0);
+	copyPixels(630, 400, 30, 50, 710, 400, GL_AND);
+	copyPixels(630, 400, 30, 50, 750, 400, GL_AND);
+	copyPixels(630, 400, 30, 50, 750, 400, GL_AND);
+
+	// OR²Ù×÷
+	drawPolygon({ { 30, 300 } ,{ 60, 300 },{ 60, 350 },{ 30, 350 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 300 } ,{ 100, 300 },{ 100, 350 },{ 70, 350 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 300 } ,{ 140, 300 },{ 140, 350 },{ 110, 350 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 300 } ,{ 180, 300 },{ 180, 350 },{ 150, 350 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(30, 300, 30, 50, 110, 300, GL_OR);
+	readAndDrawPixels(30, 300, 30, 50, 150, 300, GL_OR);
+	readAndDrawPixels(30, 300, 30, 50, 150, 300, GL_OR);
+
+	drawPolygon({ { 230, 300 } ,{ 260, 300 },{ 260, 350 },{ 230, 350 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, 300 } ,{ 300, 300 },{ 300, 350 },{ 270, 350 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, 300 } ,{ 340, 300 },{ 340, 350 },{ 310, 350 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, 300 } ,{ 380, 300 },{ 380, 350 },{ 350, 350 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(230, 300, 30, 50, 310, 300, GL_OR);
+	readAndDrawPixels(230, 300, 30, 50, 350, 300, GL_OR);
+	readAndDrawPixels(230, 300, 30, 50, 350, 300, GL_OR);
+
+	drawPolygon({ { 430, 300 } ,{ 460, 300 },{ 460, 350 },{ 430, 350 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, 300 } ,{ 500, 300 },{ 500, 350 },{ 470, 350 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, 300 } ,{ 540, 300 },{ 540, 350 },{ 510, 350 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, 300 } ,{ 580, 300 },{ 580, 350 },{ 550, 350 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(430, 300, 30, 50, 510, 300, GL_OR);
+	readAndDrawPixels(430, 300, 30, 50, 550, 300, GL_OR);
+	readAndDrawPixels(430, 300, 30, 50, 550, 300, GL_OR);
+
+	drawPolygon({ { 630, 300 } ,{ 660, 300 },{ 660, 350 },{ 630, 350 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, 300 } ,{ 700, 300 },{ 700, 350 },{ 670, 350 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, 300 } ,{ 740, 300 },{ 740, 350 },{ 710, 350 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, 300 } ,{ 780, 300 },{ 780, 350 },{ 750, 350 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(630, 300, 30, 50, 710, 300, GL_OR);
+	readAndDrawPixels(630, 300, 30, 50, 750, 300, GL_OR);
+	readAndDrawPixels(630, 300, 30, 50, 750, 300, GL_OR);
+
+	drawPolygon({ { 30, 200 } ,{ 60, 200 },{ 60, 250 },{ 30, 250 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 200 } ,{ 100, 200 },{ 100, 250 },{ 70, 250 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 200 } ,{ 140, 200 },{ 140, 250 },{ 110, 250 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 200 } ,{ 180, 200 },{ 180, 250 },{ 150, 250 } }, 0.0, 0.0, 0.0);
+	copyPixels(30, 200, 30, 50, 110, 200, GL_OR);
+	copyPixels(30, 200, 30, 50, 150, 200, GL_OR);
+	copyPixels(30, 200, 30, 50, 150, 200, GL_OR);
+
+	drawPolygon({ { 230, 200 } ,{ 260, 200 },{ 260, 250 },{ 230, 250 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, 200 } ,{ 300, 200 },{ 300, 250 },{ 270, 250 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, 200 } ,{ 340, 200 },{ 340, 250 },{ 310, 250 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, 200 } ,{ 380, 200 },{ 380, 250 },{ 350, 250 } }, 0.0, 0.0, 0.0);
+	copyPixels(230, 200, 30, 50, 310, 200, GL_OR);
+	copyPixels(230, 200, 30, 50, 350, 200, GL_OR);
+	copyPixels(230, 200, 30, 50, 350, 200, GL_OR);
+
+	drawPolygon({ { 430, 200 } ,{ 460, 200 },{ 460, 250 },{ 430, 250 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, 200 } ,{ 500, 200 },{ 500, 250 },{ 470, 250 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, 200 } ,{ 540, 200 },{ 540, 250 },{ 510, 250 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, 200 } ,{ 580, 200 },{ 580, 250 },{ 550, 250 } }, 1.0, 1.0, 1.0);
+	copyPixels(430, 200, 30, 50, 510, 200, GL_OR);
+	copyPixels(430, 200, 30, 50, 550, 200, GL_OR);
+	copyPixels(430, 200, 30, 50, 550, 200, GL_OR);
+
+	drawPolygon({ { 630, 200 } ,{ 660, 200 },{ 660, 250 },{ 630, 250 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, 200 } ,{ 700, 200 },{ 700, 250 },{ 670, 250 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, 200 } ,{ 740, 200 },{ 740, 250 },{ 710, 250 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, 200 } ,{ 780, 200 },{ 780, 250 },{ 750, 250 } }, 1.0, 1.0, 1.0);
+	copyPixels(630, 200, 30, 50, 710, 200, GL_OR);
+	copyPixels(630, 200, 30, 50, 750, 200, GL_OR);
+	copyPixels(630, 200, 30, 50, 750, 200, GL_OR);
+
+	// XOR²Ù×÷
+	drawPolygon({ { 30, 100 } ,{ 60, 100 },{ 60, 150 },{ 30, 150 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 100 } ,{ 100, 100 },{ 100, 150 },{ 70, 150 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 100 } ,{ 140, 100 },{ 140, 150 },{ 110, 150 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 100 } ,{ 180, 100 },{ 180, 150 },{ 150, 150 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(30, 100, 30, 50, 110, 100, GL_XOR);
+	readAndDrawPixels(30, 100, 30, 50, 150, 100, GL_XOR);
+	readAndDrawPixels(30, 100, 30, 50, 150, 100, GL_XOR);
+
+	drawPolygon({ { 230, 100 } ,{ 260, 100 },{ 260, 150 },{ 230, 150 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, 100 } ,{ 300, 100 },{ 300, 150 },{ 270, 150 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, 100 } ,{ 340, 100 },{ 340, 150 },{ 310, 150 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, 100 } ,{ 380, 100 },{ 380, 150 },{ 350, 150 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(230, 100, 30, 50, 310, 100, GL_XOR);
+	readAndDrawPixels(230, 100, 30, 50, 350, 100, GL_XOR);
+	readAndDrawPixels(230, 100, 30, 50, 350, 100, GL_XOR);
+
+	drawPolygon({ { 430, 100 } ,{ 460, 100 },{ 460, 150 },{ 430, 150 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, 100 } ,{ 500, 100 },{ 500, 150 },{ 470, 150 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, 100 } ,{ 540, 100 },{ 540, 150 },{ 510, 150 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, 100 } ,{ 580, 100 },{ 580, 150 },{ 550, 150 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(430, 100, 30, 50, 510, 100, GL_XOR);
+	readAndDrawPixels(430, 100, 30, 50, 550, 100, GL_XOR);
+	readAndDrawPixels(430, 100, 30, 50, 550, 100, GL_XOR);
+
+	drawPolygon({ { 630, 100 } ,{ 660, 100 },{ 660, 150 },{ 630, 150 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, 100 } ,{ 700, 100 },{ 700, 150 },{ 670, 150 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, 100 } ,{ 740, 100 },{ 740, 150 },{ 710, 150 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, 100 } ,{ 780, 100 },{ 780, 150 },{ 750, 150 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(630, 100, 30, 50, 710, 100, GL_XOR);
+	readAndDrawPixels(630, 100, 30, 50, 750, 100, GL_XOR);
+	readAndDrawPixels(630, 100, 30, 50, 750, 100, GL_XOR);
+
+	drawPolygon({ { 30, 0 } ,{ 60, 0 },{ 60, 50 },{ 30, 50 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 0 } ,{ 100, 0 },{ 100, 50 },{ 70, 50 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 0 } ,{ 140, 0 },{ 140, 50 },{ 110, 50 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 0 } ,{ 180, 0 },{ 180, 50 },{ 150, 50 } }, 0.0, 0.0, 0.0);
+	copyPixels(30, 0, 30, 50, 110, 0, GL_XOR);
+	copyPixels(30, 0, 30, 50, 150, 0, GL_XOR);
+	copyPixels(30, 0, 30, 50, 150, 0, GL_XOR);
+
+	drawPolygon({ { 230, 0 } ,{ 260, 0 },{ 260, 50 },{ 230, 50 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, 0 } ,{ 300, 0 },{ 300, 50 },{ 270, 50 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, 0 } ,{ 340, 0 },{ 340, 50 },{ 310, 50 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, 0 } ,{ 380, 0 },{ 380, 50 },{ 350, 50 } }, 0.0, 0.0, 0.0);
+	copyPixels(230, 0, 30, 50, 310, 0, GL_XOR);
+	copyPixels(230, 0, 30, 50, 350, 0, GL_XOR);
+	copyPixels(230, 0, 30, 50, 350, 0, GL_XOR);
+
+	drawPolygon({ { 430, 0 } ,{ 460, 0 },{ 460, 50 },{ 430, 50 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, 0 } ,{ 500, 0 },{ 500, 50 },{ 470, 50 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, 0 } ,{ 540, 0 },{ 540, 50 },{ 510, 50 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, 0 } ,{ 580, 0 },{ 580, 50 },{ 550, 50 } }, 1.0, 1.0, 1.0);
+	copyPixels(430, 0, 30, 50, 510, 0, GL_XOR);
+	copyPixels(430, 0, 30, 50, 550, 0, GL_XOR);
+	copyPixels(430, 0, 30, 50, 550, 0, GL_XOR);
+
+	drawPolygon({ { 630, 0 } ,{ 660, 0 },{ 660, 50 },{ 630, 50 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, 0 } ,{ 700, 0 },{ 700, 50 },{ 670, 50 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, 0 } ,{ 740, 0 },{ 740, 50 },{ 710, 50 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, 0 } ,{ 780, 0 },{ 780, 50 },{ 750, 50 } }, 1.0, 1.0, 1.0);
+	copyPixels(630, 0, 30, 50, 710, 0, GL_XOR);
+	copyPixels(630, 0, 30, 50, 750, 0, GL_XOR);
+	copyPixels(630, 0, 30, 50, 750, 0, GL_XOR);
+	
 	glFlush();
 }
 
