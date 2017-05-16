@@ -3726,20 +3726,57 @@ void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-GLubyte pixelsTemp[30 * 50 * 3 + 50 * 3] = { 0 };
+GLubyte pixelsTemp[30 * 30 * 3 + 30 * 3] = { 0 };
 void readAndDrawPixels(float readX, float readY, float readWidth, float readHeight, float drawX, float drawY, int logicOP)
 {
 	memset(pixelsTemp, 0, sizeof(pixelsTemp));
 	glReadPixels(readX, readY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
 
 	glRasterPos2i(drawX, drawY);
+
+	int preLogicOP = 0;
+	glGetIntegerv(GL_LOGIC_OP_MODE, &preLogicOP);
 	glLogicOp(logicOP);
 	glDrawPixels(readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
-	glLogicOp(GL_COPY);
+	glLogicOp(preLogicOP);
 
 	// dubug
 	//memset(pixelsTemp, 0, sizeof(pixelsTemp));
 	//glReadPixels(drawX, drawY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
+void logicTransform(float y, int logicOP)
+{
+	drawPolygon({ { 30, y } ,{ 60, y },{ 60, y + 30 },{ 30, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, y } ,{ 100, y },{ 100, y + 30 },{ 70, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, y } ,{ 140, y },{ 140, y + 30 },{ 110, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, y } ,{ 180, y },{ 180, y + 30 },{ 150, y + 30 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(30, y, 30, 30, 110, y, logicOP);
+	readAndDrawPixels(30, y, 30, 30, 150, y, logicOP);
+	readAndDrawPixels(30, y, 30, 30, 150, y, logicOP);
+
+	drawPolygon({ { 230, y } ,{ 260, y },{ 260, y + 30 },{ 230, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 270, y } ,{ 300, y },{ 300, y + 30 },{ 270, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 310, y } ,{ 340, y },{ 340, y + 30 },{ 310, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 350, y } ,{ 380, y },{ 380, y + 30 },{ 350, y + 30 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(230, y, 30, 30, 310, y, logicOP);
+	readAndDrawPixels(230, y, 30, 30, 350, y, logicOP);
+	readAndDrawPixels(230, y, 30, 30, 350, y, logicOP);
+
+	drawPolygon({ { 430, y } ,{ 460, y },{ 460, y + 30 },{ 430, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 470, y } ,{ 500, y },{ 500, y + 30 },{ 470, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 510, y } ,{ 540, y },{ 540, y + 30 },{ 510, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 550, y } ,{ 580, y },{ 580, y + 30 },{ 550, y + 30 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(430, y, 30, 30, 510, y, logicOP);
+	readAndDrawPixels(430, y, 30, 30, 550, y, logicOP);
+	readAndDrawPixels(430, y, 30, 30, 550, y, logicOP);
+
+	drawPolygon({ { 630, y } ,{ 660, y },{ 660, y + 30 },{ 630, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 670, y } ,{ 700, y },{ 700, y + 30 },{ 670, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 710, y } ,{ 740, y },{ 740, y + 30 },{ 710, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 750, y } ,{ 780, y },{ 780, y + 30 },{ 750, y + 30 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(630, y, 30, 30, 710, y, logicOP);
+	readAndDrawPixels(630, y, 30, 30, 750, y, logicOP);
+	readAndDrawPixels(630, y, 30, 30, 750, y, logicOP);
 }
 void displayFcn(void)
 {
@@ -3747,19 +3784,27 @@ void displayFcn(void)
 
 	glEnable(GL_COLOR_LOGIC_OP);
 
-	// AND²Ù×÷
-	drawPolygon({ { 30, 500 } ,{ 60, 500 },{ 60, 550 },{ 30, 550 } }, 0.0, 0.0, 0.0);
-	drawPolygon({ { 70, 500 } ,{ 100, 500 },{ 100, 550 },{ 70, 550 } }, 0.0, 0.0, 0.0);
-	drawPolygon({ { 110, 500 } ,{ 140, 500 },{ 140, 550 },{ 110, 550 } }, 0.0, 0.0, 0.0);
-	drawPolygon({ { 150, 500 } ,{ 180, 500 },{ 180, 550 },{ 150, 550 } }, 0.0, 0.0, 0.0);
-	readAndDrawPixels(30, 500, 30, 50, 110, 500, GL_AND);
-	readAndDrawPixels(30, 500, 30, 50, 150, 500, GL_AND);
-	readAndDrawPixels(30, 500, 30, 50, 150, 500, GL_AND);
+	logicTransform(550, GL_AND);
+	logicTransform(515, GL_OR);
+	logicTransform(480, GL_XOR);
+	logicTransform(445, GL_COPY_INVERTED);
+	logicTransform(410, GL_INVERT);
+	logicTransform(375, GL_CLEAR);
+	logicTransform(340, GL_SET);
+	logicTransform(305, GL_COPY);
+	logicTransform(270, GL_NOOP);
+	logicTransform(235, GL_NAND);
+	logicTransform(200, GL_NOR);
+	logicTransform(165, GL_EQUIV);
+	logicTransform(130, GL_AND_REVERSE);
+	logicTransform(95, GL_AND_INVERTED);
+	logicTransform(60, GL_OR_REVERSE);
+	logicTransform(25, GL_OR_INVERTED);
 
 	glFlush();
 }
 
-void code_7_exercise_21()
+void code_7_exercise_22()
 {
 	glutDisplayFunc(displayFcn);
 }
