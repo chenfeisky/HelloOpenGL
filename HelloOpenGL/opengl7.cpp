@@ -3715,6 +3715,56 @@ void code_7_exercise_21()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_22
+struct Point { float x; float y; };
+void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
+{
+	glColor3f(r, g, b);
+
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+GLubyte pixelsTemp[30 * 50 * 3 + 50 * 3] = { 0 };
+void readAndDrawPixels(float readX, float readY, float readWidth, float readHeight, float drawX, float drawY, int logicOP)
+{
+	memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	glReadPixels(readX, readY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+
+	glRasterPos2i(drawX, drawY);
+	glLogicOp(logicOP);
+	glDrawPixels(readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+	glLogicOp(GL_COPY);
+
+	// dubug
+	//memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	//glReadPixels(drawX, drawY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glEnable(GL_COLOR_LOGIC_OP);
+
+	// AND²Ù×÷
+	drawPolygon({ { 30, 500 } ,{ 60, 500 },{ 60, 550 },{ 30, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 70, 500 } ,{ 100, 500 },{ 100, 550 },{ 70, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 110, 500 } ,{ 140, 500 },{ 140, 550 },{ 110, 550 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 150, 500 } ,{ 180, 500 },{ 180, 550 },{ 150, 550 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(30, 500, 30, 50, 110, 500, GL_AND);
+	readAndDrawPixels(30, 500, 30, 50, 150, 500, GL_AND);
+	readAndDrawPixels(30, 500, 30, 50, 150, 500, GL_AND);
+
+	glFlush();
+}
+
+void code_7_exercise_21()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -3841,6 +3891,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_21
 	code_7_exercise_21();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_22
+	code_7_exercise_22();
 #endif
 
 	glutMainLoop();
