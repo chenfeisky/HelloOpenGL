@@ -3810,6 +3810,168 @@ void code_7_exercise_22()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_23
+struct Point { float x; float y; };
+void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
+{
+	glColor3f(r, g, b);
+
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+GLubyte pixelsTemp[60 * 30 * 3 + 30 * 3] = { 0 };
+void readAndDrawPixels(float readX, float readY, float readWidth, float readHeight, float drawX, float drawY, int logicOP)
+{
+	memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	glReadPixels(readX, readY, readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+
+	glRasterPos2i(drawX, drawY);
+
+	int preLogicOP = 0;
+	glGetIntegerv(GL_LOGIC_OP_MODE, &preLogicOP);
+	glLogicOp(logicOP);
+	glDrawPixels(readWidth, readHeight, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+	glLogicOp(preLogicOP);
+}
+void clearPixels(float x, float y, float width, float height)
+{
+	memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	glRasterPos2i(x, y);
+	glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
+void logicTransform(float y, int logicOP)
+{
+	drawPolygon({ { 20, y } ,{ 80, y },{ 80, y + 30 },{ 20, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 120, y } ,{ 180, y },{ 180, y + 30 },{ 120, y + 30 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(20, y, 60, 30, 120, y, logicOP);
+	clearPixels(20, y, 60, 30);
+
+	drawPolygon({ { 220, y } ,{ 280, y },{ 280, y + 30 },{ 220, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 320, y } ,{ 380, y },{ 380, y + 30 },{ 320, y + 30 } }, 0.0, 0.0, 0.0);
+	readAndDrawPixels(220, y, 60, 30, 320, y, logicOP);
+	clearPixels(220, y, 60, 30);
+
+	drawPolygon({ { 420, y } ,{ 480, y },{ 480, y + 30 },{ 420, y + 30 } }, 0.0, 0.0, 0.0);
+	drawPolygon({ { 520, y } ,{ 580, y },{ 580, y + 30 },{ 520, y + 30 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(420, y, 60, 30, 520, y, logicOP);
+	clearPixels(420, y, 60, 30);
+
+	drawPolygon({ { 620, y } ,{ 680, y },{ 680, y + 30 },{ 620, y + 30 } }, 1.0, 1.0, 1.0);
+	drawPolygon({ { 720, y } ,{ 780, y },{ 780, y + 30 },{ 720, y + 30 } }, 1.0, 1.0, 1.0);
+	readAndDrawPixels(620, y, 60, 30, 720, y, logicOP);
+	clearPixels(620, y, 60, 30);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glEnable(GL_COLOR_LOGIC_OP);
+
+	logicTransform(550, GL_AND);
+	logicTransform(515, GL_OR);
+	logicTransform(480, GL_XOR);
+	logicTransform(445, GL_COPY_INVERTED);
+	logicTransform(410, GL_INVERT);
+	logicTransform(375, GL_CLEAR);
+	logicTransform(340, GL_SET);
+	logicTransform(305, GL_COPY);
+	logicTransform(270, GL_NOOP);
+	logicTransform(235, GL_NAND);
+	logicTransform(200, GL_NOR);
+	logicTransform(165, GL_EQUIV);
+	logicTransform(130, GL_AND_REVERSE);
+	logicTransform(95, GL_AND_INVERTED);
+	logicTransform(60, GL_OR_REVERSE);
+	logicTransform(25, GL_OR_INVERTED);
+
+	glFlush();
+}
+
+void code_7_exercise_23()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_24
+struct Point { float x; float y; };
+const int W = 150;
+const int H = 100;
+void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
+{
+	glColor3f(r, g, b);
+
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+GLubyte pixelsTemp[W * H * 3 + H * 3] = { 0 };
+void readPixels(float x, float y, float width, float height)
+{
+	memset(pixelsTemp, 0, sizeof(pixelsTemp));
+	glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
+void drawPixels(float x, float y, float width, float height)
+{
+	glRasterPos2i(x, y);
+	glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+}
+void turnTranspose(const GLubyte in[], GLubyte out[])
+{
+	memset(out, 0, sizeof(out));
+	if (W >= H)
+	{
+		for (int i = 0; i < H; i++)
+		{ 
+			int temp;
+			int j = 0;
+			for (j = i ; j < W; j++)
+			{
+				temp = in[i * W + j];
+				if (j < H)
+					out[i * W + j] = in[j * W + i];
+				out[j * W + i] = temp;
+			}
+		}
+	}
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	int i = 0;
+	for (; i < 150 * 50; i++)
+	{
+		int pos = i * 3;
+		pixelsTemp[pos] = 0xFF;
+		pixelsTemp[pos + 1] = 0xFF;
+		pixelsTemp[pos + 2] = 0xFF;
+	}
+	for (; i < 150 * 100; i++)
+	{
+		int pos = i * 3;
+		pixelsTemp[pos] = 0xFF;
+		pixelsTemp[pos + 1] = 0x00;
+		pixelsTemp[pos + 2] = 0x00;
+	}
+	drawPixels(100, 250, 150, 100);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+
+
+	glFlush();
+}
+
+void code_7_exercise_24()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -3940,6 +4102,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_22
 	code_7_exercise_22();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_23
+	code_7_exercise_23();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_24
+	code_7_exercise_24();
 #endif
 
 	glutMainLoop();
