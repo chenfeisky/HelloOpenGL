@@ -3897,6 +3897,46 @@ void code_7_exercise_23()
 
 #ifdef CHAPTER_7_EXERCISE_24
 struct Point { float x; float y; };
+struct ColorElement
+{
+	ColorElement() {};
+	ColorElement(GLubyte r, GLubyte g, GLubyte b) : _r(r), _g(g), _b(b) {};
+	GLubyte _r = 0x00;
+	GLubyte _g = 0x00;
+	GLubyte _b = 0x00;
+};
+struct ColorArray
+{
+	ColorArray(int w, int h)
+	{
+		_w = w;
+		_h = h;
+		_data.assign(_h, std::vector<ColorElement>(_w, ColorElement()));
+		_arrayData.assign(_w * _h * 3, 0x00);
+	}
+	std::vector<ColorElement>& operator [](int h)
+	{
+		return _data[h];
+	}
+	operator GLubyte* () 
+	{
+		for (int i = 0; i < _h; i++)
+		{
+			for (int j = 0; j < _w; j++)
+			{
+				int pos = (i * _w + j) * 3;
+				_arrayData[pos] = _data[i][j]._r;
+				_arrayData[pos + 1] = _data[i][j]._g;
+				_arrayData[pos + 2] = _data[i][j]._b;
+			}
+		}
+		return &_arrayData[0];
+	}
+	int _w;
+	int _h;
+	std::vector<std::vector<ColorElement>> _data;
+	std::vector<GLubyte> _arrayData;
+};
 const int W = 150;
 const int H = 100;
 void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
@@ -3908,59 +3948,73 @@ void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-GLubyte pixelsTemp[W * H * 3 + H * 3] = { 0 };
-void readPixels(float x, float y, float width, float height)
-{
-	memset(pixelsTemp, 0, sizeof(pixelsTemp));
-	glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
-}
-void drawPixels(float x, float y, float width, float height)
+void drawPixels(float x, float y, float width, float height, ColorArray& colorArray)
 {
 	glRasterPos2i(x, y);
-	glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, pixelsTemp);
+	glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
 }
-void turnTranspose(const GLubyte in[], GLubyte out[])
+ColorArray turnTranspose(ColorArray& in)
 {
-	memset(out, 0, sizeof(out));
-	if (W >= H)
+	ColorArray ret(in._h, in._w);
+	if (in._w >= in._h)
 	{
-		for (int i = 0; i < H; i++)
-		{ 
-			int temp;
-			int j = 0;
-			for (j = i ; j < W; j++)
+		ColorElement temp;
+		for (int i = in._h - 1; i >= 0; i--)
+		{
+			for (int j = in._h - 1 - i ; j < in._w; j++)
 			{
-				temp = in[i * W + j];
-				if (j < H)
-					out[i * W + j] = in[j * W + i];
-				out[j * W + i] = temp;
+				temp = in[i][j];
+				if (j < in._h)
+					ret[ret._h - in._h + i][j] = in[in._h - 1 - j][in._h - 1 - i];
+				ret[ret._h - 1 - j][in._h - 1 - i] = temp;
 			}
 		}
 	}
+	else
+	{
+		ColorElement temp;
+		for (int j = 0; j < in._w; j++)
+		{
+			for (int i = j; i < in._h; i++)
+			{
+				temp = in[i][j];
+				if (i < in._w)
+					ret[i][j] = in[j][i];
+				ret[j][i] = temp;
+			}
+		}
+	}
+	return ret;
 }
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	int i = 0;
-	for (; i < 150 * 50; i++)
+	ColorArray colorArray(150, 100);
+	for (int i = 0; i < colorArray._h / 2; i++)
 	{
-		int pos = i * 3;
-		pixelsTemp[pos] = 0xFF;
-		pixelsTemp[pos + 1] = 0xFF;
-		pixelsTemp[pos + 2] = 0xFF;
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0xFF, 0xFF);
 	}
-	for (; i < 150 * 100; i++)
+	for (int i = 0; i < colorArray._h / 2; i++)
 	{
-		int pos = i * 3;
-		pixelsTemp[pos] = 0xFF;
-		pixelsTemp[pos + 1] = 0x00;
-		pixelsTemp[pos + 2] = 0x00;
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0x00, 0x00);
 	}
-	drawPixels(100, 250, 150, 100);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0x00, 0xFF, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
+	}
+	drawPixels(100, 250, 150, 100, colorArray);
 
+	drawPixels(300, 250, 100, 150, turnTranspose(colorArray));
 
 
 	glFlush();
