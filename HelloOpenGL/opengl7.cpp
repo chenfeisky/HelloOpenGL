@@ -3932,6 +3932,65 @@ struct ColorArray
 		}
 		return &_arrayData[0];
 	}
+	ColorArray& turnTranspose()
+	{
+		ColorArray temp(_h, _w);
+		if (_w >= _h)
+		{
+			for (int i = _h - 1; i >= 0; i--)
+			{
+				for (int j = _h - 1 - i; j < _w; j++)
+				{
+					temp[temp._h - 1 - j][_h - 1 - i] = _data[i][j];
+					if (j < _h)
+						temp[temp._h - _h + i][j] = _data[_h - 1 - j][_h - 1 - i];
+				}
+			}
+		}
+		else
+		{
+			for (int j = 0; j < _w; j++)
+			{
+				for (int i = _h - 1 - j; i >= 0; i--)
+				{
+					temp[temp._h - 1 - j][_h - 1 - i] = _data[i][j];
+					if (i > _h - 1 - _w)
+						temp[temp._h - _h + i][j] = _data[_h - 1 - j][_h - 1 - i];
+				}
+			}
+		}
+		*this = temp;
+		return *this;
+	}
+	ColorArray& turnLeftRight()
+	{
+		ColorElement temp;
+		for (int i = 0; i < _h; i++)
+		{
+			for (int j = 0; j < _w / 2; j++)
+			{
+				temp = _data[i][j];
+				_data[i][j] = _data[i][_w - 1 - j];
+				_data[i][_w - 1 - j] = temp;
+			}
+		}
+		return *this;
+	}
+	ColorArray& turnUpDown()
+	{
+		ColorElement temp;
+		for (int j = 0; j < _w; j++)
+		{
+			for (int i = 0; i < _h / 2; i++)
+			{
+				temp = _data[i][j];
+				_data[i][j] = _data[_h - 1 - i][j];
+				_data[_h - 1 - i][j] = temp;
+			}
+		}
+		return *this;
+	}
+
 	int _w;
 	int _h;
 	std::vector<std::vector<ColorElement>> _data;
@@ -3948,43 +4007,53 @@ void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void drawPixels(float x, float y, float width, float height, ColorArray& colorArray)
+void drawPixels(float x, float y, ColorArray& colorArray)
 {
 	glRasterPos2i(x, y);
-	glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
+	glDrawPixels(colorArray._w, colorArray._h, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
 }
-ColorArray turnTranspose(ColorArray& in)
+//ColorArray turnTranspose(ColorArray& in)
+//{
+//	ColorArray ret(in._h, in._w);
+//	if (in._w >= in._h)
+//	{
+//		for (int i = in._h - 1; i >= 0; i--)
+//		{
+//			for (int j = in._h - 1 - i ; j < in._w; j++)
+//			{
+//				ret[ret._h - 1 - j][in._h - 1 - i] = in[i][j];
+//				if (j < in._h)
+//					ret[ret._h - in._h + i][j] = in[in._h - 1 - j][in._h - 1 - i];
+//			}
+//		}
+//	}
+//	else
+//	{
+//		for (int j = 0; j < in._w; j++)
+//		{
+//			for (int i = in._h - 1 - j; i >= 0; i--)
+//			{
+//				ret[ret._h - 1 - j][in._h - 1 - i] = in[i][j];
+//				if (i > in._h - 1 - in._w)
+//					ret[ret._h - in._h + i][j] = in[in._h - 1 - j][in._h - 1 - i];
+//			}
+//		}
+//	}
+//	return ret;
+//}
+void same(ColorArray& c1, ColorArray& c2)
 {
-	ColorArray ret(in._h, in._w);
-	if (in._w >= in._h)
+	assert(c1._w == c2._w);
+	assert(c1._h == c2._h);
+	for (int i = 0; i < c1._h; i++)
 	{
-		ColorElement temp;
-		for (int i = in._h - 1; i >= 0; i--)
+		for (int j = 0; j < c1._w; j++)
 		{
-			for (int j = in._h - 1 - i ; j < in._w; j++)
-			{
-				temp = in[i][j];
-				if (j < in._h)
-					ret[ret._h - in._h + i][j] = in[in._h - 1 - j][in._h - 1 - i];
-				ret[ret._h - 1 - j][in._h - 1 - i] = temp;
-			}
+			assert(c1[i][j]._r == c2[i][j]._r);
+			assert(c1[i][j]._g == c2[i][j]._g);
+			assert(c1[i][j]._b == c2[i][j]._b);
 		}
 	}
-	else
-	{
-		ColorElement temp;
-		for (int j = 0; j < in._w; j++)
-		{
-			for (int i = j; i < in._h; i++)
-			{
-				temp = in[i][j];
-				if (i < in._w)
-					ret[i][j] = in[j][i];
-				ret[j][i] = temp;
-			}
-		}
-	}
-	return ret;
 }
 void displayFcn(void)
 {
@@ -4012,10 +4081,48 @@ void displayFcn(void)
 		for (int j = colorArray._w / 2; j < colorArray._w; j++)
 			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
 	}
-	drawPixels(100, 250, 150, 100, colorArray);
+	drawPixels(50, 250, colorArray);
 
-	drawPixels(300, 250, 100, 150, turnTranspose(colorArray));
+	// 90
+	auto ca = colorArray;
+	drawPixels(300, 430, ca.turnTranspose().turnUpDown());
 
+	ca = colorArray;
+	drawPixels(600, 430, ca.turnLeftRight().turnTranspose());
+
+	// 180
+	ca = colorArray;
+	drawPixels(300, 300, ca.turnLeftRight().turnUpDown());
+
+	ca = colorArray;
+	drawPixels(600, 300, ca.turnUpDown().turnLeftRight());
+
+	// 270
+	ca = colorArray;
+	drawPixels(300, 130, ca.turnTranspose().turnLeftRight());
+
+	ca = colorArray;
+	drawPixels(600, 130, ca.turnUpDown().turnTranspose());
+
+	// 360
+	ca = colorArray;
+	drawPixels(200, 20, 
+		ca.turnTranspose().turnUpDown()
+		.turnTranspose().turnUpDown()
+		.turnTranspose().turnUpDown()
+		.turnTranspose().turnUpDown());
+
+	ca = colorArray;
+	drawPixels(400, 20,
+		ca.turnLeftRight().turnUpDown()
+		.turnLeftRight().turnUpDown());
+
+	ca = colorArray;
+	drawPixels(600, 20,
+		ca.turnTranspose().turnLeftRight()
+		.turnTranspose().turnLeftRight()
+		.turnTranspose().turnLeftRight()
+		.turnTranspose().turnLeftRight());
 
 	glFlush();
 }
