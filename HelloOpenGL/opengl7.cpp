@@ -4012,35 +4012,6 @@ void drawPixels(float x, float y, ColorArray& colorArray)
 	glRasterPos2i(x, y);
 	glDrawPixels(colorArray._w, colorArray._h, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
 }
-//ColorArray turnTranspose(ColorArray& in)
-//{
-//	ColorArray ret(in._h, in._w);
-//	if (in._w >= in._h)
-//	{
-//		for (int i = in._h - 1; i >= 0; i--)
-//		{
-//			for (int j = in._h - 1 - i ; j < in._w; j++)
-//			{
-//				ret[ret._h - 1 - j][in._h - 1 - i] = in[i][j];
-//				if (j < in._h)
-//					ret[ret._h - in._h + i][j] = in[in._h - 1 - j][in._h - 1 - i];
-//			}
-//		}
-//	}
-//	else
-//	{
-//		for (int j = 0; j < in._w; j++)
-//		{
-//			for (int i = in._h - 1 - j; i >= 0; i--)
-//			{
-//				ret[ret._h - 1 - j][in._h - 1 - i] = in[i][j];
-//				if (i > in._h - 1 - in._w)
-//					ret[ret._h - in._h + i][j] = in[in._h - 1 - j][in._h - 1 - i];
-//			}
-//		}
-//	}
-//	return ret;
-//}
 void same(ColorArray& c1, ColorArray& c2)
 {
 	assert(c1._w == c2._w);
@@ -4129,6 +4100,285 @@ void displayFcn(void)
 
 void code_7_exercise_24()
 {
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_24_1
+struct Point { float x; float y; };
+struct ColorElement
+{
+	ColorElement() {};
+	ColorElement(GLubyte r, GLubyte g, GLubyte b) : _r(r), _g(g), _b(b) {};
+	GLubyte _r = 0x00;
+	GLubyte _g = 0x00;
+	GLubyte _b = 0x00;
+};
+struct ColorArray
+{
+	ColorArray(int w, int h)
+	{
+		_w = w;
+		_h = h;
+		_data.assign(_h, std::vector<ColorElement>(_w, ColorElement()));
+		_arrayData.assign(_w * _h * 3, 0x00);
+	}
+	std::vector<ColorElement>& operator [](int h)
+	{
+		return _data[h];
+	}
+	operator GLubyte* ()
+	{
+		for (int i = 0; i < _h; i++)
+		{
+			for (int j = 0; j < _w; j++)
+			{
+				int pos = (i * _w + j) * 3;
+				_arrayData[pos] = _data[i][j]._r;
+				_arrayData[pos + 1] = _data[i][j]._g;
+				_arrayData[pos + 2] = _data[i][j]._b;
+			}
+		}
+		return &_arrayData[0];
+	}
+	ColorArray& turnTranspose()
+	{
+		ColorArray temp(_h, _w);
+		if (_w >= _h)
+		{
+			for (int i = _h - 1; i >= 0; i--)
+			{
+				for (int j = _h - 1 - i; j < _w; j++)
+				{
+					temp[temp._h - 1 - j][_h - 1 - i] = _data[i][j];
+					if (j < _h)
+						temp[temp._h - _h + i][j] = _data[_h - 1 - j][_h - 1 - i];
+				}
+			}
+		}
+		else
+		{
+			for (int j = 0; j < _w; j++)
+			{
+				for (int i = _h - 1 - j; i >= 0; i--)
+				{
+					temp[temp._h - 1 - j][_h - 1 - i] = _data[i][j];
+					if (i > _h - 1 - _w)
+						temp[temp._h - _h + i][j] = _data[_h - 1 - j][_h - 1 - i];
+				}
+			}
+		}
+		*this = temp;
+		return *this;
+	}
+	ColorArray& turnLeftRight()
+	{
+		ColorElement temp;
+		for (int i = 0; i < _h; i++)
+		{
+			for (int j = 0; j < _w / 2; j++)
+			{
+				temp = _data[i][j];
+				_data[i][j] = _data[i][_w - 1 - j];
+				_data[i][_w - 1 - j] = temp;
+			}
+		}
+		return *this;
+	}
+	ColorArray& turnUpDown()
+	{
+		ColorElement temp;
+		for (int j = 0; j < _w; j++)
+		{
+			for (int i = 0; i < _h / 2; i++)
+			{
+				temp = _data[i][j];
+				_data[i][j] = _data[_h - 1 - i][j];
+				_data[_h - 1 - i][j] = temp;
+			}
+		}
+		return *this;
+	}
+
+	int _w;
+	int _h;
+	std::vector<std::vector<ColorElement>> _data;
+	std::vector<GLubyte> _arrayData;
+};
+std::string inputStr;
+void inputParam()
+{
+	printf("input transform [(T)ranspose, (U)pDown, (L)eftRight]:");
+	std::cin >> inputStr;
+}
+void drawPixels(float x, float y, ColorArray& colorArray)
+{
+	glRasterPos2i(x, y);
+	glDrawPixels(colorArray._w, colorArray._h, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
+}
+void same(ColorArray& c1, ColorArray& c2)
+{
+	assert(c1._w == c2._w);
+	assert(c1._h == c2._h);
+	for (int i = 0; i < c1._h; i++)
+	{
+		for (int j = 0; j < c1._w; j++)
+		{
+			assert(c1[i][j]._r == c2[i][j]._r);
+			assert(c1[i][j]._g == c2[i][j]._g);
+			assert(c1[i][j]._b == c2[i][j]._b);
+		}
+	}
+}
+void calcOperator(std::vector<int>& operators)
+{
+	for (auto it = operators.begin(); it != operators.end(); it++ )
+	{
+		int cur = *it;
+		if (it + 1 != operators.end())
+		{
+			int next = *(it + 1);
+			if (cur >= 0 && next >= 0)
+			{
+				it = operators.erase(it);
+				it = operators.erase(it);
+				if ((cur + next) % 360 > 0)
+					operators.insert(it, (cur + next) % 360);
+				calcOperator(operators);
+				return;
+			}
+			else if (cur < 0 && next < 0)
+			{
+				it = operators.erase(it);
+				it = operators.erase(it);
+
+				if ((cur == -1 && next == -2) || (cur == -2 && next == -1))
+				{
+					operators.insert(it, 180);
+				}
+				calcOperator(operators);
+				return;
+			}
+		}
+	}
+}
+std::vector<int> operators;
+std::vector<int> temp;
+void normal(int opIdx)
+{
+	char c = inputStr[opIdx];
+	if (c == 'T')
+	{
+		if (operators.empty())
+		{
+			operators.push_back(90);
+			operators.push_back(-1);
+		}
+		else
+		{
+			temp = operators;
+			temp.push_back(90);
+			temp.push_back(-1);
+			calcOperator(temp);
+			if (temp.size() > 2)
+			{
+				temp = operators;
+				temp.push_back(-2);
+				temp.push_back(90);
+				calcOperator(temp);
+			}
+			operators = temp;
+		}
+	}
+	else if (c == 'U')
+	{
+		operators.push_back(-1);
+		calcOperator(operators);
+	}
+	else
+	{
+		operators.push_back(-2);
+		calcOperator(operators);
+	}
+	normal(opIdx + 1);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	ColorArray colorArray(150, 100);
+	for (int i = 0; i < colorArray._h / 2; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0xFF, 0xFF);
+	}
+	for (int i = 0; i < colorArray._h / 2; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0x00, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0x00, 0xFF, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
+	}
+	drawPixels(50, 250, colorArray);
+
+	std::vector<int> operators;
+	std::vector<int> temp;
+	// ±éÀúËã·¨ 
+	for (auto& c : inputStr)
+	{
+		if (c == 'T')
+		{
+			if (operators.empty())
+			{
+				operators.push_back(90);
+				operators.push_back(-1);
+			}
+			else
+			{
+				temp = operators;
+				temp.push_back(90);
+				temp.push_back(-1);
+				calcOperator(temp);
+				if (temp.size() > 2)
+				{
+					temp = operators;
+					temp.push_back(-2);
+					temp.push_back(90);
+					calcOperator(temp);
+				}
+				operators = temp;
+			}
+		}			
+		else if (c == 'U')
+		{
+			operators.push_back(-1);
+			calcOperator(operators);
+		}
+		else
+		{
+			operators.push_back(-2);
+			calcOperator(operators);
+		}
+	}
+
+	// µÝ¹é
+
+
+	glFlush();
+}
+
+void code_7_exercise_24_1()
+{
+	inputParam();
 	glutDisplayFunc(displayFcn);
 }
 #endif
@@ -4271,6 +4521,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_24
 	code_7_exercise_24();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_24_1
+	code_7_exercise_24_1();
 #endif
 
 	glutMainLoop();
