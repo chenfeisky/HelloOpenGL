@@ -4262,45 +4262,47 @@ void calcOperator(std::vector<int>& operators)
 		}
 	}
 }
-std::vector<int> operators;
-std::vector<int> temp;
-void normal(int opIdx)
+
+void normal(std::vector<int> operators, int opIdx)
 {
+	if (operators.size() > 2)
+		return;
+
 	char c = inputStr[opIdx];
 	if (c == 'T')
 	{
-		if (operators.empty())
-		{
-			operators.push_back(90);
-			operators.push_back(-1);
-		}
-		else
-		{
-			temp = operators;
-			temp.push_back(90);
-			temp.push_back(-1);
-			calcOperator(temp);
-			if (temp.size() > 2)
-			{
-				temp = operators;
-				temp.push_back(-2);
-				temp.push_back(90);
-				calcOperator(temp);
-			}
-			operators = temp;
-		}
+		auto temp = operators;
+		temp.push_back(90);
+		temp.push_back(-1);
+		calcOperator(temp);
+		normal(temp, opIdx + 1);
+
+		temp = operators;
+		temp.push_back(-2);
+		temp.push_back(90);
+		calcOperator(temp);
+		normal(temp, opIdx + 1);
 	}
 	else if (c == 'U')
 	{
 		operators.push_back(-1);
 		calcOperator(operators);
+		normal(operators, opIdx + 1);
 	}
-	else
+	else if(c == 'L')
 	{
 		operators.push_back(-2);
 		calcOperator(operators);
+		normal(operators, opIdx + 1);
 	}
-	normal(opIdx + 1);
+	else
+	{
+		for (auto & op : operators)
+		{
+			printf("%d ", op);
+		}
+		return;
+	}
 }
 void displayFcn(void)
 {
@@ -4371,7 +4373,7 @@ void displayFcn(void)
 	}
 
 	// ตÝน้
-
+	normal(std::vector<int>(), 0);
 
 	glFlush();
 }
