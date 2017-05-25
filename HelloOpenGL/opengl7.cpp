@@ -4262,8 +4262,81 @@ void calcOperator(std::vector<int>& operators)
 		}
 	}
 }
-
-void normal(std::vector<int> operators, int opIdx)
+void drawOperator(float x, float y, ColorArray& colorArray, std::vector<int>& operators)
+{
+	for (auto & op : operators)
+	{
+		switch (op)
+		{
+		case 90:
+			colorArray.turnTranspose().turnUpDown();
+			break;
+		case 180:
+			colorArray.turnLeftRight().turnUpDown();
+			break;
+		case 270:
+			colorArray.turnTranspose().turnLeftRight();
+			break;
+		case -1:
+			colorArray.turnUpDown();
+			break;
+		case -2:
+			colorArray.turnLeftRight();
+			break;
+		default:
+			break;
+		}
+	}
+	drawPixels(x, y, colorArray);
+}
+void normalByFor(std::vector<int>& operators)
+{
+	// 遍历算法	
+	std::vector<int> temp; 
+	for (auto& c : inputStr)
+	{
+		if (c == 'T')
+		{
+			if (operators.empty())
+			{
+				operators.push_back(90);
+				operators.push_back(-1);
+			}
+			else
+			{
+				temp = operators;
+				temp.push_back(90);
+				temp.push_back(-1);
+				calcOperator(temp);
+				if (temp.size() > 2)
+				{
+					temp = operators;
+					temp.push_back(-2);
+					temp.push_back(90);
+					calcOperator(temp);
+				}
+				operators = temp;
+			}
+		}
+		else if (c == 'U')
+		{
+			operators.push_back(-1);
+			calcOperator(operators);
+		}
+		else if (c == 'L')
+		{
+			operators.push_back(-2);
+			calcOperator(operators);
+		}
+	}
+	printf("normalByFor:");
+	for (auto & op : operators)
+	{
+		printf("%d ", op);
+	}
+	printf("\n");
+}
+void normalByRecursion(std::vector<int> operators, int opIdx, std::vector<std::vector<int>>& operatorss)
 {
 	if (operators.size() > 2)
 		return;
@@ -4275,32 +4348,35 @@ void normal(std::vector<int> operators, int opIdx)
 		temp.push_back(90);
 		temp.push_back(-1);
 		calcOperator(temp);
-		normal(temp, opIdx + 1);
+		normalByRecursion(temp, opIdx + 1, operatorss);
 
 		temp = operators;
 		temp.push_back(-2);
 		temp.push_back(90);
 		calcOperator(temp);
-		normal(temp, opIdx + 1);
+		normalByRecursion(temp, opIdx + 1, operatorss);
 	}
 	else if (c == 'U')
 	{
 		operators.push_back(-1);
 		calcOperator(operators);
-		normal(operators, opIdx + 1);
+		normalByRecursion(operators, opIdx + 1, operatorss);
 	}
 	else if(c == 'L')
 	{
 		operators.push_back(-2);
 		calcOperator(operators);
-		normal(operators, opIdx + 1);
+		normalByRecursion(operators, opIdx + 1, operatorss);
 	}
 	else
 	{
+		printf("normalByRecursion:");
 		for (auto & op : operators)
 		{
 			printf("%d ", op);
 		}
+		printf("\n");
+		operatorss.push_back(operators);
 		return;
 	}
 }
@@ -4330,50 +4406,43 @@ void displayFcn(void)
 		for (int j = colorArray._w / 2; j < colorArray._w; j++)
 			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
 	}
-	drawPixels(50, 250, colorArray);
+	drawPixels(50, 400, colorArray);
 
-	std::vector<int> operators;
-	std::vector<int> temp;
-	// 遍历算法 
+	// 按输入正常变换
+	auto ca = colorArray;
 	for (auto& c : inputStr)
 	{
-		if (c == 'T')
+		switch (c)
 		{
-			if (operators.empty())
-			{
-				operators.push_back(90);
-				operators.push_back(-1);
-			}
-			else
-			{
-				temp = operators;
-				temp.push_back(90);
-				temp.push_back(-1);
-				calcOperator(temp);
-				if (temp.size() > 2)
-				{
-					temp = operators;
-					temp.push_back(-2);
-					temp.push_back(90);
-					calcOperator(temp);
-				}
-				operators = temp;
-			}
-		}			
-		else if (c == 'U')
-		{
-			operators.push_back(-1);
-			calcOperator(operators);
-		}
-		else
-		{
-			operators.push_back(-2);
-			calcOperator(operators);
+		case 'T':
+			ca.turnTranspose();
+			break;
+		case 'U':
+			ca.turnUpDown();
+			break;
+		case 'L':
+			ca.turnLeftRight();
+			break;
+		default:
+			break;
 		}
 	}
+	drawPixels(50, 150, ca);
 
-	// 递归
-	normal(std::vector<int>(), 0);
+	// 循环化简
+	ca = colorArray;
+	std::vector<int> operators;
+	normalByFor(operators);
+	drawOperator(300, 400, ca, operators);
+	
+	// 递归化简
+	std::vector<std::vector<int>> operatorss;
+	normalByRecursion(std::vector<int>(), 0, operatorss);
+	for (int i = 0; i < operatorss.size(); i++)
+	{
+		ca = colorArray;
+		drawOperator(250 + i * 200, 150, ca, operatorss[i]);
+	}
 
 	glFlush();
 }
@@ -4382,6 +4451,71 @@ void code_7_exercise_24_1()
 {
 	inputParam();
 	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_24_2
+std::string inputStr;
+void inputParam()
+{
+	printf("input majiang:");
+	std::cin >> inputStr;
+}
+bool getJiang(std::vector<int>& majiangs)
+{
+
+}
+bool get3(std::vector<int>& majiangs)
+{
+
+}
+bool getLian(std::vector<int>& majiangs)
+{
+
+}
+void majiangRecursion(std::vector<int> majiangs, bool haveJiang)
+{
+	if (majiangs.size() == 0)
+	{
+		printf("OK\n");
+		return;
+	}		
+
+	if (haveJiang)
+	{
+		if (getLian(majiangs))
+		{
+			majiangRecursion(majiangs, haveJiang);
+		}
+		
+		if (get3(majiangs))
+		{
+			majiangRecursion(majiangs, haveJiang);
+		}
+	}
+	else
+	{
+		if (getJiang(majiangs))
+		{
+			haveJiang = true;
+			majiangRecursion(majiangs, haveJiang);
+		}
+
+		if (getLian(majiangs))
+		{
+			majiangRecursion(majiangs, haveJiang);
+		}
+
+		if (get3(majiangs))
+		{
+			majiangRecursion(majiangs, haveJiang);
+		}
+	}
+}
+void code_7_exercise_24_2()
+{
+	inputParam();
+
 }
 #endif
 
@@ -4527,6 +4661,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_24_1
 	code_7_exercise_24_1();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_24_2
+	code_7_exercise_24_2();
 #endif
 
 	glutMainLoop();
