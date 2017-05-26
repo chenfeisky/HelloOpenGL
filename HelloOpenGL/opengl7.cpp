@@ -4458,20 +4458,61 @@ void code_7_exercise_24_1()
 std::string inputStr;
 void inputParam()
 {
-	printf("input majiang:");
+	printf("input majiangs:");
 	std::cin >> inputStr;
 }
 bool getJiang(std::vector<int>& majiangs)
 {
-
+	auto it = majiangs.begin();
+	if (it != majiangs.end() && it + 1 != majiangs.end() && *it == *(it + 1))
+	{
+		it = majiangs.erase(it);
+		it = majiangs.erase(it);
+		return true;
+	}
+	return false;
 }
 bool get3(std::vector<int>& majiangs)
 {
-
+	auto it = majiangs.begin();
+	if (it != majiangs.end() && it + 1 != majiangs.end() && it + 2 != majiangs.end()
+		&& *it == *(it + 1) && *it == *(it + 2))
+	{
+		it = majiangs.erase(it);
+		it = majiangs.erase(it);
+		it = majiangs.erase(it);
+		return true;
+	}
+	return false;
 }
 bool getLian(std::vector<int>& majiangs)
 {
-
+	std::vector<int> temp = majiangs;
+	auto it = temp.begin();
+	if (it != temp.end())
+	{
+		int cur = *it;
+		int count = 1;
+		for (it = temp.erase(it); it != temp.end();)
+		{
+			if (cur + 1 == *it)
+			{
+				cur = *it;
+				count++;
+				it = temp.erase(it);
+				if (count >= 3)
+				{
+					majiangs = temp;
+					return true;
+				}
+			}
+			else
+			{
+				it++;
+			}
+		}
+	}
+	return false;
 }
 void majiangRecursion(std::vector<int> majiangs, bool haveJiang)
 {
@@ -4481,41 +4522,60 @@ void majiangRecursion(std::vector<int> majiangs, bool haveJiang)
 		return;
 	}		
 
+	auto temp = majiangs;
 	if (haveJiang)
 	{
-		if (getLian(majiangs))
+		if (getLian(temp))
 		{
-			majiangRecursion(majiangs, haveJiang);
+			majiangRecursion(temp, haveJiang);
+			temp = majiangs;
 		}
 		
-		if (get3(majiangs))
+		if (get3(temp))
 		{
-			majiangRecursion(majiangs, haveJiang);
+			majiangRecursion(temp, haveJiang);
+			temp = majiangs;
 		}
 	}
 	else
 	{
-		if (getJiang(majiangs))
+		if (getJiang(temp))
 		{
 			haveJiang = true;
-			majiangRecursion(majiangs, haveJiang);
+			majiangRecursion(temp, haveJiang);
+			temp = majiangs;
+			haveJiang = false;
 		}
-
-		if (getLian(majiangs))
+						
+		if (getLian(temp))
 		{
-			majiangRecursion(majiangs, haveJiang);
+			majiangRecursion(temp, haveJiang);
+			temp = majiangs;
 		}
-
-		if (get3(majiangs))
+				
+		if (get3(temp))
 		{
-			majiangRecursion(majiangs, haveJiang);
+			majiangRecursion(temp, haveJiang);
+			temp = majiangs;
 		}
 	}
+}
+void calcHu()
+{
+	std::vector<int> majiangs;
+	for (auto& c : inputStr)
+	{
+		majiangs.push_back(c - 48);
+	}
+	std::sort(majiangs.begin(), majiangs.end(), [](auto a, auto b) { return a < b; });
+	majiangRecursion(majiangs, false);
+	cin.get();
+	cin.get();
 }
 void code_7_exercise_24_2()
 {
 	inputParam();
-
+	calcHu();
 }
 #endif
 
