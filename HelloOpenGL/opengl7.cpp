@@ -4579,6 +4579,113 @@ void code_7_exercise_24_2()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_25
+struct Point { float x; float y; };
+struct ColorElement
+{
+	ColorElement() {};
+	ColorElement(GLubyte r, GLubyte g, GLubyte b) : _r(r), _g(g), _b(b) {};
+	GLubyte _r = 0x00;
+	GLubyte _g = 0x00;
+	GLubyte _b = 0x00;
+};
+struct ColorArray
+{
+	ColorArray(int w, int h)
+	{
+		_w = w;
+		_h = h;
+		_data.assign(_h, std::vector<ColorElement>(_w, ColorElement()));
+		_arrayData.assign(_w * _h * 3, 0x00);
+	}
+	std::vector<ColorElement>& operator [](int h)
+	{
+		return _data[h];
+	}
+	operator GLubyte* ()
+	{
+		for (int i = 0; i < _h; i++)
+		{
+			for (int j = 0; j < _w; j++)
+			{
+				int pos = (i * _w + j) * 3;
+				_arrayData[pos] = _data[i][j]._r;
+				_arrayData[pos + 1] = _data[i][j]._g;
+				_arrayData[pos + 2] = _data[i][j]._b;
+			}
+		}
+		return &_arrayData[0];
+	}
+	int _w;
+	int _h;
+	std::vector<std::vector<ColorElement>> _data;
+	std::vector<GLubyte> _arrayData;
+};
+void drawPixels(float x, float y, ColorArray& colorArray)
+{
+	glRasterPos2i(x, y);
+	glDrawPixels(colorArray._w, colorArray._h, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
+}
+void drawPoint(Point p, ColorElement c)
+{
+	glRasterPos2i(p.x, p.y);
+	static GLubyte a[3];
+	a[0] = c._r;
+	a[1] = c._g;
+	a[2] = c._b;
+	glDrawPixels(1, 1, GL_RGB, GL_UNSIGNED_BYTE, a);
+}
+bool pointInRect(Point p, float x0, float y0, float w, float h)
+{
+	return p.x >= x0 && p.x <= x0 + w && p.y >= y0 && p.y <= y0 + h;
+}
+Point rotatePoint(Point p, Point pr, float theta)
+{
+	Point ret;
+	ret.x = p.x * std::cos(theta) - p.y * std::sin(theta) + pr.x * (1 - std::cos(theta)) + pr.y * std::sin(theta);
+	ret.y = p.x * std::sin(theta) + p.y * std::cos(theta) + pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
+	return ret;
+}
+void rotate(Point p0, ColorArray& colorArray, Point pr, float theta)
+{
+	for (int i = 0; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w; j++)
+		{
+			float x = p0.x + j + 0.5;
+			float y = p0.y + i + 0.5;
+			auto _p = rotatePoint({ x, y }, pr, theta);
+			for (int _i = -1; _i <= 1; _i++)
+			{
+				for (int _j = -1; _j <= 1; _j++)
+				{
+					Point p = { (int)_p.x + 0.5 + _j, (int)_p.y + 0.5 + _i };
+					Point testP = rotatePoint(p, pr, -theta);
+					if (pointInRect(testP, x - 0.5, y - 0.5, 1, 1))
+					{
+						drawPoint({p.x - 0.5, p.y - 0.5}, colorArray[i][j]);
+					}
+				}
+			}
+		}
+	}
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glColor3f(1.0, 1.0, 1.0);
+
+
+	glFlush();
+}
+
+void code_7_exercise_25()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -4726,6 +4833,11 @@ void main(int argc, char** argv)
 #ifdef CHAPTER_7_EXERCISE_24_2
 	code_7_exercise_24_2();
 #endif
+
+#ifdef CHAPTER_7_EXERCISE_25
+	code_7_exercise_25();
+#endif
+
 
 	glutMainLoop();
 }
