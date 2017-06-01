@@ -4652,18 +4652,18 @@ void rotate(Point p0, ColorArray& colorArray, Point pr, float theta)
 	{
 		for (int j = 0; j < colorArray._w; j++)
 		{
-			float x = p0.x + j + 0.5;
-			float y = p0.y + i + 0.5;
+			float x = p0.x + j + 0.5f;
+			float y = p0.y + i + 0.5f;
 			auto _p = rotatePoint({ x, y }, pr, theta);
 			for (int _i = -1; _i <= 1; _i++)
 			{
 				for (int _j = -1; _j <= 1; _j++)
 				{
-					Point p = { (int)_p.x + 0.5 + _j, (int)_p.y + 0.5 + _i };
+					Point p = { (int)_p.x + 0.5f + _j, (int)_p.y + 0.5f + _i };
 					Point testP = rotatePoint(p, pr, -theta);
-					if (pointInRect(testP, x - 0.5, y - 0.5, 1, 1))
+					if (pointInRect(testP, x - 0.5f, y - 0.5f, 1, 1))
 					{
-						drawPoint({p.x - 0.5, p.y - 0.5}, colorArray[i][j]);
+						drawPoint({p.x - 0.5f, p.y - 0.5f}, colorArray[i][j]);
 					}
 				}
 			}
@@ -4676,6 +4676,30 @@ void displayFcn(void)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glColor3f(1.0, 1.0, 1.0);
 
+	ColorArray colorArray(150, 100);
+	for (int i = 0; i < colorArray._h / 2; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0xFF, 0xFF);
+	}
+	for (int i = 0; i < colorArray._h / 2; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0x00, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0x00, 0xFF, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
+	}
+	drawPixels(300, 100, colorArray);
+
+	rotate({ 300, 100 }, colorArray, { 200, 100 }, 90 * PI / 180);
 
 	glFlush();
 }
