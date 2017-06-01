@@ -4652,18 +4652,18 @@ void rotate(Point p0, ColorArray& colorArray, Point pr, float theta)
 	{
 		for (int j = 0; j < colorArray._w; j++)
 		{
-			float x = p0.x + j + 0.5f;
-			float y = p0.y + i + 0.5f;
+			float x = p0.x + j;
+			float y = p0.y + i;
 			auto _p = rotatePoint({ x, y }, pr, theta);
 			for (int _i = -1; _i <= 1; _i++)
 			{
 				for (int _j = -1; _j <= 1; _j++)
 				{
-					Point p = { (int)_p.x + 0.5f + _j, (int)_p.y + 0.5f + _i };
+					Point p = { std::round(_p.x) + _j, std::round(_p.y) + _i };
 					Point testP = rotatePoint(p, pr, -theta);
 					if (pointInRect(testP, x - 0.5f, y - 0.5f, 1, 1))
 					{
-						drawPoint({p.x - 0.5f, p.y - 0.5f}, colorArray[i][j]);
+						drawPoint(p, colorArray[i][j]);
 					}
 				}
 			}
