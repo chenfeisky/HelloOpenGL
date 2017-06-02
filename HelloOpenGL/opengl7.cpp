@@ -4634,6 +4634,10 @@ void drawPoint(Point p, ColorElement c)
 	a[1] = c._g;
 	a[2] = c._b;
 	glDrawPixels(1, 1, GL_RGB, GL_UNSIGNED_BYTE, a);
+
+	char aa[16] = {};
+	sprintf_s(aa, "%d, %d\n", (int)p.x, (int)p.y);
+	outPut(aa);
 }
 bool pointInRect(Point p, float x0, float y0, float w, float h)
 {
@@ -4646,7 +4650,59 @@ Point rotatePoint(Point p, Point pr, float theta)
 	ret.y = p.x * std::sin(theta) + p.y * std::cos(theta) + pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
 	return ret;
 }
-void rotate(Point p0, ColorArray& colorArray, Point pr, float theta)
+// 遍历附近9个像素测试
+//void _rotateByDestCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
+//{
+//	for (int i = 0; i < colorArray._h; i++)
+//	{
+//		for (int j = 0; j < colorArray._w; j++)
+//		{
+//			float x = p0.x + j;
+//			float y = p0.y + i;
+//			auto _p = rotatePoint({ x, y }, pr, theta);
+//			for (int _i = -1; _i <= 1; _i++)
+//			{
+//				for (int _j = -1; _j <= 1; _j++)
+//				{
+//					Point p = { std::round(_p.x) + _j, std::round(_p.y) + _i };
+//					Point testP = rotatePoint(p, pr, -theta);
+//					if (pointInRect(testP, x - 0.5f, y - 0.5f, 1, 1))
+//					{
+//						drawPoint(p, colorArray[i][j]);
+//					}
+//				}
+//			}
+//		}
+//	}
+//}
+// 目标像素中心点在源像素区域中
+void rotateByDestCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
+{
+	float thetaA = theta * 180 / PI;
+	float d = std::sqrt(2) / 2 * sin((45 + fmod(std::fabs(thetaA), 90)) * PI / 180);
+	for (int i = 0; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w; j++)
+		{
+			float x = p0.x + j;
+			float y = p0.y + i;
+			auto _p = rotatePoint({ x, y }, pr, theta);
+			for (int _i = std::ceil(_p.y - d); _i <= std::floor(_p.y + d); _i++)
+			{
+				for (int _j = std::ceil(_p.x - d); _j <= std::floor(_p.x + d); _j++)
+				{
+					Point testP = rotatePoint({(float)_j, (float)_i}, pr, -theta);
+					if (pointInRect(testP, x - 0.5f, y - 0.5f, 1, 1))
+					{
+						drawPoint({ (float)_j, (float)_i }, colorArray[i][j]);
+					}
+				}
+			}
+		}
+	}
+}
+// 源像素中心点在目标像素区域中
+void rotateBySourceCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
 {
 	for (int i = 0; i < colorArray._h; i++)
 	{
@@ -4655,18 +4711,7 @@ void rotate(Point p0, ColorArray& colorArray, Point pr, float theta)
 			float x = p0.x + j;
 			float y = p0.y + i;
 			auto _p = rotatePoint({ x, y }, pr, theta);
-			for (int _i = -1; _i <= 1; _i++)
-			{
-				for (int _j = -1; _j <= 1; _j++)
-				{
-					Point p = { std::round(_p.x) + _j, std::round(_p.y) + _i };
-					Point testP = rotatePoint(p, pr, -theta);
-					if (pointInRect(testP, x - 0.5f, y - 0.5f, 1, 1))
-					{
-						drawPoint(p, colorArray[i][j]);
-					}
-				}
-			}
+			drawPoint({ std::round(_p.x), std::round(_p.y) }, colorArray[i][j]);
 		}
 	}
 }
@@ -4699,7 +4744,9 @@ void displayFcn(void)
 	}
 	drawPixels(400, 300, colorArray);
 
-	rotate({ 400, 300 }, colorArray, { 400, 300 }, 90 * PI / 180);
+	//rotateByDestCenter({ 400, 300 }, colorArray, { 300, 300 }, 90 * PI / 180);
+
+	rotateBySourceCenter({ 400, 300 }, colorArray, { 300, 300 }, 30 * PI / 180);
 
 	glFlush();
 }
