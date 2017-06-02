@@ -4697,9 +4697,9 @@ void displayFcn(void)
 		for (int j = colorArray._w / 2; j < colorArray._w; j++)
 			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
 	}
-	drawPixels(300, 100, colorArray);
+	drawPixels(400, 300, colorArray);
 
-	rotate({ 300, 100 }, colorArray, { 200, 100 }, 90 * PI / 180);
+	rotate({ 400, 300 }, colorArray, { 400, 300 }, 90 * PI / 180);
 
 	glFlush();
 }
