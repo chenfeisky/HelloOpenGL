@@ -4581,6 +4581,21 @@ void code_7_exercise_24_2()
 
 #ifdef CHAPTER_7_EXERCISE_25
 struct Point { float x; float y; };
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
 struct ColorElement
 {
 	ColorElement() {};
@@ -4713,6 +4728,37 @@ void rotateBySourceCenter(Point p0, ColorArray& colorArray, Point pr, float thet
 			auto _p = rotatePoint({ x, y }, pr, theta);
 			drawPoint({ std::round(_p.x), std::round(_p.y) }, colorArray[i][j]);
 		}
+	}
+}
+// 超采样 源像素中心点在目标像素区域中
+void rotateSSBySC(Point p0, ColorArray& colorArray, Point pr, float theta, int SSLevel)
+{
+	std::map<Point, std::map<Point, ColorElement>> pointInfo;
+
+	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
+	Point subPr = { pr.x * SSLevel , pr.y * SSLevel };
+	for (int i = 0; i < colorArray._h * SSLevel; i++)
+	{
+		for (int j = 0; j < colorArray._w * SSLevel; j++)
+		{
+			float x = subP0.x + j;
+			float y = subP0.y + i;
+			auto _p = rotatePoint({ x, y }, subPr, theta);
+			pointInfo[{ std::round(_p.x) / SSLevel, std::round(_p.y) / SSLevel }][{std::round(_p.x), std::round(_p.y)}] = colorArray[i / SSLevel][j / SSLevel];
+		}
+	}
+
+	int squareSS = SSLevel * SSLevel;
+	ColorElement c;
+	for (auto& p : pointInfo)
+	{
+		for (auto& _p : p.second)
+		{
+			c._r += _p.second._r;
+			c._g += _p.second._g;
+			c._b += _p.second._b;
+		}
+		drawPoint(p.first, ColorElement(c._r / squareSS, c._g / squareSS , c._b / squareSS));
 	}
 }
 void displayFcn(void)
