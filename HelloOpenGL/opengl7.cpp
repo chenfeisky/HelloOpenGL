@@ -4650,9 +4650,9 @@ void drawPoint(Point p, ColorElement c)
 	a[2] = c._b;
 	glDrawPixels(1, 1, GL_RGB, GL_UNSIGNED_BYTE, a);
 
-	char aa[16] = {};
-	sprintf_s(aa, "%d, %d\n", (int)p.x, (int)p.y);
-	outPut(aa);
+	//char aa[16] = {};
+	//sprintf_s(aa, "%d, %d\n", (int)p.x, (int)p.y);
+	//outPut(aa);
 }
 bool pointInRect(Point p, float x0, float y0, float w, float h)
 {
@@ -4744,21 +4744,75 @@ void rotateSSBySC(Point p0, ColorArray& colorArray, Point pr, float theta, int S
 			float x = subP0.x + j;
 			float y = subP0.y + i;
 			auto _p = rotatePoint({ x, y }, subPr, theta);
-			pointInfo[{ std::round(_p.x) / SSLevel, std::round(_p.y) / SSLevel }][{std::round(_p.x), std::round(_p.y)}] = colorArray[i / SSLevel][j / SSLevel];
+			pointInfo[{(float)(int)(std::round(_p.x) / SSLevel), (float)(int)(std::round(_p.y) / SSLevel) }][{std::round(_p.x), std::round(_p.y)}] = colorArray[i / SSLevel][j / SSLevel];
 		}
 	}
 
 	int squareSS = SSLevel * SSLevel;
-	ColorElement c;
+	int sumR = 0;
+	int sumG = 0;
+	int sumB = 0;
 	for (auto& p : pointInfo)
 	{
+		sumR = 0;
+		sumG = 0;
+		sumB = 0;
 		for (auto& _p : p.second)
 		{
-			c._r += _p.second._r;
-			c._g += _p.second._g;
-			c._b += _p.second._b;
+			sumR += _p.second._r;
+			sumG += _p.second._g;
+			sumB += _p.second._b;
 		}
-		drawPoint(p.first, ColorElement(c._r / squareSS, c._g / squareSS , c._b / squareSS));
+		drawPoint(p.first, ColorElement(sumR / squareSS, sumG / squareSS , sumB / squareSS));
+	}
+}
+// 超采样 目标像素中心点在源像素区域中
+void rotateSSByDC(Point p0, ColorArray& colorArray, Point pr, float theta, int SSLevel)
+{
+	float thetaA = theta * 180 / PI;
+	float d = std::sqrt(2) / 2 * sin((45 + fmod(std::fabs(thetaA), 90)) * PI / 180);
+
+	std::map<Point, std::map<Point, ColorElement>> pointInfo;
+
+	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
+	Point subPr = { pr.x * SSLevel , pr.y * SSLevel };
+	for (int i = 0; i < colorArray._h * SSLevel; i++)
+	{
+		for (int j = 0; j < colorArray._w * SSLevel; j++)
+		{
+			float x = subP0.x + j;
+			float y = subP0.y + i;
+			auto _p = rotatePoint({ x, y }, subPr, theta);
+			for (int _i = std::ceil(_p.y - d); _i <= std::floor(_p.y + d); _i++)
+			{
+				for (int _j = std::ceil(_p.x - d); _j <= std::floor(_p.x + d); _j++)
+				{
+					Point testP = rotatePoint({ (float)_j, (float)_i }, subPr, -theta);
+					if (pointInRect(testP, x - 0.5f, y - 0.5f, 1, 1))
+					{
+						pointInfo[{(float)(_j / SSLevel), (float)(_i / SSLevel) }][{(float)_j, (float)_i}] = colorArray[i / SSLevel][j / SSLevel];
+					}
+				}
+			}
+		}
+	}
+
+	int squareSS = SSLevel * SSLevel;
+	int sumR = 0;
+	int sumG = 0;
+	int sumB = 0;
+	for (auto& p : pointInfo)
+	{
+		sumR = 0;
+		sumG = 0;
+		sumB = 0;
+		for (auto& _p : p.second)
+		{
+			sumR += _p.second._r;
+			sumG += _p.second._g;
+			sumB += _p.second._b;
+		}
+		drawPoint(p.first, ColorElement(sumR / squareSS, sumG / squareSS, sumB / squareSS));
 	}
 }
 void displayFcn(void)
@@ -4767,7 +4821,7 @@ void displayFcn(void)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glColor3f(1.0, 1.0, 1.0);
 
-	ColorArray colorArray(150, 100);
+	ColorArray colorArray(100, 80);
 	for (int i = 0; i < colorArray._h / 2; i++)
 	{
 		for (int j = 0; j < colorArray._w / 2; j++)
@@ -4788,11 +4842,27 @@ void displayFcn(void)
 		for (int j = colorArray._w / 2; j < colorArray._w; j++)
 			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
 	}
-	drawPixels(400, 300, colorArray);
+	drawPixels(50, 300, colorArray);
 
-	//rotateByDestCenter({ 400, 300 }, colorArray, { 300, 300 }, 90 * PI / 180);
+	rotateByDestCenter({ 230, 470 }, colorArray, { 200, 470 }, 0 * PI / 180);
+	rotateByDestCenter({ 490, 450 }, colorArray, { 450, 450 }, 90 * PI / 180);
+	rotateByDestCenter({ 530, 450 }, colorArray, { 500, 450 }, 30 * PI / 180);
+	rotateByDestCenter({ 830, 500 }, colorArray, { 800, 500 }, 135 * PI / 180);
 
-	rotateBySourceCenter({ 400, 300 }, colorArray, { 300, 300 }, 30 * PI / 180);
+	rotateBySourceCenter({ 230, 320 }, colorArray, { 200, 320 }, 0 * PI / 180);
+	rotateBySourceCenter({ 490, 300 }, colorArray, { 450, 300 }, 90 * PI / 180);
+	rotateBySourceCenter({ 530, 300 }, colorArray, { 500, 300 }, 30 * PI / 180);
+	rotateBySourceCenter({ 830, 350 }, colorArray, { 800, 350 }, 135 * PI / 180);
+
+	rotateSSBySC({ 230, 170 }, colorArray, { 200, 170 }, 0 * PI / 180 , 4);
+	rotateSSBySC({ 490, 150 }, colorArray, { 450, 150 }, 90 * PI / 180, 4);
+	rotateSSBySC({ 530, 150 }, colorArray, { 500, 150 }, 30 * PI / 180, 4);
+	rotateSSBySC({ 830, 200 }, colorArray, { 800, 200 }, 135 * PI / 180, 4);
+
+	rotateSSByDC({ 230, 20 }, colorArray, { 200, 20 }, 0 * PI / 180, 4);
+	rotateSSByDC({ 490, 0 }, colorArray, { 450, 0 }, 90 * PI / 180, 4);
+	rotateSSByDC({ 530, 0 }, colorArray, { 500, 0 }, 30 * PI / 180, 4);
+	rotateSSByDC({ 830, 50 }, colorArray, { 800, 50 }, 135 * PI / 180, 4);
 
 	glFlush();
 }
@@ -4952,6 +5022,10 @@ void main(int argc, char** argv)
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_25
+	code_7_exercise_25();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_26
 	code_7_exercise_25();
 #endif
 
