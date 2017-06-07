@@ -4866,8 +4866,252 @@ void displayFcn(void)
 
 	glFlush();
 }
+#endif
 
-void code_7_exercise_25()
+#ifdef CHAPTER_7_EXERCISE_26
+struct Point { float x; float y; };
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+struct ColorElement
+{
+	ColorElement() {};
+	ColorElement(GLubyte r, GLubyte g, GLubyte b) : _r(r), _g(g), _b(b) {};
+	GLubyte _r = 0x00;
+	GLubyte _g = 0x00;
+	GLubyte _b = 0x00;
+};
+struct ColorArray
+{
+	ColorArray(int w, int h)
+	{
+		_w = w;
+		_h = h;
+		_data.assign(_h, std::vector<ColorElement>(_w, ColorElement()));
+		_arrayData.assign(_w * _h * 3, 0x00);
+	}
+	std::vector<ColorElement>& operator [](int h)
+	{
+		return _data[h];
+	}
+	operator GLubyte* ()
+	{
+		for (int i = 0; i < _h; i++)
+		{
+			for (int j = 0; j < _w; j++)
+			{
+				int pos = (i * _w + j) * 3;
+				_arrayData[pos] = _data[i][j]._r;
+				_arrayData[pos + 1] = _data[i][j]._g;
+				_arrayData[pos + 2] = _data[i][j]._b;
+			}
+		}
+		return &_arrayData[0];
+	}
+	int _w;
+	int _h;
+	std::vector<std::vector<ColorElement>> _data;
+	std::vector<GLubyte> _arrayData;
+};
+void drawPixels(float x, float y, ColorArray& colorArray)
+{
+	glRasterPos2i(x, y);
+	glDrawPixels(colorArray._w, colorArray._h, GL_RGB, GL_UNSIGNED_BYTE, colorArray);
+}
+void drawPoint(Point p, ColorElement c)
+{
+	glRasterPos2i(p.x, p.y);
+	static GLubyte a[3];
+	a[0] = c._r;
+	a[1] = c._g;
+	a[2] = c._b;
+	glDrawPixels(1, 1, GL_RGB, GL_UNSIGNED_BYTE, a);
+
+	//char aa[16] = {};
+	//sprintf_s(aa, "%d, %d\n", (int)p.x, (int)p.y);
+	//outPut(aa);
+}
+bool pointInRect(Point p, float x0, float y0, float w, float h)
+{
+	return p.x >= x0 && p.x <= x0 + w && p.y >= y0 && p.y <= y0 + h;
+}
+Point rotatePoint(Point p, Point pr, float theta)
+{
+	Point ret;
+	ret.x = p.x * std::cos(theta) - p.y * std::sin(theta) + pr.x * (1 - std::cos(theta)) + pr.y * std::sin(theta);
+	ret.y = p.x * std::sin(theta) + p.y * std::cos(theta) + pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
+	return ret;
+}
+void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
+{
+	if (sx * sy >= 1)
+	{
+		// 目标像素中心点在源像素区域中
+		Point sp0;
+		sp0.x = sx * p0.x + pr.x * (1 - sx);
+		sp0.y = sy * p0.y + pr.y * (1 - sy);
+		float nextX = sp0.x - sx / 2;
+		float nextY = sp0.y - sy / 2;
+		float curX, curY;
+		for (int i = 0; i < colorArray._h; i++)
+		{
+			curY = nextY;
+			nextY = curY + sy;
+			nextX = sp0.x - sx / 2;
+			for (int j = 0; j < colorArray._w; j++)
+			{
+				curX = nextX;				
+				nextX = curX + sx;
+
+				for (int _i = std::ceil(curY); _i <= std::floor(nextY); _i++)
+				{
+					for (int _j = std::ceil(curX); _j <= std::floor(nextX); _j++)
+					{
+						drawPoint({ (float)_j, (float)_i }, colorArray[i][j]);
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		// 源像素中心点在目标像素区域中
+		Point sp0;
+		sp0.x = sx * p0.x + pr.x * (1 - sx);
+		sp0.y = sy * p0.y + pr.y * (1 - sy);
+		float curX = sp0.x;
+		float curY = sp0.y;
+		std::map<Point, std::map<Point, ColorElement>> pointInfo;
+		for (int i = 0; i < colorArray._h; i++)
+		{
+			curX = sp0.x;
+			for (int j = 0; j < colorArray._w; j++)
+			{
+				pointInfo[{std::round(curX), std::round(curY)}][{curX, curY}] = colorArray[i][j];
+				curX += sx;
+			}
+			curY += sy;
+		}
+
+		int count = 0;
+		int sumR = 0;
+		int sumG = 0;
+		int sumB = 0;
+		for (auto& p : pointInfo)
+		{
+			count = p.second.size();
+			sumR = 0;
+			sumG = 0;
+			sumB = 0;
+			for (auto& _p : p.second)
+			{
+				sumR += _p.second._r;
+				sumG += _p.second._g;
+				sumB += _p.second._b;
+			}
+			drawPoint(p.first, ColorElement(sumR / count, sumG / count, sumB / count));
+		}
+	}
+}
+// 超采样
+void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int SSLevel)
+{
+	std::map<Point, std::map<Point, ColorElement>> pointInfo;
+
+	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
+	Point subPr = { pr.x * SSLevel , pr.y * SSLevel };
+
+	Point sp0;
+	sp0.x = sx * subP0.x + subPr.x * (1 - sx);
+	sp0.y = sy * subP0.y + subPr.y * (1 - sy);
+	float nextX = sp0.x - sx / 2 * SSLevel;
+	float nextY = sp0.y - sy / 2 * SSLevel;
+	float curX, curY;
+	for (int i = 0; i < colorArray._h; i++)
+	{
+		curY = nextY;
+		nextY = curY + sy * SSLevel;
+		nextX = sp0.x - sx / 2 * SSLevel;
+		for (int j = 0; j < colorArray._w; j++)
+		{
+			curX = nextX;
+			nextX = curX + sx * SSLevel;
+
+			for (int _i = std::ceil(curY); _i <= std::floor(nextY); _i++)
+			{
+				for (int _j = std::ceil(curX); _j <= std::floor(nextX); _j++)
+				{
+					pointInfo[{(float)(_j / SSLevel), (float)(_i / SSLevel) }][{(float)_j, (float)_i}] = colorArray[i][j];
+				}
+			}
+		}
+	}
+
+	int count = SSLevel * SSLevel;
+	int sumR = 0;
+	int sumG = 0;
+	int sumB = 0;
+	for (auto& p : pointInfo)
+	{
+		sumR = 0;
+		sumG = 0;
+		sumB = 0;
+		for (auto& _p : p.second)
+		{
+			sumR += _p.second._r;
+			sumG += _p.second._g;
+			sumB += _p.second._b;
+		}
+		drawPoint(p.first, ColorElement(sumR / count, sumG / count, sumB / count));
+	}
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glColor3f(1.0, 1.0, 1.0);
+
+	ColorArray colorArray(100, 80);
+	for (int i = 0; i < colorArray._h / 2; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0xFF, 0xFF);
+	}
+	for (int i = 0; i < colorArray._h / 2; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0xFF, 0x00, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w / 2; j++)
+			colorArray[i][j] = ColorElement(0x00, 0xFF, 0x00);
+	}
+	for (int i = colorArray._h / 2; i < colorArray._h; i++)
+	{
+		for (int j = colorArray._w / 2; j < colorArray._w; j++)
+			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
+	}
+	drawPixels(100, 100, colorArray);
+
+	scale({ 100, 100 }, colorArray, { 0, 0 }, 0.3f, 0.3f);
+
+	glFlush();
+}
+
+void code_7_exercise_26()
 {
 	glutDisplayFunc(displayFcn);
 }
@@ -5026,7 +5270,7 @@ void main(int argc, char** argv)
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_26
-	code_7_exercise_25();
+	code_7_exercise_26();
 #endif
 
 
