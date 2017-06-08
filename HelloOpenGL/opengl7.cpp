@@ -5077,6 +5077,18 @@ void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int
 		drawPoint(p.first, ColorElement(sumR / count, sumG / count, sumB / count));
 	}
 }
+float rectAndArea(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2)
+{
+	auto w = min(x1 + w1, x2 + w2) - max(x2, x1);
+	if (w <= 0) return 0;
+	auto h = min(y1 + h1, y2 + h2) - max(y2, y1);
+	if (h <= 0) return 0;
+	return w * h;
+}
+void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
+{
+	// Ñ­»·Ä£°åËã·¨
+}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -5087,7 +5099,10 @@ void displayFcn(void)
 	for (int i = 0; i < colorArray._h / 2; i++)
 	{
 		for (int j = 0; j < colorArray._w / 2; j++)
-			colorArray[i][j] = ColorElement(0xFF, 0xFF, 0xFF);
+			colorArray[i][j] = ColorElement(
+				j % 3 == 0 ? 0xFF : 0x00,
+				j % 3 == 1 ? 0xFF : 0x00,
+				j % 3 == 2 ? 0xFF : 0x00);
 	}
 	for (int i = 0; i < colorArray._h / 2; i++)
 	{
@@ -5106,7 +5121,9 @@ void displayFcn(void)
 	}
 	drawPixels(100, 100, colorArray);
 
-	scale({ 100, 100 }, colorArray, { 0, 0 }, 0.3f, 0.3f);
+
+	scale({ 100, 100 }, colorArray, { 0, 0 }, 1.5f, 0.5f);
+	//scaleSS({ 100, 100 }, colorArray, { 0, 0 }, 0.3f, 0.3f, 4);
 
 	glFlush();
 }
