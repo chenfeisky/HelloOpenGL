@@ -4581,21 +4581,24 @@ void code_7_exercise_24_2()
 
 #ifdef CHAPTER_7_EXERCISE_25
 struct Point { float x; float y; };
-bool operator < (const Point& p1, const Point& p2)
+struct Comp
 {
-	if (p1.x < p2.x)
+	bool operator()(const Point& p1, const Point& p2)
 	{
-		return true;
+		if (p1.x < p2.x)
+		{
+			return true;
+		}
+		else if (p2.x < p1.x)
+		{
+			return false;
+		}
+		else
+		{
+			return p1.y < p2.y;
+		}
 	}
-	else if (p2.x < p1.x)
-	{
-		return false;
-	}
-	else
-	{
-		return p1.y < p2.y;
-	}
-}
+};
 struct ColorElement
 {
 	ColorElement() {};
@@ -4733,7 +4736,7 @@ void rotateBySourceCenter(Point p0, ColorArray& colorArray, Point pr, float thet
 // 超采样 源像素中心点在目标像素区域中
 void rotateSSBySC(Point p0, ColorArray& colorArray, Point pr, float theta, int SSLevel)
 {
-	std::map<Point, std::map<Point, ColorElement>> pointInfo;
+	std::map<Point, std::map<Point, ColorElement, Comp>, Comp> pointInfo;
 
 	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
 	Point subPr = { pr.x * SSLevel , pr.y * SSLevel };
@@ -4772,7 +4775,7 @@ void rotateSSByDC(Point p0, ColorArray& colorArray, Point pr, float theta, int S
 	float thetaA = theta * 180 / PI;
 	float d = std::sqrt(2) / 2 * sin((45 + fmod(std::fabs(thetaA), 90)) * PI / 180);
 
-	std::map<Point, std::map<Point, ColorElement>> pointInfo;
+	std::map<Point, std::map<Point, ColorElement, Comp>, Comp> pointInfo;
 
 	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
 	Point subPr = { pr.x * SSLevel , pr.y * SSLevel };
@@ -4866,25 +4869,34 @@ void displayFcn(void)
 
 	glFlush();
 }
+void code_7_exercise_25()
+{
+	glutDisplayFunc(displayFcn);
+}
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_26
 struct Point { float x; float y; };
-bool operator < (const Point& p1, const Point& p2)
+// 判断浮点数相等
+bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
+struct Comp
 {
-	if (p1.x < p2.x)
+	bool operator()(const Point& p1, const Point& p2)
 	{
-		return true;
+		if (p1.x < p2.x)
+		{
+			return true;
+		}
+		else if (p2.x < p1.x)
+		{
+			return false;
+		}
+		else
+		{
+			return p1.y < p2.y;
+		}
 	}
-	else if (p2.x < p1.x)
-	{
-		return false;
-	}
-	else
-	{
-		return p1.y < p2.y;
-	}
-}
+};
 struct ColorElement
 {
 	ColorElement() {};
@@ -4993,7 +5005,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 		sp0.y = sy * p0.y + pr.y * (1 - sy);
 		float curX = sp0.x;
 		float curY = sp0.y;
-		std::map<Point, std::map<Point, ColorElement>> pointInfo;
+		std::map<Point, std::map<Point, ColorElement, Comp>, Comp> pointInfo;
 		for (int i = 0; i < colorArray._h; i++)
 		{
 			curX = sp0.x;
@@ -5028,7 +5040,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 // 超采样
 void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int SSLevel)
 {
-	std::map<Point, std::map<Point, ColorElement>> pointInfo;
+	std::map<Point, std::map<Point, ColorElement, Comp>, Comp> pointInfo;
 
 	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
 	Point subPr = { pr.x * SSLevel , pr.y * SSLevel };
@@ -5085,9 +5097,89 @@ float rectAndArea(float x1, float y1, float w1, float h1, float x2, float y2, fl
 	if (h <= 0) return 0;
 	return w * h;
 }
-void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
+// 真实宽高计算
+void scaleRealWH(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
-	// 循环模板算法
+	std::map<int, std::map<int, float>> widthStencil;
+	std::map<int, std::map<int, float>> heightStencil;
+	
+	Point sp0;
+	sp0.x = sx * p0.x + pr.x * (1 - sx);
+	sp0.y = sy * p0.y + pr.y * (1 - sy);
+	float nextX = sp0.x - sx / 2;
+	float nextY = sp0.y - sy / 2;
+	float curX, curY;
+
+	std::map<Point, std::map<ColorElement, float>> pointInfo;
+
+	float w, h;
+	for (int i = 0; i < colorArray._h; i++)
+	{
+		curY = nextY;
+		nextY = curY + sy;
+		for (int _i = (int)std::round(curY); _i <= (int)std::round(nextY); _i++)
+		{
+			if ((int)std::round(curY) == (int)std::round(nextY))
+			{
+				h = nextY - curY;
+			}
+			else if (_i == (int)std::round(curY))
+			{
+				h = round(curY) + 0.5 - curY;
+			}
+			else if (_i == (int)std::round(nextY))
+			{
+				h = curY - (round(curY) - 0.5);
+			}
+			else
+			{
+				h = 1;
+			}
+			nextX = sp0.x - sx / 2;
+			for (int j = 0; j < colorArray._w; j++)
+			{
+				curX = nextX;
+				nextX = curX + sx;
+				for (int _j = (int)std::round(curX); _j <= (int)std::round(nextX); _j++)
+				{
+					if ((int)std::round(curX) == (int)std::round(nextX))
+					{
+						w = nextX - curX;
+					}
+					else if (_j == (int)std::round(curX))
+					{
+						w = round(curX) + 0.5 - curX;
+					}
+					else if (_j == (int)std::round(nextX))
+					{
+						w = curX - (round(curX) - 0.5);
+					}
+					else
+					{
+						w = 1;
+					}
+					pointInfo[{_j, _i}][colorArray[i][j]] += w * h;
+				}
+			}
+		}
+	}
+
+	float sumR = 0;
+	float sumG = 0;
+	float sumB = 0;
+	for (auto& p : pointInfo)
+	{
+		sumR = 0;
+		sumG = 0;
+		sumB = 0;
+		for (auto& _c : p.second)
+		{
+			sumR += _c.first._r * _c.second;
+			sumG += _c.first._g * _c.second;
+			sumB += _c.first._b * _c.second;
+		}
+		drawPoint(p.first, ColorElement(sumR, sumG, sumB));
+	}
 }
 void displayFcn(void)
 {
