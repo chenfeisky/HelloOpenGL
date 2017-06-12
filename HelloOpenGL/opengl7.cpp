@@ -4937,6 +4937,27 @@ struct ColorArray
 	std::vector<std::vector<ColorElement>> _data;
 	std::vector<GLubyte> _arrayData;
 };
+struct CompColor
+{
+	bool operator()(const ColorElement& c1, const ColorElement& c2)
+	{
+		if (c1._r == c2._r)
+		{
+			if (c1._g == c2._g)
+			{
+				return c1._b < c2._b;
+			}
+			else
+			{
+				return c1._g < c2._g;
+			}
+		}
+		else
+		{
+			return c1._r < c2._r;
+		}
+	}
+};
 void drawPixels(float x, float y, ColorArray& colorArray)
 {
 	glRasterPos2i(x, y);
@@ -5098,11 +5119,8 @@ float rectAndArea(float x1, float y1, float w1, float h1, float x2, float y2, fl
 	return w * h;
 }
 // 真实宽高计算
-void scaleRealWH(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
+void scaleReal(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
-	std::map<int, std::map<int, float>> widthStencil;
-	std::map<int, std::map<int, float>> heightStencil;
-	
 	Point sp0;
 	sp0.x = sx * p0.x + pr.x * (1 - sx);
 	sp0.y = sy * p0.y + pr.y * (1 - sy);
@@ -5110,7 +5128,7 @@ void scaleRealWH(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 	float nextY = sp0.y - sy / 2;
 	float curX, curY;
 
-	std::map<Point, std::map<ColorElement, float>> pointInfo;
+	std::map<Point, std::map<ColorElement, float, CompColor>, Comp> pointInfo;
 
 	float w, h;
 	for (int i = 0; i < colorArray._h; i++)
@@ -5129,7 +5147,7 @@ void scaleRealWH(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 			}
 			else if (_i == (int)std::round(nextY))
 			{
-				h = curY - (round(curY) - 0.5);
+				h = nextY - (round(nextY) - 0.5);
 			}
 			else
 			{
@@ -5152,17 +5170,149 @@ void scaleRealWH(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 					}
 					else if (_j == (int)std::round(nextX))
 					{
-						w = curX - (round(curX) - 0.5);
+						w = nextX - (round(nextX) - 0.5);
 					}
 					else
 					{
 						w = 1;
 					}
-					pointInfo[{_j, _i}][colorArray[i][j]] += w * h;
+					pointInfo[{(float)_j, (float)_i}][colorArray[i][j]] += w * h;
 				}
 			}
 		}
 	}
+
+	float sumR = 0;
+	float sumG = 0;
+	float sumB = 0;
+	for (auto& p : pointInfo)
+	{
+		sumR = 0;
+		sumG = 0;
+		sumB = 0;
+		for (auto& _c : p.second)
+		{
+			sumR += _c.first._r * _c.second;
+			sumG += _c.first._g * _c.second;
+			sumB += _c.first._b * _c.second;
+		}
+		drawPoint(p.first, ColorElement(sumR, sumG, sumB));
+	}
+}
+// 真实模板计算
+void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
+{
+	Point sp0;
+	sp0.x = sx * p0.x + pr.x * (1 - sx);
+	sp0.y = sy * p0.y + pr.y * (1 - sy);
+	float nextX = sp0.x - sx / 2;
+	float nextY = sp0.y - sy / 2;
+	float curX, curY;
+
+	std::map<Point, std::map<Point, float, Comp>, Comp> pointStencil;
+	int stencilX, stencilY, stencilRealX, stencilRealY;
+	std::map<Point, std::map<ColorElement, float, CompColor>, Comp> pointInfo;
+
+	float w, h;
+	for (int i = 0; i < colorArray._h; i++)
+	{
+		stencilY = i + 1;
+		curY = nextY;
+		nextY = curY + sy;
+		stencilRealY = std::round(nextY - (sp0.y - sy / 2));
+		for (int _i = (int)std::round(curY); _i <= (int)std::round(nextY); _i++)
+		{
+			if ((int)std::round(curY) == (int)std::round(nextY))
+			{
+				h = nextY - curY;
+			}
+			else if (_i == (int)std::round(curY))
+			{
+				h = round(curY) + 0.5 - curY;
+			}
+			else if (_i == (int)std::round(nextY))
+			{
+				h = nextY - (round(nextY) - 0.5);
+			}
+			else
+			{
+				h = 1;
+			}
+			nextX = sp0.x - sx / 2;
+			for (int j = 0; j < colorArray._w; j++)
+			{
+				stencilX = j + 1;
+				curX = nextX;
+				nextX = curX + sx;
+				stencilRealX = std::round(nextX - (sp0.x - sx / 2));
+				for (int _j = (int)std::round(curX); _j <= (int)std::round(nextX); _j++)
+				{
+					if ((int)std::round(curX) == (int)std::round(nextX))
+					{
+						w = nextX - curX;
+					}
+					else if (_j == (int)std::round(curX))
+					{
+						w = round(curX) + 0.5 - curX;
+					}
+					else if (_j == (int)std::round(nextX))
+					{
+						w = nextX - (round(nextX) - 0.5);
+					}
+					else
+					{
+						w = 1;
+					}
+					pointStencil[{j, i}][{_j, _i}] = w * h;
+				}
+				if (Equal(nextX - (int)nextX, sp0.x - sx / 2 - (int)(sp0.x - sx / 2)))
+				{
+					break;
+				}
+			}
+		}
+		if (Equal(nextY - (int)nextY, sp0.y - sy / 2 - (int)(sp0.y - sy / 2)))
+		{			
+			break;
+		}
+	}
+	
+	//int maxX = 0;
+	//int loopX = 0;
+	//for (int i = 0;;i++)
+	//{
+	//	for (int j = 0;;j++)
+	//	{
+	//		maxX += stencilX;
+	//		for (int _i = 0; _i <= maxX % stencilX; i++)
+	//		{
+	//			for (int _j = 0; _j <= maxX % stencilX; j++)
+	//			{
+	//				for (auto & p : pointStencil[{_j, _i}])
+	//				{
+	//					pointInfo[{sp0.x + j * stencilRealX + p.first.x, sp0.y + i * stencilRealY + p.first.y}][]
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+	for (int i = 0; i < colorArray._h; i++)
+	{
+		for (int j = 0; j < colorArray._w; j++)
+		{
+			Point p = { j % stencilX, i % stencilY };
+			int nX = j / stencilX;
+			int nY = i / stencilY;
+			for (auto & realP : pointStencil[p])
+			{
+				pointInfo[{realP.first.x + nX * stencilRealX, realP.first.y + nY * stencilRealY}][colorArray[i][j]] += realP.second;
+			}
+		}
+	}
+
+
+
 
 	float sumR = 0;
 	float sumG = 0;
@@ -5213,9 +5363,11 @@ void displayFcn(void)
 	}
 	drawPixels(100, 100, colorArray);
 
-
-	scale({ 100, 100 }, colorArray, { 0, 0 }, 1.5f, 0.5f);
-	//scaleSS({ 100, 100 }, colorArray, { 0, 0 }, 0.3f, 0.3f, 4);
+	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 1.5f, 2.3f);
+	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 0.5f, 0.5f);
+	//scale({ 100, 100 }, colorArray, { 0, 0 }, 0.5f, 0.5f);
+	
+	//scaleSS({ 100, 100 }, colorArray, { 0, 0 }, 0.5f, 0.5f, 4);
 
 	glFlush();
 }
