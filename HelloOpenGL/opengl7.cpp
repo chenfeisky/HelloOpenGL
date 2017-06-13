@@ -4972,8 +4972,8 @@ void drawPoint(Point p, ColorElement c)
 	a[2] = c._b;
 	glDrawPixels(1, 1, GL_RGB, GL_UNSIGNED_BYTE, a);
 
-	//char aa[16] = {};
-	//sprintf_s(aa, "%d, %d\n", (int)p.x, (int)p.y);
+	//static char aa[64] = {};
+	//sprintf_s(aa, "%d, %d	%d, %d, %d\n", (int)p.x, (int)p.y, (int)a[0], (int)a[1], (int)a[2]);
 	//outPut(aa);
 }
 bool pointInRect(Point p, float x0, float y0, float w, float h)
@@ -4987,9 +4987,10 @@ Point rotatePoint(Point p, Point pr, float theta)
 	ret.y = p.x * std::sin(theta) + p.y * std::cos(theta) + pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
 	return ret;
 }
+void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, float sy);
 void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
-	if (sx * sy >= 1)
+	if (sx >= 1 && sy >= 1)
 	{
 		// 目标像素中心点在源像素区域中
 		Point sp0;
@@ -5018,7 +5019,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 			}
 		}
 	}
-	else
+	else if (sx <= 1 && sy <= 1)
 	{
 		// 源像素中心点在目标像素区域中
 		Point sp0;
@@ -5057,10 +5058,18 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 			drawPoint(p.first, ColorElement(sumR / count, sumG / count, sumB / count));
 		}
 	}
+	else
+	{
+		scaleRealStencil(p0, colorArray, pr, sx, sy);
+	}
 }
 // 超采样
 void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int SSLevel)
 {
+	float minPer = max(1 / sx, 1 / sy);
+	if (SSLevel < minPer)
+		SSLevel = std::ceil(minPer);
+
 	std::map<Point, std::map<Point, ColorElement, Comp>, Comp> pointInfo;
 
 	Point subP0 = { p0.x * SSLevel , p0.y * SSLevel };
@@ -5196,7 +5205,7 @@ void scaleReal(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 			sumG += _c.first._g * _c.second;
 			sumB += _c.first._b * _c.second;
 		}
-		drawPoint(p.first, ColorElement(sumR, sumG, sumB));
+		drawPoint(p.first, ColorElement(std::round(sumR), std::round(sumG), std::round(sumB)));
 	}
 }
 // 真实模板计算
@@ -5210,7 +5219,8 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 	float curX, curY;
 
 	std::map<Point, std::map<Point, float, Comp>, Comp> pointStencil;
-	int stencilX, stencilY, stencilRealX, stencilRealY;
+	int stencilX, stencilY;
+	float stencilRealX, stencilRealY;
 	std::map<Point, std::map<ColorElement, float, CompColor>, Comp> pointInfo;
 
 	float w, h;
@@ -5219,7 +5229,7 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 		stencilY = i + 1;
 		curY = nextY;
 		nextY = curY + sy;
-		stencilRealY = std::round(nextY - (sp0.y - sy / 2));
+		stencilRealY = nextY - (sp0.y - sy / 2);
 		for (int _i = (int)std::round(curY); _i <= (int)std::round(nextY); _i++)
 		{
 			if ((int)std::round(curY) == (int)std::round(nextY))
@@ -5244,7 +5254,7 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 				stencilX = j + 1;
 				curX = nextX;
 				nextX = curX + sx;
-				stencilRealX = std::round(nextX - (sp0.x - sx / 2));
+				stencilRealX = nextX - (sp0.x - sx / 2);
 				for (int _j = (int)std::round(curX); _j <= (int)std::round(nextX); _j++)
 				{
 					if ((int)std::round(curX) == (int)std::round(nextX))
@@ -5263,39 +5273,21 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 					{
 						w = 1;
 					}
-					pointStencil[{j, i}][{_j, _i}] = w * h;
+					pointStencil[{(float)j, (float)i}][{(float)_j, (float)_i}] = w * h;
 				}
-				if (Equal(nextX - (int)nextX, sp0.x - sx / 2 - (int)(sp0.x - sx / 2)))
+				if (Equal(stencilRealX - std::round(stencilRealX), 0))
 				{
 					break;
 				}
 			}
 		}
-		if (Equal(nextY - (int)nextY, sp0.y - sy / 2 - (int)(sp0.y - sy / 2)))
+		if (Equal(stencilRealY - std::round(stencilRealY), 0))
 		{			
 			break;
 		}
 	}
-	
-	//int maxX = 0;
-	//int loopX = 0;
-	//for (int i = 0;;i++)
-	//{
-	//	for (int j = 0;;j++)
-	//	{
-	//		maxX += stencilX;
-	//		for (int _i = 0; _i <= maxX % stencilX; i++)
-	//		{
-	//			for (int _j = 0; _j <= maxX % stencilX; j++)
-	//			{
-	//				for (auto & p : pointStencil[{_j, _i}])
-	//				{
-	//					pointInfo[{sp0.x + j * stencilRealX + p.first.x, sp0.y + i * stencilRealY + p.first.y}][]
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
+	stencilRealX = std::round(stencilRealX);
+	stencilRealY = std::round(stencilRealY);
 
 	for (int i = 0; i < colorArray._h; i++)
 	{
@@ -5311,9 +5303,6 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 		}
 	}
 
-
-
-
 	float sumR = 0;
 	float sumG = 0;
 	float sumB = 0;
@@ -5328,7 +5317,7 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 			sumG += _c.first._g * _c.second;
 			sumB += _c.first._b * _c.second;
 		}
-		drawPoint(p.first, ColorElement(sumR, sumG, sumB));
+		drawPoint(p.first, ColorElement(std::round(sumR), std::round(sumG), std::round(sumB)));
 	}
 }
 void displayFcn(void)
@@ -5363,11 +5352,11 @@ void displayFcn(void)
 	}
 	drawPixels(100, 100, colorArray);
 
-	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 1.5f, 2.3f);
-	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 0.5f, 0.5f);
-	//scale({ 100, 100 }, colorArray, { 0, 0 }, 0.5f, 0.5f);
+	//scaleRealStencil({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f);
+	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 1.2f, 1.5f);
+	scale({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f);
 	
-	//scaleSS({ 100, 100 }, colorArray, { 0, 0 }, 0.5f, 0.5f, 4);
+	//scaleSS({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f, 4);
 
 	glFlush();
 }
