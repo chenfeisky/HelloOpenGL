@@ -5148,23 +5148,32 @@ void scaleReal(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 	std::map<Point, std::map<ColorElement, float, CompColor>, Comp> pointInfo;
 
 	float w, h;
+	int beginX, endX, beginY, endY;
 	for (int i = 0; i < colorArray._h; i++)
 	{
 		curY = nextY;
 		nextY = curY + sy;
-		for (int _i = (int)std::round(curY); _i <= (int)std::round(nextY); _i++)
+		beginY = sy > 0 ? std::round(curY) : std::round(nextY);
+		endY = sy > 0 ? std::round(nextY) : std::round(curY);
+		for (int _i = beginY; _i <= endY; _i++)
 		{
-			if ((int)std::round(curY) == (int)std::round(nextY))
+			if (beginY == endY)
 			{
-				h = nextY - curY;
+				h = std::abs(sy);
 			}
-			else if (_i == (int)std::round(curY))
+			else if (_i == beginY)
 			{
-				h = round(curY) + 0.5 - curY;
+				if (sy > 0)
+					h = beginY + 0.5 - curY;
+				else
+					h = beginY + 0.5 - nextY;
 			}
-			else if (_i == (int)std::round(nextY))
+			else if (_i == endY)
 			{
-				h = nextY - (round(nextY) - 0.5);
+				if (sy > 0)
+					h = nextY - (endY - 0.5);
+				else
+					h = curY - (endY - 0.5);
 			}
 			else
 			{
@@ -5175,19 +5184,27 @@ void scaleReal(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 			{
 				curX = nextX;
 				nextX = curX + sx;
-				for (int _j = (int)std::round(curX); _j <= (int)std::round(nextX); _j++)
+				beginX = sx > 0 ? std::round(curX) : std::round(nextX);
+				endX = sx > 0 ? std::round(nextX) : std::round(curX);
+				for (int _j = beginX; _j <= endX; _j++)
 				{
-					if ((int)std::round(curX) == (int)std::round(nextX))
+					if (beginX == endX)
 					{
-						w = nextX - curX;
+						w = std::abs(sx);
 					}
-					else if (_j == (int)std::round(curX))
+					else if (_j == beginX)
 					{
-						w = round(curX) + 0.5 - curX;
+						if (sx > 0)
+							w = beginX + 0.5 - curX;
+						else
+							w = beginX + 0.5 - nextX;
 					}
-					else if (_j == (int)std::round(nextX))
+					else if (_j == endX)
 					{
-						w = nextX - (round(nextX) - 0.5);
+						if (sx > 0)
+							w = nextX - (endX - 0.5);
+						else
+							w = curX - (endX - 0.5);
 					}
 					else
 					{
@@ -5361,10 +5378,10 @@ void displayFcn(void)
 	drawPixels(400, 300, colorArray);
 
 	//scaleRealStencil({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f);
-	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 1.2f, 1.5f);
+	scaleReal({ 400, 300 }, colorArray, { 400, 300 }, -2.0f, -2.0f);
 	//scale({ 400, 300 }, colorArray, { 400, 300 }, 0.5f, -0.5f);
 	
-	scaleSS({ 400, 300 }, colorArray, { 400, 300 }, -0.5f, -0.5f, 4);
+	//scaleSS({ 400, 300 }, colorArray, { 400, 300 }, -0.5f, -0.5f, 4);
 
 	glFlush();
 }
