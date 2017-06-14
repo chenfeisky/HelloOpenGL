@@ -4990,7 +4990,7 @@ Point rotatePoint(Point p, Point pr, float theta)
 void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, float sy);
 void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
-	if (sx >= 1 && sy >= 1)
+	if (std::abs(sx) >= 1 && std::abs(sy) >= 1)
 	{
 		// 目标像素中心点在源像素区域中
 		Point sp0;
@@ -4999,19 +4999,23 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 		float nextX = sp0.x - sx / 2;
 		float nextY = sp0.y - sy / 2;
 		float curX, curY;
+		int beginX, endX, beginY, endY;
 		for (int i = 0; i < colorArray._h; i++)
 		{
 			curY = nextY;
 			nextY = curY + sy;
+			beginY = sy > 0 ? std::ceil(curY) : std::ceil(nextY);
+			endY = sy > 0 ? std::floor(nextY) : std::floor(curY);
 			nextX = sp0.x - sx / 2;
 			for (int j = 0; j < colorArray._w; j++)
 			{
 				curX = nextX;				
 				nextX = curX + sx;
-
-				for (int _i = std::ceil(curY); _i <= std::floor(nextY); _i++)
+				beginX = sx > 0 ? std::ceil(curX) : std::ceil(nextX);
+				endX = sx > 0 ? std::floor(nextX) : std::floor(curX);
+				for (int _i = beginY; _i <= endY; _i++)
 				{
-					for (int _j = std::ceil(curX); _j <= std::floor(nextX); _j++)
+					for (int _j = beginX; _j <= endX; _j++)
 					{
 						drawPoint({ (float)_j, (float)_i }, colorArray[i][j]);
 					}
@@ -5019,7 +5023,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 			}
 		}
 	}
-	else if (sx <= 1 && sy <= 1)
+	else if (std::abs(sx) <= 1 && std::abs(sy) <= 1)
 	{
 		// 源像素中心点在目标像素区域中
 		Point sp0;
@@ -5066,7 +5070,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 // 超采样
 void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int SSLevel)
 {
-	float minPer = max(1 / sx, 1 / sy);
+	float minPer = max(std::abs(1 / sx), std::abs(1 / sy));
 	if (SSLevel < minPer)
 		SSLevel = std::ceil(minPer);
 
@@ -5081,21 +5085,25 @@ void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int
 	float nextX = sp0.x - sx / 2 * SSLevel;
 	float nextY = sp0.y - sy / 2 * SSLevel;
 	float curX, curY;
+	int beginX, endX, beginY, endY;
 	for (int i = 0; i < colorArray._h; i++)
 	{
 		curY = nextY;
 		nextY = curY + sy * SSLevel;
+		beginY = sy > 0 ? std::ceil(curY) : std::ceil(nextY);
+		endY = sy > 0 ? std::floor(nextY) : std::floor(curY);
 		nextX = sp0.x - sx / 2 * SSLevel;
 		for (int j = 0; j < colorArray._w; j++)
 		{
 			curX = nextX;
 			nextX = curX + sx * SSLevel;
-
-			for (int _i = std::ceil(curY); _i <= std::floor(nextY); _i++)
+			beginX = sx > 0 ? std::ceil(curX) : std::ceil(nextX);
+			endX = sx > 0 ? std::floor(nextX) : std::floor(curX);
+			for (int _i = beginY; _i <= endY; _i++)
 			{
-				for (int _j = std::ceil(curX); _j <= std::floor(nextX); _j++)
+				for (int _j = beginX; _j <= endX; _j++)
 				{
-					pointInfo[{(float)(_j / SSLevel), (float)(_i / SSLevel) }][{(float)_j, (float)_i}] = colorArray[i][j];
+					pointInfo[{floor((float)_j / SSLevel), floor((float)_i / SSLevel)}][{(float)_j, (float)_i}] = colorArray[i][j];
 				}
 			}
 		}
@@ -5350,13 +5358,13 @@ void displayFcn(void)
 		for (int j = colorArray._w / 2; j < colorArray._w; j++)
 			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
 	}
-	drawPixels(100, 100, colorArray);
+	drawPixels(400, 300, colorArray);
 
 	//scaleRealStencil({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f);
 	//scaleReal({ 100, 100 }, colorArray, { 0, 0 }, 1.2f, 1.5f);
-	scale({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f);
+	//scale({ 400, 300 }, colorArray, { 400, 300 }, 0.5f, -0.5f);
 	
-	//scaleSS({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f, 4);
+	scaleSS({ 400, 300 }, colorArray, { 400, 300 }, -0.5f, -0.5f, 4);
 
 	glFlush();
 }
