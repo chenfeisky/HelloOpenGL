@@ -4583,7 +4583,7 @@ void code_7_exercise_24_2()
 struct Point { float x; float y; };
 struct Comp
 {
-	bool operator()(const Point& p1, const Point& p2)
+	bool operator()(const Point& p1, const Point& p2) const
 	{
 		if (p1.x < p2.x)
 		{
@@ -4881,7 +4881,7 @@ struct Point { float x; float y; };
 bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 struct Comp
 {
-	bool operator()(const Point& p1, const Point& p2)
+	bool operator()(const Point& p1, const Point& p2) const 
 	{
 		if (p1.x < p2.x)
 		{
@@ -4939,7 +4939,7 @@ struct ColorArray
 };
 struct CompColor
 {
-	bool operator()(const ColorElement& c1, const ColorElement& c2)
+	bool operator()(const ColorElement& c1, const ColorElement& c2) const
 	{
 		if (c1._r == c2._r)
 		{
@@ -5249,25 +5249,34 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 	std::map<Point, std::map<ColorElement, float, CompColor>, Comp> pointInfo;
 
 	float w, h;
+	int beginX, endX, beginY, endY;
 	for (int i = 0; i < colorArray._h; i++)
 	{
 		stencilY = i + 1;
 		curY = nextY;
 		nextY = curY + sy;
 		stencilRealY = nextY - (sp0.y - sy / 2);
-		for (int _i = (int)std::round(curY); _i <= (int)std::round(nextY); _i++)
+		beginY = sy > 0 ? std::round(curY) : std::round(nextY);
+		endY = sy > 0 ? std::round(nextY) : std::round(curY);
+		for (int _i = beginY; _i <= endY; _i++)
 		{
-			if ((int)std::round(curY) == (int)std::round(nextY))
+			if (beginY == endY)
 			{
-				h = nextY - curY;
+				h = std::abs(sy);
 			}
-			else if (_i == (int)std::round(curY))
+			else if (_i == beginY)
 			{
-				h = round(curY) + 0.5 - curY;
+				if (sy > 0)
+					h = beginY + 0.5 - curY;
+				else
+					h = beginY + 0.5 - nextY;
 			}
-			else if (_i == (int)std::round(nextY))
+			else if (_i == endY)
 			{
-				h = nextY - (round(nextY) - 0.5);
+				if (sy > 0)
+					h = nextY - (endY - 0.5);
+				else
+					h = curY - (endY - 0.5);
 			}
 			else
 			{
@@ -5280,19 +5289,27 @@ void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, floa
 				curX = nextX;
 				nextX = curX + sx;
 				stencilRealX = nextX - (sp0.x - sx / 2);
-				for (int _j = (int)std::round(curX); _j <= (int)std::round(nextX); _j++)
+				beginX = sx > 0 ? std::round(curX) : std::round(nextX);
+				endX = sx > 0 ? std::round(nextX) : std::round(curX);
+				for (int _j = beginX; _j <= endX; _j++)
 				{
-					if ((int)std::round(curX) == (int)std::round(nextX))
+					if (beginX == endX)
 					{
-						w = nextX - curX;
+						w = std::abs(sx);
 					}
-					else if (_j == (int)std::round(curX))
+					else if (_j == beginX)
 					{
-						w = round(curX) + 0.5 - curX;
+						if (sx > 0)
+							w = beginX + 0.5 - curX;
+						else
+							w = beginX + 0.5 - nextX;
 					}
-					else if (_j == (int)std::round(nextX))
+					else if (_j == endX)
 					{
-						w = nextX - (round(nextX) - 0.5);
+						if (sx > 0)
+							w = nextX - (endX - 0.5);
+						else
+							w = curX - (endX - 0.5);
 					}
 					else
 					{
@@ -5351,7 +5368,7 @@ void displayFcn(void)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glColor3f(1.0, 1.0, 1.0);
 
-	ColorArray colorArray(100, 80);
+	ColorArray colorArray(100, 60);
 	for (int i = 0; i < colorArray._h / 2; i++)
 	{
 		for (int j = 0; j < colorArray._w / 2; j++)
@@ -5375,13 +5392,38 @@ void displayFcn(void)
 		for (int j = colorArray._w / 2; j < colorArray._w; j++)
 			colorArray[i][j] = ColorElement(0x00, 0x00, 0xFF);
 	}
-	drawPixels(400, 300, colorArray);
+	drawPixels(20, 300, colorArray);
+	glPixelZoom(0.5, 0.5);
+	drawPixels(20, 250, colorArray);
+	glPixelZoom(1.0, 1.0);
 
-	//scaleRealStencil({ 100, 100 }, colorArray, { 0, 0 }, 0.12f, 1.5f);
-	scaleReal({ 400, 300 }, colorArray, { 400, 300 }, -2.0f, -2.0f);
-	//scale({ 400, 300 }, colorArray, { 400, 300 }, 0.5f, -0.5f);
-	
-	//scaleSS({ 400, 300 }, colorArray, { 400, 300 }, -0.5f, -0.5f, 4);
+	scale({ 130, 430 }, colorArray, { 110, 400 }, 2.f, 2.f);
+	scale({ 380, 430 }, colorArray, { 360, 400 }, 0.73f, 1.85f);
+	scale({ 660, 630 }, colorArray, { 640, 600 }, -1.5f, -1.5f);
+	scale({ 820, 520 }, colorArray, { 810, 500 }, -1.8f, 0.5f);
+
+	scaleSS({ 130, 280 }, colorArray, { 110, 250 }, 2.f, 2.f, 4);
+	scaleSS({ 380, 280 }, colorArray, { 360, 250 }, 0.73f, 1.85f, 4);
+	scaleSS({ 660, 480 }, colorArray, { 640, 450 }, -1.5f, -1.5f, 4);
+	scaleSS({ 820, 370 }, colorArray, { 810, 350 }, -1.8f, 0.5f, 4);
+
+	auto startTime = GetTickCount();
+	scaleReal({ 130, 130 }, colorArray, { 110, 100 }, 2.f, 2.f);
+	scaleReal({ 380, 130 }, colorArray, { 360, 100 }, 0.73f, 1.85f);
+	scaleReal({ 660, 330 }, colorArray, { 640, 300 }, -1.5f, -1.5f);
+	scaleReal({ 820, 220 }, colorArray, { 810, 200 }, -1.8f, 0.5f);
+	auto endTime = GetTickCount();
+	printf("%d ms\n", endTime - startTime);
+
+	startTime = GetTickCount();
+	scaleRealStencil({ 130, -20 }, colorArray, { 110, -50 }, 2.f, 2.f);
+	scaleRealStencil({ 380, -20 }, colorArray, { 360, -50 }, 0.73f, 1.85f);
+	scaleRealStencil({ 660, 180 }, colorArray, { 640, 150 }, -1.5f, -1.5f);
+	scaleRealStencil({ 820, 70 }, colorArray, { 810, 50 }, -1.8f, 0.5f);
+	endTime = GetTickCount();
+	printf("%d ms\n", endTime - startTime);
+
+
 
 	glFlush();
 }
