@@ -20264,6 +20264,10 @@ void main(int argc, char** argv)
 	code_6_exercise_add_2();
 #endif
 
+#ifdef CHAPTER_6_EXERCISE_ADD_2
+	code_6_exercise_add_2();
+#endif
+
 
 	glutMainLoop();
 }

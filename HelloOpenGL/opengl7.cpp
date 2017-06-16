@@ -5434,6 +5434,42 @@ void code_7_exercise_26()
 }
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_27
+struct Point { float x; float y; };
+void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
+{
+	glColor3f(r, g, b);
+
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	std::vector<Point> rect = { {-10, 100}, {10, 100}, {10, 120}, {-10, 120} };
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(100.f, 100.f, 0.f);
+	drawPolygon(rect, 0.0, 0.0, 0.0);
+
+	glRotated(30, 0, 0, 1);
+	drawPolygon(rect, 0.0, 0.0, 0.0);
+
+	glRotated(30, 0, 0, 1);
+	drawPolygon(rect, 0.0, 0.0, 0.0);
+
+	glFlush();
+}
+void code_7_exercise_27()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_7_COMMON
 
@@ -5588,6 +5624,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_7_EXERCISE_26
 	code_7_exercise_26();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_27
+	code_7_exercise_27();
 #endif
 
 
