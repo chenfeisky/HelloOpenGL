@@ -5436,6 +5436,9 @@ void code_7_exercise_26()
 
 #ifdef CHAPTER_7_EXERCISE_27
 struct Point { float x; float y; };
+std::vector<Point> rect1 = { { 90, -10 },{ 110, -10 },{ 110, 10 },{ 90, 10 } };
+std::vector<Point> rect2 = { { -10, -10 },{ 10, -10 },{ 10, 10 },{ -10, 10 } };
+int curAngle = 0;
 void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
 {
 	glColor3f(r, g, b);
@@ -5445,27 +5448,192 @@ void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	
-	std::vector<Point> rect = { {-10, 100}, {10, 100}, {10, 120}, {-10, 120} };
+
+	// 旋转-平移
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(100.f, 100.f, 0.f);
-	drawPolygon(rect, 0.0, 0.0, 0.0);
+	glTranslatef(150.f, 300.f, 0.f);
+	drawCoordinate();
+	glRotated(curAngle, 0, 0, 1);
+	drawPolygon(rect1, 0.0, 0.0, 0.0);
 
-	glRotated(30, 0, 0, 1);
-	drawPolygon(rect, 0.0, 0.0, 0.0);
+	auto x = std::cos(curAngle * PI / 180) * 100;
+	auto y = std::sin(curAngle * PI / 180) * 100;
+	// 旋转-基于正方向中心的旋转（正方向）-平移
+	glLoadIdentity();
+	glTranslatef(400.f, 300.f, 0.f);
+	drawCoordinate();
+	glTranslatef(x, y, 0.f);
+	glRotated(-curAngle, 0, 0, 1);
+	glTranslatef(-x, -y, 0.f);
+	glRotated(curAngle, 0, 0, 1);
+	drawPolygon(rect1, 0.0, 0.0, 0.0);
 
-	glRotated(30, 0, 0, 1);
-	drawPolygon(rect, 0.0, 0.0, 0.0);
+	// 直接按圆路径平移
+	glLoadIdentity();
+	glTranslatef(650.f, 300.f, 0.f);
+	drawCoordinate();
+	glTranslatef(x, y, 0.f);
+	drawPolygon(rect2, 0.0, 0.0, 0.0);
 
 	glFlush();
+}
+void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+	curAngle -= 360 / 12;
+	if (curAngle <= 0)
+		curAngle = 360;
+	displayFcn();
 }
 void code_7_exercise_27()
 {
 	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glColor3f(0.0, 0.0, 0.0);
+	SetTimer(NULL, NULL, 1000, onTimer);
+
+	curAngle = 90;
+	
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_28
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+std::vector<Point> rect1 = { { 90, -10 },{ 110, -10 },{ 110, 10 },{ 90, 10 } };
+std::vector<Point> rect2 = { { -10, -10 },{ 10, -10 },{ 10, 10 },{ -10, 10 } };
+int curAngle = 0;
+void drawPolygon(const std::vector<Point>& points, float r, float g, float b)
+{
+	glColor3f(r, g, b);
+
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void translate(float tx, float ty)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][3] = tx;
+	m[1][3] = ty;
+	glMultMatrixf(m);
+}
+void rotate(Point pr, float theta)
+{
+	theta = theta * PI / 180;
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][0] = std::cos(theta);
+	m[0][1] = -std::sin(theta);
+	m[0][3] = pr.x * (1 - std::cos(theta)) + pr.y * std::sin(theta);
+	m[1][0] = std::sin(theta);
+	m[1][1] = std::cos(theta);
+	m[1][3] = pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
+	glMultMatrixf(m);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// 旋转-平移
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	translate(150.f, 300.f);
+	drawCoordinate();
+	glRotated(curAngle, 0, 0, 1);
+	drawPolygon(rect1, 0.0, 0.0, 0.0);
+
+	float x = std::cos(curAngle * PI / 180) * 100;
+	float y = std::sin(curAngle * PI / 180) * 100;
+	// 旋转-基于正方向中心的旋转（正方向）-平移
+	glLoadIdentity();
+	translate(400.f, 300.f);
+	drawCoordinate();
+	rotate({x, y}, -curAngle);
+	rotate({0.f, 0.f}, curAngle);
+	drawPolygon(rect1, 0.0, 0.0, 0.0);
+
+	// 直接按圆路径平移
+	glLoadIdentity();
+	translate(650.f, 300.f);
+	drawCoordinate();
+	translate(x, y);
+	drawPolygon(rect2, 0.0, 0.0, 0.0);
+
+	glFlush();
+}
+void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+	curAngle -= 360 / 12;
+	if (curAngle <= 0)
+		curAngle = 360;
+	displayFcn();
+}
+void code_7_exercise_28()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glColor3f(0.0, 0.0, 0.0);
+	SetTimer(NULL, NULL, 1000, onTimer);
+
+	curAngle = 90;
+
 	glutDisplayFunc(displayFcn);
 }
 #endif
@@ -5630,6 +5798,9 @@ void main(int argc, char** argv)
 	code_7_exercise_27();
 #endif
 
+#ifdef CHAPTER_7_EXERCISE_28
+	code_7_exercise_28();
+#endif
 
 	glutMainLoop();
 }
