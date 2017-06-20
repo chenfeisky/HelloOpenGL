@@ -5991,9 +5991,10 @@ void displayFcn(void)
 	auto x = std::cos(curAngle * PI / 180) * 100;
 	auto y = std::sin(curAngle * PI / 180) * 100;
 
-	// 旋转-基于正方形中心的顺时针自旋转-平移
+	selfScale = ((float)((curAngle - 1) % 90 + 1) / 90  + 1) / 2;
+
+	// 旋转-基于正方形中心的顺时针自旋转-基于正方形中心的缩放-平移
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
-	selfScale = ((float)(curAngle % 90) / 90  + 1) / 2;
 	glLoadIdentity();
 	glTranslatef(200.f, 450.f, 0.f);
 	glColor3f(0.0, 0.0, 0.0);
@@ -6013,13 +6014,14 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// 旋转-基于正方形中心的逆时针自旋转-平移
+	// 旋转-基于正方形中心的逆时针自旋转-基于正方形中心的缩放-平移
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	glTranslatef(600.f, 450.f, 0.f);
 	glColor3f(0.0, 0.0, 0.0);
 	drawCoordinate();
 	glTranslatef(x, y, 0.f);
+	glScaled(selfScale, selfScale, 1.0);
 	glRotated(selfAngle - curAngle, 0, 0, 1);
 	glTranslatef(-x, -y, 0.f);
 	glRotated(curAngle, 0, 0, 1);
@@ -6033,13 +6035,14 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// 基于正方形中心的顺时针自旋转-直接按圆路径平移
+	// 基于正方形中心的顺时针自旋转-基于正方形中心的缩放-按圆路径平移
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	glTranslatef(200.f, 150.f, 0.f);
 	glColor3f(0.0, 0.0, 0.0);
 	drawCoordinate();
 	glTranslatef(x, y, 0.f);
+	glScaled(selfScale, selfScale, 1.0);
 	glRotated(selfAngle, 0, 0, 1);
 
 	glColor3f(0.0, 0.0, 0.0);
@@ -6051,13 +6054,14 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect2_4);
 
-	// 基于正方形中心的逆时针自旋转-直接按圆路径平移
+	// 基于正方形中心的逆时针自旋转-基于正方形中心的缩放-按圆路径平移
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	glTranslatef(600.f, 150.f, 0.f);
 	glColor3f(0.0, 0.0, 0.0);
 	drawCoordinate();
 	glTranslatef(x, y, 0.f);
+	glScaled(selfScale, selfScale, 1.0);
 	glRotated(selfAngle, 0, 0, 1);
 
 	glColor3f(0.0, 0.0, 0.0);
@@ -6083,6 +6087,343 @@ void code_7_exercise_31()
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glColor3f(0.0, 0.0, 0.0);
 	SetTimer(NULL, NULL, 1000, onTimer);
+
+	curAngle = 90;
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_32
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+std::vector<Point> rect1_1 = { { 90, -10 },{ 100, -10 },{ 100, 0 },{ 90, 0 } };
+std::vector<Point> rect1_2 = { { 100, -10 },{ 110, -10 },{ 110, 0 },{ 100, 0 } };
+std::vector<Point> rect1_3 = { { 100, 0 },{ 110, 0 },{ 110, 10 },{ 100, 10 } };
+std::vector<Point> rect1_4 = { { 90, 0 },{ 100, 0 },{ 100, 10 },{ 90, 10 } };
+std::vector<Point> rect2_1 = { { -10, -10 },{ 0, -10 },{ 0, 0 },{ -10, 0 } };
+std::vector<Point> rect2_2 = { { 0, -10 },{ 10, -10 },{ 10, 0 },{ 0, 0 } };
+std::vector<Point> rect2_3 = { { 0, 0 },{ 10, 0 },{ 10, 10 },{ 0, 10 } };
+std::vector<Point> rect2_4 = { { -10, 0 },{ 0, 0 },{ 0, 10 },{ -10, 10 } };
+int curAngle = 0;
+float selfAngle = 0;
+float selfScale = 0;
+void drawPolygon(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void translate(float tx, float ty)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][3] = tx;
+	m[1][3] = ty;
+	glMultMatrixf(m);
+}
+void rotate(Point pr, float theta)
+{
+	theta = theta * PI / 180;
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][0] = std::cos(theta);
+	m[0][1] = -std::sin(theta);
+	m[0][3] = pr.x * (1 - std::cos(theta)) + pr.y * std::sin(theta);
+	m[1][0] = std::sin(theta);
+	m[1][1] = std::cos(theta);
+	m[1][3] = pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
+	glMultMatrixf(m);
+}
+void scale(Point pr, float sx, float sy)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][0] = sx;
+	m[0][3] = pr.x * (1 - sx);
+	m[1][1] = sy;
+	m[1][3] = pr.y * (1 - sy);
+	glMultMatrixf(m);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+
+	float x = std::cos(curAngle * PI / 180) * 100;
+	float y = std::sin(curAngle * PI / 180) * 100;
+
+	selfScale = ((float)((curAngle - 1) % 90 + 1) / 90 + 1) / 2;
+
+	// 旋转-基于正方形中心的顺时针自旋转-基于正方形中心的缩放-平移
+	selfAngle = (float)(curAngle % 90) / 90 * 360;
+	glLoadIdentity();
+	translate(200.f, 450.f);
+	glColor3f(0.0, 0.0, 0.0);
+	drawCoordinate();
+	scale({ x, y }, selfScale, selfScale);
+	rotate({ x, y }, selfAngle - curAngle);
+	rotate({ 0.f, 0.f }, curAngle);
+
+	glColor3f(0.0, 0.0, 0.0);
+	drawPolygon(rect1_1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(rect1_2);
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolygon(rect1_3);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(rect1_4);
+
+	// 旋转-基于正方形中心的逆时针自旋转-基于正方形中心的缩放-平移
+	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
+	glLoadIdentity();
+	translate(600.f, 450.f);
+	glColor3f(0.0, 0.0, 0.0);
+	drawCoordinate();
+	scale({ x, y }, selfScale, selfScale);
+	rotate({ x, y }, selfAngle - curAngle);
+	rotate({ 0.f, 0.f }, curAngle);
+
+	glColor3f(0.0, 0.0, 0.0);
+	drawPolygon(rect1_1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(rect1_2);
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolygon(rect1_3);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(rect1_4);
+
+	// 基于正方形中心的顺时针自旋转-基于正方形中心的缩放-按圆路径平移
+	selfAngle = (float)(curAngle % 90) / 90 * 360;
+	glLoadIdentity();
+	translate(200.f, 150.f);
+	glColor3f(0.0, 0.0, 0.0);
+	drawCoordinate();
+	translate(x, y);
+	scale({ 0.f, 0.f }, selfScale, selfScale);
+	rotate({ 0.f, 0.f }, selfAngle);
+
+	glColor3f(0.0, 0.0, 0.0);
+	drawPolygon(rect2_1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(rect2_2);
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolygon(rect2_3);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(rect2_4);
+
+	// 基于正方形中心的逆时针自旋转-基于正方形中心的缩放-按圆路径平移
+	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
+	glLoadIdentity();
+	translate(600.f, 150.f);
+	glColor3f(0.0, 0.0, 0.0);
+	drawCoordinate();
+	translate(x, y);
+	scale({ 0.f, 0.f }, selfScale, selfScale);
+	rotate({ 0.f, 0.f }, selfAngle);
+
+	glColor3f(0.0, 0.0, 0.0);
+	drawPolygon(rect2_1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(rect2_2);
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolygon(rect2_3);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(rect2_4);
+
+	glFlush();
+
+}
+void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+	curAngle -= 360 / 60;
+	if (curAngle <= 0)
+		curAngle = 360;
+	displayFcn();
+}
+void code_7_exercise_32()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glColor3f(0.0, 0.0, 0.0);
+	SetTimer(NULL, NULL, 100, onTimer);
+
+	curAngle = 90;
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_ADD_1
+struct Point { float x; float y; };
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+std::vector<Point> road = { { 0, 150 },{ 1000, 150 },{ 1200, 250 },{ 1600, 250 },{ 2000, 150 },{ 2800, 150 } };
+int curAngle = 0;
+float selfAngle = 0;
+float selfScale = 0;
+void drawRoad(const std::vector<Point>& points)
+{
+	glBegin(GL_LINE_STRIP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawPolygon(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex2i(-winWidth / 2, 0);
+	glVertex2i(winWidth / 2, 0);
+	glVertex2i(0, -winHeight / 2);
+	glVertex2i(0, winHeight / 2);
+	glEnd();
+}
+void translate(float tx, float ty)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][3] = tx;
+	m[1][3] = ty;
+	glMultMatrixf(m);
+}
+void rotate(Point pr, float theta)
+{
+	theta = theta * PI / 180;
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][0] = std::cos(theta);
+	m[0][1] = -std::sin(theta);
+	m[0][3] = pr.x * (1 - std::cos(theta)) + pr.y * std::sin(theta);
+	m[1][0] = std::sin(theta);
+	m[1][1] = std::cos(theta);
+	m[1][3] = pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
+	glMultMatrixf(m);
+}
+void scale(Point pr, float sx, float sy)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][0] = sx;
+	m[0][3] = pr.x * (1 - sx);
+	m[1][1] = sy;
+	m[1][3] = pr.y * (1 - sy);
+	glMultMatrixf(m);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	drawRoad(road);
+
+	glFlush();
+
+}
+DWORD last = 0;
+DWORD cur = 0;
+void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+	cur = GetTickCount();
+	printf("%d ms\n", cur - last);
+	last = cur;
+
+	static int i = 0;
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0 + i * 0.8, winWidth + i * 0.8, 0, winHeight);
+	i++;
+	displayFcn();
+}
+void code_7_exercise_add_1()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glColor3f(0.0, 0.0, 0.0);
+	SetTimer(NULL, NULL, 500, onTimer);
+
+	cur = GetTickCount();
+	last = cur;
 
 	curAngle = 90;
 
@@ -6265,6 +6606,15 @@ void main(int argc, char** argv)
 #ifdef CHAPTER_7_EXERCISE_31
 	code_7_exercise_31();
 #endif
+	
+#ifdef CHAPTER_7_EXERCISE_32
+	code_7_exercise_32();
+#endif
+
+#ifdef CHAPTER_7_EXERCISE_ADD_1
+	code_7_exercise_add_1();
+#endif
+
 
 	glutMainLoop();
 }
