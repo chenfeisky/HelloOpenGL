@@ -6406,7 +6406,7 @@ DWORD cur = 0;
 void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
 	cur = GetTickCount();
-	printf("%d ms\n", cur - last);
+	//printf("%d ms\n", cur - last);
 	last = cur;
 
 	static int i = 0;
@@ -6426,7 +6426,7 @@ void code_7_exercise_add_1()
 	last = cur;
 
 	curAngle = 90;
-
+	
 	glutDisplayFunc(displayFcn);
 }
 #endif
