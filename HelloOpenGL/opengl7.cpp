@@ -6392,42 +6392,43 @@ void scale(Point pr, float sx, float sy)
 	m[1][3] = pr.y * (1 - sy);
 	glMultMatrixf(m);
 }
+float FPS = 60;
+float delta = 0.0;
+Point curWindowPos = { 0, 0 };
 void displayFcn(void)
 {
+	printf("%f \n", delta);
+
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	drawRoad(road);
+	
+	curWindowPos.x += delta * 100;
+	if (curWindowPos.x > road.back().x - winWidth)
+		curWindowPos.x = 0;
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(curWindowPos.x, curWindowPos.x + winWidth , curWindowPos.y, curWindowPos.y + winHeight);
+
 
 	glFlush();
 
 }
-DWORD last = 0;
-DWORD cur = 0;
-void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+void onTimer(int lastTick)
 {
-	cur = GetTickCount();
-	//printf("%d ms\n", cur - last);
-	last = cur;
-
-	static int i = 0;
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0 + i * 0.8, winWidth + i * 0.8, 0, winHeight);
-	i++;
-	displayFcn();
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, curTick);
 }
 void code_7_exercise_add_1()
 {
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glColor3f(0.0, 0.0, 0.0);
-	SetTimer(NULL, NULL, 500, onTimer);
 
-	cur = GetTickCount();
-	last = cur;
-
-	curAngle = 90;
-	
 	glutDisplayFunc(displayFcn);
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
 }
 #endif
 
