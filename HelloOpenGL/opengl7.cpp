@@ -6311,109 +6311,268 @@ struct Matrix
 	{
 		return _data[row];
 	}
-	operator GLfloat *()
-	{
-		_elementData.clear();
-		for (int j = 0; j < _col; j++)
-		{
-			for (int i = 0; i < _row; i++)
-			{
-				_elementData.push_back(_data[i][j]);
-			}
-		}
-		return &_elementData[0];
-	}
 	std::vector<std::vector<float>> _data;
-	std::vector<float> _elementData;
 	int _row;
 	int _col;
 };
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
 void matrixSetIdentity(Matrix& m)
 {
 	for (int row = 0; row < m._row; row++)
 		for (int col = 0; col < m._col; col++)
 			m[row][col] = (row == col);
 }
-std::vector<Point> road = { { 0, 150 },{ 1000, 150 },{ 1200, 250 },{ 1600, 250 },{ 2000, 150 },{ 2800, 150 } };
-int curAngle = 0;
-float selfAngle = 0;
-float selfScale = 0;
-void drawRoad(const std::vector<Point>& points)
-{
-	glBegin(GL_LINE_STRIP);
-	for (auto & p : points)
-		glVertex2f(p.x, p.y);
-	glEnd();
-}
-void drawPolygon(const std::vector<Point>& points)
+void square(const std::vector<Point>& points)
 {
 	glBegin(GL_POLYGON);
 	for (auto & p : points)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void drawCoordinate()
+Matrix translateMatrix(float tx, float ty)
 {
-	glBegin(GL_LINES);
-	glVertex2i(-winWidth / 2, 0);
-	glVertex2i(winWidth / 2, 0);
-	glVertex2i(0, -winHeight / 2);
-	glVertex2i(0, winHeight / 2);
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix rotateByPointMatrix(Point p, float theta)
+{
+	// 基于指定点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
+	return ret;
+}
+Matrix scaleMatrix(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix scaleByPointMatrix(Point p, float sx, float sy)
+{
+	// 基于指定点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+void transformPoint(Matrix& m, Point& point)
+{
+	Matrix _point(3, 1);
+	Matrix temp(3, 1);
+	_point[0][0] = point.x;
+	_point[1][0] = point.y;
+	_point[2][0] = 1;
+	temp = m * _point;
+	point.x = temp[0][0];
+	point.y = temp[1][0];
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+std::vector<Point> road = { { -400, 0 }, { 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 }, { 2600, 0 },{ 3000, 0 } };
+std::vector<Point> car = { {0, 0}, {-70, 0}, {-70, -12},{30, -12},{30, -2},{15, 26},{0, 26} };
+std::vector<Point> goods = { { -30, -20 },{ 30, -20},{ 30, 20 },{ -30, 20 }};
+Point wheelPoint = { 0, 0 };
+std::vector<Point> wheel;
+
+std::vector<Point> curCar;
+std::vector<Point> curGoods;
+Point curWheelPoint1;
+Point curWheelPoint2;
+std::vector<Point> curWheel1;
+std::vector<Point> curWheel2;
+
+float FPS = 60;
+float speed = 100;
+void drawPoint(Point p)
+{
+	glBegin(GL_POINTS);
+	glVertex2f(p.x, p.y);
 	glEnd();
 }
-void translate(float tx, float ty)
+void drawStrip(const std::vector<Point>& points)
 {
-	Matrix m(4, 4);
-	matrixSetIdentity(m);
-	m[0][3] = tx;
-	m[1][3] = ty;
-	glMultMatrixf(m);
+	glBegin(GL_LINE_STRIP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
 }
-void rotate(Point pr, float theta)
+void drawLoop(const std::vector<Point>& points)
 {
-	theta = theta * PI / 180;
-	Matrix m(4, 4);
-	matrixSetIdentity(m);
-	m[0][0] = std::cos(theta);
-	m[0][1] = -std::sin(theta);
-	m[0][3] = pr.x * (1 - std::cos(theta)) + pr.y * std::sin(theta);
-	m[1][0] = std::sin(theta);
-	m[1][1] = std::cos(theta);
-	m[1][3] = pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
-	glMultMatrixf(m);
+	glBegin(GL_LINE_LOOP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
 }
-void scale(Point pr, float sx, float sy)
+void plotPoints(Point p0, Point p)
 {
-	Matrix m(4, 4);
-	matrixSetIdentity(m);
-	m[0][0] = sx;
-	m[0][3] = pr.x * (1 - sx);
-	m[1][1] = sy;
-	m[1][3] = pr.y * (1 - sy);
-	glMultMatrixf(m);
+	drawPoint({p0.x + p.x, p0.y + p.y});
+	drawPoint({p0.x - p.x, p0.y + p.y});
+	drawPoint({p0.x + p.x, p0.y - p.y});
+	drawPoint({p0.x - p.x, p0.y - p.y});
+	drawPoint({p0.x + p.y, p0.y + p.x});
+	drawPoint({p0.x - p.y, p0.y + p.x});
+	drawPoint({p0.x + p.y, p0.y - p.x});
+	drawPoint({p0.x - p.y, p0.y - p.x});
+}									 
+void drawCircle(Point p0, float r)
+{
+	float x = r;
+	float y = 0;
+	int d2x = 2 * r;
+	int d2y = 0;
+	int p = 1 - r;
+	plotPoints(p0, { x, y });
+	while (x > y)
+	{
+		y++;
+		d2y += 2;
+		if (p < 0)
+		{
+			p += d2y + 1;
+		}
+		else
+		{
+			x--;
+			d2x -= 2;
+			p += d2y + 1 - d2x;
+		}
+		plotPoints(p0, { x, y });
+	}
 }
-float FPS = 60;
+void drawRoad()
+{
+	drawStrip(road);
+}
+void drawCar()
+{
+	drawLoop(curCar);
+}
+void drawGoods()
+{
+	drawLoop(curGoods);
+}
+void drawWheel()
+{
+	drawCircle(curWheelPoint1, 10);
+	for (auto & p : curWheel1)
+	{
+		drawStrip({ curWheelPoint1, p});
+	}
+	drawCircle(curWheelPoint2, 10);
+	for (auto & p : curWheel2)
+	{
+		drawStrip({ curWheelPoint2, p });
+	}
+}
+void initWheelPoint()
+{
+	for (int i = 0; i <= 4; i++)
+	{
+		float angle = (90 + i * 360 / 5) * PI / 180;
+		wheel.push_back({ std::cos(angle) * 10, std::sin(angle) * 10 });
+	}
+}
+void initPosition()
+{
+	curCar = car;
+	curGoods = goods;
+	curWheelPoint1 = wheelPoint;
+	curWheelPoint2 = wheelPoint;
+	curWheel1 = wheel;
+	curWheel2 = wheel;
+	transformPoints(translateMatrix(20, 22), curCar);
+	transformPoints(translateMatrix(-15, 47), curGoods);
+	transformPoint(translateMatrix(32, 10), curWheelPoint1);
+	transformPoint(translateMatrix(-32, 10), curWheelPoint2);
+	transformPoints(translateMatrix(32, 10), curWheel1);
+	transformPoints(translateMatrix(-32, 10), curWheel2);
+}
 float delta = 0.0;
-Point curWindowPos = { 0, 0 };
+Point curWindowPos = { 0, -150 };
+void update()
+{
+	float deltaA = delta  * speed / 10;
+	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheel1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheel2);
+}
 void displayFcn(void)
 {
-	printf("%f \n", delta);
+	//printf("%f \n", delta);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	
-	drawRoad(road);
-	
-	curWindowPos.x += delta * 100;
-	if (curWindowPos.x > road.back().x - winWidth)
+	update();
+
+	drawRoad();
+	drawCar();
+	drawGoods();
+	drawWheel();
+
+	//curWindowPos.x += delta * speed;
+	if (curWindowPos.x > road[road.size() - 2].x)
 		curWindowPos.x = 0;
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(curWindowPos.x, curWindowPos.x + winWidth , curWindowPos.y, curWindowPos.y + winHeight);
-
-
+	gluOrtho2D(curWindowPos.x - winWidth / 2, curWindowPos.x + winWidth / 2, curWindowPos.y, curWindowPos.y + winHeight);
+	
 	glFlush();
-
 }
 void onTimer(int lastTick)
 {
@@ -6426,6 +6585,9 @@ void code_7_exercise_add_1()
 {
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glColor3f(0.0, 0.0, 0.0);
+
+	initWheelPoint();
+	initPosition();
 
 	glutDisplayFunc(displayFcn);
 	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
