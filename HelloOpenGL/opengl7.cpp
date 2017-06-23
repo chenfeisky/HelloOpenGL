@@ -6424,7 +6424,7 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 		p.y = temp[1][0];
 	}
 }
-std::vector<Point> road = { { -400, 0 }, { 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 }, { 2600, 0 },{ 3000, 0 } };
+std::vector<Point> road = { { -400, 0 }, { 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 },{ 2600, 0 }, { 2600, 200 },{ 2800, 200 } ,{ 2800, 0 } ,{ 3200, 0 },{ 3600, 0 } };
 std::vector<Point> car = { {0, 0}, {-70, 0}, {-70, -12},{30, -12},{30, -2},{15, 26},{0, 26} };
 std::vector<Point> goods = { { -30, -20 },{ 30, -20},{ 30, 20 },{ -30, 20 }};
 Point wheelPoint = { 0, 0 };
@@ -6520,6 +6520,11 @@ void drawWheel()
 		drawStrip({ curWheelPoint2, p });
 	}
 }
+float delta = 0.0;
+int curRoadIdx = 0;
+int nextRoadIdx = 0;
+Point curPosition;
+float curDirection;
 void initWheelPoint()
 {
 	for (int i = 0; i <= 4; i++)
@@ -6530,6 +6535,9 @@ void initWheelPoint()
 }
 void initPosition()
 {
+	curPosition = { 0.f, 0.f };
+	curDirection = 0.f;
+	initWheelPoint();
 	curCar = car;
 	curGoods = goods;
 	curWheelPoint1 = wheelPoint;
@@ -6543,13 +6551,103 @@ void initPosition()
 	transformPoints(translateMatrix(32, 10), curWheel1);
 	transformPoints(translateMatrix(-32, 10), curWheel2);
 }
-float delta = 0.0;
-Point curWindowPos = { 0, -150 };
-void update()
+float distance(const Point& p1, const Point& p2)
+{
+	auto dx = p2.x - p1.x;
+	auto dy = p2.y - p1.y;
+	return std::sqrt(dx * dx + dy * dy);
+}
+Point calcNextPoint(Point curPos, float deltaByWay)
+{
+	Point ret;
+	float breakL = distance(road[nextRoadIdx], curPos);
+	if (deltaByWay > breakL)
+	{
+		curRoadIdx = nextRoadIdx;
+		nextRoadIdx++;
+		return calcNextPoint(road[curRoadIdx], deltaByWay - breakL);
+	}
+	else
+	{
+		float edgeL = distance(road[nextRoadIdx], road[curRoadIdx]);
+		ret.x = curPos.x + (road[nextRoadIdx].x - road[curRoadIdx].x) / edgeL * deltaByWay;
+		ret.y = curPos.y + (road[nextRoadIdx].y - road[curRoadIdx].y) / edgeL * deltaByWay;
+	}
+	return ret;
+}
+void reset()
+{
+	delta = 0.0;
+	curRoadIdx = 1;
+	nextRoadIdx = 2;
+}
+void updateWindowPosition()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(curPosition.x - winWidth / 2, curPosition.x + winWidth / 2, -150, -150 + winHeight);
+}
+void updateDirection(float diretion)
+{
+	auto d = diretion - curDirection;
+	transformPoints(rotateByPointMatrix(curPosition, d), curCar);
+	transformPoints(rotateByPointMatrix(curPosition, d), curGoods);
+	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint1);
+	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
+}
+void updateMove(Point p)
+{
+	auto dx = p.x - curPosition.x;
+	auto dy = p.y - curPosition.y;
+	transformPoints(translateMatrix(dx, dy), curCar);
+	transformPoints(translateMatrix(dx, dy), curGoods);
+	transformPoint(translateMatrix(dx, dy), curWheelPoint1);
+	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
+	transformPoints(translateMatrix(dx, dy), curWheel1);
+	transformPoints(translateMatrix(dx, dy), curWheel2);
+}
+void updateTransform()
 {
 	float deltaA = delta  * speed / 10;
 	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheel1);
 	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheel2);
+}
+void update()
+{
+	Point nextP = calcNextPoint(curPosition, delta * speed);
+	if (nextP.x > road[road.size() - 2].x)
+	{
+		nextP = { 0.f, 0.f };
+		reset();
+	}
+	auto dx = nextP.x - curPosition.x;
+	auto dy = nextP.y - curPosition.y;
+	float dir = 0;
+	if (dx)
+	{
+		dir = std::atan(dy / dx);
+	}
+	else
+	{
+		if (dy)
+		{
+			auto sign = dy > 0 ? 1 : -1;
+			dir = sign * PI / 2;
+		}
+		else
+		{
+			dir = curDirection;
+		}
+	}		
+
+	updateMove(nextP);
+	curPosition = nextP;
+	updateDirection(dir);
+	curDirection = dir;
+	updateTransform();
+	updateWindowPosition();
 }
 void displayFcn(void)
 {
@@ -6564,14 +6662,6 @@ void displayFcn(void)
 	drawGoods();
 	drawWheel();
 
-	//curWindowPos.x += delta * speed;
-	if (curWindowPos.x > road[road.size() - 2].x)
-		curWindowPos.x = 0;
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(curWindowPos.x - winWidth / 2, curWindowPos.x + winWidth / 2, curWindowPos.y, curWindowPos.y + winHeight);
-	
 	glFlush();
 }
 void onTimer(int lastTick)
@@ -6586,8 +6676,8 @@ void code_7_exercise_add_1()
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glColor3f(0.0, 0.0, 0.0);
 
-	initWheelPoint();
 	initPosition();
+	reset();
 
 	glutDisplayFunc(displayFcn);
 	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
