@@ -2668,7 +2668,7 @@ void displayFcn(void)
 	std::vector<Point> originalPoints = { { 0, 0 },{ 100, 0 },{ 100, 100 },{ 0, 100 } };
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
-
+	
 	// 基于原点的错切
 	float shx = 2;
 
@@ -6429,6 +6429,7 @@ std::vector<Point> car = { {0, 0}, {-70, 0}, {-70, -12},{30, -12},{30, -2},{15, 
 std::vector<Point> goods = { { -30, -20 },{ 30, -20},{ 30, 20 },{ -30, 20 }};
 Point wheelPoint = { 0, 0 };
 std::vector<Point> wheel;
+std::vector<Point> wheelHolder;
 
 std::vector<Point> curCar;
 std::vector<Point> curGoods;
@@ -6436,13 +6437,28 @@ Point curWheelPoint1;
 Point curWheelPoint2;
 std::vector<Point> curWheel1;
 std::vector<Point> curWheel2;
+std::vector<Point> curWheelHolder1;
+std::vector<Point> curWheelHolder2;
 
 float FPS = 60;
 float speed = 100;
+float delta = 0.0;
+int curRoadIdx = 0;
+int nextRoadIdx = 0;
+Point curPosition;
+float curDirection;
+float wheelRadius = 0;
 void drawPoint(Point p)
 {
 	glBegin(GL_POINTS);
 	glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawPoints(const std::vector<Point>& points)
+{
+	glBegin(GL_POINTS);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
 	glEnd();
 }
 void drawStrip(const std::vector<Point>& points)
@@ -6459,25 +6475,26 @@ void drawLoop(const std::vector<Point>& points)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void plotPoints(Point p0, Point p)
+void circlePlot(Point p0, Point p, std::vector<Point>& points)
 {
-	drawPoint({p0.x + p.x, p0.y + p.y});
-	drawPoint({p0.x - p.x, p0.y + p.y});
-	drawPoint({p0.x + p.x, p0.y - p.y});
-	drawPoint({p0.x - p.x, p0.y - p.y});
-	drawPoint({p0.x + p.y, p0.y + p.x});
-	drawPoint({p0.x - p.y, p0.y + p.x});
-	drawPoint({p0.x + p.y, p0.y - p.x});
-	drawPoint({p0.x - p.y, p0.y - p.x});
+	points.push_back({p0.x + p.x, p0.y + p.y});
+	points.push_back({p0.x - p.x, p0.y + p.y});
+	points.push_back({p0.x + p.x, p0.y - p.y});
+	points.push_back({p0.x - p.x, p0.y - p.y});
+	points.push_back({p0.x + p.y, p0.y + p.x});
+	points.push_back({p0.x - p.y, p0.y + p.x});
+	points.push_back({p0.x + p.y, p0.y - p.x});
+	points.push_back({p0.x - p.y, p0.y - p.x});
 }									 
-void drawCircle(Point p0, float r)
+void circle(Point p0, float r, std::vector<Point>& points)
 {
+	points.clear();
 	float x = r;
 	float y = 0;
 	int d2x = 2 * r;
 	int d2y = 0;
 	int p = 1 - r;
-	plotPoints(p0, { x, y });
+	circlePlot(p0, { x, y }, points);
 	while (x > y)
 	{
 		y++;
@@ -6492,7 +6509,69 @@ void drawCircle(Point p0, float r)
 			d2x -= 2;
 			p += d2y + 1 - d2x;
 		}
-		plotPoints(p0, { x, y });
+		circlePlot(p0, { x, y }, points);
+	}
+}
+inline int64_t Round(const double a)
+{
+	if (a >= 0)
+		return int64_t(a + 0.5);
+	else
+		return int64_t(a - 0.5);
+}
+void ellipsePlot(int xCenter, int yCenter, int x, int y, std::vector<Point>& points)
+{
+	points.push_back({ (float)xCenter + x, (float)yCenter + y });
+	points.push_back({ (float)xCenter - x, (float)yCenter + y });
+	points.push_back({ (float)xCenter + x, (float)yCenter - y });
+	points.push_back({ (float)xCenter - x, (float)yCenter - y });
+}
+void ellipse(int xCenter, int yCenter, int Rx, int Ry, std::vector<Point>& points)
+{
+	points.clear();
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	ellipsePlot(xCenter, yCenter, x, y, points);
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		ellipsePlot(xCenter, yCenter, x, y, points);
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		ellipsePlot(xCenter, yCenter, x, y, points);
 	}
 }
 void drawRoad()
@@ -6509,47 +6588,58 @@ void drawGoods()
 }
 void drawWheel()
 {
-	drawCircle(curWheelPoint1, 10);
-	for (auto & p : curWheel1)
+	drawPoints(curWheel1);
+	for (auto & p : curWheelHolder1)
 	{
 		drawStrip({ curWheelPoint1, p});
 	}
-	drawCircle(curWheelPoint2, 10);
-	for (auto & p : curWheel2)
+	drawPoints(curWheel2);
+	for (auto & p : curWheelHolder2)
 	{
 		drawStrip({ curWheelPoint2, p });
 	}
 }
-float delta = 0.0;
-int curRoadIdx = 0;
-int nextRoadIdx = 0;
-Point curPosition;
-float curDirection;
-void initWheelPoint()
+void scaleCar(float sx, float sy)
 {
+	wheelRadius *= sx;
+	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curCar);
+	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curGoods);
+	transformPoint(scaleByPointMatrix(curPosition, sx, sy), curWheelPoint1);
+	transformPoint(scaleByPointMatrix(curPosition, sx, sy), curWheelPoint2);
+	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curWheelHolder1);
+	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curWheelHolder2);
+}
+void initWheel()
+{
+	circle({ 0, 0 }, wheelRadius, wheel);
 	for (int i = 0; i <= 4; i++)
 	{
 		float angle = (90 + i * 360 / 5) * PI / 180;
-		wheel.push_back({ std::cos(angle) * 10, std::sin(angle) * 10 });
+		wheelHolder.push_back({ std::cos(angle) * wheelRadius, std::sin(angle) * wheelRadius });
 	}
 }
-void initPosition()
+void initCarData()
 {
 	curPosition = { 0.f, 0.f };
 	curDirection = 0.f;
-	initWheelPoint();
+	wheelRadius = 10;
+	initWheel();
 	curCar = car;
 	curGoods = goods;
 	curWheelPoint1 = wheelPoint;
 	curWheelPoint2 = wheelPoint;
 	curWheel1 = wheel;
 	curWheel2 = wheel;
+	curWheelHolder1 = wheelHolder;
+	curWheelHolder2 = wheelHolder;
 	transformPoints(translateMatrix(20, 22), curCar);
 	transformPoints(translateMatrix(-15, 47), curGoods);
 	transformPoint(translateMatrix(32, 10), curWheelPoint1);
 	transformPoint(translateMatrix(-32, 10), curWheelPoint2);
 	transformPoints(translateMatrix(32, 10), curWheel1);
 	transformPoints(translateMatrix(-32, 10), curWheel2);
+	transformPoints(translateMatrix(32, 10), curWheelHolder1);
+	transformPoints(translateMatrix(-32, 10), curWheelHolder2);
 }
 float distance(const Point& p1, const Point& p2)
 {
@@ -6596,6 +6686,8 @@ void updateDirection(float diretion)
 	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheelHolder1);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheelHolder2);
 }
 void updateMove(Point p)
 {
@@ -6607,12 +6699,14 @@ void updateMove(Point p)
 	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
 	transformPoints(translateMatrix(dx, dy), curWheel1);
 	transformPoints(translateMatrix(dx, dy), curWheel2);
+	transformPoints(translateMatrix(dx, dy), curWheelHolder1);
+	transformPoints(translateMatrix(dx, dy), curWheelHolder2);
 }
 void updateTransform()
 {
-	float deltaA = delta  * speed / 10;
-	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheel1);
-	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheel2);
+	float deltaA = delta  * speed / wheelRadius;
+	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheelHolder1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheelHolder2);
 }
 void update()
 {
@@ -6676,8 +6770,9 @@ void code_7_exercise_add_1()
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glColor3f(0.0, 0.0, 0.0);
 
-	initPosition();
+	initCarData();
 	reset();
+	//scaleCar(1, 0.5);
 
 	glutDisplayFunc(displayFcn);
 	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
