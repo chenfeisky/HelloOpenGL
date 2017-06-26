@@ -6428,7 +6428,6 @@ std::vector<Point> road = { { -400, 0 }, { 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 16
 std::vector<Point> car = { {0, 0}, {-70, 0}, {-70, -12},{30, -12},{30, -2},{15, 26},{0, 26} };
 std::vector<Point> goods = { { -30, -20 },{ 30, -20},{ 30, 20 },{ -30, 20 }};
 Point wheelPoint = { 0, 0 };
-std::vector<Point> wheel;
 std::vector<Point> wheelHolder;
 
 std::vector<Point> curCar;
@@ -6437,6 +6436,8 @@ Point curWheelPoint1;
 Point curWheelPoint2;
 std::vector<Point> curWheel1;
 std::vector<Point> curWheel2;
+std::vector<Point> curWheelRoundHolder1;
+std::vector<Point> curWheelRoundHolder2;
 std::vector<Point> curWheelHolder1;
 std::vector<Point> curWheelHolder2;
 
@@ -6448,6 +6449,8 @@ int nextRoadIdx = 0;
 Point curPosition;
 float curDirection;
 float wheelRadius = 0;
+float scaleX = 0;
+float scaleY = 0;
 void drawPoint(Point p)
 {
 	glBegin(GL_POINTS);
@@ -6519,14 +6522,14 @@ inline int64_t Round(const double a)
 	else
 		return int64_t(a - 0.5);
 }
-void ellipsePlot(int xCenter, int yCenter, int x, int y, std::vector<Point>& points)
+void ellipsePlot(Point p0, int x, int y, std::vector<Point>& points)
 {
-	points.push_back({ (float)xCenter + x, (float)yCenter + y });
-	points.push_back({ (float)xCenter - x, (float)yCenter + y });
-	points.push_back({ (float)xCenter + x, (float)yCenter - y });
-	points.push_back({ (float)xCenter - x, (float)yCenter - y });
+	points.push_back({ p0.x + x, p0.y + y });
+	points.push_back({ p0.x - x, p0.y + y });
+	points.push_back({ p0.x + x, p0.y - y });
+	points.push_back({ p0.x - x, p0.y - y });
 }
-void ellipse(int xCenter, int yCenter, int Rx, int Ry, std::vector<Point>& points)
+void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
 {
 	points.clear();
 	int Rx2 = Rx*Rx;
@@ -6538,7 +6541,7 @@ void ellipse(int xCenter, int yCenter, int Rx, int Ry, std::vector<Point>& point
 	int y = Ry;
 	int64_t px = 0;
 	int64_t py = twoRx2*y;
-	ellipsePlot(xCenter, yCenter, x, y, points);
+	ellipsePlot(p0, x, y, points);
 	/*Region 1*/
 	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
 	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
@@ -6554,7 +6557,7 @@ void ellipse(int xCenter, int yCenter, int Rx, int Ry, std::vector<Point>& point
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		ellipsePlot(xCenter, yCenter, x, y, points);
+		ellipsePlot(p0, x, y, points);
 	}
 	/*Region 2*/
 	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
@@ -6571,7 +6574,7 @@ void ellipse(int xCenter, int yCenter, int Rx, int Ry, std::vector<Point>& point
 			px += twoRy2;
 			p += Rx2 - py + px;
 		}
-		ellipsePlot(xCenter, yCenter, x, y, points);
+		ellipsePlot(p0, x, y, points);
 	}
 }
 void drawRoad()
@@ -6601,17 +6604,20 @@ void drawWheel()
 }
 void scaleCar(float sx, float sy)
 {
-	wheelRadius *= sx;
+	//wheelRadius *= sx;
+	scaleX *= sx;
+	scaleY *= sy;
 	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curCar);
 	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curGoods);
 	transformPoint(scaleByPointMatrix(curPosition, sx, sy), curWheelPoint1);
 	transformPoint(scaleByPointMatrix(curPosition, sx, sy), curWheelPoint2);
 	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curWheelHolder1);
 	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curWheelHolder2);
+	ellipse(curWheelPoint1, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
+	ellipse(curWheelPoint2, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel2);
 }
 void initWheel()
 {
-	circle({ 0, 0 }, wheelRadius, wheel);
 	for (int i = 0; i <= 4; i++)
 	{
 		float angle = (90 + i * 360 / 5) * PI / 180;
@@ -6623,23 +6629,25 @@ void initCarData()
 	curPosition = { 0.f, 0.f };
 	curDirection = 0.f;
 	wheelRadius = 10;
+	scaleX = 1;
+	scaleY = 1;
 	initWheel();
 	curCar = car;
 	curGoods = goods;
 	curWheelPoint1 = wheelPoint;
 	curWheelPoint2 = wheelPoint;
-	curWheel1 = wheel;
-	curWheel2 = wheel;
 	curWheelHolder1 = wheelHolder;
 	curWheelHolder2 = wheelHolder;
 	transformPoints(translateMatrix(20, 22), curCar);
 	transformPoints(translateMatrix(-15, 47), curGoods);
 	transformPoint(translateMatrix(32, 10), curWheelPoint1);
 	transformPoint(translateMatrix(-32, 10), curWheelPoint2);
-	transformPoints(translateMatrix(32, 10), curWheel1);
-	transformPoints(translateMatrix(-32, 10), curWheel2);
 	transformPoints(translateMatrix(32, 10), curWheelHolder1);
 	transformPoints(translateMatrix(-32, 10), curWheelHolder2);
+	curWheelRoundHolder1 = curWheelHolder1;
+	curWheelRoundHolder2 = curWheelHolder2;
+	circle({ 32, 10 }, wheelRadius, curWheel1);
+	circle({ -32, 10 }, wheelRadius, curWheel2);
 }
 float distance(const Point& p1, const Point& p2)
 {
@@ -6686,8 +6694,8 @@ void updateDirection(float diretion)
 	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
-	transformPoints(rotateByPointMatrix(curPosition, d), curWheelHolder1);
-	transformPoints(rotateByPointMatrix(curPosition, d), curWheelHolder2);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheelRoundHolder1);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheelRoundHolder2);
 }
 void updateMove(Point p)
 {
@@ -6699,14 +6707,18 @@ void updateMove(Point p)
 	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
 	transformPoints(translateMatrix(dx, dy), curWheel1);
 	transformPoints(translateMatrix(dx, dy), curWheel2);
-	transformPoints(translateMatrix(dx, dy), curWheelHolder1);
-	transformPoints(translateMatrix(dx, dy), curWheelHolder2);
+	transformPoints(translateMatrix(dx, dy), curWheelRoundHolder1);
+	transformPoints(translateMatrix(dx, dy), curWheelRoundHolder2);
 }
 void updateTransform()
 {
 	float deltaA = delta  * speed / wheelRadius;
-	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheelHolder1);
-	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheelHolder2);
+	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheelRoundHolder1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheelRoundHolder2);
+	curWheelHolder1 = curWheelRoundHolder1;
+	curWheelHolder2 = curWheelRoundHolder2;
+	transformPoints(scaleByPointMatrix(curWheelPoint1, scaleX, scaleY), curWheelHolder1);
+	transformPoints(scaleByPointMatrix(curWheelPoint2, scaleX, scaleY), curWheelHolder2);
 }
 void update()
 {
@@ -6772,7 +6784,8 @@ void code_7_exercise_add_1()
 
 	initCarData();
 	reset();
-	//scaleCar(1, 0.5);
+	scaleCar(1, 2);
+	//scaleCar(2, 1);
 
 	glutDisplayFunc(displayFcn);
 	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
