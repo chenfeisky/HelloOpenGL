@@ -6436,8 +6436,7 @@ Point curWheelPoint1;
 Point curWheelPoint2;
 std::vector<Point> curWheel1;
 std::vector<Point> curWheel2;
-std::vector<Point> curWheelRoundHolder1;
-std::vector<Point> curWheelRoundHolder2;
+std::vector<Point> curWheelRoundHolder;
 std::vector<Point> curWheelHolder1;
 std::vector<Point> curWheelHolder2;
 
@@ -6638,14 +6637,13 @@ void initCarData()
 	curWheelPoint2 = wheelPoint;
 	curWheelHolder1 = wheelHolder;
 	curWheelHolder2 = wheelHolder;
+	curWheelRoundHolder = wheelHolder;
 	transformPoints(translateMatrix(20, 22), curCar);
 	transformPoints(translateMatrix(-15, 47), curGoods);
 	transformPoint(translateMatrix(32, 10), curWheelPoint1);
 	transformPoint(translateMatrix(-32, 10), curWheelPoint2);
 	transformPoints(translateMatrix(32, 10), curWheelHolder1);
 	transformPoints(translateMatrix(-32, 10), curWheelHolder2);
-	curWheelRoundHolder1 = curWheelHolder1;
-	curWheelRoundHolder2 = curWheelHolder2;
 	circle({ 32, 10 }, wheelRadius, curWheel1);
 	circle({ -32, 10 }, wheelRadius, curWheel2);
 }
@@ -6694,8 +6692,8 @@ void updateDirection(float diretion)
 	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
-	transformPoints(rotateByPointMatrix(curPosition, d), curWheelRoundHolder1);
-	transformPoints(rotateByPointMatrix(curPosition, d), curWheelRoundHolder2);
+	transformPoints(rotateByPointMatrix(curWheelPoint1, curDirection), curWheelHolder1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, curDirection), curWheelHolder2);
 }
 void updateMove(Point p)
 {
@@ -6707,18 +6705,17 @@ void updateMove(Point p)
 	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
 	transformPoints(translateMatrix(dx, dy), curWheel1);
 	transformPoints(translateMatrix(dx, dy), curWheel2);
-	transformPoints(translateMatrix(dx, dy), curWheelRoundHolder1);
-	transformPoints(translateMatrix(dx, dy), curWheelRoundHolder2);
+	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
+	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
 }
 void updateTransform()
 {
 	float deltaA = delta  * speed / wheelRadius;
-	transformPoints(rotateByPointMatrix(curWheelPoint1, -deltaA), curWheelRoundHolder1);
-	transformPoints(rotateByPointMatrix(curWheelPoint2, -deltaA), curWheelRoundHolder2);
-	curWheelHolder1 = curWheelRoundHolder1;
-	curWheelHolder2 = curWheelRoundHolder2;
-	transformPoints(scaleByPointMatrix(curWheelPoint1, scaleX, scaleY), curWheelHolder1);
-	transformPoints(scaleByPointMatrix(curWheelPoint2, scaleX, scaleY), curWheelHolder2);
+	transformPoints(rotateByPointMatrix({0, 0}, -deltaA), curWheelRoundHolder);
+	curWheelHolder1 = curWheelRoundHolder;
+	curWheelHolder2 = curWheelRoundHolder;
+	transformPoints(scaleByPointMatrix({0, 0}, scaleX, scaleY), curWheelHolder1);
+	curWheelHolder2 = curWheelHolder1;
 }
 void update()
 {
@@ -6748,11 +6745,11 @@ void update()
 		}
 	}		
 
+	updateTransform();
 	updateMove(nextP);
 	curPosition = nextP;
 	updateDirection(dir);
 	curDirection = dir;
-	updateTransform();
 	updateWindowPosition();
 }
 void displayFcn(void)
