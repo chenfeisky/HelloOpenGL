@@ -6440,7 +6440,7 @@ std::vector<Point> curWheelRoundHolder;
 std::vector<Point> curWheelHolder1;
 std::vector<Point> curWheelHolder2;
 
-float FPS = 60;
+float FPS = 5;
 float speed = 100;
 float delta = 0.0;
 int curRoadIdx = 0;
@@ -6692,8 +6692,11 @@ void updateDirection(float diretion)
 	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
 	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
-	transformPoints(rotateByPointMatrix(curWheelPoint1, curDirection), curWheelHolder1);
-	transformPoints(rotateByPointMatrix(curWheelPoint2, curDirection), curWheelHolder2);
+
+	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
+	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
+	transformPoints(rotateByPointMatrix(curWheelPoint1, diretion), curWheelHolder1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, diretion), curWheelHolder2);
 }
 void updateMove(Point p)
 {
@@ -6705,8 +6708,8 @@ void updateMove(Point p)
 	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
 	transformPoints(translateMatrix(dx, dy), curWheel1);
 	transformPoints(translateMatrix(dx, dy), curWheel2);
-	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
-	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
+	//transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
+	//transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
 }
 void updateTransform()
 {
