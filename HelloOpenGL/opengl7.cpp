@@ -2660,6 +2660,13 @@ void drawCoordinate()
 	glVertex2i(0, winHeight / 2);
 	glEnd();
 }
+void drawPoints(const std::vector<Point>& points)
+{
+	glBegin(GL_POINTS);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -6399,6 +6406,14 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy)
 	ret[1][2] = p.y * (1 - sy);
 	return ret;
 }
+Matrix shearXMatrix(float shx)
+{
+	// 基于原点的x方向错切
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][1] = shx;
+	return ret;
+}
 void transformPoint(Matrix& m, Point& point)
 {
 	Matrix _point(3, 1);
@@ -6440,7 +6455,7 @@ std::vector<Point> curWheelRoundHolder;
 std::vector<Point> curWheelHolder1;
 std::vector<Point> curWheelHolder2;
 
-float FPS = 5;
+float FPS = 60;
 float speed = 100;
 float delta = 0.0;
 int curRoadIdx = 0;
@@ -6450,6 +6465,7 @@ float curDirection;
 float wheelRadius = 0;
 float scaleX = 0;
 float scaleY = 0;
+float shx = 0;
 void drawPoint(Point p)
 {
 	glBegin(GL_POINTS);
@@ -6606,14 +6622,31 @@ void scaleCar(float sx, float sy)
 	//wheelRadius *= sx;
 	scaleX *= sx;
 	scaleY *= sy;
-	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curCar);
-	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curGoods);
-	transformPoint(scaleByPointMatrix(curPosition, sx, sy), curWheelPoint1);
-	transformPoint(scaleByPointMatrix(curPosition, sx, sy), curWheelPoint2);
-	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curWheelHolder1);
-	transformPoints(scaleByPointMatrix(curPosition, sx, sy), curWheelHolder2);
+	auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
+	transformPoints(m, curCar);
+	transformPoints(m, curGoods);
+	transformPoint(m, curWheelPoint1);
+	transformPoint(m, curWheelPoint2);
+	transformPoints(m, curWheelHolder1);
+	transformPoints(m, curWheelHolder2);
+
 	ellipse(curWheelPoint1, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
 	ellipse(curWheelPoint2, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel2);
+	transformPoints(rotateByPointMatrix(curWheelPoint1, curDirection), curWheel1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, curDirection), curWheel2);
+}
+void shearCar(float sh)
+{
+	shx += sh;
+	auto m = translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(sh) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y);
+	transformPoints(m, curCar);
+	transformPoints(m, curGoods);
+	transformPoint(m, curWheelPoint1);
+	transformPoint(m, curWheelPoint2);
+	transformPoints(m, curWheelHolder1);
+	transformPoints(m, curWheelHolder2);
+	transformPoints(m, curWheel1);
+	transformPoints(m, curWheel2);
 }
 void initWheel()
 {
@@ -6630,6 +6663,7 @@ void initCarData()
 	wheelRadius = 10;
 	scaleX = 1;
 	scaleY = 1;
+	shx = 0;
 	initWheel();
 	curCar = car;
 	curGoods = goods;
@@ -6708,8 +6742,6 @@ void updateMove(Point p)
 	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
 	transformPoints(translateMatrix(dx, dy), curWheel1);
 	transformPoints(translateMatrix(dx, dy), curWheel2);
-	//transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
-	//transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
 }
 void updateTransform()
 {
@@ -6718,8 +6750,10 @@ void updateTransform()
 	curWheelHolder1 = curWheelRoundHolder;
 	curWheelHolder2 = curWheelRoundHolder;
 	transformPoints(scaleByPointMatrix({0, 0}, scaleX, scaleY), curWheelHolder1);
+	transformPoints(shearXMatrix(shx), curWheelHolder1);
 	curWheelHolder2 = curWheelHolder1;
 }
+bool test = true;
 void update()
 {
 	Point nextP = calcNextPoint(curPosition, delta * speed);
@@ -6754,6 +6788,14 @@ void update()
 	updateDirection(dir);
 	curDirection = dir;
 	updateWindowPosition();
+
+	if (curPosition.x >= 1100 && test)
+	{
+		test = false;
+		scaleCar(1, -2);
+		shearCar(1);
+		//shearCar(-0.5);
+	}
 }
 void displayFcn(void)
 {
@@ -6784,7 +6826,10 @@ void code_7_exercise_add_1()
 
 	initCarData();
 	reset();
-	scaleCar(1, 2);
+
+	//scaleCar(1, -2);
+	//shearCar(1);
+	//shearCar(0.5);
 	//scaleCar(2, 1);
 
 	glutDisplayFunc(displayFcn);
