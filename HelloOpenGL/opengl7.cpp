@@ -6466,6 +6466,7 @@ float wheelRadius = 0;
 float scaleX = 0;
 float scaleY = 0;
 float shx = 0;
+float tansShx = 0;
 void drawPoint(Point p)
 {
 	glBegin(GL_POINTS);
@@ -6617,9 +6618,8 @@ void drawWheel()
 		drawStrip({ curWheelPoint2, p });
 	}
 }
-void scaleCar(float sx, float sy)
+void scale(float sx, float sy)
 {
-	//wheelRadius *= sx;
 	scaleX *= sx;
 	scaleY *= sy;
 	auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
@@ -6630,14 +6630,17 @@ void scaleCar(float sx, float sy)
 	transformPoints(m, curWheelHolder1);
 	transformPoints(m, curWheelHolder2);
 
-	ellipse(curWheelPoint1, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
-	ellipse(curWheelPoint2, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel2);
-	transformPoints(rotateByPointMatrix(curWheelPoint1, curDirection), curWheel1);
-	transformPoints(rotateByPointMatrix(curWheelPoint2, curDirection), curWheel2);
+	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
+	tansShx *= (sx / sy);
+	transformPoints(rotateByPointMatrix({0, 0}, curDirection) * shearXMatrix(tansShx), curWheel1);
+	curWheel2 = curWheel1;
+	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheel1);
+	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheel2);
 }
-void shearCar(float sh)
+void shear(float sh)
 {
 	shx += sh;
+	tansShx += sh;
 	auto m = translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(sh) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y);
 	transformPoints(m, curCar);
 	transformPoints(m, curGoods);
@@ -6648,6 +6651,13 @@ void shearCar(float sh)
 	transformPoints(m, curWheel1);
 	transformPoints(m, curWheel2);
 }
+void reset()
+{
+	FPS = 60;
+	speed = 100;
+	scale(1 / scaleX, 1 / scaleY);
+	shear(-tansShx);
+}
 void initWheel()
 {
 	for (int i = 0; i <= 4; i++)
@@ -6656,14 +6666,22 @@ void initWheel()
 		wheelHolder.push_back({ std::cos(angle) * wheelRadius, std::sin(angle) * wheelRadius });
 	}
 }
+
+void resetRoad()
+{
+	curRoadIdx = 1;
+	nextRoadIdx = 2;
+}
 void initCarData()
 {
+	resetRoad();
 	curPosition = { 0.f, 0.f };
 	curDirection = 0.f;
 	wheelRadius = 10;
 	scaleX = 1;
 	scaleY = 1;
 	shx = 0;
+	tansShx = shx;
 	initWheel();
 	curCar = car;
 	curGoods = goods;
@@ -6705,12 +6723,6 @@ Point calcNextPoint(Point curPos, float deltaByWay)
 	}
 	return ret;
 }
-void reset()
-{
-	delta = 0.0;
-	curRoadIdx = 1;
-	nextRoadIdx = 2;
-}
 void updateWindowPosition()
 {
 	glMatrixMode(GL_PROJECTION);
@@ -6745,22 +6757,23 @@ void updateMove(Point p)
 }
 void updateTransform()
 {
-	float deltaA = delta  * speed / wheelRadius;
+	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
+	
+	float deltaA = delta  * speed / l;
 	transformPoints(rotateByPointMatrix({0, 0}, -deltaA), curWheelRoundHolder);
 	curWheelHolder1 = curWheelRoundHolder;
-	curWheelHolder2 = curWheelRoundHolder;
-	transformPoints(scaleByPointMatrix({0, 0}, scaleX, scaleY), curWheelHolder1);
-	transformPoints(shearXMatrix(shx), curWheelHolder1);
+	transformPoints(shearXMatrix(tansShx) * scaleByPointMatrix({ 0, 0 }, scaleX, scaleY), curWheelHolder1);
 	curWheelHolder2 = curWheelHolder1;
 }
-bool test = true;
 void update()
 {
+	//printf("update: %f\n", delta);
+
 	Point nextP = calcNextPoint(curPosition, delta * speed);
 	if (nextP.x > road[road.size() - 2].x)
 	{
 		nextP = { 0.f, 0.f };
-		reset();
+		resetRoad();
 	}
 	auto dx = nextP.x - curPosition.x;
 	auto dy = nextP.y - curPosition.y;
@@ -6788,19 +6801,109 @@ void update()
 	updateDirection(dir);
 	curDirection = dir;
 	updateWindowPosition();
+}
+void showCmdUI()
+{
+	printf("input control parameter [(F)PS, (Sp)eed, (S)cale, (Sh)ear, (R)eset, (E)xit]: \n");
 
-	if (curPosition.x >= 1100 && test)
+}
+void normalKeyFcn(unsigned char key, int x, int y)
+{
+	//printf("normalKeyFcn %d, %d, %d\n", key, x, y);
+	switch (key)
 	{
-		test = false;
-		scaleCar(1, -2);
-		shearCar(1);
-		//shearCar(-0.5);
+	case 27:
+		showCmdUI();
+		break;
+	case 'r':
+	case 'R':
+		reset();
+		break;
+	case 'w':
+	case 'W':
+		speed += 10;
+		break;
+	case 's':
+	case 'S':
+		speed -= 10;
+		break;
+	case 'a':
+	case 'A':
+		FPS -= 5;
+		break;
+	case 'd':
+	case 'D':
+		FPS += 5;
+		break;
+	default:
+		break;
+	}
+	
+}
+void specialKeyFcn(int key, int x, int y)
+{
+	//printf("specialKeyFcn %d, %d, %d\n", key, x, y);
+	int mod = glutGetModifiers();
+	switch (key)
+	{
+	case GLUT_KEY_RIGHT:
+		if (mod == 0)
+		{
+			scale(2, 1);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleX < 0)
+				scale(-1, 1);
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			shear(1);
+		}
+		break;
+	case GLUT_KEY_LEFT:
+		if (mod == 0)
+		{
+			scale(0.5, 1);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleX > 0)
+				scale(-1, 1);
+		}			
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			shear(-1);
+		}
+		break;
+	case GLUT_KEY_UP:
+		if (mod == 0)
+		{
+			scale(1, 2);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleY < 0)
+				scale(1, -1);
+		}
+		break;
+	case GLUT_KEY_DOWN:
+		if (mod == 0)
+		{
+			scale(1, 0.5);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleY > 0)
+				scale(1, -1);
+		}
+		break;
+	default:
+		break;
 	}
 }
 void displayFcn(void)
 {
-	//printf("%f \n", delta);
-
 	glClear(GL_COLOR_BUFFER_BIT);
 	
 	update();
@@ -6825,14 +6928,11 @@ void code_7_exercise_add_1()
 	glColor3f(0.0, 0.0, 0.0);
 
 	initCarData();
-	reset();
-
-	//scaleCar(1, -2);
-	//shearCar(1);
-	//shearCar(0.5);
-	//scaleCar(2, 1);
 
 	glutDisplayFunc(displayFcn);
+	glutKeyboardFunc(normalKeyFcn);
+	glutSpecialFunc(specialKeyFcn);
+
 	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
 }
 #endif
