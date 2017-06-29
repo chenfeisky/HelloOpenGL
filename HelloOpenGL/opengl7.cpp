@@ -6340,6 +6340,51 @@ Matrix operator *(Matrix& m1, Matrix& m2)
 	}
 	return ret;
 }
+struct Path
+{
+	struct PathLine
+	{
+		Point begin;
+		Point end;
+		float sin;
+		float cos;
+		float length;
+	};
+	std::vector<PathLine> _pathLines;
+	float curLength;
+	int curPathIdx;
+	Path(const std::vector<Point>& points)
+	{
+		curLength = 0.f;
+		curPathIdx = 0;
+		for (int i = 0 ; i < points.size() - 1; i ++)
+		{
+			float dx = points[i + 1].x - points[i].x;
+			float dy = points[i + 1].y - points[i].y;
+			float length = std::sqrt(dx * dx + dy * dy);
+			_pathLines.push_back({ points[i], points[i + 1], dy / length, dx / length, length });
+		}
+	}
+	Point move(float distance)
+	{
+		curLength += distance;
+		float dMaxLength = curLength - _pathLines[curPathIdx].length;
+		float dMinLength = curLength - 0;
+		if (dMaxLength > 0)
+		{
+			curPathIdx = (curPathIdx + 1) % _pathLines.size();
+			curLength = 0;
+			return move(dMaxLength);
+		}
+		else if (dMinLength < 0)
+		{
+			curPathIdx = (curPathIdx - 1 + _pathLines.size()) % _pathLines.size();
+			curLength = _pathLines[curPathIdx].length;
+			return move(dMinLength);
+		}
+		return{ _pathLines[curPathIdx].begin.x + curLength * _pathLines[curPathIdx].cos, _pathLines[curPathIdx].begin.y + curLength * _pathLines[curPathIdx].sin };
+	}
+};
 void matrixSetIdentity(Matrix& m)
 {
 	for (int row = 0; row < m._row; row++)
@@ -6458,8 +6503,6 @@ std::vector<Point> curWheelHolder2;
 float FPS = 60;
 float speed = 100;
 float delta = 0.0;
-int curRoadIdx = 0;
-int nextRoadIdx = 0;
 Point curPosition;
 float curDirection;
 float wheelRadius = 0;
@@ -6467,6 +6510,15 @@ float scaleX = 0;
 float scaleY = 0;
 float shx = 0;
 float tansShx = 0;
+Path* path = nullptr;
+float realFPS = 0;
+void initPath()
+{
+	auto temp = road;
+	temp.erase(temp.begin());
+	temp.erase(temp.end() - 1);
+	path = new Path(temp);
+}
 void drawPoint(Point p)
 {
 	glBegin(GL_POINTS);
@@ -6666,15 +6718,9 @@ void initWheel()
 		wheelHolder.push_back({ std::cos(angle) * wheelRadius, std::sin(angle) * wheelRadius });
 	}
 }
-
-void resetRoad()
-{
-	curRoadIdx = 1;
-	nextRoadIdx = 2;
-}
 void initCarData()
 {
-	resetRoad();
+	initPath();
 	curPosition = { 0.f, 0.f };
 	curDirection = 0.f;
 	wheelRadius = 10;
@@ -6704,24 +6750,6 @@ float distance(const Point& p1, const Point& p2)
 	auto dx = p2.x - p1.x;
 	auto dy = p2.y - p1.y;
 	return std::sqrt(dx * dx + dy * dy);
-}
-Point calcNextPoint(Point curPos, float deltaByWay)
-{
-	Point ret;
-	float breakL = distance(road[nextRoadIdx], curPos);
-	if (deltaByWay > breakL)
-	{
-		curRoadIdx = nextRoadIdx;
-		nextRoadIdx++;
-		return calcNextPoint(road[curRoadIdx], deltaByWay - breakL);
-	}
-	else
-	{
-		float edgeL = distance(road[nextRoadIdx], road[curRoadIdx]);
-		ret.x = curPos.x + (road[nextRoadIdx].x - road[curRoadIdx].x) / edgeL * deltaByWay;
-		ret.y = curPos.y + (road[nextRoadIdx].y - road[curRoadIdx].y) / edgeL * deltaByWay;
-	}
-	return ret;
 }
 void updateWindowPosition()
 {
@@ -6769,12 +6797,7 @@ void update()
 {
 	//printf("update: %f\n", delta);
 
-	Point nextP = calcNextPoint(curPosition, delta * speed);
-	if (nextP.x > road[road.size() - 2].x)
-	{
-		nextP = { 0.f, 0.f };
-		resetRoad();
-	}
+	Point nextP = path->move(delta * speed);
 	auto dx = nextP.x - curPosition.x;
 	auto dy = nextP.y - curPosition.y;
 	float dir = 0;
@@ -6786,8 +6809,9 @@ void update()
 	{
 		if (dy)
 		{
-			auto sign = dy > 0 ? 1 : -1;
-			dir = sign * PI / 2;
+			auto signDy = dy > 0 ? 1 : -1;
+			auto signSpeed = speed > 0 ? 1 : -1;
+			dir = signDy * signSpeed * PI / 2;
 		}
 		else
 		{
@@ -6821,19 +6845,19 @@ void normalKeyFcn(unsigned char key, int x, int y)
 		break;
 	case 'w':
 	case 'W':
-		speed += 10;
+		FPS += 5;
 		break;
 	case 's':
 	case 'S':
-		speed -= 10;
+		FPS -= 5;
 		break;
 	case 'a':
 	case 'A':
-		FPS -= 5;
+		speed -= 10;
 		break;
 	case 'd':
 	case 'D':
-		FPS += 5;
+		speed += 10;
 		break;
 	default:
 		break;
