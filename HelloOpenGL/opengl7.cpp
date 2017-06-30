@@ -6501,17 +6501,23 @@ std::vector<Point> curWheelHolder1;
 std::vector<Point> curWheelHolder2;
 
 float FPS = 60;
+int deltaFPS = 5;
 float speed = 100;
+float deltaSpeed = 10;
+float scaleX = 1;
+float deltaScaleX = 2;
+float scaleY = 1;
+float deltaScaleY = 2;
+float shx = 0;
+float tansShx = 0;
+float deltaShear = 1;
+
+int lastTick = 0;
 float delta = 0.0;
 Point curPosition;
 float curDirection;
 float wheelRadius = 0;
-float scaleX = 0;
-float scaleY = 0;
-float shx = 0;
-float tansShx = 0;
 Path* path = nullptr;
-float realFPS = 0;
 void initPath()
 {
 	auto temp = road;
@@ -6683,6 +6689,7 @@ void scale(float sx, float sy)
 	transformPoints(m, curWheelHolder2);
 
 	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
+	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
 	tansShx *= (sx / sy);
 	transformPoints(rotateByPointMatrix({0, 0}, curDirection) * shearXMatrix(tansShx), curWheel1);
 	curWheel2 = curWheel1;
@@ -6706,9 +6713,14 @@ void shear(float sh)
 void reset()
 {
 	FPS = 60;
+	deltaFPS = 5;
 	speed = 100;
+	deltaSpeed = 10;
 	scale(1 / scaleX, 1 / scaleY);
+	deltaScaleX = 2;
+	deltaScaleY = 2;
 	shear(-tansShx);
+	deltaShear = 1;
 }
 void initWheel()
 {
@@ -6721,13 +6733,10 @@ void initWheel()
 void initCarData()
 {
 	initPath();
+	lastTick = GetTickCount();
 	curPosition = { 0.f, 0.f };
 	curDirection = 0.f;
 	wheelRadius = 10;
-	scaleX = 1;
-	scaleY = 1;
-	shx = 0;
-	tansShx = shx;
 	initWheel();
 	curCar = car;
 	curGoods = goods;
@@ -6796,7 +6805,6 @@ void updateTransform()
 void update()
 {
 	//printf("update: %f\n", delta);
-
 	Point nextP = path->move(delta * speed);
 	auto dx = nextP.x - curPosition.x;
 	auto dy = nextP.y - curPosition.y;
@@ -6826,10 +6834,333 @@ void update()
 	curDirection = dir;
 	updateWindowPosition();
 }
-void showCmdUI()
+bool isNumber(string s)
 {
-	printf("input control parameter [(F)PS, (Sp)eed, (S)cale, (Sh)ear, (R)eset, (E)xit]: \n");
+	std::stringstream sin(s);
+	double d;
+	char c;
+	if (!(sin >> d))
+		return false;
+	if (sin >> c)
+		return false;
+	return true;
+}
+bool setFPS(int value)
+{
+	if (value <= 0)
+	{
+		return false;
+	}
+	else
+	{
+		FPS = value;
+		return true;
+	}
+}
+void dealFPSCommand()
+{
+	printf("input fps value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("fps must be a number!!!\n");
+		dealFPSCommand();
+		return;
+	}
+	int value = std::stoi(str);
+	if (!setFPS(value))
+	{
+		printf("fps must be a positive number!!!\n");
+		dealFPSCommand();
+	}
+}
+void dealDeltaFPSCommand()
+{
+	printf("input fps delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("fps delta must be a number!!!\n");
+		dealDeltaFPSCommand();
+		return;
+	}
+	int value = std::stoi(str);
+	deltaFPS = value;
+}
+void dealSpeedCommand()
+{
+	printf("input speed value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("speed must be a number!!!\n");
+		dealSpeedCommand();
+		return;
+	}
+	float value = std::stof(str);
+	speed = value;
+}
+void dealDeltaSpeedCommand()
+{
+	printf("input speed delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("speed delta must be a number!!!\n");
+		dealDeltaSpeedCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaSpeed = value;
+}
+void dealScaleXCommand()
+{
+	printf("input scale x value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale x must be a number!!!\n");
+		dealScaleXCommand();
+		return;
+	}
+	float value = std::stof(str);
+	scale(value / scaleX, 1);
+}
+void dealDeltaScaleXCommand()
+{
+	printf("input scale x delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale x delta must be a number!!!\n");
+		dealDeltaScaleXCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaScaleX = value;
+}
+void dealScaleYCommand()
+{
+	printf("input scale y value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale y must be a number!!!\n");
+		dealScaleYCommand();
+		return;
+	}
+	float value = std::stof(str);
+	scale(1, value / scaleY);
+}
+void dealDeltaScaleYCommand()
+{
+	printf("input scale y delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale y delta must be a number!!!\n");
+		dealDeltaScaleYCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaScaleY = value;
+}
+void dealShearCommand()
+{
+	printf("input shear value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("shear must be a number!!!\n");
+		dealShearCommand();
+		return;
+	}
+	float value = std::stof(str);
+	shear(value - tansShx);
+}
+void dealDeltaShearCommand()
+{
+	printf("input shear delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("shear delta must be a number!!!\n");
+		dealDeltaShearCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaShear = value;
+}
 
+void showOperatorNotice();
+bool _dealCommand(string commandString)
+{
+	if (commandString == "fps" || commandString == "FPS")
+	{
+		dealFPSCommand();
+		return true;
+	}
+	else if (commandString == "dfps" || commandString == "DFPS")
+	{
+		dealDeltaFPSCommand();
+		return true;
+	}
+	else if (commandString == "speed" || commandString == "SPEED")
+	{
+		dealSpeedCommand();
+		return true;
+	}
+	else if (commandString == "dspeed" || commandString == "DSPEED")
+	{
+		dealDeltaSpeedCommand();
+		return true;
+	}
+	else if (commandString == "scalex" || commandString == "SCALEX")
+	{
+		dealScaleXCommand();
+		return true;
+	}
+	else if (commandString == "dscalex" || commandString == "DSCALEX")
+	{
+		dealDeltaScaleXCommand();
+		return true;
+	}
+	else if (commandString == "scaley" || commandString == "SCALEY")
+	{
+		dealScaleYCommand();
+		return true;
+	}
+	else if (commandString == "dscaley" || commandString == "DSCALEY")
+	{
+		dealDeltaScaleYCommand();
+		return true;
+	}
+	else if (commandString == "shear" || commandString == "SHEAR")
+	{
+		dealShearCommand();
+		return true;
+	}
+	else if (commandString == "dshear" || commandString == "DSHEAR")
+	{
+		dealDeltaShearCommand();
+		return true;
+	}
+	else if (commandString == "reset" || commandString == "RESET")
+	{
+		reset();
+		return true;
+	}
+	else if (commandString == "exit" || commandString == "EXIT")
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+void dealCommand()
+{
+	printf("Input Command: ");
+	std::string commandString;
+	std::cin >> commandString;
+	if (!_dealCommand(commandString))
+	{
+		printf("error command!!!\n");
+		dealCommand();
+		return;
+	}
+	showOperatorNotice();
+	lastTick = GetTickCount();
+}
+void drawString(Point point, string word)
+{
+	glRasterPos2i(point.x, point.y);
+	for (char c : word)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+	}
+}
+void showState()
+{
+	float leftX = curPosition.x - winWidth / 2 + 10;
+	float topY = -150 + winHeight;
+	int space = 20;
+	char s[128] = {};
+		
+	int realFPS = 0;
+	if (delta)
+		realFPS = 1 / delta;
+	sprintf_s(s, "FPS: %d", realFPS);	
+	drawString({ leftX, topY - space * 1 }, s);
+
+	sprintf_s(s, "position: %.02f, %.02f", curPosition.x, curPosition.y);
+	drawString({ leftX, topY - space * 2 }, s);
+
+	sprintf_s(s, "speed: %.02f pixel/s", speed);
+	drawString({ leftX, topY - space * 3 }, s);
+
+	float angle = curDirection * 180 / PI;
+	sprintf_s(s, "angle: %.02f", angle);
+	drawString({ leftX, topY - space * 4 }, s);
+
+	sprintf_s(s, "scale x: %.02f", scaleX);
+	drawString({ leftX, topY - space * 5 }, s);
+
+	sprintf_s(s, "scale y: %.02f", scaleY);
+	drawString({ leftX, topY - space * 6 }, s);
+
+	sprintf_s(s, "shear: %.02f", tansShx);
+	drawString({ leftX, topY - space * 7 }, s);
+}
+void showOperatorNotice()
+{
+	system("cls");
+	printf("Operator: \n");
+	printf("W: add FPS.\n");
+	printf("S: decrease FPS.\n");
+	printf("D: add speed.\n");
+	printf("A: decrease speed.\n");
+	printf("→: add scale x.\n");
+	printf("←: decrease scale x.\n");
+	printf("↑: add scale y.\n");
+	printf("↓: decrease scale y.\n");
+	printf("CTRL →: reflect to +x.\n");
+	printf("CTRL ←: reflect to -x.\n");
+	printf("CTRL ↑: reflect to +y.\n");
+	printf("CTRL ↓: reflect to -y.\n");
+	printf("SHIFT →: add shear.\n");
+	printf("SHIFT ←: decrease shear.\n");
+	printf("R: reset state\n");
+	printf("ESC: command mode.\n");
+}
+void showCommandNotice()
+{	
+	system("cls");
+	printf("Command Mode: \n");
+	printf("fps: set FPS.\n");
+	printf("dfps: set FPS delta.\n");
+	printf("speed: set speed.\n");
+	printf("dspeed: set speed delta.\n");
+	printf("scalex: set scale x.\n");
+	printf("dscalex: set scale x delta.\n");
+	printf("scaley: set scale y.\n");
+	printf("dscaley: set scale y delta.\n");
+	printf("shear: set shear.\n");
+	printf("dshear: set shear delta.\n");
+	printf("reset: reset state.\n");
+	printf("exit: exit command mode.\n");
+	dealCommand();
 }
 void normalKeyFcn(unsigned char key, int x, int y)
 {
@@ -6837,7 +7168,7 @@ void normalKeyFcn(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 27:
-		showCmdUI();
+		showCommandNotice();
 		break;
 	case 'r':
 	case 'R':
@@ -6845,19 +7176,19 @@ void normalKeyFcn(unsigned char key, int x, int y)
 		break;
 	case 'w':
 	case 'W':
-		FPS += 5;
+		setFPS(FPS + deltaFPS);
 		break;
 	case 's':
 	case 'S':
-		FPS -= 5;
+		setFPS(FPS - deltaFPS);
 		break;
 	case 'a':
 	case 'A':
-		speed -= 10;
+		speed -= deltaSpeed;
 		break;
 	case 'd':
 	case 'D':
-		speed += 10;
+		speed += deltaSpeed;
 		break;
 	default:
 		break;
@@ -6873,7 +7204,7 @@ void specialKeyFcn(int key, int x, int y)
 	case GLUT_KEY_RIGHT:
 		if (mod == 0)
 		{
-			scale(2, 1);
+			scale(deltaScaleX, 1);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
@@ -6882,13 +7213,13 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			shear(1);
+			shear(deltaShear);
 		}
 		break;
 	case GLUT_KEY_LEFT:
 		if (mod == 0)
 		{
-			scale(0.5, 1);
+			scale(1 / deltaScaleX, 1);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
@@ -6897,13 +7228,13 @@ void specialKeyFcn(int key, int x, int y)
 		}			
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			shear(-1);
+			shear(-deltaShear);
 		}
 		break;
 	case GLUT_KEY_UP:
 		if (mod == 0)
 		{
-			scale(1, 2);
+			scale(1, deltaScaleY);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
@@ -6914,7 +7245,7 @@ void specialKeyFcn(int key, int x, int y)
 	case GLUT_KEY_DOWN:
 		if (mod == 0)
 		{
-			scale(1, 0.5);
+			scale(1, 1 / deltaScaleY);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
@@ -6937,14 +7268,17 @@ void displayFcn(void)
 	drawGoods();
 	drawWheel();
 
+	showState();
+
 	glFlush();
 }
-void onTimer(int lastTick)
+void onTimer(int id)
 {
 	int curTick = GetTickCount();
 	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
 	glutPostRedisplay();
-	glutTimerFunc((unsigned)(1000 / FPS), onTimer, curTick);
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
 }
 void code_7_exercise_add_1()
 {
@@ -6952,12 +7286,13 @@ void code_7_exercise_add_1()
 	glColor3f(0.0, 0.0, 0.0);
 
 	initCarData();
+	showOperatorNotice();
 
 	glutDisplayFunc(displayFcn);
 	glutKeyboardFunc(normalKeyFcn);
 	glutSpecialFunc(specialKeyFcn);
 
-	glutTimerFunc((unsigned)(1000 / FPS), onTimer, GetTickCount());
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
 }
 #endif
 

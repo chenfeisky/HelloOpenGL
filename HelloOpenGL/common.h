@@ -14,6 +14,7 @@
 
 #include <time.h>
 #include <iostream>
+#include <sstream>  
 #include <assert.h>
 #include <fstream>
 #include <math.h>
