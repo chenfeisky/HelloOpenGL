@@ -6391,13 +6391,6 @@ void matrixSetIdentity(Matrix& m)
 		for (int col = 0; col < m._col; col++)
 			m[row][col] = (row == col);
 }
-void square(const std::vector<Point>& points)
-{
-	glBegin(GL_POLYGON);
-	for (auto & p : points)
-		glVertex2f(p.x, p.y);
-	glEnd();
-}
 Matrix translateMatrix(float tx, float ty)
 {
 	// 平移
@@ -6804,7 +6797,8 @@ void updateTransform()
 }
 void update()
 {
-	printf("update: %f\n", delta);
+	//printf("update: %f\n", delta);
+
 	Point nextP = path->move(delta * speed);
 	auto dx = nextP.x - curPosition.x;
 	auto dy = nextP.y - curPosition.y;
@@ -6832,6 +6826,7 @@ void update()
 	curPosition = nextP;
 	updateDirection(dir);
 	curDirection = dir;
+	
 	updateWindowPosition();
 }
 bool isNumber(string s)
@@ -7267,7 +7262,6 @@ void displayFcn(void)
 	drawCar();
 	drawGoods();
 	drawWheel();
-
 	showState();
 
 	glFlush();
@@ -7812,7 +7806,8 @@ void updateTransform()
 }
 void update()
 {
-	printf("update: %f\n", delta);
+	//printf("update: %f\n", delta);
+
 	Point nextP = path->move(delta * speed);
 	auto dx = nextP.x - curPosition.x;
 	auto dy = nextP.y - curPosition.y;
@@ -7840,6 +7835,11 @@ void update()
 	curPosition = nextP;
 	//updateDirection(dir);
 	curDirection = dir;
+
+	// gluOrtho2D之后的绘制才会使用新的视口，否则若在gluOrtho2D之前绘制，绘制使用之前的视口，下次新视口才生效
+	// 这样每帧绘制都会超前视口一个delta*speed距离，因为delta是变量，所以每帧位置都有小偏差，造成视觉残影，绘制抖动
+	updateWindowPosition();
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	drawRoad();
@@ -7856,8 +7856,6 @@ void update()
 	glTranslated(-15, 47, 0);
 	drawGoods();
 	glLoadIdentity();
-
-	updateWindowPosition();
 }
 bool isNumber(string s)
 {
