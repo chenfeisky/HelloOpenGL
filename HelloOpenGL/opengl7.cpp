@@ -7837,6 +7837,8 @@ void update()
 	curDirection = dir;
 
 	// gluOrtho2D之后的绘制才会使用新的视口，否则若在gluOrtho2D之前绘制，绘制使用之前的视口，下次新视口才生效
+	// 因此第一次绘制的效果是绘制图形移动，但视口不动，即绘制图形超前视口一个delta*speed距离
+	// 下次绘制时，会首先生效上次的视口设置，即视口中心为绘制图形中心，但是图形此时又会移动，即绘制图形又会超前视口一个delta*speed距离
 	// 这样每帧绘制都会超前视口一个delta*speed距离，因为delta是变量，所以每帧位置都有小偏差，造成视觉残影，绘制抖动
 	updateWindowPosition();
 
