@@ -7504,7 +7504,7 @@ float FPS = 60;
 int deltaFPS = 5;
 float speed = 100;
 float deltaSpeed = 10;
-float scaleX = 1;
+float scaleX = 2;
 float deltaScaleX = 2;
 float scaleY = 1;
 float deltaScaleY = 2;
@@ -7667,16 +7667,29 @@ void drawGoods()
 }
 void drawWheel()
 {
+	//drawPoints(curWheel1);
+	//for (auto & p : curWheelHolder1)
+	//{
+	//	drawStrip({ curWheelPoint1, p });
+	//}
+	//drawPoints(curWheel2);
+	//for (auto & p : curWheelHolder2)
+	//{
+	//	drawStrip({ curWheelPoint2, p });
+	//}
+	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
 	drawPoints(curWheel1);
-	for (auto & p : curWheelHolder1)
+}
+void drawWheelHolder()
+{
+	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
+
+	float deltaA = delta  * speed / l;
+	transformPoints(rotateByPointMatrix({ 0, 0 }, -deltaA), curWheelRoundHolder);
+	for (auto & p : curWheelRoundHolder)
 	{
-		drawStrip({ curWheelPoint1, p });
-	}
-	drawPoints(curWheel2);
-	for (auto & p : curWheelHolder2)
-	{
-		drawStrip({ curWheelPoint2, p });
-	}
+		drawStrip({ {0, 0}, p });
+	};
 }
 void scale(float sx, float sy)
 {
@@ -7847,16 +7860,36 @@ void update()
 	drawRoad();
 
 	glLoadIdentity();
-	//printf("%f\n", curPosition.x);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glScalef(2, 1, 1.0);
 	glTranslated(20, 22, 0);
 	drawCar();
 
 	glLoadIdentity();
-	//printf("%f\n", curPosition.x);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glScalef(2, 1, 1.0);
 	glTranslated(-15, 47, 0);
 	drawGoods();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	//glScalef(2, 1, 1.0);
+	glTranslated(32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+	//drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	//glScalef(2, 2, 1.0);
+	glTranslated(-32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+	//drawWheelHolder();
+
+
 	glLoadIdentity();
 }
 bool isNumber(string s)
