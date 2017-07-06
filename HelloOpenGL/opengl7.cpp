@@ -7434,7 +7434,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 Matrix scaleMatrix(float sx, float sy)
 {
 	// 基于原点缩放
-	Matrix ret(3, 3);
+	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
 	ret[1][1] = sy;
@@ -7454,7 +7454,7 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy)
 Matrix shearXMatrix(float shx)
 {
 	// 基于原点的x方向错切
-	Matrix ret(3, 3);
+	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
 	return ret;
@@ -7504,7 +7504,7 @@ float FPS = 60;
 int deltaFPS = 5;
 float speed = 100;
 float deltaSpeed = 10;
-float scaleX = 2;
+float scaleX = 1;
 float deltaScaleX = 2;
 float scaleY = 1;
 float deltaScaleY = 2;
@@ -7518,6 +7518,8 @@ Point curPosition;
 float curDirection;
 float wheelRadius = 0;
 Path* path = nullptr;
+float wheelRadian = 0.f;
+Matrix curTransform(4, 4);
 void initPath()
 {
 	auto temp = road;
@@ -7657,35 +7659,19 @@ void drawRoad()
 }
 void drawCar()
 {
-	//drawLoop(curCar);
 	drawLoop(car);
 }
 void drawGoods()
 {
-	//drawLoop(curGoods);
 	drawLoop(goods);
 }
 void drawWheel()
 {
-	//drawPoints(curWheel1);
-	//for (auto & p : curWheelHolder1)
-	//{
-	//	drawStrip({ curWheelPoint1, p });
-	//}
-	//drawPoints(curWheel2);
-	//for (auto & p : curWheelHolder2)
-	//{
-	//	drawStrip({ curWheelPoint2, p });
-	//}
 	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
 	drawPoints(curWheel1);
 }
 void drawWheelHolder()
 {
-	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
-
-	float deltaA = delta  * speed / l;
-	transformPoints(rotateByPointMatrix({ 0, 0 }, -deltaA), curWheelRoundHolder);
 	for (auto & p : curWheelRoundHolder)
 	{
 		drawStrip({ {0, 0}, p });
@@ -7695,35 +7681,16 @@ void scale(float sx, float sy)
 {
 	scaleX *= sx;
 	scaleY *= sy;
-	auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
-	transformPoints(m, curCar);
-	transformPoints(m, curGoods);
-	transformPoint(m, curWheelPoint1);
-	transformPoint(m, curWheelPoint2);
-	transformPoints(m, curWheelHolder1);
-	transformPoints(m, curWheelHolder2);
-
-	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
+	
 	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
 	tansShx *= (sx / sy);
-	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection) * shearXMatrix(tansShx), curWheel1);
-	curWheel2 = curWheel1;
-	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheel1);
-	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheel2);
+	curTransform = scaleMatrix(sx, sy) * curTransform;
 }
 void shear(float sh)
 {
 	shx += sh;
 	tansShx += sh;
-	auto m = translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(sh) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y);
-	transformPoints(m, curCar);
-	transformPoints(m, curGoods);
-	transformPoint(m, curWheelPoint1);
-	transformPoint(m, curWheelPoint2);
-	transformPoints(m, curWheelHolder1);
-	transformPoints(m, curWheelHolder2);
-	transformPoints(m, curWheel1);
-	transformPoints(m, curWheel2);
+	curTransform = shearXMatrix(sh) * curTransform;
 }
 void reset()
 {
@@ -7752,7 +7719,9 @@ void initCarData()
 	curPosition = { 0.f, 0.f };
 	curDirection = 0.f;
 	wheelRadius = 10;
+	wheelRadian = 0.f;
 	initWheel();
+	matrixSetIdentity(curTransform);
 	curCar = car;
 	curGoods = goods;
 	curWheelPoint1 = wheelPoint;
@@ -7768,6 +7737,9 @@ void initCarData()
 	transformPoints(translateMatrix(-32, 10), curWheelHolder2);
 	circle({ 32, 10 }, wheelRadius, curWheel1);
 	circle({ -32, 10 }, wheelRadius, curWheel2);
+	//scale(1, 2);
+	shear(1);
+	
 }
 float distance(const Point& p1, const Point& p2)
 {
@@ -7862,35 +7834,50 @@ void update()
 	glLoadIdentity();
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glScalef(2, 1, 1.0);
+	glMultMatrixf(curTransform);
 	glTranslated(20, 22, 0);
 	drawCar();
 
 	glLoadIdentity();
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glScalef(2, 1, 1.0);
+	glMultMatrixf(curTransform);
 	glTranslated(-15, 47, 0);
 	drawGoods();
 
+	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
+	wheelRadian -= delta * speed / l * 180 / PI;
+	wheelRadian = fmod(wheelRadian, 360);
+
 	glLoadIdentity();
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	//glScalef(2, 1, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+	
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix(tansShx));
 	glTranslated(32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
-	//drawWheelHolder();
 
 	glLoadIdentity();
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	//glScalef(2, 2, 1.0);
+	glMultMatrixf(shearXMatrix(tansShx));
 	glTranslated(-32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
-	//drawWheelHolder();
-
-
-	glLoadIdentity();
 }
 bool isNumber(string s)
 {
@@ -8151,6 +8138,8 @@ void drawString(Point point, string word)
 }
 void showState()
 {
+	glLoadIdentity();
+
 	float leftX = curPosition.x - winWidth / 2 + 10;
 	float topY = -150 + winHeight;
 	int space = 20;
