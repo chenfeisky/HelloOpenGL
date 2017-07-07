@@ -7391,46 +7391,6 @@ void matrixSetIdentity(Matrix& m)
 		for (int col = 0; col < m._col; col++)
 			m[row][col] = (row == col);
 }
-void square(const std::vector<Point>& points)
-{
-	glBegin(GL_POLYGON);
-	for (auto & p : points)
-		glVertex2f(p.x, p.y);
-	glEnd();
-}
-Matrix translateMatrix(float tx, float ty)
-{
-	// 平移
-	Matrix ret(3, 3);
-	matrixSetIdentity(ret);
-	ret[0][2] = tx;
-	ret[1][2] = ty;
-	return ret;
-}
-Matrix rotateMatrix(float theta)
-{
-	// 基于原点旋转
-	Matrix ret(3, 3);
-	matrixSetIdentity(ret);
-	ret[0][0] = std::cos(theta);
-	ret[0][1] = -std::sin(theta);
-	ret[1][0] = std::sin(theta);
-	ret[1][1] = std::cos(theta);
-	return ret;
-}
-Matrix rotateByPointMatrix(Point p, float theta)
-{
-	// 基于指定点旋转
-	Matrix ret(3, 3);
-	matrixSetIdentity(ret);
-	ret[0][0] = std::cos(theta);
-	ret[0][1] = -std::sin(theta);
-	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
-	ret[1][0] = std::sin(theta);
-	ret[1][1] = std::cos(theta);
-	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
-	return ret;
-}
 Matrix scaleMatrix(float sx, float sy)
 {
 	// 基于原点缩放
@@ -7438,17 +7398,6 @@ Matrix scaleMatrix(float sx, float sy)
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
 	ret[1][1] = sy;
-	return ret;
-}
-Matrix scaleByPointMatrix(Point p, float sx, float sy)
-{
-	// 基于指定点缩放
-	Matrix ret(3, 3);
-	matrixSetIdentity(ret);
-	ret[0][0] = sx;
-	ret[0][2] = p.x * (1 - sx);
-	ret[1][1] = sy;
-	ret[1][2] = p.y * (1 - sy);
 	return ret;
 }
 Matrix shearXMatrix(float shx)
@@ -7459,46 +7408,10 @@ Matrix shearXMatrix(float shx)
 	ret[0][1] = shx;
 	return ret;
 }
-void transformPoint(Matrix& m, Point& point)
-{
-	Matrix _point(3, 1);
-	Matrix temp(3, 1);
-	_point[0][0] = point.x;
-	_point[1][0] = point.y;
-	_point[2][0] = 1;
-	temp = m * _point;
-	point.x = temp[0][0];
-	point.y = temp[1][0];
-}
-void transformPoints(Matrix& m, std::vector<Point>& points)
-{
-	Matrix point(3, 1);
-	Matrix temp(3, 1);
-	for (auto& p : points)
-	{
-		point[0][0] = p.x;
-		point[1][0] = p.y;
-		point[2][0] = 1;
-		temp = m * point;
-		p.x = temp[0][0];
-		p.y = temp[1][0];
-	}
-}
 std::vector<Point> road = { { -400, 0 },{ 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 },{ 2600, 0 },{ 2600, 200 },{ 2800, 200 } ,{ 2800, 0 } ,{ 3200, 0 },{ 3600, 0 } };
 std::vector<Point> car = { { 0, 0 },{ -70, 0 },{ -70, -12 },{ 30, -12 },{ 30, -2 },{ 15, 26 },{ 0, 26 } };
 std::vector<Point> goods = { { -30, -20 },{ 30, -20 },{ 30, 20 },{ -30, 20 } };
-Point wheelPoint = { 0, 0 };
 std::vector<Point> wheelHolder;
-
-std::vector<Point> curCar;
-std::vector<Point> curGoods;
-Point curWheelPoint1;
-Point curWheelPoint2;
-std::vector<Point> curWheel1;
-std::vector<Point> curWheel2;
-std::vector<Point> curWheelRoundHolder;
-std::vector<Point> curWheelHolder1;
-std::vector<Point> curWheelHolder2;
 
 float FPS = 60;
 int deltaFPS = 5;
@@ -7554,43 +7467,6 @@ void drawLoop(const std::vector<Point>& points)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void circlePlot(Point p0, Point p, std::vector<Point>& points)
-{
-	points.push_back({ p0.x + p.x, p0.y + p.y });
-	points.push_back({ p0.x - p.x, p0.y + p.y });
-	points.push_back({ p0.x + p.x, p0.y - p.y });
-	points.push_back({ p0.x - p.x, p0.y - p.y });
-	points.push_back({ p0.x + p.y, p0.y + p.x });
-	points.push_back({ p0.x - p.y, p0.y + p.x });
-	points.push_back({ p0.x + p.y, p0.y - p.x });
-	points.push_back({ p0.x - p.y, p0.y - p.x });
-}
-void circle(Point p0, float r, std::vector<Point>& points)
-{
-	points.clear();
-	float x = r;
-	float y = 0;
-	int d2x = 2 * r;
-	int d2y = 0;
-	int p = 1 - r;
-	circlePlot(p0, { x, y }, points);
-	while (x > y)
-	{
-		y++;
-		d2y += 2;
-		if (p < 0)
-		{
-			p += d2y + 1;
-		}
-		else
-		{
-			x--;
-			d2x -= 2;
-			p += d2y + 1 - d2x;
-		}
-		circlePlot(p0, { x, y }, points);
-	}
-}
 inline int64_t Round(const double a)
 {
 	if (a >= 0)
@@ -7598,16 +7474,15 @@ inline int64_t Round(const double a)
 	else
 		return int64_t(a - 0.5);
 }
-void ellipsePlot(Point p0, int x, int y, std::vector<Point>& points)
+void ellipsePlot(Point p0, int x, int y)
 {
-	points.push_back({ p0.x + x, p0.y + y });
-	points.push_back({ p0.x - x, p0.y + y });
-	points.push_back({ p0.x + x, p0.y - y });
-	points.push_back({ p0.x - x, p0.y - y });
+	drawPoint({ p0.x + x, p0.y + y });
+	drawPoint({ p0.x - x, p0.y + y });
+	drawPoint({ p0.x + x, p0.y - y });
+	drawPoint({ p0.x - x, p0.y - y });
 }
-void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
+void ellipse(Point p0, int Rx, int Ry)
 {
-	points.clear();
 	int Rx2 = Rx*Rx;
 	int Ry2 = Ry*Ry;
 	int twoRx2 = 2 * Rx2;
@@ -7617,7 +7492,7 @@ void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
 	int y = Ry;
 	int64_t px = 0;
 	int64_t py = twoRx2*y;
-	ellipsePlot(p0, x, y, points);
+	ellipsePlot(p0, x, y);
 	/*Region 1*/
 	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
 	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
@@ -7633,7 +7508,7 @@ void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		ellipsePlot(p0, x, y, points);
+		ellipsePlot(p0, x, y);
 	}
 	/*Region 2*/
 	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
@@ -7650,7 +7525,7 @@ void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
 			px += twoRy2;
 			p += Rx2 - py + px;
 		}
-		ellipsePlot(p0, x, y, points);
+		ellipsePlot(p0, x, y);
 	}
 }
 void drawRoad()
@@ -7667,12 +7542,11 @@ void drawGoods()
 }
 void drawWheel()
 {
-	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
-	drawPoints(curWheel1);
+	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius);
 }
 void drawWheelHolder()
 {
-	for (auto & p : curWheelRoundHolder)
+	for (auto & p : wheelHolder)
 	{
 		drawStrip({ {0, 0}, p });
 	};
@@ -7698,11 +7572,14 @@ void reset()
 	deltaFPS = 5;
 	speed = 100;
 	deltaSpeed = 10;
-	scale(1 / scaleX, 1 / scaleY);
+	scaleX = 1;
+	scaleY = 1;
 	deltaScaleX = 2;
 	deltaScaleY = 2;
-	shear(-tansShx);
+	shx = 0;
+	tansShx = 0;
 	deltaShear = 1;
+	matrixSetIdentity(curTransform);
 }
 void initWheel()
 {
@@ -7722,72 +7599,12 @@ void initCarData()
 	wheelRadian = 0.f;
 	initWheel();
 	matrixSetIdentity(curTransform);
-	curCar = car;
-	curGoods = goods;
-	curWheelPoint1 = wheelPoint;
-	curWheelPoint2 = wheelPoint;
-	curWheelHolder1 = wheelHolder;
-	curWheelHolder2 = wheelHolder;
-	curWheelRoundHolder = wheelHolder;
-	transformPoints(translateMatrix(20, 22), curCar);
-	transformPoints(translateMatrix(-15, 47), curGoods);
-	transformPoint(translateMatrix(32, 10), curWheelPoint1);
-	transformPoint(translateMatrix(-32, 10), curWheelPoint2);
-	transformPoints(translateMatrix(32, 10), curWheelHolder1);
-	transformPoints(translateMatrix(-32, 10), curWheelHolder2);
-	circle({ 32, 10 }, wheelRadius, curWheel1);
-	circle({ -32, 10 }, wheelRadius, curWheel2);
-	//scale(1, 2);
-	shear(1);
-	
-}
-float distance(const Point& p1, const Point& p2)
-{
-	auto dx = p2.x - p1.x;
-	auto dy = p2.y - p1.y;
-	return std::sqrt(dx * dx + dy * dy);
 }
 void updateWindowPosition()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(curPosition.x - winWidth / 2, curPosition.x + winWidth / 2, -150, -150 + winHeight);
-}
-void updateDirection(float diretion)
-{
-	auto d = diretion - curDirection;
-	transformPoints(rotateByPointMatrix(curPosition, d), curCar);
-	transformPoints(rotateByPointMatrix(curPosition, d), curGoods);
-	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint1);
-	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
-	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
-	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
-
-	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
-	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
-	transformPoints(rotateByPointMatrix(curWheelPoint1, diretion), curWheelHolder1);
-	transformPoints(rotateByPointMatrix(curWheelPoint2, diretion), curWheelHolder2);
-}
-void updateMove(Point p)
-{
-	auto dx = p.x - curPosition.x;
-	auto dy = p.y - curPosition.y;
-	transformPoints(translateMatrix(dx, dy), curCar);
-	transformPoints(translateMatrix(dx, dy), curGoods);
-	transformPoint(translateMatrix(dx, dy), curWheelPoint1);
-	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
-	transformPoints(translateMatrix(dx, dy), curWheel1);
-	transformPoints(translateMatrix(dx, dy), curWheel2);
-}
-void updateTransform()
-{
-	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
-
-	float deltaA = delta  * speed / l;
-	transformPoints(rotateByPointMatrix({ 0, 0 }, -deltaA), curWheelRoundHolder);
-	curWheelHolder1 = curWheelRoundHolder;
-	transformPoints(shearXMatrix(tansShx) * scaleByPointMatrix({ 0, 0 }, scaleX, scaleY), curWheelHolder1);
-	curWheelHolder2 = curWheelHolder1;
 }
 void update()
 {
@@ -7814,11 +7631,7 @@ void update()
 			dir = curDirection;
 		}
 	}
-
-	//updateTransform();
-	//updateMove(nextP);
 	curPosition = nextP;
-	//updateDirection(dir);
 	curDirection = dir;
 
 	// gluOrtho2D之后的绘制才会使用新的视口，否则若在gluOrtho2D之前绘制，绘制使用之前的视口，下次新视口才生效
@@ -8226,7 +8039,7 @@ void normalKeyFcn(unsigned char key, int x, int y)
 		setFPS(FPS + deltaFPS);
 		break;
 	case 's':
-	case 'S':
+	case 'S':CHAPTER_7_EXERCISE_ADD_2
 		setFPS(FPS - deltaFPS);
 		break;
 	case 'a':
@@ -8309,12 +8122,7 @@ void displayFcn(void)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	update();
-
-	//drawRoad();
-	//drawCar();
-	//drawGoods();
-	//drawWheel();
-
+	
 	showState();
 
 	glFlush();
