@@ -2,4 +2,14 @@
 
 // 选择一个，注释掉其他的
 //#define CHAPTER_8_4_16 // 二维观察
-#define CHAPTER_8_4_16_test // 多视口，多窗口，子窗口等示例 二维观察
+//#define CHAPTER_8_4_16_test // 多视口，多窗口，子窗口等示例 二维观察
+//#define CHAPTER_8_7_1 // Cohen-Sutherland线段裁剪算法
+#define CHAPTER_8_7_2 // 梁友栋-Barsky线段裁剪算法
+
+#ifdef CHAPTER_8_7_1
+#define CHAPTER_8_COMMON
+#endif
+
+#ifdef CHAPTER_8_7_2
+#define CHAPTER_8_COMMON
+#endif
