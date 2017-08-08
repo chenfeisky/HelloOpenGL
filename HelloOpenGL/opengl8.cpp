@@ -682,6 +682,231 @@ void drawFunc()
 	p1.setCoords(106, 475);
 	p2.setCoords(578, 120);
 	glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(79, 346);
+p2.setCoords(688, 256);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(401, 434);
+p2.setCoords(294, 260);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(561, 399);
+p2.setCoords(627, 191);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(134, 313);
+p2.setCoords(378, 174);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(55, 249);
+p2.setCoords(273, 122);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(139, 431);
+p2.setCoords(139, 134);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(253, 440);
+p2.setCoords(253, 186);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+p1.setCoords(424, 249);
+p2.setCoords(479, 328);
+glColor3f(1.0, 1.0, 1.0);
+lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+glColor3f(1.0, 0.0, 0.0);
+lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+glFlush();
+}
+void code_8_7_2()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_8_8_1
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+typedef enum { Left, Right, Bottom, Top } Boundary;
+const GLint nClip = 4;
+GLint inside(wcPt2D p, Boundary b, wcPt2D wMin, wcPt2D wMax)
+{
+	switch (b)
+	{
+	case Left:
+		if (p.x < wMin.x)
+			return (false);
+		break;
+	case Right:
+		if (p.x > wMax.x)
+			return (false);
+		break;
+	case Bottom:
+		if (p.y < wMin.y)
+			return (false);
+		break;
+	case Top:
+		if (p.y > wMax.y)
+			return (false);
+		break;
+	}
+	return (true);
+}
+GLint cross(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax)
+{
+	if (inside(p1, winEdge, wMin, wMax) == inside(p2, winEdge, wMin, wMax))
+		return (false);
+	else
+		return (true);
+}
+wcPt2D intersect(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax)
+{
+	wcPt2D iPt;
+	GLfloat m;
+
+	if (p1.x != p2.x)
+		m = (p1.y - p2.y) / (p1.x - p2.x);
+	switch (winEdge)
+	{
+	case Left:
+		iPt.x = wMin.x;
+		iPt.y = p2.y + (wMin.x - p2.x) * m;
+		break;
+	case Right:
+		iPt.x = wMax.x;
+		iPt.y = p2.y + (wMax.x - p2.x) * m;
+		break;
+	case Bottom:
+		iPt.y = wMin.y;
+		if (p1.x != p2.x)
+			iPt.x = p2.x + (wMin.y - p2.y) / m;
+		else
+			iPt.x = p2.x;
+		break;
+	case Top:
+		iPt.y = wMax.y;
+		if (p1.x != p2.x)
+			iPt.x = p2.x + (wMax.y - p2.y) / m;
+		else
+			iPt.x = p2.x;
+		break;
+	default:
+		break;
+	}
+	return (iPt);
+}
+
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.getx() - p1.getx(), dy;
+	if (clipTest(-dx, p1.getx() - winMin.getx(), &u1, &u2))
+		if (clipTest(dx, winMax.getx() - p1.getx(), &u1, &u2))
+		{
+			dy = p2.gety() - p1.gety();
+			if (clipTest(-dy, p1.gety() - winMin.gety(), &u1, &u2))
+				if (clipTest(dy, winMax.gety() - p1.gety(), &u1, &u2))
+				{
+					if (u2 < 1.0)
+					{
+						p2.setCoords(p1.getx() + u2 * dx, p1.gety() + u2 * dy);
+					}
+					if (u1 > 0.0)
+					{
+						p1.setCoords(p1.getx() + u1 * dx, p1.gety() + u1 * dy);
+					}
+					//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+					lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+				}
+		}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	wcPt2D winMin, winMax;
+	winMin.setCoords(200, 220);
+	winMax.setCoords(520, 380);
+
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.getx(), winMin.gety());
+	glVertex2f(winMax.getx(), winMin.gety());
+	glVertex2f(winMax.getx(), winMax.gety());
+	glVertex2f(winMin.getx(), winMax.gety());
+	glEnd();
+
+	wcPt2D p1, p2;
+	p1.setCoords(106, 475);
+	p2.setCoords(578, 120);
+	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipLiangBarsk(winMin, winMax, p1, p2);
@@ -744,7 +969,7 @@ void drawFunc()
 
 	glFlush();
 }
-void code_8_7_2()
+void code_8_8_1()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -780,6 +1005,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_7_2
 	code_8_7_2();
+#endif
+
+#ifdef CHAPTER_8_8_1
+	code_8_8_1();
 #endif
 
 	glutMainLoop();
