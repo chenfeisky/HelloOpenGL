@@ -758,6 +758,7 @@ public:
 };
 typedef enum { Left, Right, Bottom, Top } Boundary;
 const GLint nClip = 4;
+vector<wcPt2D> sPoint[nClip];
 GLint inside(wcPt2D p, Boundary b, wcPt2D wMin, wcPt2D wMax)
 {
 	switch (b)
@@ -824,67 +825,108 @@ wcPt2D intersect(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMa
 	}
 	return (iPt);
 }
-
-inline GLint Round(const GLfloat a)
+void clipPoint(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, int* cnt, wcPt2D* first[], wcPt2D* s)
 {
-	return GLint(a + 0.5);
-}
-void lineBres(float x0, float y0, float xEnd, float yEnd)
-{
-	glBegin(GL_LINES);
-	glVertex2f(x0, y0);
-	glVertex2f(xEnd, yEnd);
-	glEnd();
-	return;
-}
-GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
-{
-	GLfloat r;
-	GLint returnValue = true;
-
-	if (p < 0.0)
+	wcPt2D iPt;
+	if (!first[winEdge])
+		first[winEdge] = new wcPt2D{p.x, p.y};
+	else
 	{
-		r = q / p;
-		if (r > *u2)
-			returnValue = false;
-		else if (r > *u1)
-			*u1 = r;
-	}
-	else if (p > 0.0)
-	{
-		r = q / p;
-		if (r < *u1)
-			returnValue = false;
-		else if (r < *u2)
-			*u2 = r;
-	}
-	else if (q < 0.0)
-		returnValue = false;
-
-	return (returnValue);
-}
-void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
-{
-	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.getx() - p1.getx(), dy;
-	if (clipTest(-dx, p1.getx() - winMin.getx(), &u1, &u2))
-		if (clipTest(dx, winMax.getx() - p1.getx(), &u1, &u2))
+		if (cross(p, s[winEdge], winEdge, wMin, wMax))
 		{
-			dy = p2.gety() - p1.gety();
-			if (clipTest(-dy, p1.gety() - winMin.gety(), &u1, &u2))
-				if (clipTest(dy, winMax.gety() - p1.gety(), &u1, &u2))
-				{
-					if (u2 < 1.0)
-					{
-						p2.setCoords(p1.getx() + u2 * dx, p1.gety() + u2 * dy);
-					}
-					if (u1 > 0.0)
-					{
-						p1.setCoords(p1.getx() + u1 * dx, p1.gety() + u1 * dy);
-					}
-					//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
-					lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-				}
+			iPt = intersect(p, s[winEdge], winEdge, wMin, wMax);
+			if (winEdge < Top)
+				clipPoint(iPt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s);
+			else
+			{
+				pOut[*cnt] = iPt;
+				(*cnt)++;
+			}				
 		}
+	}
+
+	s[winEdge] = p;
+	sPoint[winEdge].push_back(p);
+
+	if (inside(p, winEdge, wMin, wMax))
+	{
+		if (winEdge < Top)
+			clipPoint(p, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s);
+		else
+		{
+			pOut[*cnt] = p;
+			(*cnt)++;
+		}
+	}
+}
+void closeClip(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* first[], wcPt2D* s)
+{
+	wcPt2D pt;
+	Boundary winEdge;
+	for (winEdge = Left; winEdge <= Top; winEdge = (Boundary)(winEdge + 1))
+	{
+		if (cross(s[winEdge], *first[winEdge], winEdge, wMin, wMax))
+		{
+			pt = intersect(s[winEdge], *first[winEdge], winEdge, wMin, wMax);
+			if (winEdge < Top)
+				clipPoint(pt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s);
+			else
+			{
+				pOut[*cnt] = pt;
+				(*cnt)++;
+			}
+		}
+	}
+}
+GLint polygonClipSuthHodg(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D* pOut)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		sPoint[i].clear();
+	}
+	wcPt2D* first[nClip] = { 0, 0, 0, 0 }, s[nClip];
+	GLint k, cnt = 0;
+	for (k = 0; k < n; k++)
+		clipPoint(pIn[k], Left, wMin, wMax, pOut, &cnt, first, s);
+	closeClip(wMin, wMax, pOut, &cnt, first, s);
+	
+	printf("==================================================\n");
+	for (int i = 0; i < 4; i++)
+	{
+		printf("%0.2f,%0.2f  ", first[i]->x, first[i]->y);
+	}
+	printf("\n");
+
+	int max = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (max < sPoint[i].size())
+			max = sPoint[i].size();
+	}
+
+	for (int i = 0; i < max; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (i < sPoint[j].size())
+			{
+				printf("%0.2f,%0.2f  ", sPoint[j][i].x, sPoint[j][i].y);
+			}
+			else
+			{
+				printf("             ");
+			}
+		}
+		printf("\n");			
+	}
+	return (cnt);
+}
+void polygon(wcPt2D * verts, int n)
+{
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < n; i++)
+		glVertex2f(verts[i].x, verts[i].y);
+	glEnd();
 }
 void drawFunc()
 {
@@ -892,81 +934,82 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	wcPt2D winMin, winMax;
-	winMin.setCoords(200, 220);
-	winMax.setCoords(520, 380);
+	{
+		glColor3f(1.0, 1.0, 1.0);
+		wcPt2D winMin = { 100, 400 }, winMax = { 250, 500 };
 
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(winMin.getx(), winMin.gety());
-	glVertex2f(winMax.getx(), winMin.gety());
-	glVertex2f(winMax.getx(), winMax.gety());
-	glVertex2f(winMin.getx(), winMax.gety());
-	glEnd();
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(winMin.x, winMin.y);
+		glVertex2f(winMax.x, winMin.y);
+		glVertex2f(winMax.x, winMax.y);
+		glVertex2f(winMin.x, winMax.y);
+		glEnd();
 
-	wcPt2D p1, p2;
-	p1.setCoords(106, 475);
-	p2.setCoords(578, 120);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+		wcPt2D verts[3] = { {137, 362},{170, 445},{ 25, 431 } };
+		polygon(verts, 3);
+		wcPt2D pOut[16];
+		int n = polygonClipSuthHodg(winMin, winMax, 3, verts, pOut);
+		glColor3f(1.0, 0.0, 0.0);
+		polygon(pOut, n);
+	}
 
-	p1.setCoords(79, 346);
-	p2.setCoords(688, 256);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	{
+		glColor3f(1.0, 1.0, 1.0);
+		wcPt2D winMin = { 400, 400 }, winMax = { 650, 500 };
 
-	p1.setCoords(401, 434);
-	p2.setCoords(294, 260);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(winMin.x, winMin.y);
+		glVertex2f(winMax.x, winMin.y);
+		glVertex2f(winMax.x, winMax.y);
+		glVertex2f(winMin.x, winMax.y);
+		glEnd();
 
-	p1.setCoords(561, 399);
-	p2.setCoords(627, 191);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+		wcPt2D verts[3] = { { 549, 369 },{ 572, 546 },{ 657, 419 } };
+		polygon(verts, 3);
+		wcPt2D pOut[16];
+		int n = polygonClipSuthHodg(winMin, winMax, 3, verts, pOut);
+		glColor3f(1.0, 0.0, 0.0);
+		polygon(pOut, n);
+	}
 
-	p1.setCoords(134, 313);
-	p2.setCoords(378, 174);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	{
+		glColor3f(1.0, 1.0, 1.0);
+		wcPt2D winMin = { 100, 100 }, winMax = { 250, 200 };
 
-	p1.setCoords(55, 249);
-	p2.setCoords(273, 122);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(winMin.x, winMin.y);
+		glVertex2f(winMax.x, winMin.y);
+		glVertex2f(winMax.x, winMax.y);
+		glVertex2f(winMin.x, winMax.y);
+		glEnd();
 
-	p1.setCoords(139, 431);
-	p2.setCoords(139, 134);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+		wcPt2D verts[3] = { { 308, 182 },{ 232, 249 },{ 72, 124 } };
+		polygon(verts, 3);
+		wcPt2D pOut[16];
+		int n = polygonClipSuthHodg(winMin, winMax, 3, verts, pOut);
+		glColor3f(1.0, 0.0, 0.0);
+		polygon(pOut, n);
+	}
 
-	p1.setCoords(253, 440);
-	p2.setCoords(253, 186);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	{
+		glColor3f(1.0, 1.0, 1.0);
+		wcPt2D winMin = { 500, 100 }, winMax = { 650, 200 };
 
-	p1.setCoords(424, 249);
-	p2.setCoords(479, 328);
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(winMin, winMax, p1, p2);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(winMin.x, winMin.y);
+		glVertex2f(winMax.x, winMin.y);
+		glVertex2f(winMax.x, winMax.y);
+		glVertex2f(winMin.x, winMax.y);
+		glEnd();
 
+		wcPt2D verts[4] = { { 577, 75 },{ 421, 187 },{ 454, 258 },{ 667,75 } };
+		polygon(verts, 4);
+		wcPt2D pOut[16];
+		int n = polygonClipSuthHodg(winMin, winMax, 4, verts, pOut);
+		glColor3f(1.0, 0.0, 0.0);
+		polygon(pOut, n);
+	}
+		
 	glFlush();
 }
 void code_8_8_1()
