@@ -1117,13 +1117,13 @@ void triangle(const std::vector<Point>& points)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void coordinate(Point o, Vec upV)
+void coordinate(Point o, Vec up)
 {
-	float distanceV = std::sqrt(upV.x * upV.x + upV.y * upV.y);
-	upV.x = upV.x / distanceV;
-	upV.y = upV.y / distanceV;
-	Point y = { o.x + upV.x * winWidth, o.y + upV.y * winWidth };
-	Point x = { o.x + upV.y * winWidth, o.y - upV.x * winWidth };
+	float distanceV = std::sqrt(up.x * up.x + up.y * up.y);
+	up.x = up.x / distanceV;
+	up.y = up.y / distanceV;
+	Point y = { o.x + up.x * winWidth, o.y + up.y * winWidth };
+	Point x = { o.x + up.y * winWidth, o.y - up.x * winWidth };
 	glBegin(GL_LINES);
 	glVertex2f(o.x, o.y);
 	glVertex2f(x.x, x.y);
@@ -1145,6 +1145,24 @@ void drawFunc()
 	coordinate({ 0, 0 }, { 0, 1 });
 	coordinate(p0, up);
 	triangle(tri);
+
+	glViewport(400, 300, 400, 300);
+	auto temp = tri;
+	Vec v, u;
+	float distanceV = std::sqrt(up.x * up.x + up.y * up.y);
+	v.x = up.x / distanceV;
+	v.y = up.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+	Matrix r(3, 3);
+	matrixSetIdentity(r);
+	r[0][0] = u.x;
+	r[0][1] = u.y;
+	r[1][0] = v.x;
+	r[1][1] = v.y;
+	transformPoints(r * translateMatrix(-p0.x, -p0.y), temp);
+	coordinate({ 0, 0 }, { 0, 1 });
+	triangle(temp);
 
 	//glRotatef(30.f, 0.f, 0.f, 1.f);
 	//glTranslatef(-100.f, -200.f, 0.f);
