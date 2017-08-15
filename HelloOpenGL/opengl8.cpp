@@ -1018,6 +1018,152 @@ void code_8_8_1()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_1
+struct Point { float x; float y; };
+typedef Point Vec;
+Point p0 = {100, 200};
+Vec up = {255, 555};
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(Point pivotPt, float theta)
+{
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	return matRot;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void triangle(const std::vector<Point>& points)
+{
+	glBegin(GL_TRIANGLES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void coordinate(Point o, Vec upV)
+{
+	float distanceV = std::sqrt(upV.x * upV.x + upV.y * upV.y);
+	upV.x = upV.x / distanceV;
+	upV.y = upV.y / distanceV;
+	Point y = { o.x + upV.x * winWidth, o.y + upV.y * winWidth };
+	Point x = { o.x + upV.y * winWidth, o.y - upV.x * winWidth };
+	glBegin(GL_LINES);
+	glVertex2f(o.x, o.y);
+	glVertex2f(x.x, x.y);
+	glVertex2f(o.x, o.y);
+	glVertex2f(y.x, y.y);
+	glEnd();
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> tri = { { 250.f, 200.f },{ 550.f, 200.f },{ 400.f, 500.f } };
+
+	glViewport(0, 300, 400, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	coordinate({ 0, 0 }, { 0, 1 });
+	coordinate(p0, up);
+	triangle(tri);
+
+	//glRotatef(30.f, 0.f, 0.f, 1.f);
+	//glTranslatef(-100.f, -200.f, 0.f);
+
+	//std::vector<Point> tri = { { 250.f, 200.f }, { 550.f, 200.f }, { 400.f, 500.f } };
+	//transformPoints(rotateMatrix({ 0.f, 0.f }, 30 * PI / 180) * translateMatrix(-100.f, -200.f), tri);
+	//triangle(tri);
+	
+	glFlush();
+}
+void code_8_exercise_1()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0 - 2, winWidth + 2, 0 - 2, winHeight + 2);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -1052,6 +1198,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_8_1
 	code_8_8_1();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_1
+	code_8_exercise_1();
 #endif
 
 	glutMainLoop();
