@@ -1022,7 +1022,7 @@ void code_8_8_1()
 struct Point { float x; float y; };
 typedef Point Vec;
 Point p0 = {100, 200};
-Vec up = {255, 555};
+Vec V = {155, 355};
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -1117,13 +1117,13 @@ void triangle(const std::vector<Point>& points)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-void coordinate(Point o, Vec up)
+void coordinate(Point o, Vec V)
 {
-	float distanceV = std::sqrt(up.x * up.x + up.y * up.y);
-	up.x = up.x / distanceV;
-	up.y = up.y / distanceV;
-	Point y = { o.x + up.x * winWidth, o.y + up.y * winWidth };
-	Point x = { o.x + up.y * winWidth, o.y - up.x * winWidth };
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	V.x = V.x / distanceV;
+	V.y = V.y / distanceV;
+	Point y = { o.x + V.x * winWidth, o.y + V.y * winWidth };
+	Point x = { o.x + V.y * winWidth, o.y - V.x * winWidth };
 	glBegin(GL_LINES);
 	glVertex2f(o.x, o.y);
 	glVertex2f(x.x, x.y);
@@ -1139,21 +1139,25 @@ void drawFunc()
 
 	std::vector<Point> tri = { { 250.f, 200.f },{ 550.f, 200.f },{ 400.f, 500.f } };
 
+	Vec v, u;
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	v.x = V.x / distanceV;
+	v.y = V.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+
 	glViewport(0, 300, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	coordinate({ 0, 0 }, { 0, 1 });
-	coordinate(p0, up);
+	coordinate(p0, V);
 	triangle(tri);
 
 	glViewport(400, 300, 400, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	coordinate({ 0, 0 }, { 0, 1 });
 	auto temp = tri;
-	Vec v, u;
-	float distanceV = std::sqrt(up.x * up.x + up.y * up.y);
-	v.x = up.x / distanceV;
-	v.y = up.y / distanceV;
-	u.x = v.y;
-	u.y = -v.x;
 	Matrix r(3, 3);
 	matrixSetIdentity(r);
 	r[0][0] = u.x;
@@ -1161,16 +1165,31 @@ void drawFunc()
 	r[1][0] = v.x;
 	r[1][1] = v.y;
 	transformPoints(r * translateMatrix(-p0.x, -p0.y), temp);
-	coordinate({ 0, 0 }, { 0, 1 });
 	triangle(temp);
 
-	//glRotatef(30.f, 0.f, 0.f, 1.f);
-	//glTranslatef(-100.f, -200.f, 0.f);
+	glViewport(0, 0, 400, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	coordinate({ 0, 0 }, { 0, 1 });
+	Matrix r1(4, 4);
+	matrixSetIdentity(r1);
+	r1[0][0] = u.x;
+	r1[0][1] = u.y;
+	r1[1][0] = v.x;
+	r1[1][1] = v.y;
+	glMultMatrixf(r1);
+	glTranslatef(-p0.x, -p0.y, 0.f);
+	triangle(tri);
 
-	//std::vector<Point> tri = { { 250.f, 200.f }, { 550.f, 200.f }, { 400.f, 500.f } };
-	//transformPoints(rotateMatrix({ 0.f, 0.f }, 30 * PI / 180) * translateMatrix(-100.f, -200.f), tri);
-	//triangle(tri);
-	
+	glViewport(400, 0, 400, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	coordinate({ 0, 0 }, { 0, 1 });
+	float arg = atan2(V.y, V.x);
+	glRotatef((PI / 2 - arg) * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-p0.x, -p0.y, 0.f);
+	triangle(tri);
+
 	glFlush();
 }
 void code_8_exercise_1()
