@@ -1146,6 +1146,7 @@ void drawFunc()
 	u.x = v.y;
 	u.y = -v.x;
 
+	// 原始世界坐标系和观察坐标系
 	glViewport(0, 300, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1153,6 +1154,7 @@ void drawFunc()
 	coordinate(p0, V);
 	triangle(tri);
 
+	// 转换到观察坐标系 自定义矩阵 单位向量构造旋转矩阵
 	glViewport(400, 300, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1167,6 +1169,7 @@ void drawFunc()
 	transformPoints(r * translateMatrix(-p0.x, -p0.y), temp);
 	triangle(temp);
 
+	// 转换到观察坐标系 OpenGL矩阵 单位向量构造旋转矩阵
 	glViewport(0, 0, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1181,6 +1184,7 @@ void drawFunc()
 	glTranslatef(-p0.x, -p0.y, 0.f);
 	triangle(tri);
 
+	// 转换到观察坐标系 OpenGL矩阵 直接计算角度旋转矩阵
 	glViewport(400, 0, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1197,6 +1201,175 @@ void code_8_exercise_1()
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0 - 2, winWidth + 2, 0 - 2, winHeight + 2);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_2
+struct Point { float x; float y; };
+float xwmin = 40, ywmin = 50, xwmax = 340, ywmax = 250;
+float xvmin = 0.3, yvmin = 0.4, xvmax = 0.7, yvmax = 0.7;
+float showRate = 150.f;
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(Point pivotPt, float theta)
+{
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	return matRot;
+}
+Matrix scaleMatrix(Point p, float sx, float sy)
+{
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void triangle(const std::vector<Point>& points)
+{
+	glBegin(GL_TRIANGLES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void rect(float xmin, float ymin, float xmax, float ymax)
+{
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xmin, ymin);
+	glVertex2f(xmax, ymin);
+	glVertex2f(xmax, ymax);
+	glVertex2f(xmin, ymax);
+	glEnd();
+}
+void coordinate(float xCoord, float yCoord)
+{
+	glBegin(GL_LINES);
+	glVertex2f(0, 0);
+	glVertex2f(xCoord, 0);
+	glVertex2f(0, 0);
+	glVertex2f(0, yCoord);
+	glEnd();
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> tri = { { 100.f, 80.f },{ 200.f, 80.f },{ 150.f, 300.f } };
+
+	// 原始裁剪窗口
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-30, 370, -200, 400);
+	glViewport(0, 0, 400, 600);
+	coordinate(350, 350);
+	rect(xwmin, ywmin, xwmax, ywmax);
+	triangle(tri);
+
+	// 转换到规范化视口 自定义矩阵 中心缩放+平移推导
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-30, 170, -100, 200);
+	glViewport(400, 300, 200, 300);
+	coordinate(showRate, showRate);
+	rect(xvmin * showRate, yvmin * showRate, xvmax * showRate, yvmax * showRate);
+	auto temp = tri;
+	transformPoints(translateMatrix((xvmax + xvmin) / 2 - (xwmax + xwmin) / 2, (yvmax + yvmin) / 2 - (ywmax + ywmin) / 2)
+		* scaleMatrix({ (xwmax + xwmin) / 2 , (ywmax + ywmin) / 2 }, (xvmax - xvmin) / (xwmax - xwmin), (yvmax - yvmin) / (ywmax - ywmin)), temp);
+	for (auto & p : temp)
+	{
+		p.x *= showRate;
+		p.y *= showRate;
+	}
+	triangle(temp);
+
+	glFlush();
+}
+void code_8_exercise_2()
+{
 	glutDisplayFunc(drawFunc);
 }
 #endif
@@ -1239,6 +1412,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_1
 	code_8_exercise_1();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_2
+	code_8_exercise_2();
 #endif
 
 	glutMainLoop();
