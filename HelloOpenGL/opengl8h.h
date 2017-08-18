@@ -7,7 +7,8 @@
 //#define CHAPTER_8_7_2 // ¡∫”—∂∞-Barskyœﬂ∂Œ≤√ºÙÀ„∑®
 //#define CHAPTER_8_8_1 // Sutherland-Hodgman∂‡±ﬂ–Œ≤√ºÙÀ„∑®
 //#define CHAPTER_8_EXERCISE_1
-#define CHAPTER_8_EXERCISE_2
+//#define CHAPTER_8_EXERCISE_2
+#define CHAPTER_8_EXERCISE_3
 
 #ifdef CHAPTER_8_7_1
 #define CHAPTER_8_COMMON
@@ -26,5 +27,9 @@
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_2
+#define CHAPTER_8_COMMON
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_3
 #define CHAPTER_8_COMMON
 #endif
