@@ -1417,8 +1417,7 @@ void code_8_exercise_2()
 #ifdef CHAPTER_8_EXERCISE_3
 struct Point { float x; float y; };
 float xwmin = 40, ywmin = 50, xwmax = 340, ywmax = 250;
-float xvmin = 0.3, yvmin = 0.4, xvmax = 0.7, yvmax = 0.7;
-float showRate = 150.f;
+float showRate = 75.f;
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -1535,9 +1534,9 @@ void rect(float xmin, float ymin, float xmax, float ymax)
 void coordinate(float xCoord, float yCoord)
 {
 	glBegin(GL_LINES);
-	glVertex2f(0, 0);
+	glVertex2f(-xCoord, 0);
 	glVertex2f(xCoord, 0);
-	glVertex2f(0, 0);
+	glVertex2f(0, -yCoord);
 	glVertex2f(0, yCoord);
 	glEnd();
 }
@@ -1558,59 +1557,59 @@ void drawFunc()
 	rect(xwmin, ywmin, xwmax, ywmax);
 	triangle(tri);
 
-	// 转换到规范化视口 自定义矩阵 左下角缩放+平移推导
+	// 转换到规范化正方形 自定义矩阵 左下角缩放+平移推导
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-30, 170, -100, 200);
+	gluOrtho2D(-100, 100, -150, 150);
 	glViewport(400, 300, 200, 300);
-	coordinate(showRate, showRate);
-	rect(xvmin * showRate, yvmin * showRate, xvmax * showRate, yvmax * showRate);
+	coordinate(1.2 * showRate, 1.8 * showRate);
+	rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
 	auto temp = tri;
-	transformPoints(translateMatrix((xvmax + xvmin) / 2 - (xwmax + xwmin) / 2, (yvmax + yvmin) / 2 - (ywmax + ywmin) / 2)
-		* scaleMatrix({ (xwmax + xwmin) / 2 , (ywmax + ywmin) / 2 }, (xvmax - xvmin) / (xwmax - xwmin), (yvmax - yvmin) / (ywmax - ywmin)), temp);
+	transformPoints(translateMatrix(-1 - xwmin, -1 - ywmin)
+		* scaleMatrix({  xwmin, ywmin }, 2 / (xwmax - xwmin), 2 / (ywmax - ywmin)), temp);
 	transformPoints(scaleMatrix({ 0, 0 }, showRate, showRate), temp);
 	triangle(temp);
 
-	// 转换到规范化视口 自定义矩阵 直接使用书上结论
+	// 转换到规范化正方形 自定义矩阵 直接使用书上结论
 	glViewport(600, 300, 200, 300);
-	coordinate(showRate, showRate);
-	rect(xvmin * showRate, yvmin * showRate, xvmax * showRate, yvmax * showRate);
+	coordinate(1.2 * showRate, 1.8 * showRate);
+	rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
 	temp = tri;
 	Matrix m(3, 3);
 	matrixSetIdentity(m);
-	m[0][0] = (xvmax - xvmin) / (xwmax - xwmin);
-	m[1][1] = (yvmax - yvmin) / (ywmax - ywmin);
-	m[0][2] = (xwmax*xvmin - xwmin*xvmax) / (xwmax - xwmin);
-	m[1][2] = (ywmax*yvmin - ywmin*yvmax) / (ywmax - ywmin);
+	m[0][0] = 2 / (xwmax - xwmin);
+	m[1][1] = 2 / (ywmax - ywmin);
+	m[0][2] = -(xwmax + xwmin) / (xwmax - xwmin);
+	m[1][2] = -(ywmax + ywmin) / (ywmax - ywmin);
 	transformPoints(m, temp);
 	transformPoints(scaleMatrix({ 0, 0 }, showRate, showRate), temp);
 	triangle(temp);
 
-	// 转换到规范化视口 OpenGL矩阵 中心缩放+平移推导
+	// 转换到规范化正方形 OpenGL矩阵 左下角缩放+平移推导
 	glViewport(400, 0, 200, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	coordinate(showRate, showRate);
-	rect(xvmin * showRate, yvmin * showRate, xvmax * showRate, yvmax * showRate);
+	coordinate(1.2 * showRate, 1.8 * showRate);
+	rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
 	glScalef(showRate, showRate, 1.f);
-	glTranslatef((xvmax + xvmin) / 2 - (xwmax + xwmin) / 2, (yvmax + yvmin) / 2 - (ywmax + ywmin) / 2, 0.f);
-	glTranslatef((xwmax + xwmin) / 2, (ywmax + ywmin) / 2, 0.f);
-	glScalef((xvmax - xvmin) / (xwmax - xwmin), (yvmax - yvmin) / (ywmax - ywmin), 1.f);
-	glTranslatef(-(xwmax + xwmin) / 2, -(ywmax + ywmin) / 2, 0.f);
+	glTranslatef(-1 - xwmin, -1 - ywmin, 0.f);
+	glTranslatef(xwmin, ywmin, 0.f);
+	glScalef(2 / (xwmax - xwmin), 2 / (ywmax - ywmin), 1.f);
+	glTranslatef(-xwmin, -ywmin, 0.f);
 	triangle(tri);
 
-	// 转换到规范化视口 OpenGL矩阵 直接使用书上结论
+	// 转换到规范化正方形 OpenGL矩阵 直接使用书上结论
 	glViewport(600, 0, 200, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	coordinate(showRate, showRate);
-	rect(xvmin * showRate, yvmin * showRate, xvmax * showRate, yvmax * showRate);
+	coordinate(1.2 * showRate, 1.8 * showRate);
+	rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
 	Matrix m1(4, 4);
 	matrixSetIdentity(m1);
-	m1[0][0] = (xvmax - xvmin) / (xwmax - xwmin);
-	m1[1][1] = (yvmax - yvmin) / (ywmax - ywmin);
-	m1[0][3] = (xwmax*xvmin - xwmin*xvmax) / (xwmax - xwmin);
-	m1[1][3] = (ywmax*yvmin - ywmin*yvmax) / (ywmax - ywmin);
+	m1[0][0] = 2 / (xwmax - xwmin);
+	m1[1][1] = 2 / (ywmax - ywmin);
+	m1[0][3] = -(xwmax + xwmin) / (xwmax - xwmin);
+	m1[1][3] = -(ywmax + ywmin) / (ywmax - ywmin);
 	glScalef(showRate, showRate, 1.f);
 	glMultMatrixf(m1);
 	triangle(tri);
