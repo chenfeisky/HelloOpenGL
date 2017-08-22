@@ -1614,7 +1614,11 @@ void code_8_exercise_3()
 
 #ifdef CHAPTER_8_EXERCISE_4
 struct Point { float x; float y; };
-float xwmin = 40, ywmin = 50, xwmax = 340, ywmax = 250;
+typedef Point Vec;
+Point pv0 = {17, 103}; // 观察坐标系原点
+Point pv1 = {84, 237}; // 观察坐标系向上向量方向点（相对于pv0点）
+float xwmin = 30, ywmin = 20, xwmax = 200, ywmax = 130;  // 裁剪窗口(观察坐标系中定义)
+float xvmin = 40, yvmin = 50, xvmax = 340, yvmax = 250;  // 视口(设备坐标系中定义)
 float showRate = 75.f;
 struct Matrix
 {
@@ -1729,13 +1733,27 @@ void rect(float xmin, float ymin, float xmax, float ymax)
 	glVertex2f(xmin, ymax);
 	glEnd();
 }
-void coordinate(float _xCoord, float xCoord, float _yCoord, float yCoord)
+void rect(const std::vector<Point>& points)
 {
+	glBegin(GL_LINE_LOOP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void coordinate(Point o, Vec V, float _xCoord, float xCoord, float _yCoord, float yCoord)
+{
+	Vec v, u;
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	v.x = V.x / distanceV;
+	v.y = V.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+	
 	glBegin(GL_LINES);
-	glVertex2f(_xCoord, 0);
-	glVertex2f(xCoord, 0);
-	glVertex2f(0, _yCoord);
-	glVertex2f(0, yCoord);
+	glVertex2f(o.x + v.x * _yCoord, o.y + v.y * _yCoord);
+	glVertex2f(o.x + v.x * yCoord, o.y + v.y * yCoord);
+	glVertex2f(o.x + u.x * _xCoord, o.y + u.y * _xCoord);
+	glVertex2f(o.x + u.x * xCoord, o.y + u.y * xCoord);
 	glEnd();
 }
 void drawFunc()
@@ -1744,16 +1762,16 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> tri = { { -50.f, 0.f },{ 50.f, 0.f },{ 0.f, 150.f } };
+	std::vector<Point> tri = { { -50.f, 0.f },{ 50.f, 0.f },{ 0.f, 130.f } };
 
-	// 局部坐标系
 	auto temp = tri;
 
+	// 局部坐标系
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-100, 100, -300, 300);
 	glViewport(0, 0, 200, 600);
-	coordinate(-90, 90, -50, 200);
+	coordinate({ 0, 0 }, { 0, 1 }, -90, 90, -50, 200);
 	triangle(temp);
 
 	// 转换到世界坐标系
@@ -1761,66 +1779,61 @@ void drawFunc()
 	glLoadIdentity();
 	gluOrtho2D(-25, 275, -25, 275);
 	glViewport(200, 300, 300, 300);
-	coordinate(-10, 250, -10, 250);
-	transformPoints(translateMatrix(150, 75), temp);
+	coordinate({ 0, 0 }, { 0, 1 }, -10, 250, -10, 250);
+	transformPoints(translateMatrix(150, 100), temp);
+	Vec V = { pv1.x - pv0.x, pv1.y - pv0.y };
+	coordinate(pv0, V, -10, 200, -10, 180);
+	triangle(temp);
+	std::vector<Point> tempWin = { { xwmin, ywmin },{ xwmax, ywmin },{ xwmax, ywmax },{ xwmin, ywmax } };
+	Vec v, u;
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	v.x = V.x / distanceV;
+	v.y = V.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+	Matrix r(3, 3); // 绕pv0旋转到v, u坐标系
+	matrixSetIdentity(r);
+	r[0][0] = u.x;
+	r[0][1] = v.x;
+	r[1][0] = u.y;
+	r[1][1] = v.y;
+	r[0][2] = pv0.x * (1 - r[0][0]) + pv0.y * r[1][0];
+	r[1][2] = pv0.y * (1 - r[0][0]) - pv0.x * r[1][0];
+	transformPoints(r * translateMatrix(pv0.x, pv0.y), tempWin);
+	rect(tempWin);
+
+	// 转换到观察坐标系
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-50, 250, -80, 220);
+	glViewport(500, 300, 300, 300);
+	coordinate({ 0, 0 }, { 0, 1 }, -20, 230, -40, 200);
+	rect(xwmin, ywmin, xwmax, ywmax);
+	Matrix r1(3, 3);
+	matrixSetIdentity(r1);
+	r1[0][0] = u.x;
+	r1[0][1] = u.y;
+	r1[1][0] = v.x;
+	r1[1][1] = v.y;
+	transformPoints(r1 * translateMatrix(-pv0.x, -pv0.y), temp);
 	triangle(temp);
 
-	//// 转换到规范化正方形 自定义矩阵 左下角缩放+平移推导
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//gluOrtho2D(-100, 100, -150, 150);
-	//glViewport(400, 300, 200, 300);
-	//coordinate(1.2 * showRate, 1.8 * showRate);
-	//rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
-	//auto temp = tri;
-	//transformPoints(translateMatrix(-1 - xwmin, -1 - ywmin)
-	//	* scaleMatrix({ xwmin, ywmin }, 2 / (xwmax - xwmin), 2 / (ywmax - ywmin)), temp);
-	//transformPoints(scaleMatrix({ 0, 0 }, showRate, showRate), temp);
-	//triangle(temp);
+	// 转换到规范化设备坐标系(规范化正方形)
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-2, 2, -2, 2); // 放大75倍
+	glViewport(200, 0, 300, 300);
+	coordinate({ 0, 0 }, { 0, 1 }, -1.2, 1.2, -1.2, 1.2);	
+	rect(-1, -1, 1, 1);
+	Matrix r2(3, 3);
+	matrixSetIdentity(r2);
+	r2[0][0] = 2 / (xwmax - xwmin);
+	r2[1][1] = 2 / (ywmax - ywmin);
+	r2[0][2] = -(xwmax + xwmin) / (xwmax - xwmin);
+	r2[1][2] = -(ywmax + ywmin) / (ywmax - ywmin);
+	transformPoints(r2, temp);
+	triangle(temp);
 
-	//// 转换到规范化正方形 自定义矩阵 直接使用书上结论
-	//glViewport(600, 300, 200, 300);
-	//coordinate(1.2 * showRate, 1.8 * showRate);
-	//rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
-	//temp = tri;
-	//Matrix m(3, 3);
-	//matrixSetIdentity(m);
-	//m[0][0] = 2 / (xwmax - xwmin);
-	//m[1][1] = 2 / (ywmax - ywmin);
-	//m[0][2] = -(xwmax + xwmin) / (xwmax - xwmin);
-	//m[1][2] = -(ywmax + ywmin) / (ywmax - ywmin);
-	//transformPoints(m, temp);
-	//transformPoints(scaleMatrix({ 0, 0 }, showRate, showRate), temp);
-	//triangle(temp);
-
-	//// 转换到规范化正方形 OpenGL矩阵 左下角缩放+平移推导
-	//glViewport(400, 0, 200, 300);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//coordinate(1.2 * showRate, 1.8 * showRate);
-	//rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
-	//glScalef(showRate, showRate, 1.f);
-	//glTranslatef(-1 - xwmin, -1 - ywmin, 0.f);
-	//glTranslatef(xwmin, ywmin, 0.f);
-	//glScalef(2 / (xwmax - xwmin), 2 / (ywmax - ywmin), 1.f);
-	//glTranslatef(-xwmin, -ywmin, 0.f);
-	//triangle(tri);
-
-	//// 转换到规范化正方形 OpenGL矩阵 直接使用书上结论
-	//glViewport(600, 0, 200, 300);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//coordinate(1.2 * showRate, 1.8 * showRate);
-	//rect(-1 * showRate, -1 * showRate, 1 * showRate, 1 * showRate);
-	//Matrix m1(4, 4);
-	//matrixSetIdentity(m1);
-	//m1[0][0] = 2 / (xwmax - xwmin);
-	//m1[1][1] = 2 / (ywmax - ywmin);
-	//m1[0][3] = -(xwmax + xwmin) / (xwmax - xwmin);
-	//m1[1][3] = -(ywmax + ywmin) / (ywmax - ywmin);
-	//glScalef(showRate, showRate, 1.f);
-	//glMultMatrixf(m1);
-	//triangle(tri);
 
 	glFlush();
 }
