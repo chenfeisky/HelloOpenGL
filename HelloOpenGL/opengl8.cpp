@@ -1618,8 +1618,7 @@ typedef Point Vec;
 Point pv0 = {17, 103}; // 观察坐标系原点
 Point pv1 = {84, 237}; // 观察坐标系向上向量方向点（相对于pv0点）
 float xwmin = 30, ywmin = 20, xwmax = 200, ywmax = 130;  // 裁剪窗口(观察坐标系中定义)
-float xvmin = 40, yvmin = 50, xvmax = 340, yvmax = 250;  // 视口(设备坐标系中定义)
-float showRate = 75.f;
+float xvmin = 150, yvmin = 50, xvmax = 235, yvmax = 105;  // 视口(设备坐标系中定义)
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -1762,11 +1761,11 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> tri = { { -50.f, 0.f },{ 50.f, 0.f },{ 0.f, 130.f } };
+	std::vector<Point> tri = { { -50.f, 0.f },{ 50.f, 0.f },{ 0.f, 130.f }};
 
 	auto temp = tri;
 
-	// 局部坐标系
+	// 0.局部坐标系
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-100, 100, -300, 300);
@@ -1774,7 +1773,7 @@ void drawFunc()
 	coordinate({ 0, 0 }, { 0, 1 }, -90, 90, -50, 200);
 	triangle(temp);
 
-	// 转换到世界坐标系
+	// 1.转换到世界坐标系
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-25, 275, -25, 275);
@@ -1802,7 +1801,7 @@ void drawFunc()
 	transformPoints(r * translateMatrix(pv0.x, pv0.y), tempWin);
 	rect(tempWin);
 
-	// 转换到观察坐标系
+	// 2.转换到观察坐标系 使用观察坐标系（8.2.1）
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-50, 250, -80, 220);
@@ -1818,7 +1817,7 @@ void drawFunc()
 	transformPoints(r1 * translateMatrix(-pv0.x, -pv0.y), temp);
 	triangle(temp);
 
-	// 转换到规范化设备坐标系(规范化正方形)
+	// 3.转换到规范化设备坐标系(规范化正方形)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-2, 2, -2, 2); // 放大75倍
@@ -1834,26 +1833,319 @@ void drawFunc()
 	transformPoints(r2, temp);
 	triangle(temp);
 
-	// 转换到设备坐标系
+	// 4.转换到设备坐标系
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-2, 2, -2, 2);
+	gluOrtho2D(-25, 275, -100, 200);
 	glViewport(500, 0, 300, 300);
-	coordinate({ 0, 0 }, { 0, 1 }, -1.2, 1.2, -1.2, 1.2);
+	coordinate({ 0, 0 }, { 0, 1 }, -10, 250, -50, 180);
 	rect(xvmin, yvmin, xvmax, yvmax);
-	Matrix r2(3, 3);
-	matrixSetIdentity(r2);
-	r2[0][0] = 2 / (xwmax - xwmin);
-	r2[1][1] = 2 / (ywmax - ywmin);
-	r2[0][2] = -(xwmax + xwmin) / (xwmax - xwmin);
-	r2[1][2] = -(ywmax + ywmin) / (ywmax - ywmin);
-	transformPoints(r2, temp);
+	Matrix r3(3, 3);
+	matrixSetIdentity(r3);
+	r3[0][0] = (xvmax - xvmin) / 2;
+	r3[1][1] = (yvmax - yvmin) / 2;
+	r3[0][2] = (xvmin + xvmax) / 2;
+	r3[1][2] = (yvmin + yvmax) / 2;
+	transformPoints(r3, temp);
 	triangle(temp);
-
 
 	glFlush();
 }
 void code_8_exercise_4()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_4_1
+struct Point { float x; float y; };
+typedef Point Vec;
+Point p0 = { 150, 143 }; // 对象参考点（中心点）
+Point p1 = { 200, 240 }; // 向量方向点（相对于p0点）
+float xwmin = 30 - 101.07, ywmin = 20 - 95.25, xwmax = 200 - 101.07, ywmax = 130 - 95.25;  // 裁剪窗口(世界坐标系中定义， 和上一习题中位置相同， (101.07, 95.25)是上一习题中计算出的三角形中心在观察坐标系中的坐标)
+float xvmin = 150, yvmin = 50, xvmax = 235, yvmax = 105;  // 视口(设备坐标系中定义)
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(Point pivotPt, float theta)
+{
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	return matRot;
+}
+Matrix scaleMatrix(Point p, float sx, float sy)
+{
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void triangle(const std::vector<Point>& points)
+{
+	glBegin(GL_TRIANGLES);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void rect(float xmin, float ymin, float xmax, float ymax)
+{
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(xmin, ymin);
+	glVertex2f(xmax, ymin);
+	glVertex2f(xmax, ymax);
+	glVertex2f(xmin, ymax);
+	glEnd();
+}
+void rect(const std::vector<Point>& points)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void coordinate(Point o, Vec V, float _xCoord, float xCoord, float _yCoord, float yCoord)
+{
+	Vec v, u;
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	v.x = V.x / distanceV;
+	v.y = V.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+
+	glBegin(GL_LINES);
+	glVertex2f(o.x + v.x * _yCoord, o.y + v.y * _yCoord);
+	glVertex2f(o.x + v.x * yCoord, o.y + v.y * yCoord);
+	glVertex2f(o.x + u.x * _xCoord, o.y + u.y * _xCoord);
+	glVertex2f(o.x + u.x * xCoord, o.y + u.y * xCoord);
+	glEnd();
+}
+void point(Point p)
+{
+	glColor3f(1.0, 0.0, 0.0);
+	glPointSize(5.0);
+	glBegin(GL_POINTS);
+	glVertex2f(p.x, p.y);
+	glEnd();
+	glColor3f(1.0, 1.0, 1.0);
+}
+void Vector(Point o, Vec V)
+{
+	glColor3f(1.0, 0.0, 0.0);
+
+	float arrowH = 10, arrowW = 5;
+
+	Point end = { o.x + V.x, o.y + V.y };
+	glBegin(GL_LINES);
+	glVertex2f(o.x, o.y);
+	glVertex2f(end.x, end.y);
+	glEnd();
+
+	Vec v, u;
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	v.x = V.x / distanceV;
+	v.y = V.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+	Point bottomCenter = { end.x - v.x * arrowH, end.y - v.y * arrowH };
+	Point bottomLeft = { bottomCenter.x - u.x * arrowW / 2, bottomCenter.y - u.y * arrowW / 2 };
+	Point bottomRight = { bottomCenter.x + u.x * arrowW / 2, bottomCenter.y + u.y * arrowW / 2 };
+	triangle({ bottomLeft, bottomRight, end });
+
+	glColor3f(1.0, 1.0, 1.0);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> tri = { { -50.f, 0.f },{ 50.f, 0.f },{ 0.f, 130.f } };
+
+	// 0.局部坐标系
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-100, 100, -300, 300);
+	glViewport(0, 0, 200, 600);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	coordinate({ 0, 0 }, { 0, 1 }, -90, 90, -50, 200);
+	triangle(tri);
+
+	// 1.转换到世界坐标系
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-25, 275, -25, 275);
+	glViewport(200, 300, 300, 300);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	coordinate({ 0, 0 }, { 0, 1 }, -10, 250, -10, 250);
+	glTranslatef(150.f, 100.f, 0.f);
+	triangle(tri);
+	glLoadIdentity();
+	Vec V = { p1.x - p0.x, p1.y - p0.y };
+	point(p0);
+	Vector(p0, V);
+	
+	//std::vector<Point> tempWin = { { xwmin, ywmin },{ xwmax, ywmin },{ xwmax, ywmax },{ xwmin, ywmax } };
+	//Vec v, u;
+	//float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	//v.x = V.x / distanceV;
+	//v.y = V.y / distanceV;
+	//u.x = v.y;
+	//u.y = -v.x;
+	//Matrix r(4, 4); // 绕pv0旋转到v, u坐标系
+	//matrixSetIdentity(r);
+	//r[0][0] = u.x;
+	//r[0][1] = v.x;
+	//r[1][0] = u.y;
+	//r[1][1] = v.y;
+	//r[0][3] = pv0.x * (1 - r[0][0]) + pv0.y * r[1][0];
+	//r[1][3] = pv0.y * (1 - r[0][0]) - pv0.x * r[1][0];
+	//glLoadIdentity();
+	//glMultMatrixf(r);
+	//glTranslatef(pv0.x, pv0.y, 0.f);
+	//rect(tempWin);
+
+	// 2.直接变换世界对象（8.2.2）
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-150, 150, -150, 150);
+	glViewport(500, 300, 300, 300);
+	coordinate({ 0, 0 }, { 0, 1 }, -130, 130, -130, 130);
+	rect(xwmin, ywmin, xwmax, ywmax);
+	Vec v, u;
+	float distanceV = std::sqrt(V.x * V.x + V.y * V.y);
+	v.x = V.x / distanceV;
+	v.y = V.y / distanceV;
+	u.x = v.y;
+	u.y = -v.x;
+	Matrix r1(4, 4);
+	matrixSetIdentity(r1);
+	r1[0][0] = u.x;
+	r1[0][1] = u.y;
+	r1[1][0] = v.x;
+	r1[1][1] = v.y;
+	glMultMatrixf(r1);
+	glTranslatef(-p0.x, -p0.y, 0.f);
+	glTranslatef(150.f, 100.f, 0.f);
+	triangle(tri);
+
+	//// 3.转换到规范化设备坐标系(规范化正方形)
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//gluOrtho2D(-2, 2, -2, 2); // 放大75倍
+	//glViewport(200, 0, 300, 300);
+	//coordinate({ 0, 0 }, { 0, 1 }, -1.2, 1.2, -1.2, 1.2);
+	//rect(-1, -1, 1, 1);
+	//Matrix r2(3, 3);
+	//matrixSetIdentity(r2);
+	//r2[0][0] = 2 / (xwmax - xwmin);
+	//r2[1][1] = 2 / (ywmax - ywmin);
+	//r2[0][2] = -(xwmax + xwmin) / (xwmax - xwmin);
+	//r2[1][2] = -(ywmax + ywmin) / (ywmax - ywmin);
+	//transformPoints(r2, temp);
+	//triangle(temp);
+
+	//// 4.转换到设备坐标系
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//gluOrtho2D(-25, 275, -100, 200);
+	//glViewport(500, 0, 300, 300);
+	//coordinate({ 0, 0 }, { 0, 1 }, -10, 250, -50, 180);
+	//rect(xvmin, yvmin, xvmax, yvmax);
+	//Matrix r3(3, 3);
+	//matrixSetIdentity(r3);
+	//r3[0][0] = (xvmax - xvmin) / 2;
+	//r3[1][1] = (yvmax - yvmin) / 2;
+	//r3[0][2] = (xvmin + xvmax) / 2;
+	//r3[1][2] = (yvmin + yvmax) / 2;
+	//transformPoints(r3, temp);
+	//triangle(temp);
+
+	glFlush();
+}
+void code_8_exercise_4_1()
 {
 	glutDisplayFunc(drawFunc);
 }
@@ -1909,6 +2201,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_4
 	code_8_exercise_4();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_4_1
+	code_8_exercise_4_1();
 #endif
 
 	glutMainLoop();
