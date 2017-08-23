@@ -1834,6 +1834,22 @@ void drawFunc()
 	transformPoints(r2, temp);
 	triangle(temp);
 
+	// 转换到设备坐标系
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-2, 2, -2, 2);
+	glViewport(500, 0, 300, 300);
+	coordinate({ 0, 0 }, { 0, 1 }, -1.2, 1.2, -1.2, 1.2);
+	rect(xvmin, yvmin, xvmax, yvmax);
+	Matrix r2(3, 3);
+	matrixSetIdentity(r2);
+	r2[0][0] = 2 / (xwmax - xwmin);
+	r2[1][1] = 2 / (ywmax - ywmin);
+	r2[0][2] = -(xwmax + xwmin) / (xwmax - xwmin);
+	r2[1][2] = -(ywmax + ywmin) / (ywmax - ywmin);
+	transformPoints(r2, temp);
+	triangle(temp);
+
 
 	glFlush();
 }
