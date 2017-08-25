@@ -567,6 +567,12 @@ void drawFunc()
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 100, 240 }, p2 = { 400, 240 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
 	
 	glFlush();
 }
@@ -2139,6 +2145,173 @@ void code_8_exercise_4_1()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_6
+float FPS = 60;
+float speedA = 6 * PI / 180;
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(wcPt2D pt, wcPt2D winMin, wcPt2D winMax)
+{
+	GLubyte code = 0x00;
+	if (pt.x < winMin.x)
+		code = code | winLeftBitCode;
+	if (pt.x > winMax.x)
+		code = code | winRightBitCode;
+	if (pt.y < winMin.y)
+		code = code | winBottomBitCode;
+	if (pt.y > winMax.y)
+		code = code | winTopBitCode;
+	return (code);
+}
+void swapPts(wcPt2D* p1, wcPt2D* p2)
+{
+	wcPt2D tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	GLfloat m;
+	while (!done)
+	{
+		code1 = encode(p1, winMin, winMax);
+		code2 = encode(p2, winMin, winMax);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			if (p2.x != p1.x)
+				m = (p2.y - p1.y) / (p2.x - p1.x);
+			if (code1 & winLeftBitCode)
+			{
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
+			}
+			else if (code1 & winRightBitCode)
+			{
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				if (p2.x != p1.x)
+					p1.x += (winMin.y - p1.y) / m;
+				p1.y = winMin.y;
+			}
+			else if (code1 & winTopBitCode)
+			{
+				if (p2.x != p1.x)
+					p1.x += (winMax.y - p1.y) / m;
+				p1.y = winMax.y;
+			}
+		}
+	}
+	if (plotLine)
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+}
+int lastTick = 0;
+float delta = 0.f;
+float angle = PI / 2;
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	wcPt2D winMin = { 200, 220 }, winMax = { 520, 380 };
+	wcPt2D winCenter = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
+
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	wcPt2D p1, p2;
+	p1 = { winCenter.x, winCenter.y + 280}, p2 = { winCenter.x, winCenter.y - 200 };
+	angle -= delta * speedA;
+	printf("angle = %f\n", angle);
+	p1.x = 300 * cos(angle) + winCenter.x;
+	p1.y = 300 * sin(angle) + winCenter.y;
+	p2.x = -200 * cos(angle) + winCenter.x;
+	p2.y = -200 * sin(angle) + winCenter.y;
+
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	glFlush();
+}
+void onTimer(int id)
+{
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+void code_8_exercise_6()
+{
+	glutDisplayFunc(drawFunc);
+	lastTick = GetTickCount();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -2193,6 +2366,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_4_1
 	code_8_exercise_4_1();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_6
+	code_8_exercise_6();
 #endif
 
 	glutMainLoop();
