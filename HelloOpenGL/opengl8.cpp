@@ -688,67 +688,74 @@ void drawFunc()
 	p1.setCoords(106, 475);
 	p2.setCoords(578, 120);
 	glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(79, 346);
-p2.setCoords(688, 256);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(79, 346);
+	p2.setCoords(688, 256);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(401, 434);
-p2.setCoords(294, 260);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(401, 434);
+	p2.setCoords(294, 260);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(561, 399);
-p2.setCoords(627, 191);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(561, 399);
+	p2.setCoords(627, 191);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(134, 313);
-p2.setCoords(378, 174);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(134, 313);
+	p2.setCoords(378, 174);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(55, 249);
-p2.setCoords(273, 122);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(55, 249);
+	p2.setCoords(273, 122);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(139, 431);
-p2.setCoords(139, 134);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(139, 431);
+	p2.setCoords(139, 134);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(253, 440);
-p2.setCoords(253, 186);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(253, 440);
+	p2.setCoords(253, 186);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-p1.setCoords(424, 249);
-p2.setCoords(479, 328);
-glColor3f(1.0, 1.0, 1.0);
-lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
-glColor3f(1.0, 0.0, 0.0);
-lineClipLiangBarsk(winMin, winMax, p1, p2);
+	p1.setCoords(424, 249);
+	p2.setCoords(479, 328);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
-glFlush();
+	p1.setCoords(100, 240);
+	p2.setCoords(400, 240);
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+	glFlush();
 }
 void code_8_7_2()
 {
@@ -2312,6 +2319,297 @@ void code_8_exercise_6()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_8
+std::map<int, int> opCount;
+#define ADD 0
+#define MINUS 1
+#define MULTIPLY 2
+#define DIVISION 3
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(wcPt2D pt, wcPt2D winMin, wcPt2D winMax)
+{
+	GLubyte code = 0x00;
+	if (pt.x < winMin.x)
+		code = code | winLeftBitCode;
+	if (pt.x > winMax.x)
+		code = code | winRightBitCode;
+	if (pt.y < winMin.y)
+		code = code | winBottomBitCode;
+	if (pt.y > winMax.y)
+		code = code | winTopBitCode;
+	return (code);
+}
+void swapPts(wcPt2D* p1, wcPt2D* p2)
+{
+	wcPt2D tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	opCount.clear();
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	GLfloat m;
+	while (!done)
+	{
+		code1 = encode(p1, winMin, winMax);
+		code2 = encode(p2, winMin, winMax);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			if (p2.x != p1.x)
+			{
+				m = (p2.y - p1.y) / (p2.x - p1.x);
+				opCount[MINUS] += 2;
+				opCount[DIVISION] += 1;
+			}
+				
+			if (code1 & winLeftBitCode)
+			{
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+			}
+			else if (code1 & winRightBitCode)
+			{
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					p1.x += (winMin.y - p1.y) / m;
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+				}					
+				p1.y = winMin.y;
+			}
+			else if (code1 & winTopBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					p1.x += (winMax.y - p1.y) / m;
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+				}
+				p1.y = winMax.y;
+			}
+		}
+	}
+	if (plotLine)
+	{
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+		printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY],opCount[DIVISION]);
+	}
+		
+}
+
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		opCount[DIVISION] += 1;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		opCount[DIVISION] += 1;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	opCount.clear();
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy;
+	if (clipTest(-dx, p1.x - winMin.x, &u1, &u2))
+		if (clipTest(dx, winMax.x - p1.x, &u1, &u2))
+		{
+			dy = p2.y - p1.y;
+			if (clipTest(-dy, p1.y - winMin.y, &u1, &u2))
+				if (clipTest(dy, winMax.y - p1.y, &u1, &u2))
+				{
+					if (u2 < 1.0)
+					{
+						p2.x = p1.x + u2 * dx;
+						p2.y = p1.y + u2 * dy;
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+					}
+					if (u1 > 0.0)
+					{
+						p1.x = p1.x + u1 * dx;
+						p1.y = p1.y + u1 * dy;
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+					}
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+					lineBres(p1.x, p1.y, p2.x, p2.y);
+					printf("Liang-Barsky: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+				}
+		}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	wcPt2D winMin = { 200, 220 }, winMax = { 520, 380 };
+
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	
+	wcPt2D p1, p2;
+	p1 = { 106, 475 }, p2 = { 578, 120 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+	/*p1 = { 79, 346 }, p2 = { 688, 256 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 401, 434 }, p2 = { 294, 260 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 561, 399 }, p2 = { 627, 191 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 134, 313 }, p2 = { 378, 174 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 55, 249 }, p2 = { 273, 122 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 139, 431 }, p2 = { 139, 134 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 253, 440 }, p2 = { 253, 186 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 424, 249 }, p2 = { 479, 328 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+
+	p1 = { 100, 240 }, p2 = { 400, 240 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);*/
+
+	glFlush();
+}
+void code_8_exercise_8()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -2370,6 +2668,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_6
 	code_8_exercise_6();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_8
+	code_8_exercise_8();
 #endif
 
 	glutMainLoop();

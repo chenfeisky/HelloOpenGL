@@ -12,11 +12,16 @@
 //#define CHAPTER_8_EXERCISE_4
 //#define CHAPTER_8_EXERCISE_4_1 // OpenGL矩阵实现上一习题(其中2,3,4步使用不同的方法)
 //#define CHAPTER_8_EXERCISE_5
-#define CHAPTER_8_EXERCISE_6
-
+//#define CHAPTER_8_EXERCISE_6
+//#define CHAPTER_8_EXERCISE_7
+#define CHAPTER_8_EXERCISE_8
 
 #ifdef CHAPTER_8_EXERCISE_5
 #define CHAPTER_8_7_1
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_7
+#define CHAPTER_8_7_2
 #endif
 
 #ifdef CHAPTER_8_7_1
@@ -52,5 +57,9 @@
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_6
+#define CHAPTER_8_COMMON
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_8
 #define CHAPTER_8_COMMON
 #endif
