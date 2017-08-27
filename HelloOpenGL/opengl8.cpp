@@ -2462,9 +2462,86 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 		printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY],opCount[DIVISION]);
 	}
-		
 }
+void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	opCount.clear();
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	GLfloat m;
+	if (p2.x != p1.x)
+	{
+		m = (p2.y - p1.y) / (p2.x - p1.x);
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+	}
 
+	while (!done)
+	{
+		code1 = encode(p1, winMin, winMax);
+		code2 = encode(p2, winMin, winMax);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+
+			if (code1 & winLeftBitCode)
+			{
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+			}
+			else if (code1 & winRightBitCode)
+			{
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					p1.x += (winMin.y - p1.y) / m;
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+				}
+				p1.y = winMin.y;
+			}
+			else if (code1 & winTopBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					p1.x += (winMax.y - p1.y) / m;
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+				}
+				p1.y = winMax.y;
+			}
+		}
+	}
+	if (plotLine)
+	{
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+		printf("Cohen-Sutherland Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+	}
+}
 GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
 {
 	GLfloat r;
@@ -2546,6 +2623,7 @@ void drawFunc()
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
 	lineClipLiangBarsk(winMin, winMax, p1, p2);
 
 	/*p1 = { 79, 346 }, p2 = { 688, 256 };
