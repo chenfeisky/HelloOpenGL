@@ -2330,6 +2330,7 @@ class wcPt2D
 public:
 	GLfloat x, y;
 };
+typedef enum { Left, Right, Bottom, Top } Boundary;
 inline GLint Round(const GLfloat a)
 {
 	return GLint(a + 0.5);
@@ -2411,35 +2412,35 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 			}
 			if (p2.x != p1.x)
 			{
-				m = (p2.y - p1.y) / (p2.x - p1.x);
 				opCount[MINUS] += 2;
 				opCount[DIVISION] += 1;
+				m = (p2.y - p1.y) / (p2.x - p1.x);
 			}
 				
 			if (code1 & winLeftBitCode)
 			{
-				p1.y += (winMin.x - p1.x) * m;
-				p1.x = winMin.x;
 				opCount[ADD] += 1;
 				opCount[MINUS] += 1;
 				opCount[MULTIPLY] += 1;
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
 			}
 			else if (code1 & winRightBitCode)
 			{
-				p1.y += (winMax.x - p1.x) * m;
-				p1.x = winMax.x;
 				opCount[ADD] += 1;
 				opCount[MINUS] += 1;
 				opCount[MULTIPLY] += 1;
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
 			}
 			else if (code1 & winBottomBitCode)
 			{
 				if (p2.x != p1.x)
 				{
-					p1.x += (winMin.y - p1.y) / m;
 					opCount[ADD] += 1;
 					opCount[MINUS] += 1;
 					opCount[DIVISION] += 1;
+					p1.x += (winMin.y - p1.y) / m;
 				}					
 				p1.y = winMin.y;
 			}
@@ -2447,10 +2448,10 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 			{
 				if (p2.x != p1.x)
 				{
-					p1.x += (winMax.y - p1.y) / m;
 					opCount[ADD] += 1;
 					opCount[MINUS] += 1;
 					opCount[DIVISION] += 1;
+					p1.x += (winMax.y - p1.y) / m;
 				}
 				p1.y = winMax.y;
 			}
@@ -2471,9 +2472,9 @@ void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 	GLfloat m;
 	if (p2.x != p1.x)
 	{
-		m = (p2.y - p1.y) / (p2.x - p1.x);
 		opCount[MINUS] += 2;
 		opCount[DIVISION] += 1;
+		m = (p2.y - p1.y) / (p2.x - p1.x);
 	}
 
 	while (!done)
@@ -2497,28 +2498,28 @@ void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 
 			if (code1 & winLeftBitCode)
 			{
-				p1.y += (winMin.x - p1.x) * m;
-				p1.x = winMin.x;
 				opCount[ADD] += 1;
 				opCount[MINUS] += 1;
 				opCount[MULTIPLY] += 1;
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
 			}
 			else if (code1 & winRightBitCode)
 			{
-				p1.y += (winMax.x - p1.x) * m;
-				p1.x = winMax.x;
 				opCount[ADD] += 1;
 				opCount[MINUS] += 1;
 				opCount[MULTIPLY] += 1;
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
 			}
 			else if (code1 & winBottomBitCode)
 			{
 				if (p2.x != p1.x)
 				{
-					p1.x += (winMin.y - p1.y) / m;
 					opCount[ADD] += 1;
 					opCount[MINUS] += 1;
 					opCount[DIVISION] += 1;
+					p1.x += (winMin.y - p1.y) / m;
 				}
 				p1.y = winMin.y;
 			}
@@ -2526,10 +2527,10 @@ void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 			{
 				if (p2.x != p1.x)
 				{
-					p1.x += (winMax.y - p1.y) / m;
 					opCount[ADD] += 1;
 					opCount[MINUS] += 1;
 					opCount[DIVISION] += 1;
+					p1.x += (winMax.y - p1.y) / m;
 				}
 				p1.y = winMax.y;
 			}
@@ -2549,8 +2550,8 @@ GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
 
 	if (p < 0.0)
 	{
-		r = q / p;
 		opCount[DIVISION] += 1;
+		r = q / p;
 		if (r > *u2)
 			returnValue = false;
 		else if (r > *u1)
@@ -2558,8 +2559,8 @@ GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
 	}
 	else if (p > 0.0)
 	{
-		r = q / p;
 		opCount[DIVISION] += 1;
+		r = q / p;
 		if (r < *u1)
 			returnValue = false;
 		else if (r < *u2)
@@ -2573,33 +2574,138 @@ GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
 void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 {
 	opCount.clear();
+	opCount[MINUS] += 1;
 	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy;
+	opCount[MINUS] += 1;
 	if (clipTest(-dx, p1.x - winMin.x, &u1, &u2))
+	{
+		opCount[MINUS] += 1;
 		if (clipTest(dx, winMax.x - p1.x, &u1, &u2))
 		{
+			opCount[MINUS] += 1;
 			dy = p2.y - p1.y;
+			opCount[MINUS] += 1;
 			if (clipTest(-dy, p1.y - winMin.y, &u1, &u2))
+			{
+				opCount[MINUS] += 1;
 				if (clipTest(dy, winMax.y - p1.y, &u1, &u2))
 				{
 					if (u2 < 1.0)
 					{
-						p2.x = p1.x + u2 * dx;
-						p2.y = p1.y + u2 * dy;
 						opCount[ADD] += 2;
 						opCount[MULTIPLY] += 2;
+						p2.x = p1.x + u2 * dx;
+						p2.y = p1.y + u2 * dy;
 					}
 					if (u1 > 0.0)
 					{
-						p1.x = p1.x + u1 * dx;
-						p1.y = p1.y + u1 * dy;
 						opCount[ADD] += 2;
 						opCount[MULTIPLY] += 2;
+						p1.x = p1.x + u1 * dx;
+						p1.y = p1.y + u1 * dy;
 					}
 					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
 					lineBres(p1.x, p1.y, p2.x, p2.y);
 					printf("Liang-Barsky: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 				}
+			}
 		}
+	}
+}
+bool clipTestBoundary(GLfloat p, wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2, Boundary b, GLfloat* u1, GLfloat* u2)
+{
+	switch (b)
+	{
+	case Boundary::Left:
+	{
+		if (p1.x < winMin.x && p2.x < winMin.x)
+			return false;
+		else if (p1.x > winMin.x && p2.x > winMin.x)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, p1.x - winMin.x, u1, u2);
+		}
+	}
+	break;
+	case Boundary::Right:
+	{
+		if (p1.x > winMax.x && p2.x > winMax.x)
+			return false;
+		else if (p1.x < winMax.x && p2.x < winMax.x)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, winMax.x - p1.x, u1, u2);
+		}
+	}
+	break;
+	case Boundary::Bottom:
+	{
+		if (p1.y < winMin.y && p2.y < winMin.y)
+			return false;
+		else if (p1.y > winMin.y && p2.y > winMin.y)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, p1.y - winMin.y, u1, u2);
+		}
+	}
+	break;
+	case Boundary::Top:
+	{
+		if (p1.y > winMax.y && p2.y > winMax.y)
+			return false;
+		else if (p1.y < winMax.y && p2.y < winMax.y)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, winMax.y - p1.y, u1, u2);
+		}
+	}
+	break;
+	default:
+		return false;
+	}
+}
+void lineClipLiangBarskOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	opCount.clear();
+	opCount[MINUS] += 1;
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.y, dy;
+	if (clipTestBoundary(-dx, winMin, winMax, p1, p2, Boundary::Left, &u1, &u2))
+		if (clipTestBoundary(dx, winMin, winMax, p1, p2, Boundary::Right, &u1, &u2))
+		{
+			opCount[MINUS] += 1;
+			dy = p2.y - p1.y;
+			if (clipTestBoundary(-dy, winMin, winMax, p1, p2, Boundary::Bottom, &u1, &u2))
+				if (clipTestBoundary(dy, winMin, winMax, p1, p2, Boundary::Top, &u1, &u2))
+				{
+					if (u2 < 1.0)
+					{
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+						p2.x = p1.x + u2 * dx;
+						p2.y = p1.y + u2 * dy;
+					}
+					if (u1 > 0.0)
+					{
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+						p1.x = p1.x + u1 * dx;
+						p1.y = p1.y + u1 * dy;
+					}
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+					lineBres(p1.x, p1.y, p2.x, p2.y);
+					printf("Liang-Barsky Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+				}
+		}
+
+	
 }
 void drawFunc()
 {
@@ -2625,6 +2731,7 @@ void drawFunc()
 	lineClipCohSuth(winMin, winMax, p1, p2);
 	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
 	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
 	/*p1 = { 79, 346 }, p2 = { 688, 256 };
 	glColor3f(1.0, 1.0, 1.0);
