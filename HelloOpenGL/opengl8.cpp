@@ -2291,8 +2291,8 @@ void drawFunc()
 	p1 = { winCenter.x, winCenter.y + 280}, p2 = { winCenter.x, winCenter.y - 200 };
 	angle -= delta * speedA;
 	printf("angle = %f\n", angle);
-	p1.x = 300 * cos(angle) + winCenter.x;
-	p1.y = 300 * sin(angle) + winCenter.y;
+	p1.x = 280 * cos(angle) + winCenter.x;
+	p1.y = 280 * sin(angle) + winCenter.y;
 	p2.x = -200 * cos(angle) + winCenter.x;
 	p2.y = -200 * sin(angle) + winCenter.y;
 
@@ -2461,8 +2461,8 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 	{
 		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
 		lineBres(p1.x, p1.y, p2.x, p2.y);
-		printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY],opCount[DIVISION]);
 	}
+	printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY],opCount[DIVISION]);
 }
 void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 {
@@ -2540,8 +2540,8 @@ void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 	{
 		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
 		lineBres(p1.x, p1.y, p2.x, p2.y);
-		printf("Cohen-Sutherland Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 	}
+	printf("Cohen-Sutherland Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 }
 GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
 {
@@ -2606,11 +2606,11 @@ void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 					}
 					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
 					lineBres(p1.x, p1.y, p2.x, p2.y);
-					printf("Liang-Barsky: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 				}
 			}
 		}
 	}
+	printf("Liang-Barsky: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 }
 bool clipTestBoundary(GLfloat p, wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2, Boundary b, GLfloat* u1, GLfloat* u2)
 {
@@ -2676,7 +2676,7 @@ void lineClipLiangBarskOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D 
 {
 	opCount.clear();
 	opCount[MINUS] += 1;
-	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.y, dy;
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy;
 	if (clipTestBoundary(-dx, winMin, winMax, p1, p2, Boundary::Left, &u1, &u2))
 		if (clipTestBoundary(dx, winMin, winMax, p1, p2, Boundary::Right, &u1, &u2))
 		{
@@ -2701,11 +2701,9 @@ void lineClipLiangBarskOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D 
 					}
 					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
 					lineBres(p1.x, p1.y, p2.x, p2.y);
-					printf("Liang-Barsky Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 				}
 		}
-
-	
+	printf("Liang-Barsky Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);	
 }
 void drawFunc()
 {
@@ -2721,9 +2719,9 @@ void drawFunc()
 	glVertex2f(winMax.x, winMax.y);
 	glVertex2f(winMin.x, winMax.y);
 	glEnd();
-
-	
+		
 	wcPt2D p1, p2;
+
 	p1 = { 106, 475 }, p2 = { 578, 120 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
@@ -2733,65 +2731,223 @@ void drawFunc()
 	lineClipLiangBarsk(winMin, winMax, p1, p2);
 	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
-	/*p1 = { 79, 346 }, p2 = { 688, 256 };
+	printf("=================================================\n");
+	p1 = { 79, 346 }, p2 = { 688, 256 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 401, 434 }, p2 = { 294, 260 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 561, 399 }, p2 = { 627, 191 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 134, 313 }, p2 = { 378, 174 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 55, 249 }, p2 = { 273, 122 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 139, 431 }, p2 = { 139, 134 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 253, 440 }, p2 = { 253, 186 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 424, 249 }, p2 = { 479, 328 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
 	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
+	printf("=================================================\n");
 	p1 = { 100, 240 }, p2 = { 400, 240 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipCohSuth(winMin, winMax, p1, p2);*/
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
 
 	glFlush();
 }
 void code_8_exercise_8()
 {
 	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_10
+float FPS = 60;
+float speedA = 6 * PI / 180;
+class wcPt2D
+{
+public:
+	GLfloat x, y;
+};
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
+{
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy;
+	if (clipTest(-dx, p1.x - winMin.x, &u1, &u2))
+		if (clipTest(dx, winMax.x - p1.x, &u1, &u2))
+		{
+			dy = p2.y - p1.y;
+			if (clipTest(-dy, p1.y - winMin.y, &u1, &u2))
+				if (clipTest(dy, winMax.y - p1.y, &u1, &u2))
+				{
+					if (u2 < 1.0)
+					{
+						p2.x = p1.x + u2 * dx;
+						p2.y = p1.y + u2 * dy;
+					}
+					if (u1 > 0.0)
+					{
+						p1.x = p1.x + u1 * dx;
+						p1.y = p1.y + u1 * dy;
+					}
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+					lineBres(p1.x, p1.y, p2.x, p2.y);
+				}
+		}
+}
+int lastTick = 0;
+float delta = 0.f;
+float angle = PI / 2;
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	wcPt2D winMin = { 200, 220 }, winMax = { 520, 380 };
+	wcPt2D winCenter = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
+
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	wcPt2D p1, p2;
+	p1 = { winCenter.x, winCenter.y + 280 }, p2 = { winCenter.x, winCenter.y - 200 };
+	angle -= delta * speedA;
+	printf("angle = %f\n", angle);
+	p1.x = 280 * cos(angle) + winCenter.x;
+	p1.y = 280 * sin(angle) + winCenter.y;
+	p2.x = -200 * cos(angle) + winCenter.x;
+	p2.y = -200 * sin(angle) + winCenter.y;
+
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+
+	glFlush();
+}
+void onTimer(int id)
+{
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+void code_8_exercise_10()
+{
+	glutDisplayFunc(drawFunc);
+	lastTick = GetTickCount();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
 }
 #endif
 
@@ -2857,6 +3013,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_8
 	code_8_exercise_8();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_10
+	code_8_exercise_10();
 #endif
 
 	glutMainLoop();
