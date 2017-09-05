@@ -2951,6 +2951,187 @@ void code_8_exercise_10()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_11
+class Point
+{
+public:
+	GLfloat x, y;
+};
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix rotateMatrix(Point pivotPt, float theta)
+{
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	return matRot;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void transformPoint(Matrix& m, Point& point)
+{
+	Matrix p(3, 1);
+	p[0][0] = point.x;
+	p[1][0] = point.y;
+	p[2][0] = 1;
+	auto temp = m * p;
+	point.x = temp[0][0];
+	point.y = temp[1][0];
+}
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void point(Point p)
+{
+	glPointSize(5.0);
+	glBegin(GL_POINTS);
+	glVertex2f(p.x, p.y);
+	glEnd();
+}
+void rect(float left, float right, float bottom, float top)
+{
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(left, bottom);
+	glVertex2f(right, bottom);
+	glVertex2f(right, top);
+	glVertex2f(left, top);
+	glEnd();
+}
+void rorate(Point& p, float& left, float& right, float& bottom, float& top, float angle)
+{
+	Point center = { (left + right) / 2, (bottom + top) / 2 };
+	transformPoint(rotateMatrix(center, angle * PI / 180), p);
+	if (angle == 90 || angle == 270)
+	{
+		float w = right - left;
+		float h = top - bottom;
+		left = center.x - h / 2;
+		right = center.x + h / 2;
+		bottom = center.y - w / 2;
+		top = center.y + w / 2;
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glViewport(0, 0, winWidth, winHeight);
+	glBegin(GL_LINES);
+	glVertex2f(0, winHeight / 2);
+	glVertex2f(winWidth, winHeight / 2);
+	glVertex2f(260, 0);
+	glVertex2f(260, winHeight);
+	glVertex2f(520, 0);
+	glVertex2f(520, winHeight);
+	glEnd();
+
+	float left = 400, right = 520, bottom = 300, top = 380;
+
+	Point p = { 500, 400 };
+	float _left = left, _right = right, _bottom = bottom, _top = top;
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(330, 590, 265, 415);
+	glViewport(0, 450, 260, 150);
+	point(p);
+	rect(_left, _right, _bottom, _top);
+	glViewport(0, 300, 260, 150);
+	rorate(p, _left, _right, _bottom, _top, 90);
+	point(p);
+	rect(_left, _right, _bottom, _top);
+
+	p = { 535, 395 };
+	_left = left, _right = right, _bottom = bottom, _top = top;
+	glViewport(260, 450, 260, 150);
+	point(p);
+	rect(_left, _right, _bottom, _top);
+	glViewport(260, 300, 260, 150);
+	rorate(p, _left, _right, _bottom, _top, 90);
+	point(p);
+	rect(_left, _right, _bottom, _top);
+
+	glFlush();
+}
+void code_8_exercise_11()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -3017,6 +3198,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_10
 	code_8_exercise_10();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_11
+	code_8_exercise_11();
 #endif
 
 	glutMainLoop();
