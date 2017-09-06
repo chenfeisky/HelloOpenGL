@@ -3057,27 +3057,27 @@ void point(Point p)
 	glVertex2f(p.x, p.y);
 	glEnd();
 }
-void rect(float left, float right, float bottom, float top)
+void rect(Point winMin, Point winMax)
 {
 	glBegin(GL_LINE_LOOP);
-	glVertex2f(left, bottom);
-	glVertex2f(right, bottom);
-	glVertex2f(right, top);
-	glVertex2f(left, top);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
 	glEnd();
 }
-void rorate(Point& p, float& left, float& right, float& bottom, float& top, float angle)
+void rorate(Point& p, Point& winMin, Point& winMax, float angle)
 {
-	Point center = { (left + right) / 2, (bottom + top) / 2 };
+	Point center = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
 	transformPoint(rotateMatrix(center, angle * PI / 180), p);
 	if (angle == 90 || angle == 270)
 	{
-		float w = right - left;
-		float h = top - bottom;
-		left = center.x - h / 2;
-		right = center.x + h / 2;
-		bottom = center.y - w / 2;
-		top = center.y + w / 2;
+		float w = winMax.x - winMin.x;
+		float h = winMax.y - winMin.y;
+		winMin.x = center.x - h / 2;
+		winMax.x = center.x + h / 2;
+		winMin.y = center.y - w / 2;
+		winMax.y = center.y + w / 2;
 	}
 }
 void drawFunc()
@@ -3099,30 +3099,76 @@ void drawFunc()
 	glVertex2f(520, winHeight);
 	glEnd();
 
-	float left = 400, right = 520, bottom = 300, top = 380;
+	Point winMin = { 400 , 300}, winMax = { 480 , 350};
 
-	Point p = { 500, 400 };
-	float _left = left, _right = right, _bottom = bottom, _top = top;
+	// 上
+	Point p = { 465, 370 };
+	Point _winMin = winMin, _winMax = winMax;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(330, 590, 265, 415);
+	gluOrtho2D(310, 570, 250, 400);
 	glViewport(0, 450, 260, 150);
 	point(p);
-	rect(_left, _right, _bottom, _top);
+	rect(_winMin, _winMax);
 	glViewport(0, 300, 260, 150);
-	rorate(p, _left, _right, _bottom, _top, 90);
+	rorate(p, _winMin, _winMax, 90);
 	point(p);
-	rect(_left, _right, _bottom, _top);
+	rect(_winMin, _winMax);
 
-	p = { 535, 395 };
-	_left = left, _right = right, _bottom = bottom, _top = top;
+	// 右上
+	p = { 500, 370 };
+	_winMin = winMin, _winMax = winMax;
 	glViewport(260, 450, 260, 150);
 	point(p);
-	rect(_left, _right, _bottom, _top);
+	rect(_winMin, _winMax);
 	glViewport(260, 300, 260, 150);
-	rorate(p, _left, _right, _bottom, _top, 90);
+	rorate(p, _winMin, _winMax, 90);
 	point(p);
-	rect(_left, _right, _bottom, _top);
+	rect(_winMin, _winMax);
+
+	// 右
+	p = { 520, 344 };
+	_winMin = winMin, _winMax = winMax;
+	glViewport(520, 450, 260, 150);
+	point(p);
+	rect(_winMin, _winMax);
+	glViewport(520, 300, 260, 150);
+	rorate(p, _winMin, _winMax, 180);
+	point(p);
+	rect(_winMin, _winMax);
+
+	// 右下
+	p = { 490, 260 };
+	_winMin = winMin, _winMax = winMax;
+	glViewport(520, 150, 260, 150);
+	point(p);
+	rect(_winMin, _winMax);
+	glViewport(520, 0, 260, 150);
+	rorate(p, _winMin, _winMax, 180);
+	point(p);
+	rect(_winMin, _winMax);
+
+	// 下
+	p = { 440, 270 };
+	_winMin = winMin, _winMax = winMax;
+	glViewport(260, 150, 260, 150);
+	point(p);
+	rect(_winMin, _winMax);
+	glViewport(260, 0, 260, 150);
+	rorate(p, _winMin, _winMax, 270);
+	point(p);
+	rect(_winMin, _winMax);
+
+	// 左下
+	p = { 375, 290 };
+	_winMin = winMin, _winMax = winMax;
+	glViewport(0, 150, 260, 150);
+	point(p);
+	rect(_winMin, _winMax);
+	glViewport(0, 0, 260, 150);
+	rorate(p, _winMin, _winMax, 270);
+	point(p);
+	rect(_winMin, _winMax);
 
 	glFlush();
 }
@@ -3132,6 +3178,337 @@ void code_8_exercise_11()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_12
+class Point
+{
+public:
+	GLfloat x, y;
+};
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix rotateMatrix(Point pivotPt, float theta)
+{
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
+	matRot[0][0] = cos(theta);
+	matRot[0][1] = -sin(theta);
+	matRot[0][2] = pivotPt.x * (1 - cos(theta)) + pivotPt.y * sin(theta);
+	matRot[1][0] = sin(theta);
+	matRot[1][1] = cos(theta);
+	matRot[1][2] = pivotPt.y * (1 - cos(theta)) - pivotPt.x * sin(theta);
+	return matRot;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void transformPoint(Matrix& m, Point& point)
+{
+	Matrix p(3, 1);
+	p[0][0] = point.x;
+	p[1][0] = point.y;
+	p[2][0] = 1;
+	auto temp = m * p;
+	point.x = temp[0][0];
+	point.y = temp[1][0];
+}
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(Point pt, Point winMin, Point winMax)
+{
+	GLubyte code = 0x00;
+	if (pt.x < winMin.x)
+		code = code | winLeftBitCode;
+	if (pt.x > winMax.x)
+		code = code | winRightBitCode;
+	if (pt.y < winMin.y)
+		code = code | winBottomBitCode;
+	if (pt.y > winMax.y)
+		code = code | winTopBitCode;
+	return (code);
+}
+void point(Point p)
+{
+	glPointSize(5.0);
+	glBegin(GL_POINTS);
+	glVertex2f(p.x, p.y);
+	glEnd();
+}
+void rect(Point winMin, Point winMax)
+{
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+}
+void rorate(Point& p1, Point& p2, Point& winMin, Point& winMax, float angle)
+{
+	Point center = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
+	auto m = rotateMatrix(center, angle * PI / 180);
+	transformPoint(m, p1);
+	transformPoint(m, p2);
+	if (angle == 90 || angle == 270)
+	{
+		float w = winMax.x - winMin.x;
+		float h = winMax.y - winMin.y;
+		winMin.x = center.x - h / 2;
+		winMax.x = center.x + h / 2;
+		winMin.y = center.y - w / 2;
+		winMax.y = center.y + w / 2;
+	}
+}
+bool inside(GLint code)
+{
+	return code == 0;
+}
+bool leftTop(GLint code)
+{
+	return code == (winLeftBitCode | winTopBitCode);
+}
+bool left(GLint code)
+{
+	return code == winLeftBitCode;
+}
+bool leftBottom(GLint code)
+{
+	return code == (winLeftBitCode | winBottomBitCode);
+}
+bool rightTop(GLint code)
+{
+	return code == (winRightBitCode | winTopBitCode);
+}
+bool right(GLint code)
+{
+	return code == winRightBitCode;
+}
+bool rightBottom(GLint code)
+{
+	return code == (winRightBitCode | winBottomBitCode);
+}
+bool top(GLint code)
+{
+	return code == winTopBitCode;
+}
+bool bottom(GLint code)
+{
+	return code == winBottomBitCode;
+}
+void swapPts(Point& p1, Point& p2)
+{
+	Point tmp;
+	tmp = p1;
+	p1 = p2;
+	p2 = tmp;
+}
+void swapCodes(GLubyte& c1, GLubyte& c2)
+{
+	GLubyte tmp;
+	tmp = c1;
+	c1 = c2;
+	c2 = tmp;
+}
+void lineClipNLNStandardInside(Point winMin, Point winMax, Point p1, Point p2)
+{
+
+}
+void lineClipNLNStandardLeft(Point winMin, Point winMax, Point p1, Point p2)
+{
+
+}
+void lineClipNLNStandardLeftL(Point winMin, Point winMax, Point p1, Point p2)
+{
+
+}
+void lineClipNLNStandardLeftT(Point winMin, Point winMax, Point p1, Point p2)
+{
+
+}
+void lineClipNLNStandard(Point winMin, Point winMax, Point p1, Point p2, GLint code1, GLint code2)
+{
+	if (inside(code1))
+	{
+		lineClipNLNStandardInside(winMin, winMax, p1, p2);
+	}
+	else if (left(code1))
+	{
+		lineClipNLNStandardLeft(winMin, winMax, p1, p2);
+	}
+	else if (leftTop(code1))
+	{
+		if(fabs(p1.y - winMax.y) > fabs(p1.x - winMin.x))
+			lineClipNLNStandardLeftL(winMin, winMax, p1, p2);
+		else
+			lineClipNLNStandardLeftT(winMin, winMax, p1, p2);
+	}
+
+}
+void lineClipNLN(Point winMin, Point winMax, Point p1, Point p2)
+{
+	GLubyte code1 = encode(p1, winMin, winMax);
+	GLubyte code2 = encode(p2, winMin, winMax);
+	bool draw = false;
+	if (accept(code1, code2))
+	{
+		draw = true;
+	}
+	else if (reject(code1, code2))
+	{
+		draw = false;
+	}
+	else
+	{
+		draw = true;
+		float rotateAngle = 0;
+		if (inside(code1) || left(code1) || leftTop(code1))
+		{
+
+		}
+		else if (inside(code2) || left(code2) || leftTop(code2))
+		{
+			swapPts(p1, p2);
+			swapCodes(code1, code2);
+		}
+		else
+		{
+			if (top(code1) || rightTop(code1))
+			{
+				rotateAngle = 90;
+			}
+			else if (right(code1) || rightBottom(code1))
+			{
+				rotateAngle = 180;
+			}
+			else
+			{
+				rotateAngle = 270;
+			}
+			rorate(p1, p2, winMin, winMax, rotateAngle);
+		}
+		lineClipNLNStandard(winMin, winMax, p1, p2);
+		if (rotateAngle > 0)
+		{
+			rorate(p1, p2, winMin, winMax, -rotateAngle);
+		}
+	}
+
+	if (draw)
+	{
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glViewport(0, 0, winWidth, winHeight);
+	glBegin(GL_LINES);
+	glVertex2f(0, winHeight / 2);
+	glVertex2f(winWidth, winHeight / 2);
+	glVertex2f(260, 0);
+	glVertex2f(260, winHeight);
+	glVertex2f(520, 0);
+	glVertex2f(520, winHeight);
+	glEnd();
+
+
+
+	glFlush();
+}
+void code_8_exercise_12()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -3202,6 +3579,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_11
 	code_8_exercise_11();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_12
+	code_8_exercise_12();
 #endif
 
 	glutMainLoop();
