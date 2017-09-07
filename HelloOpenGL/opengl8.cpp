@@ -3392,40 +3392,90 @@ void swapCodes(GLubyte& c1, GLubyte& c2)
 	c1 = c2;
 	c2 = tmp;
 }
-void lineClipNLNStandardInside(Point winMin, Point winMax, Point p1, Point p2)
+bool lineClipNLNStandardInside(Point winMin, Point winMax, Point& p1, Point& p2)
+{
+	float dy = p2.y - p1.y;
+	float dx = p2.x - p1.x;
+	float slopeLine = 0.f;
+	float slopeLB = 0.f;
+	float slopeBR = 0.f;
+	float slopeTR = 0.f;
+	float slopeTL = 0.f;
+
+	if (dx)
+		slopeLine = dy / dx;
+
+	if (winMin.x - p1.x)
+		slopeLB = (winMin.y - p1.y) / (winMin.x - p1.x);
+
+	if (winMax.x - p1.x)
+		slopeBR = (winMin.y - p1.y) / (winMax.x - p1.x);
+
+	if (dy < 0 && (dx == 0 || (winMin.x - p1.x ? slopeLB < slopeLine : false) || (winMax.x - p1.x ? slopeLine < slopeBR : false)))
+	{
+		p2.y = winMin.y;
+		if (dx)
+			p2.x = p1.x + (winMin.y - p1.y) / slopeLine;
+	}
+	else
+	{
+		if (winMax.x - p1.x)
+			slopeTR = (winMax.y - p1.y) / (winMax.x - p1.x);
+
+		if (dx > 0 && (winMax.x - p1.x ? slopeBR <= slopeLine && slopeLine <= slopeTR : true))
+		{
+			p2.x = winMax.x;
+			p2.y = p1.y + (winMax.x - p1.x) * slopeLine;
+		}
+		else
+		{
+			if (winMin.x - p1.x)
+				slopeTL = (winMax.y - p1.y) / (winMin.x - p1.x);
+
+			if (dy > 0 && (dx == 0 || (winMax.x - p1.x ? slopeTR < slopeLine : false) || (winMin.x - p1.x ? slopeLine < slopeTL : false)))
+			{
+				p2.y = winMax.y;
+				if (dx)
+					p2.x = p1.x + (winMax.y - p1.y) / slopeLine;
+			}
+			else if (dx < 0 && (winMin.x - p1.x ? slopeTL <= slopeLine && slopeLine <= slopeLB : true))
+			{
+				p2.x = winMin.x;
+				p2.y = p1.y + (winMin.x - p1.x) * slopeLine;
+			}
+		}
+	}
+	return true;
+}
+bool lineClipNLNStandardLeft(Point winMin, Point winMax, Point& p1, Point& p2)
+{
+}
+bool lineClipNLNStandardLeftL(Point winMin, Point winMax, Point& p1, Point& p2)
 {
 
 }
-void lineClipNLNStandardLeft(Point winMin, Point winMax, Point p1, Point p2)
+bool lineClipNLNStandardLeftT(Point winMin, Point winMax, Point& p1, Point& p2)
 {
 
 }
-void lineClipNLNStandardLeftL(Point winMin, Point winMax, Point p1, Point p2)
-{
-
-}
-void lineClipNLNStandardLeftT(Point winMin, Point winMax, Point p1, Point p2)
-{
-
-}
-void lineClipNLNStandard(Point winMin, Point winMax, Point p1, Point p2, GLint code1, GLint code2)
+bool lineClipNLNStandard(Point winMin, Point winMax, Point& p1, Point& p2, GLint code1, GLint code2)
 {
 	if (inside(code1))
 	{
-		lineClipNLNStandardInside(winMin, winMax, p1, p2);
+		return lineClipNLNStandardInside(winMin, winMax, p1, p2);
 	}
 	else if (left(code1))
 	{
-		lineClipNLNStandardLeft(winMin, winMax, p1, p2);
+		return lineClipNLNStandardLeft(winMin, winMax, p1, p2);
 	}
 	else if (leftTop(code1))
 	{
 		if(fabs(p1.y - winMax.y) > fabs(p1.x - winMin.x))
-			lineClipNLNStandardLeftL(winMin, winMax, p1, p2);
+			return lineClipNLNStandardLeftL(winMin, winMax, p1, p2);
 		else
-			lineClipNLNStandardLeftT(winMin, winMax, p1, p2);
+			return lineClipNLNStandardLeftT(winMin, winMax, p1, p2);
 	}
-
+	return false;
 }
 void lineClipNLN(Point winMin, Point winMax, Point p1, Point p2)
 {
@@ -3442,7 +3492,6 @@ void lineClipNLN(Point winMin, Point winMax, Point p1, Point p2)
 	}
 	else
 	{
-		draw = true;
 		float rotateAngle = 0;
 		if (inside(code1) || left(code1) || leftTop(code1))
 		{
@@ -3469,7 +3518,7 @@ void lineClipNLN(Point winMin, Point winMax, Point p1, Point p2)
 			}
 			rorate(p1, p2, winMin, winMax, rotateAngle);
 		}
-		lineClipNLNStandard(winMin, winMax, p1, p2);
+		draw = lineClipNLNStandard(winMin, winMax, p1, p2, code1, code2);
 		if (rotateAngle > 0)
 		{
 			rorate(p1, p2, winMin, winMax, -rotateAngle);
@@ -3487,18 +3536,22 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0, winWidth, 0, winHeight);
-	glViewport(0, 0, winWidth, winHeight);
-	glBegin(GL_LINES);
-	glVertex2f(0, winHeight / 2);
-	glVertex2f(winWidth, winHeight / 2);
-	glVertex2f(260, 0);
-	glVertex2f(260, winHeight);
-	glVertex2f(520, 0);
-	glVertex2f(520, winHeight);
+	Point winMin = { 200, 220 }, winMax = { 520, 380 };
+
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
 	glEnd();
+
+	Point p1, p2;
+
+	p1 = { 353, 255 }, p2 = { 50, 255 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(winMin, winMax, p1, p2);
 
 
 
