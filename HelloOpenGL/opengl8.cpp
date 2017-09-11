@@ -3821,6 +3821,1156 @@ void code_8_exercise_12()
 	glutDisplayFunc(drawFunc);
 }
 #endif
+
+#ifdef CHAPTER_8_EXERCISE_13
+class Point
+{
+public:
+	GLfloat x, y;
+};
+std::map<int, int> opCount;
+#define ADD 0
+#define MINUS 1
+#define MULTIPLY 2
+#define DIVISION 3
+#define TRIGONOMETRIC 4 // 三角函数
+typedef enum { Left, Right, Bottom, Top } Boundary;
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+// Cohen-Sutherland
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(Point pt, Point winMin, Point winMax)
+{
+	GLubyte code = 0x00;
+	if (pt.x < winMin.x)
+		code = code | winLeftBitCode;
+	if (pt.x > winMax.x)
+		code = code | winRightBitCode;
+	if (pt.y < winMin.y)
+		code = code | winBottomBitCode;
+	if (pt.y > winMax.y)
+		code = code | winTopBitCode;
+	return (code);
+}
+void swapPts(Point& p1, Point& p2)
+{
+	Point tmp;
+	tmp = p1;
+	p1 = p2;
+	p2 = tmp;
+}
+void swapCodes(GLubyte& c1, GLubyte& c2)
+{
+	GLubyte tmp;
+	tmp = c1;
+	c1 = c2;
+	c2 = tmp;
+}
+void lineClipCohSuth(Point winMin, Point winMax, Point p1, Point p2)
+{
+	opCount.clear();
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	GLfloat m;
+	while (!done)
+	{
+		code1 = encode(p1, winMin, winMax);
+		code2 = encode(p2, winMin, winMax);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(p1, p2);
+				swapCodes(code1, code2);
+			}
+			if (p2.x != p1.x)
+			{
+				opCount[MINUS] += 2;
+				opCount[DIVISION] += 1;
+				m = (p2.y - p1.y) / (p2.x - p1.x);
+			}
+
+			if (code1 & winLeftBitCode)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
+			}
+			else if (code1 & winRightBitCode)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p1.x += (winMin.y - p1.y) / m;
+				}
+				p1.y = winMin.y;
+			}
+			else if (code1 & winTopBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p1.x += (winMax.y - p1.y) / m;
+				}
+				p1.y = winMax.y;
+			}
+		}
+	}
+	if (plotLine)
+	{
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+	}
+	printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+}
+void lineClipCohSuthOptimize(Point winMin, Point winMax, Point p1, Point p2)
+{
+	opCount.clear();
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	GLfloat m;
+	if (p2.x != p1.x)
+	{
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+		m = (p2.y - p1.y) / (p2.x - p1.x);
+	}
+
+	while (!done)
+	{
+		code1 = encode(p1, winMin, winMax);
+		code2 = encode(p2, winMin, winMax);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(p1, p2);
+				swapCodes(code1, code2);
+			}
+
+			if (code1 & winLeftBitCode)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
+			}
+			else if (code1 & winRightBitCode)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p1.x += (winMin.y - p1.y) / m;
+				}
+				p1.y = winMin.y;
+			}
+			else if (code1 & winTopBitCode)
+			{
+				if (p2.x != p1.x)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p1.x += (winMax.y - p1.y) / m;
+				}
+				p1.y = winMax.y;
+			}
+		}
+	}
+	if (plotLine)
+	{
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+	}
+	printf("Cohen-Sutherland Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+}
+// 梁友栋-Barsky
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		opCount[DIVISION] += 1;
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		opCount[DIVISION] += 1;
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+void lineClipLiangBarsk(Point winMin, Point winMax, Point p1, Point p2)
+{
+	opCount.clear();
+	opCount[MINUS] += 1;
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy;
+	opCount[MINUS] += 1;
+	if (clipTest(-dx, p1.x - winMin.x, &u1, &u2))
+	{
+		opCount[MINUS] += 1;
+		if (clipTest(dx, winMax.x - p1.x, &u1, &u2))
+		{
+			opCount[MINUS] += 1;
+			dy = p2.y - p1.y;
+			opCount[MINUS] += 1;
+			if (clipTest(-dy, p1.y - winMin.y, &u1, &u2))
+			{
+				opCount[MINUS] += 1;
+				if (clipTest(dy, winMax.y - p1.y, &u1, &u2))
+				{
+					if (u2 < 1.0)
+					{
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+						p2.x = p1.x + u2 * dx;
+						p2.y = p1.y + u2 * dy;
+					}
+					if (u1 > 0.0)
+					{
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+						p1.x = p1.x + u1 * dx;
+						p1.y = p1.y + u1 * dy;
+					}
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+					lineBres(p1.x, p1.y, p2.x, p2.y);
+				}
+			}
+		}
+	}
+	printf("Liang-Barsky: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+}
+bool clipTestBoundary(GLfloat p, Point winMin, Point winMax, Point p1, Point p2, Boundary b, GLfloat* u1, GLfloat* u2)
+{
+	switch (b)
+	{
+	case Boundary::Left:
+	{
+		if (p1.x < winMin.x && p2.x < winMin.x)
+			return false;
+		else if (p1.x > winMin.x && p2.x > winMin.x)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, p1.x - winMin.x, u1, u2);
+		}
+	}
+	break;
+	case Boundary::Right:
+	{
+		if (p1.x > winMax.x && p2.x > winMax.x)
+			return false;
+		else if (p1.x < winMax.x && p2.x < winMax.x)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, winMax.x - p1.x, u1, u2);
+		}
+	}
+	break;
+	case Boundary::Bottom:
+	{
+		if (p1.y < winMin.y && p2.y < winMin.y)
+			return false;
+		else if (p1.y > winMin.y && p2.y > winMin.y)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, p1.y - winMin.y, u1, u2);
+		}
+	}
+	break;
+	case Boundary::Top:
+	{
+		if (p1.y > winMax.y && p2.y > winMax.y)
+			return false;
+		else if (p1.y < winMax.y && p2.y < winMax.y)
+			return true;
+		else
+		{
+			opCount[MINUS] += 1;
+			return clipTest(p, winMax.y - p1.y, u1, u2);
+		}
+	}
+	break;
+	default:
+		return false;
+	}
+}
+void lineClipLiangBarskOptimize(Point winMin, Point winMax, Point p1, Point p2)
+{
+	opCount.clear();
+	opCount[MINUS] += 1;
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy;
+	if (clipTestBoundary(-dx, winMin, winMax, p1, p2, Boundary::Left, &u1, &u2))
+		if (clipTestBoundary(dx, winMin, winMax, p1, p2, Boundary::Right, &u1, &u2))
+		{
+			opCount[MINUS] += 1;
+			dy = p2.y - p1.y;
+			if (clipTestBoundary(-dy, winMin, winMax, p1, p2, Boundary::Bottom, &u1, &u2))
+				if (clipTestBoundary(dy, winMin, winMax, p1, p2, Boundary::Top, &u1, &u2))
+				{
+					if (u2 < 1.0)
+					{
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+						p2.x = p1.x + u2 * dx;
+						p2.y = p1.y + u2 * dy;
+					}
+					if (u1 > 0.0)
+					{
+						opCount[ADD] += 2;
+						opCount[MULTIPLY] += 2;
+						p1.x = p1.x + u1 * dx;
+						p1.y = p1.y + u1 * dy;
+					}
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+					lineBres(p1.x, p1.y, p2.x, p2.y);
+				}
+		}
+	printf("Liang-Barsky Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+}
+// NLN
+std::map<int, int> opCountRotate;
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				opCountRotate[MULTIPLY] += 1;
+				opCountRotate[ADD] += 1;
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix rotateMatrix(Point pivotPt, float theta)
+{
+	opCountRotate[ADD] += 1;
+	opCountRotate[MINUS] += 3;
+	opCountRotate[MULTIPLY] += 4;
+	opCountRotate[TRIGONOMETRIC] += 2;
+	
+	auto cosValue = cos(theta);
+	auto sinValue = sin(theta);
+	Matrix matRot(3, 3);
+	matrixSetIdentity(matRot);
+	matRot[0][0] = cosValue;
+	matRot[0][1] = -sinValue;
+	matRot[0][2] = pivotPt.x * (1 - cosValue) + pivotPt.y * sinValue;
+	matRot[1][0] = sinValue;
+	matRot[1][1] = cosValue;
+	matRot[1][2] = pivotPt.y * (1 - cosValue) - pivotPt.x * sinValue;
+	return matRot;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+void transformPoint(Matrix& m, Point& point)
+{
+	Matrix p(3, 1);
+	p[0][0] = point.x;
+	p[1][0] = point.y;
+	p[2][0] = 1;
+	auto temp = m * p;
+	point.x = temp[0][0];
+	point.y = temp[1][0];
+}
+void rorate(Point& p1, Point& p2, Point& winMin, Point& winMax, float angle)
+{
+	opCountRotate[ADD] += 2;
+	opCountRotate[DIVISION] += 2;
+	Point center = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
+	auto m = rotateMatrix(center, angle * PI / 180);
+	transformPoint(m, p1);
+	transformPoint(m, p2);
+	if (angle == 90 || angle == 270)
+	{
+		opCountRotate[ADD] += 2;
+		opCountRotate[MINUS] += 4;
+		opCountRotate[DIVISION] += 4;
+		float w = winMax.x - winMin.x;
+		float h = winMax.y - winMin.y;
+		winMin.x = center.x - h / 2;
+		winMax.x = center.x + h / 2;
+		winMin.y = center.y - w / 2;
+		winMax.y = center.y + w / 2;
+	}
+}
+bool leftTop(GLint code)
+{
+	return code == (winLeftBitCode | winTopBitCode);
+}
+bool left(GLint code)
+{
+	return code == winLeftBitCode;
+}
+bool leftBottom(GLint code)
+{
+	return code == (winLeftBitCode | winBottomBitCode);
+}
+bool rightTop(GLint code)
+{
+	return code == (winRightBitCode | winTopBitCode);
+}
+bool right(GLint code)
+{
+	return code == winRightBitCode;
+}
+bool rightBottom(GLint code)
+{
+	return code == (winRightBitCode | winBottomBitCode);
+}
+bool top(GLint code)
+{
+	return code == winTopBitCode;
+}
+bool bottom(GLint code)
+{
+	return code == winBottomBitCode;
+}
+bool lineClipNLNStandardInside(Point winMin, Point winMax, Point& p1, Point& p2)
+{
+	opCount[MINUS] += 2;
+	float dy = p2.y - p1.y;
+	float dx = p2.x - p1.x;
+	float slopeLine = 0.f;
+	float slopeLB = 0.f;
+	float slopeBR = 0.f;
+	float slopeTR = 0.f;
+	float slopeTL = 0.f;
+
+	if (dx)
+	{
+		opCount[DIVISION] += 1;
+		slopeLine = dy / dx;
+	}
+
+	opCount[MINUS] += 1;
+	if (winMin.x - p1.x)
+	{
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+		slopeLB = (winMin.y - p1.y) / (winMin.x - p1.x);
+	}		
+
+	opCount[MINUS] += 1;
+	if (winMax.x - p1.x)
+	{
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+		slopeBR = (winMin.y - p1.y) / (winMax.x - p1.x);
+	}
+
+	if (dy < 0 && (dx == 0 || (winMin.x - p1.x ? slopeLB < slopeLine : false) || (winMax.x - p1.x ? slopeLine < slopeBR : false)))
+	{
+		p2.y = winMin.y;
+		if (dx)
+		{
+			opCount[ADD] += 1;
+			opCount[MINUS] += 1;
+			opCount[DIVISION] += 1;
+			p2.x = p1.x + (winMin.y - p1.y) / slopeLine;
+		}			
+	}
+	else
+	{
+		opCount[MINUS] += 1;
+		if (winMax.x - p1.x)
+		{
+			opCount[MINUS] += 2;
+			opCount[DIVISION] += 1;
+			slopeTR = (winMax.y - p1.y) / (winMax.x - p1.x);
+		}			
+
+		if (dx > 0 && (winMax.x - p1.x ? slopeBR <= slopeLine && slopeLine <= slopeTR : true))
+		{
+			p2.x = winMax.x;
+			opCount[ADD] += 1;
+			opCount[MINUS] += 1;
+			opCount[MULTIPLY] += 1;
+			p2.y = p1.y + (winMax.x - p1.x) * slopeLine;
+		}
+		else
+		{
+			opCount[MINUS] += 1;
+			if (winMin.x - p1.x)
+			{
+				opCount[MINUS] += 2;
+				opCount[DIVISION] += 1;
+				slopeTL = (winMax.y - p1.y) / (winMin.x - p1.x);
+			}			
+
+			if (dy > 0 && (dx == 0 || (winMax.x - p1.x ? slopeTR < slopeLine : false) || (winMin.x - p1.x ? slopeLine < slopeTL : false)))
+			{
+				p2.y = winMax.y;
+				if (dx)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p2.x = p1.x + (winMax.y - p1.y) / slopeLine;
+				}					
+			}
+			else if (dx < 0 && (winMin.x - p1.x ? slopeTL <= slopeLine && slopeLine <= slopeLB : true))
+			{
+				p2.x = winMin.x;
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p2.y = p1.y + (winMin.x - p1.x) * slopeLine;
+			}
+		}
+	}
+	return true;
+}
+bool lineClipNLNStandardLeft(Point winMin, Point winMax, Point& p1, Point& p2)
+{
+	opCount[MINUS] += 2;
+	float dy = p2.y - p1.y;
+	float dx = p2.x - p1.x;
+	float slopeLine = 0.f;
+	float slopeLB = 0.f;
+	float slopeBR = 0.f;
+	float slopeTR = 0.f;
+	float slopeTL = 0.f;
+
+	opCount[DIVISION] += 1;
+	slopeLine = dy / dx;
+
+	opCount[MINUS] += 2;
+	opCount[DIVISION] += 1;
+	slopeLB = (winMin.y - p1.y) / (winMin.x - p1.x);
+
+	if (slopeLine < slopeLB)
+	{
+		return false;
+	}
+	else
+	{
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+		slopeBR = (winMin.y - p1.y) / (winMax.x - p1.x);
+		if (slopeLB <= slopeLine && slopeLine < slopeBR)
+		{
+			opCount[ADD] += 1;
+			opCount[MINUS] += 1;
+			opCount[MULTIPLY] += 1;
+			p1.y = p1.y + slopeLine * (winMin.x - p1.x);
+			p1.x = winMin.x;
+
+			if (p2.y < winMin.y)
+			{
+				p2.y = winMin.y;
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[DIVISION] += 1;
+				p2.x = p1.x + (winMin.y - p1.y) / slopeLine;
+			}
+			return true;
+		}
+		else
+		{
+			opCount[MINUS] += 2;
+			opCount[DIVISION] += 1;
+			slopeTR = (winMax.y - p1.y) / (winMax.x - p1.x);
+			if (slopeBR <= slopeLine && slopeLine < slopeTR)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p1.y = p1.y + slopeLine * (winMin.x - p1.x);
+				p1.x = winMin.x;
+
+				if (p2.x > winMax.x)
+				{
+					p2.x = winMax.x;
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[MULTIPLY] += 1;
+					p2.y = p1.y + slopeLine * (p2.x - p1.x);
+				}
+				return true;
+			}
+			else
+			{
+				opCount[MINUS] += 2;
+				opCount[DIVISION] += 1;
+				slopeTL = (winMax.y - p1.y) / (winMin.x - p1.x);
+				if (slopeTR <= slopeLine && slopeLine <= slopeTL)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[MULTIPLY] += 1;
+					p1.y = p1.y + slopeLine * (winMin.x - p1.x);
+					p1.x = winMin.x;
+
+					if (p2.y > winMax.y)
+					{
+						p2.y = winMax.y;
+						opCount[ADD] += 1;
+						opCount[MINUS] += 1;
+						opCount[DIVISION] += 1;
+						p2.x = p1.x + (winMax.y - p1.y) / slopeLine;
+					}
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool lineClipNLNStandardLeftL(Point winMin, Point winMax, Point& p1, Point& p2)
+{
+	opCount[MINUS] += 2;
+	float dy = p2.y - p1.y;
+	float dx = p2.x - p1.x;
+	float slopeLine = 0.f;
+	float slopeLB = 0.f;
+	float slopeBR = 0.f;
+	float slopeTR = 0.f;
+	float slopeTL = 0.f;
+
+	opCount[DIVISION] += 1;
+	slopeLine = dy / dx;
+
+	opCount[MINUS] += 2;
+	opCount[DIVISION] += 1;
+	slopeLB = (winMin.y - p1.y) / (winMin.x - p1.x);
+
+	if (slopeLine < slopeLB)
+	{
+		return false;
+	}
+	else
+	{
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+		slopeTL = (winMax.y - p1.y) / (winMin.x - p1.x);
+		if (slopeLB <= slopeLine && slopeLine < slopeTL)
+		{
+			opCount[ADD] += 1;
+			opCount[MINUS] += 1;
+			opCount[MULTIPLY] += 1;
+			p1.y = p1.y + slopeLine * (winMin.x - p1.x);
+			p1.x = winMin.x;
+
+			if (p2.y < winMin.y)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[DIVISION] += 1;
+				p2.y = winMin.y;
+				p2.x = p1.x + (winMin.y - p1.y) / slopeLine;
+			}
+			return true;
+		}
+		else
+		{
+			opCount[MINUS] += 2;
+			opCount[DIVISION] += 1;
+			slopeBR = (winMin.y - p1.y) / (winMax.x - p1.x);
+			if (slopeTL <= slopeLine && slopeLine < slopeBR)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[DIVISION] += 1;
+				p1.x = p1.x + (winMax.y - p1.y) / slopeLine;
+				p1.y = winMax.y;
+
+				if (p2.y < winMin.y)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p2.y = winMin.y;
+					p2.x = p1.x + (winMin.y - p1.y) / slopeLine;
+				}
+				return true;
+			}
+			else
+			{
+				opCount[MINUS] += 2;
+				opCount[DIVISION] += 1;
+				slopeTR = (winMax.y - p1.y) / (winMax.x - p1.x);
+				if (slopeBR <= slopeLine && slopeLine <= slopeTR)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p1.x = p1.x + (winMax.y - p1.y) / slopeLine;
+					p1.y = winMax.y;
+
+					if (p2.x > winMax.x)
+					{
+						opCount[ADD] += 1;
+						opCount[MINUS] += 1;
+						opCount[MULTIPLY] += 1;
+						p2.x = winMax.x;
+						p2.y = p1.y + slopeLine * (winMax.x - p1.x);
+					}
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool lineClipNLNStandardLeftT(Point winMin, Point winMax, Point& p1, Point& p2)
+{
+	opCount[MINUS] += 2;
+	float dy = p2.y - p1.y;
+	float dx = p2.x - p1.x;
+	float slopeLine = 0.f;
+	float slopeLB = 0.f;
+	float slopeBR = 0.f;
+	float slopeTR = 0.f;
+	float slopeTL = 0.f;
+
+	opCount[DIVISION] += 1;
+	slopeLine = dy / dx;
+
+	opCount[MINUS] += 2;
+	opCount[DIVISION] += 1;
+	slopeLB = (winMin.y - p1.y) / (winMin.x - p1.x);
+
+	if (slopeLine < slopeLB)
+	{
+		return false;
+	}
+	else
+	{
+		opCount[MINUS] += 2;
+		opCount[DIVISION] += 1;
+		slopeBR = (winMin.y - p1.y) / (winMax.x - p1.x);
+		if (slopeLB <= slopeLine && slopeLine < slopeBR)
+		{
+			opCount[ADD] += 1;
+			opCount[MINUS] += 1;
+			opCount[MULTIPLY] += 1;
+			p1.y = p1.y + slopeLine * (winMin.x - p1.x);
+			p1.x = winMin.x;
+
+			if (p2.y < winMin.y)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[DIVISION] += 1;
+				p2.y = winMin.y;
+				p2.x = p1.x + (winMin.y - p1.y) / slopeLine;
+			}
+			return true;
+		}
+		else
+		{
+			opCount[MINUS] += 2;
+			opCount[DIVISION] += 1;
+			slopeTL = (winMax.y - p1.y) / (winMin.x - p1.x);
+			if (slopeBR <= slopeLine && slopeLine < slopeTL)
+			{
+				opCount[ADD] += 1;
+				opCount[MINUS] += 1;
+				opCount[MULTIPLY] += 1;
+				p1.y = p1.y + slopeLine * (winMin.x - p1.x);
+				p1.x = winMin.x;
+
+				if (p2.x > winMax.x)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[MULTIPLY] += 1;
+					p2.x = winMax.x;
+					p2.y = p1.y + slopeLine * (winMax.x - p1.x);
+				}
+				return true;
+			}
+			else
+			{
+				opCount[MINUS] += 2;
+				opCount[DIVISION] += 1;
+				slopeTR = (winMax.y - p1.y) / (winMax.x - p1.x);
+				if (slopeTL <= slopeLine && slopeLine <= slopeTR)
+				{
+					opCount[ADD] += 1;
+					opCount[MINUS] += 1;
+					opCount[DIVISION] += 1;
+					p1.x = p1.x + (winMax.y - p1.y) / slopeLine;
+					p1.y = winMax.y;
+
+					if (p2.x > winMax.x)
+					{
+						opCount[ADD] += 1;
+						opCount[MINUS] += 1;
+						opCount[MULTIPLY] += 1;
+						p2.x = winMax.x;
+						p2.y = p1.y + slopeLine * (winMax.x - p1.x);
+					}
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool lineClipNLNStandard(Point winMin, Point winMax, Point& p1, Point& p2, GLint code1, GLint code2)
+{
+	if (inside(code1))
+	{
+		return lineClipNLNStandardInside(winMin, winMax, p1, p2);
+	}
+	else if (left(code1))
+	{
+		return lineClipNLNStandardLeft(winMin, winMax, p1, p2);
+	}
+	else if (leftTop(code1))
+	{
+		opCount[MINUS] += 2;
+		if (fabs(p1.y - winMax.y) > fabs(p1.x - winMin.x))
+			return lineClipNLNStandardLeftL(winMin, winMax, p1, p2);
+		else
+			return lineClipNLNStandardLeftT(winMin, winMax, p1, p2);
+	}
+	return false;
+}
+void lineClipNLN(Point winMin, Point winMax, Point p1, Point p2)
+{
+	opCount.clear();
+	opCountRotate.clear();
+	GLubyte code1 = encode(p1, winMin, winMax);
+	GLubyte code2 = encode(p2, winMin, winMax);
+	bool draw = false;
+	if (accept(code1, code2))
+	{
+		draw = true;
+	}
+	else if (reject(code1, code2))
+	{
+		draw = false;
+	}
+	else
+	{
+		float rotateAngle = 0;
+		if (inside(code1) || left(code1) || leftTop(code1))
+		{
+
+		}
+		else if (inside(code2) || left(code2) || leftTop(code2))
+		{
+			swapPts(p1, p2);
+			swapCodes(code1, code2);
+		}
+		else
+		{
+			if (top(code1) || rightTop(code1))
+			{
+				rotateAngle = 90;
+			}
+			else if (right(code1) || rightBottom(code1))
+			{
+				rotateAngle = 180;
+			}
+			else
+			{
+				rotateAngle = 270;
+			}
+			rorate(p1, p2, winMin, winMax, rotateAngle);
+			code1 = encode(p1, winMin, winMax);
+			code2 = encode(p2, winMin, winMax);
+		}
+		draw = lineClipNLNStandard(winMin, winMax, p1, p2, code1, code2);
+		if (rotateAngle > 0)
+		{
+			rorate(p1, p2, winMin, winMax, -rotateAngle);
+		}
+	}
+
+	if (draw)
+	{
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+	}
+	printf("NLN: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d TRIGONOMETRIC: %d\n", opCount[ADD] + opCountRotate[ADD], opCount[MINUS] + opCountRotate[MINUS], opCount[MULTIPLY] + opCountRotate[MULTIPLY], opCount[DIVISION] + opCountRotate[DIVISION], opCountRotate[TRIGONOMETRIC]);
+	printf("NLN standard: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	Point winMin = { 200, 220 }, winMax = { 520, 380 };
+
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	Point p1, p2;
+
+	p1 = { 106, 475 }, p2 = { 578, 120 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 79, 346 }, p2 = { 688, 256 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 401, 434 }, p2 = { 294, 260 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 561, 399 }, p2 = { 627, 191 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 134, 313 }, p2 = { 378, 174 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 55, 249 }, p2 = { 273, 122 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 139, 431 }, p2 = { 139, 134 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 253, 440 }, p2 = { 253, 186 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 424, 249 }, p2 = { 479, 328 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	printf("=================================================\n");
+	p1 = { 100, 240 }, p2 = { 400, 240 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth(winMin, winMax, p1, p2);
+	lineClipCohSuthOptimize(winMin, winMax, p1, p2);
+	lineClipLiangBarsk(winMin, winMax, p1, p2);
+	lineClipLiangBarskOptimize(winMin, winMax, p1, p2);
+	lineClipNLN(winMin, winMax, p1, p2);
+
+	glFlush();
+}
+void code_8_exercise_13()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -3895,6 +5045,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_12
 	code_8_exercise_12();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_13
+	code_8_exercise_13();
 #endif
 
 	glutMainLoop();
