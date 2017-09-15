@@ -5139,6 +5139,83 @@ void polygonClipLiangBarsk2(Point winMin, Point winMax, std::vector<Point>& poly
 	clipBoundary2(winMin, winMax, polygon, Boundary::Bottom);
 	clipBoundary2(winMin, winMax, polygon, Boundary::Top);
 }
+void clipBoundary3(Point winMin, Point winMax, std::vector<Point>& polygon, Boundary b)
+{
+	//auto temp = polygon;
+	//polygon.clear();
+	//for (int i = 0; i < temp.size(); i++)
+	//{
+	//	int next = i + 1 < temp.size() ? i + 1 : 0;
+	//	GLfloat u1 = 0.0, u2 = 1.0, dx = temp[next].x - temp[i].x, dy = temp[next].y - temp[i].y;
+	//	switch (b)
+	//	{
+	//	case Boundary::Left:
+	//		clipTest(-dx, temp[i].x - winMin.x, &u1, &u2);
+	//		break;
+	//	case Boundary::Right:
+	//		clipTest(dx, winMax.x - temp[i].x, &u1, &u2);
+	//		break;
+	//	case Boundary::Bottom:
+	//		clipTest(-dy, temp[i].y - winMin.y, &u1, &u2);
+	//		break;
+	//	case Boundary::Top:
+	//		clipTest(dy, winMax.y - temp[i].y, &u1, &u2);
+	//		break;
+	//	default:
+	//		break;
+	//	}
+
+	//	bool in1 = inside(temp[i], b, winMin, winMax);
+	//	bool in2 = inside(temp[next], b, winMin, winMax);
+	//	if ((in1 && in2) || (in1 && (!in2)))
+	//	{
+	//		polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
+	//	}
+	//	else if ((!in1) && in2)
+	//	{
+	//		polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
+	//		polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
+	//	}
+	//}
+
+	bool keep = false;
+	switch (b)
+	{
+	case Boundary::Left:
+		keep = clipTest(-dx, temp[i].x - winMin.x, &u1, &u2);
+		break;
+	case Boundary::Right:
+		keep = clipTest(dx, winMax.x - temp[i].x, &u1, &u2);
+		break;
+	case Boundary::Bottom:
+		keep = clipTest(-dy, temp[i].y - winMin.y, &u1, &u2);
+		break;
+	case Boundary::Top:
+		keep = clipTest(dy, winMax.y - temp[i].y, &u1, &u2);
+		break;
+	default:
+		break;
+	}
+	if (keep)
+	{
+		polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
+		polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
+	}
+}
+void polygonClipLiangBarsk3(Point winMin, Point winMax, std::vector<Point>& polygon)
+{
+	for (int i = 0; i < temp.size(); i++)
+	{
+		int next = i + 1 < temp.size() ? i + 1 : 0;
+
+		clipBoundary3(winMin, winMax, polygon, Boundary::Left);
+		clipBoundary3(winMin, winMax, polygon, Boundary::Right);
+		clipBoundary3(winMin, winMax, polygon, Boundary::Bottom);
+		clipBoundary3(winMin, winMax, polygon, Boundary::Top);
+	}
+
+	// ÑØ²Ã¼ô±ß´¦Àí
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -5154,11 +5231,12 @@ void drawFunc()
 	glVertex2f(winMin.x, winMax.y);
 	glEnd();
 
+	//std::vector<Point> polygon1 = { { 128, 418 },{ 263, 392 },{ 237, 346 } };
 	//std::vector<Point> polygon1 = { { 107, 424 },{ 562, 160 },{ 700, 362 },{ 191, 521 } };
 	std::vector<Point> polygon1 = { { 381, 87 },{ 368, 284 },{ 69, 229 },{ 171, 82 } };
 	glColor3f(1.0, 1.0, 1.0);
 	drawPolygon(polygon1);
-	polygonClipLiangBarsk2(winMin, winMax, polygon1);
+	polygonClipLiangBarsk1(winMin, winMax, polygon1);
 	glColor3f(1.0, 0.0, 0.0);
 	drawPolygon(polygon1);
 
