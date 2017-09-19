@@ -5139,7 +5139,7 @@ void polygonClipLiangBarsk2(Point winMin, Point winMax, std::vector<Point>& poly
 	clipBoundary2(winMin, winMax, polygon, Boundary::Bottom);
 	clipBoundary2(winMin, winMax, polygon, Boundary::Top);
 }
-enum BoundaryAntiClock
+enum class BoundaryAntiClock
 {
 	None, 
 	Left, 
@@ -5151,8 +5151,8 @@ struct Line
 {
 	Point begin;
 	Point end;
-	Boundary beginBoundary;
-	Boundary endBoundary;
+	BoundaryAntiClock beginBoundary;
+	BoundaryAntiClock endBoundary;
 };
 GLint clipTest3(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2, bool& u1Cliped, bool& u2Cliped)
 {
@@ -5188,8 +5188,18 @@ GLint clipTest3(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2, bool& u1Cliped, 
 
 	return (returnValue);
 }
+void setBoundaryPoint(Point winMin, Point winMax, std::map<BoundaryAntiClock, Point>& boundaryPoint)
+{
+	boundaryPoint[BoundaryAntiClock::Left] = winMin;
+	boundaryPoint[BoundaryAntiClock::Bottom] = { winMax.x, winMin.y };
+	boundaryPoint[BoundaryAntiClock::Right] = winMax;
+	boundaryPoint[BoundaryAntiClock::Top] = { winMin.x, winMax.y };
+}
 void polygonClipLiangBarsk3(Point winMin, Point winMax, std::vector<Point>& polygon)
 {
+	std::map<BoundaryAntiClock, Point> boundaryPoint;
+	setBoundaryPoint(winMin, winMax, boundaryPoint);
+
 	std::vector<Line> clipLines;
 	for (int i = 0; i < polygon.size(); i++)
 	{
@@ -5200,34 +5210,34 @@ void polygonClipLiangBarsk3(Point winMin, Point winMax, std::vector<Point>& poly
 		Line line;
 		line.begin = { polygon[i].x ,  polygon[i].y };
 		line.end = { polygon[next].x ,  polygon[next].y };
-		line.beginBoundary = Boundary::None;
-		line.endBoundary = Boundary::None;
+		line.beginBoundary = BoundaryAntiClock::None;
+		line.endBoundary = BoundaryAntiClock::None;
 		if (clipTest3(-dx, polygon[i].x - winMin.x, &u1, &u2, u1Cliped, u2Cliped))
 		{
 			if (u1Cliped)
-				line.beginBoundary = Boundary::Left;
+				line.beginBoundary = BoundaryAntiClock::Left;
 			if (u2Cliped)
-				line.endBoundary = Boundary::Left;
+				line.endBoundary = BoundaryAntiClock::Left;
 			if (clipTest3(dx, winMax.x - polygon[i].x, &u1, &u2, u1Cliped, u2Cliped))
 			{
 				if (u1Cliped)
-					line.beginBoundary = Boundary::Right;
+					line.beginBoundary = BoundaryAntiClock::Right;
 				if (u2Cliped)
-					line.endBoundary = Boundary::Right;
+					line.endBoundary = BoundaryAntiClock::Right;
 
 				dy = polygon[next].y - polygon[i].y;
 				if (clipTest3(-dy, polygon[i].y - winMin.y, &u1, &u2, u1Cliped, u2Cliped))
 				{
 					if (u1Cliped)
-						line.beginBoundary = Boundary::Bottom;
+						line.beginBoundary = BoundaryAntiClock::Bottom;
 					if (u2Cliped)
-						line.endBoundary = Boundary::Bottom;
+						line.endBoundary = BoundaryAntiClock::Bottom;
 					if (clipTest3(dy, winMax.y - polygon[i].y, &u1, &u2, u1Cliped, u2Cliped))
 					{
 						if (u1Cliped)
-							line.beginBoundary = Boundary::Top;
+							line.beginBoundary = BoundaryAntiClock::Top;
 						if (u2Cliped)
-							line.endBoundary = Boundary::Top;
+							line.endBoundary = BoundaryAntiClock::Top;
 						if (u2 < 1.0)
 						{
 							line.end = { line.begin.x + u2 * dx, line.begin.y + u2 * dy };
@@ -5250,7 +5260,15 @@ void polygonClipLiangBarsk3(Point winMin, Point winMax, std::vector<Point>& poly
 		int next = i + 1 < clipLines.size() ? i + 1 : 0;
 		if (clipLines[next].begin.x != clipLines[i].end.x || clipLines[next].begin.y != clipLines[i].end.y)
 		{
-			
+			BoundaryAntiClock curBoundary = clipLines[i].endBoundary;
+			while (curBoundary != clipLines[next].beginBoundary)
+			{
+				polygon.push_back(boundaryPoint[curBoundary]);
+				curBoundary = (BoundaryAntiClock)((int)curBoundary + 1);
+				if (curBoundary > BoundaryAntiClock::Top)
+					curBoundary = BoundaryAntiClock::Left;
+			}
+			polygon.push_back(clipLines[next].begin);
 		}
 	}
 }
@@ -5258,10 +5276,16 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	Point winMin = { 50, 220 }, winMax = { 200, 330 };
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 260, 0, winHeight);
+
+	// polygonClipLiangBarsk1 整体裁剪，每一边整体裁剪多边形，然后传到下一条边，参见P237
+	glViewport(0, 0, 260, winHeight);
+
 	glColor3f(1.0, 1.0, 1.0);
-
-	Point winMin = { 200, 200 }, winMax = { 600, 450 };
-
 	glBegin(GL_LINE_LOOP);
 	glVertex2f(winMin.x, winMin.y);
 	glVertex2f(winMax.x, winMin.y);
@@ -5269,14 +5293,45 @@ void drawFunc()
 	glVertex2f(winMin.x, winMax.y);
 	glEnd();
 
-	//std::vector<Point> polygon1 = { { 128, 418 },{ 263, 392 },{ 237, 346 } };
-	//std::vector<Point> polygon1 = { { 107, 424 },{ 562, 160 },{ 700, 362 },{ 191, 521 } };
-	std::vector<Point> polygon1 = { { 381, 87 },{ 368, 284 },{ 69, 229 },{ 171, 82 } };
-	glColor3f(1.0, 1.0, 1.0);
+	std::vector<Point> polygon1 = { { 118, 146 },{ 166, 300 },{ 12, 234 }};
 	drawPolygon(polygon1);
 	polygonClipLiangBarsk1(winMin, winMax, polygon1);
 	glColor3f(1.0, 0.0, 0.0);
 	drawPolygon(polygon1);
+
+	// polygonClipLiangBarsk2 整体裁剪，但使用与P238中不同的保留点规则
+	glViewport(260, 0, 260, winHeight);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	std::vector<Point> polygon2 = { { 130, 182 },{ 234, 277 },{ 117, 364 } };
+	drawPolygon(polygon2);
+	polygonClipLiangBarsk2(winMin, winMax, polygon2);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(polygon2);
+
+	// polygonClipLiangBarsk3 并行裁剪，多边形每条边都进行单独裁剪，最后按照裁剪边界添加角点
+	glViewport(520, 0, 260, winHeight);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	std::vector<Point> polygon3 = { { 92, 183 },{ 189, 235 },{ 242, 348 },{ 92, 359 } };
+	drawPolygon(polygon3);
+	polygonClipLiangBarsk3(winMin, winMax, polygon3);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(polygon3);
 
 	glFlush();
 }
