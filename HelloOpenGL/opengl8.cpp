@@ -5738,6 +5738,430 @@ void code_8_exercise_15()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_16
+class Point
+{
+public:
+	GLfloat x, y;
+};
+enum class PointType
+{
+	Polygon, // 多边形点
+	Window,	 // 裁剪窗口点
+	CrossIn, // 裁剪窗口进交点
+	CrossOut, //裁剪窗口出交点
+};
+struct PointInfo
+{
+	Point* point;
+	PointType type;
+};
+struct CrossPointInfo
+{
+	float u1 = 0.0f;	// 多边形边	直线参数方程u
+	float u2 = 0.0f;	// 裁剪窗口边 直线参数方程u
+	PointInfo pInfo;
+};
+struct Line
+{
+	Point* begin;
+	Point* end;
+	std::vector<CrossPointInfo> crossPoints;
+};
+struct Point2Index
+{
+	Point* point;
+	int idx1;	// 多边形顶点 数组索引
+	int idx2;   // 裁剪窗口顶点 数组索引
+};
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void drawPolygon(const vector<Point>& polygon)
+{
+	glBegin(GL_POLYGON);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+GLint inside(Point p, Boundary b, Point wMin, Point wMax)
+{
+	switch (b)
+	{
+	case Left:
+		if (p.x < wMin.x)
+			return (false);
+		break;
+	case Right:
+		if (p.x > wMax.x)
+			return (false);
+		break;
+	case Bottom:
+		if (p.y < wMin.y)
+			return (false);
+		break;
+	case Top:
+		if (p.y > wMax.y)
+			return (false);
+		break;
+	}
+	return (true);
+}
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+void clipBoundary1(Point winMin, Point winMax, std::vector<Point>& polygon, Boundary b)
+{
+	auto temp = polygon;
+	polygon.clear();
+	for (int i = 0; i < temp.size(); i++)
+	{
+		int next = i + 1 < temp.size() ? i + 1 : 0;
+		GLfloat u1 = 0.0, u2 = 1.0, dx = temp[next].x - temp[i].x, dy = temp[next].y - temp[i].y;
+		switch (b)
+		{
+		case Boundary::Left:
+			clipTest(-dx, temp[i].x - winMin.x, &u1, &u2);
+			break;
+		case Boundary::Right:
+			clipTest(dx, winMax.x - temp[i].x, &u1, &u2);
+			break;
+		case Boundary::Bottom:
+			clipTest(-dy, temp[i].y - winMin.y, &u1, &u2);
+			break;
+		case Boundary::Top:
+			clipTest(dy, winMax.y - temp[i].y, &u1, &u2);
+			break;
+		default:
+			break;
+		}
+
+		bool in1 = inside(temp[i], b, winMin, winMax);
+		bool in2 = inside(temp[next], b, winMin, winMax);
+		if ((in1 && in2) || (in1 && (!in2)))
+		{
+			polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
+		}
+		else if ((!in1) && in2)
+		{
+			polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
+			polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
+		}
+	}
+}
+void polygonClipLiangBarsk1(Point winMin, Point winMax, std::vector<Point>& polygon)
+{
+	clipBoundary1(winMin, winMax, polygon, Boundary::Left);
+	clipBoundary1(winMin, winMax, polygon, Boundary::Right);
+	clipBoundary1(winMin, winMax, polygon, Boundary::Bottom);
+	clipBoundary1(winMin, winMax, polygon, Boundary::Top);
+}
+void clipBoundary2(Point winMin, Point winMax, std::vector<Point>& polygon, Boundary b)
+{
+	auto temp = polygon;
+	polygon.clear();
+	for (int i = 0; i < temp.size(); i++)
+	{
+		int next = i + 1 < temp.size() ? i + 1 : 0;
+		GLfloat u1 = 0.0, u2 = 1.0, dx = temp[next].x - temp[i].x, dy = temp[next].y - temp[i].y;
+		switch (b)
+		{
+		case Boundary::Left:
+			clipTest(-dx, temp[i].x - winMin.x, &u1, &u2);
+			break;
+		case Boundary::Right:
+			clipTest(dx, winMax.x - temp[i].x, &u1, &u2);
+			break;
+		case Boundary::Bottom:
+			clipTest(-dy, temp[i].y - winMin.y, &u1, &u2);
+			break;
+		case Boundary::Top:
+			clipTest(dy, winMax.y - temp[i].y, &u1, &u2);
+			break;
+		default:
+			break;
+		}
+
+		bool in1 = inside(temp[i], b, winMin, winMax);
+		bool in2 = inside(temp[next], b, winMin, winMax);
+		if ((in1 && in2) || ((!in1) && in2))
+		{
+			polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
+		}
+		else if (in1 && (!in2))
+		{
+			polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
+			polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
+		}
+	}
+}
+void polygonClipLiangBarsk2(Point winMin, Point winMax, std::vector<Point>& polygon)
+{
+	clipBoundary2(winMin, winMax, polygon, Boundary::Left);
+	clipBoundary2(winMin, winMax, polygon, Boundary::Right);
+	clipBoundary2(winMin, winMax, polygon, Boundary::Bottom);
+	clipBoundary2(winMin, winMax, polygon, Boundary::Top);
+}
+enum class BoundaryAntiClock
+{
+	None,
+	Left,
+	Bottom,
+	Right,
+	Top
+};
+struct Line
+{
+	Point begin;
+	Point end;
+	BoundaryAntiClock beginBoundary;
+	BoundaryAntiClock endBoundary;
+};
+GLint clipTest3(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2, bool& u1Cliped, bool& u2Cliped)
+{
+	GLfloat r;
+	GLint returnValue = true;
+	u1Cliped = false;
+	u2Cliped = false;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+		{
+			*u1 = r;
+			u1Cliped = true;
+		}
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+		{
+			*u2 = r;
+			u2Cliped = true;
+		}
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+void setBoundaryPoint(Point winMin, Point winMax, std::map<BoundaryAntiClock, Point>& boundaryPoint)
+{
+	boundaryPoint[BoundaryAntiClock::Left] = winMin;
+	boundaryPoint[BoundaryAntiClock::Bottom] = { winMax.x, winMin.y };
+	boundaryPoint[BoundaryAntiClock::Right] = winMax;
+	boundaryPoint[BoundaryAntiClock::Top] = { winMin.x, winMax.y };
+}
+void polygonClipLiangBarsk3(Point winMin, Point winMax, std::vector<Point>& polygon)
+{
+	std::map<BoundaryAntiClock, Point> boundaryPoint;
+	setBoundaryPoint(winMin, winMax, boundaryPoint);
+
+	std::vector<Line> clipLines;
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+
+		GLfloat u1 = 0.0, u2 = 1.0, dx = polygon[next].x - polygon[i].x, dy;
+		bool u1Cliped = false, u2Cliped = false;
+		Line line;
+		line.begin = { polygon[i].x ,  polygon[i].y };
+		line.end = { polygon[next].x ,  polygon[next].y };
+		line.beginBoundary = BoundaryAntiClock::None;
+		line.endBoundary = BoundaryAntiClock::None;
+		if (clipTest3(-dx, polygon[i].x - winMin.x, &u1, &u2, u1Cliped, u2Cliped))
+		{
+			if (u1Cliped)
+				line.beginBoundary = BoundaryAntiClock::Left;
+			if (u2Cliped)
+				line.endBoundary = BoundaryAntiClock::Left;
+			if (clipTest3(dx, winMax.x - polygon[i].x, &u1, &u2, u1Cliped, u2Cliped))
+			{
+				if (u1Cliped)
+					line.beginBoundary = BoundaryAntiClock::Right;
+				if (u2Cliped)
+					line.endBoundary = BoundaryAntiClock::Right;
+
+				dy = polygon[next].y - polygon[i].y;
+				if (clipTest3(-dy, polygon[i].y - winMin.y, &u1, &u2, u1Cliped, u2Cliped))
+				{
+					if (u1Cliped)
+						line.beginBoundary = BoundaryAntiClock::Bottom;
+					if (u2Cliped)
+						line.endBoundary = BoundaryAntiClock::Bottom;
+					if (clipTest3(dy, winMax.y - polygon[i].y, &u1, &u2, u1Cliped, u2Cliped))
+					{
+						if (u1Cliped)
+							line.beginBoundary = BoundaryAntiClock::Top;
+						if (u2Cliped)
+							line.endBoundary = BoundaryAntiClock::Top;
+						if (u2 < 1.0)
+						{
+							line.end = { line.begin.x + u2 * dx, line.begin.y + u2 * dy };
+						}
+						if (u1 > 0.0)
+						{
+							line.begin = { line.begin.x + u1 * dx, line.begin.y + u1 * dy };
+						}
+						clipLines.push_back(line);
+					}
+				}
+			}
+		}
+	}
+
+	polygon.clear();
+	for (int i = 0; i < clipLines.size(); i++)
+	{
+		polygon.push_back(clipLines[i].end);
+		int next = i + 1 < clipLines.size() ? i + 1 : 0;
+		if (clipLines[next].begin.x != clipLines[i].end.x || clipLines[next].begin.y != clipLines[i].end.y)
+		{
+			BoundaryAntiClock curBoundary = clipLines[i].endBoundary;
+			while (curBoundary != clipLines[next].beginBoundary)
+			{
+				polygon.push_back(boundaryPoint[curBoundary]);
+				curBoundary = (BoundaryAntiClock)((int)curBoundary + 1);
+				if (curBoundary > BoundaryAntiClock::Top)
+					curBoundary = BoundaryAntiClock::Left;
+			}
+			polygon.push_back(clipLines[next].begin);
+		}
+	}
+}
+Point speed = { 12, -8 };
+int lastTick = 0;
+float delta = 0.f;
+float curTime = 0;
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	Point winMin = { 55, 250 }, winMax = { 205, 350 };
+	curTime += delta;
+	std::vector<Point> polygon = { { 15, 354 },{ 40, 354 },{ 50, 371 },{ 40, 393 },{ 15, 393 },{ 7, 371 } };
+	std::vector<Point> curPolygon;
+	for (auto & p : polygon)
+	{
+		curPolygon.push_back({ p.x + speed.x * curTime, p.y + speed.y * curTime });
+	}
+
+	if (curPolygon[5].x > winMax.x)
+	{
+		curTime = 0;
+		curPolygon = polygon;
+	}
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 260, 0, winHeight);
+
+	// polygonClipLiangBarsk1 整体裁剪，每一边整体裁剪多边形，然后传到下一条边，参见P237
+	auto polygon1 = curPolygon;
+	glViewport(0, 0, 260, winHeight);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	drawPolygon(polygon1);
+	polygonClipLiangBarsk1(winMin, winMax, polygon1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(polygon1);
+
+	// polygonClipLiangBarsk2 整体裁剪，但使用与P238中不同的保留点规则
+	auto polygon2 = curPolygon;
+	glViewport(260, 0, 260, winHeight);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	drawPolygon(polygon2);
+	polygonClipLiangBarsk2(winMin, winMax, polygon2);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(polygon2);
+
+	// polygonClipLiangBarsk3 并行裁剪，多边形每条边都进行单独裁剪，最后按照裁剪边界添加角点
+	auto polygon3 = curPolygon;
+	glViewport(520, 0, 260, winHeight);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(winMin.x, winMin.y);
+	glVertex2f(winMax.x, winMin.y);
+	glVertex2f(winMax.x, winMax.y);
+	glVertex2f(winMin.x, winMax.y);
+	glEnd();
+
+	drawPolygon(polygon3);
+	polygonClipLiangBarsk3(winMin, winMax, polygon3);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(polygon3);
+
+	glFlush();
+}
+void onTimer(int id)
+{
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+void code_8_exercise_16()
+{
+	glutDisplayFunc(drawFunc);
+	lastTick = GetTickCount();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
@@ -5825,6 +6249,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_15
 	code_8_exercise_15();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_16
+	code_8_exercise_16();
 #endif
 
 	glutMainLoop();
