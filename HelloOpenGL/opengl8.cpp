@@ -5746,21 +5746,17 @@ public:
 };
 enum class PointType
 {
+	None,    // 无类型
 	Polygon, // 多边形点
-	Window,	 // 裁剪窗口点
+	ClipWindow,	 // 裁剪窗口点
 	CrossIn, // 裁剪窗口进交点
 	CrossOut, //裁剪窗口出交点
 };
-struct PointInfo
-{
-	Point* point;
-	PointType type;
-};
 struct CrossPointInfo
 {
-	float u1 = 0.0f;	// 多边形边	直线参数方程u
-	float u2 = 0.0f;	// 裁剪窗口边 直线参数方程u
-	PointInfo pInfo;
+	float u1 = 0.0f;	// 裁剪窗口边 直线参数方程u
+	float u2 = 0.0f;	// 多边形边	直线参数方程u
+	Point* point;       // 交点
 };
 struct Line
 {
@@ -5768,11 +5764,14 @@ struct Line
 	Point* end;
 	std::vector<CrossPointInfo> crossPoints;
 };
-struct Point2Index
+struct PointInfo
 {
-	Point* point;
-	int idx1;	// 多边形顶点 数组索引
-	int idx2;   // 裁剪窗口顶点 数组索引
+	PointType type; // 类型
+	int idx1;   // 裁剪窗口顶点 数组索引
+	int idx2;	// 多边形顶点 数组索引
+	bool dealed; // 是否已处理
+
+	PointInfo::PointInfo() : type(PointType::None), idx1(-1), idx2(-1), dealed(false) {}
 };
 inline GLint Round(const GLfloat a)
 {
@@ -5793,279 +5792,124 @@ void lineBres(float x0, float y0, float xEnd, float yEnd)
 	glEnd();
 	return;
 }
-GLint inside(Point p, Boundary b, Point wMin, Point wMax)
+void calcLines(std::vector<Point>& points, std::vector<Line>& lines)
 {
-	switch (b)
+	for (int i = 0; i < points.size(); i++)
 	{
-	case Left:
-		if (p.x < wMin.x)
-			return (false);
-		break;
-	case Right:
-		if (p.x > wMax.x)
-			return (false);
-		break;
-	case Bottom:
-		if (p.y < wMin.y)
-			return (false);
-		break;
-	case Top:
-		if (p.y > wMax.y)
-			return (false);
-		break;
-	}
-	return (true);
-}
-GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
-{
-	GLfloat r;
-	GLint returnValue = true;
-
-	if (p < 0.0)
-	{
-		r = q / p;
-		if (r > *u2)
-			returnValue = false;
-		else if (r > *u1)
-			*u1 = r;
-	}
-	else if (p > 0.0)
-	{
-		r = q / p;
-		if (r < *u1)
-			returnValue = false;
-		else if (r < *u2)
-			*u2 = r;
-	}
-	else if (q < 0.0)
-		returnValue = false;
-
-	return (returnValue);
-}
-void clipBoundary1(Point winMin, Point winMax, std::vector<Point>& polygon, Boundary b)
-{
-	auto temp = polygon;
-	polygon.clear();
-	for (int i = 0; i < temp.size(); i++)
-	{
-		int next = i + 1 < temp.size() ? i + 1 : 0;
-		GLfloat u1 = 0.0, u2 = 1.0, dx = temp[next].x - temp[i].x, dy = temp[next].y - temp[i].y;
-		switch (b)
-		{
-		case Boundary::Left:
-			clipTest(-dx, temp[i].x - winMin.x, &u1, &u2);
-			break;
-		case Boundary::Right:
-			clipTest(dx, winMax.x - temp[i].x, &u1, &u2);
-			break;
-		case Boundary::Bottom:
-			clipTest(-dy, temp[i].y - winMin.y, &u1, &u2);
-			break;
-		case Boundary::Top:
-			clipTest(dy, winMax.y - temp[i].y, &u1, &u2);
-			break;
-		default:
-			break;
-		}
-
-		bool in1 = inside(temp[i], b, winMin, winMax);
-		bool in2 = inside(temp[next], b, winMin, winMax);
-		if ((in1 && in2) || (in1 && (!in2)))
-		{
-			polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
-		}
-		else if ((!in1) && in2)
-		{
-			polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
-			polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
-		}
+		int next = i + 1 < points.size() ? i + 1 : 0;
+		lines.push_back(Line());
+		lines.back().begin = new Point{points[i]};
+		lines.back().end = new Point{ points[next] };
+		lines.back().crossPoints.clear();
 	}
 }
-void polygonClipLiangBarsk1(Point winMin, Point winMax, std::vector<Point>& polygon)
+bool calcCrossPoint(Line& clipWindowLine, Line& polygonLine, CrossPointInfo& crossPointInfo, std::map<Point*, PointInfo>& pointInfo)
 {
-	clipBoundary1(winMin, winMax, polygon, Boundary::Left);
-	clipBoundary1(winMin, winMax, polygon, Boundary::Right);
-	clipBoundary1(winMin, winMax, polygon, Boundary::Bottom);
-	clipBoundary1(winMin, winMax, polygon, Boundary::Top);
-}
-void clipBoundary2(Point winMin, Point winMax, std::vector<Point>& polygon, Boundary b)
-{
-	auto temp = polygon;
-	polygon.clear();
-	for (int i = 0; i < temp.size(); i++)
-	{
-		int next = i + 1 < temp.size() ? i + 1 : 0;
-		GLfloat u1 = 0.0, u2 = 1.0, dx = temp[next].x - temp[i].x, dy = temp[next].y - temp[i].y;
-		switch (b)
-		{
-		case Boundary::Left:
-			clipTest(-dx, temp[i].x - winMin.x, &u1, &u2);
-			break;
-		case Boundary::Right:
-			clipTest(dx, winMax.x - temp[i].x, &u1, &u2);
-			break;
-		case Boundary::Bottom:
-			clipTest(-dy, temp[i].y - winMin.y, &u1, &u2);
-			break;
-		case Boundary::Top:
-			clipTest(dy, winMax.y - temp[i].y, &u1, &u2);
-			break;
-		default:
-			break;
-		}
+	float dx1 = clipWindowLine.end->x - clipWindowLine.begin->x;
+	float dy1 = clipWindowLine.end->y - clipWindowLine.begin->y;
+	float dx2 = polygonLine.end->x - polygonLine.begin->x;
+	float dy2 = polygonLine.end->y - polygonLine.begin->y;
 
-		bool in1 = inside(temp[i], b, winMin, winMax);
-		bool in2 = inside(temp[next], b, winMin, winMax);
-		if ((in1 && in2) || ((!in1) && in2))
-		{
-			polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
-		}
-		else if (in1 && (!in2))
-		{
-			polygon.push_back({ temp[i].x + u1 * dx, temp[i].y + u1 * dy });
-			polygon.push_back({ temp[i].x + u2 * dx, temp[i].y + u2 * dy });
-		}
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (dy1 / dx1 == dy2 / dx2)
+		return false;
+
+	float x01 = clipWindowLine.begin->x;
+	float y01 = clipWindowLine.begin->y;
+	float x02 = polygonLine.begin->x;
+	float y02 = polygonLine.begin->y;
+	float u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	float u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
+		return false;
+
+	crossPointInfo.u1 = u1;
+	crossPointInfo.u2 = u2;
+	crossPointInfo.point = new Point{ x01 + u1 * dx1, y01 + u1 * dy1 };
+	if (dx1 * dy2 - dy1 * dx2)
+	{
+		pointInfo[crossPointInfo.point].type = PointType::CrossIn;
 	}
-}
-void polygonClipLiangBarsk2(Point winMin, Point winMax, std::vector<Point>& polygon)
-{
-	clipBoundary2(winMin, winMax, polygon, Boundary::Left);
-	clipBoundary2(winMin, winMax, polygon, Boundary::Right);
-	clipBoundary2(winMin, winMax, polygon, Boundary::Bottom);
-	clipBoundary2(winMin, winMax, polygon, Boundary::Top);
-}
-enum class BoundaryAntiClock
-{
-	None,
-	Left,
-	Bottom,
-	Right,
-	Top
-};
-struct Line
-{
-	Point begin;
-	Point end;
-	BoundaryAntiClock beginBoundary;
-	BoundaryAntiClock endBoundary;
-};
-GLint clipTest3(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2, bool& u1Cliped, bool& u2Cliped)
-{
-	GLfloat r;
-	GLint returnValue = true;
-	u1Cliped = false;
-	u2Cliped = false;
-
-	if (p < 0.0)
+	else
 	{
-		r = q / p;
-		if (r > *u2)
-			returnValue = false;
-		else if (r > *u1)
-		{
-			*u1 = r;
-			u1Cliped = true;
-		}
+		pointInfo[crossPointInfo.point].type = PointType::CrossOut;
 	}
-	else if (p > 0.0)
-	{
-		r = q / p;
-		if (r < *u1)
-			returnValue = false;
-		else if (r < *u2)
-		{
-			*u2 = r;
-			u2Cliped = true;
-		}
-	}
-	else if (q < 0.0)
-		returnValue = false;
-
-	return (returnValue);
+	return true;
 }
-void setBoundaryPoint(Point winMin, Point winMax, std::map<BoundaryAntiClock, Point>& boundaryPoint)
+void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<Point*>& clipWindowPoints, std::vector<Point*>& polygonPoints, std::map<Point*, PointInfo>& pointInfo)
 {
-	boundaryPoint[BoundaryAntiClock::Left] = winMin;
-	boundaryPoint[BoundaryAntiClock::Bottom] = { winMax.x, winMin.y };
-	boundaryPoint[BoundaryAntiClock::Right] = winMax;
-	boundaryPoint[BoundaryAntiClock::Top] = { winMin.x, winMax.y };
-}
-void polygonClipLiangBarsk3(Point winMin, Point winMax, std::vector<Point>& polygon)
-{
-	std::map<BoundaryAntiClock, Point> boundaryPoint;
-	setBoundaryPoint(winMin, winMax, boundaryPoint);
+	std::vector<Line> clipWindowLines;
+	std::vector<Line> polygonLines;
+	calcLines(clipWindow, clipWindowLines);
+	calcLines(polygon, polygonLines);
 
-	std::vector<Line> clipLines;
-	for (int i = 0; i < polygon.size(); i++)
+	CrossPointInfo crossPointInfo;
+	for (int i = 0; i < clipWindowLines.size(); i++)
 	{
-		int next = i + 1 < polygon.size() ? i + 1 : 0;
-
-		GLfloat u1 = 0.0, u2 = 1.0, dx = polygon[next].x - polygon[i].x, dy;
-		bool u1Cliped = false, u2Cliped = false;
-		Line line;
-		line.begin = { polygon[i].x ,  polygon[i].y };
-		line.end = { polygon[next].x ,  polygon[next].y };
-		line.beginBoundary = BoundaryAntiClock::None;
-		line.endBoundary = BoundaryAntiClock::None;
-		if (clipTest3(-dx, polygon[i].x - winMin.x, &u1, &u2, u1Cliped, u2Cliped))
+		for (int j = 0; j < polygonLines.size(); j++)
 		{
-			if (u1Cliped)
-				line.beginBoundary = BoundaryAntiClock::Left;
-			if (u2Cliped)
-				line.endBoundary = BoundaryAntiClock::Left;
-			if (clipTest3(dx, winMax.x - polygon[i].x, &u1, &u2, u1Cliped, u2Cliped))
+			if (calcCrossPoint(clipWindowLines[i], polygonLines[j], crossPointInfo, pointInfo))
 			{
-				if (u1Cliped)
-					line.beginBoundary = BoundaryAntiClock::Right;
-				if (u2Cliped)
-					line.endBoundary = BoundaryAntiClock::Right;
-
-				dy = polygon[next].y - polygon[i].y;
-				if (clipTest3(-dy, polygon[i].y - winMin.y, &u1, &u2, u1Cliped, u2Cliped))
-				{
-					if (u1Cliped)
-						line.beginBoundary = BoundaryAntiClock::Bottom;
-					if (u2Cliped)
-						line.endBoundary = BoundaryAntiClock::Bottom;
-					if (clipTest3(dy, winMax.y - polygon[i].y, &u1, &u2, u1Cliped, u2Cliped))
-					{
-						if (u1Cliped)
-							line.beginBoundary = BoundaryAntiClock::Top;
-						if (u2Cliped)
-							line.endBoundary = BoundaryAntiClock::Top;
-						if (u2 < 1.0)
-						{
-							line.end = { line.begin.x + u2 * dx, line.begin.y + u2 * dy };
-						}
-						if (u1 > 0.0)
-						{
-							line.begin = { line.begin.x + u1 * dx, line.begin.y + u1 * dy };
-						}
-						clipLines.push_back(line);
-					}
-				}
+				clipWindowLines[i].crossPoints.push_back(crossPointInfo);
+				polygonLines[j].crossPoints.push_back(crossPointInfo);
 			}
 		}
 	}
-
-	polygon.clear();
-	for (int i = 0; i < clipLines.size(); i++)
+	for (auto l : clipWindowLines)
 	{
-		polygon.push_back(clipLines[i].end);
-		int next = i + 1 < clipLines.size() ? i + 1 : 0;
-		if (clipLines[next].begin.x != clipLines[i].end.x || clipLines[next].begin.y != clipLines[i].end.y)
+		clipWindowPoints.push_back(l.begin);
+		pointInfo[clipWindowPoints.back()].type = PointType::ClipWindow;
+		pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
+
+		if (l.crossPoints.size() > 1)
 		{
-			BoundaryAntiClock curBoundary = clipLines[i].endBoundary;
-			while (curBoundary != clipLines[next].beginBoundary)
+			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
 			{
-				polygon.push_back(boundaryPoint[curBoundary]);
-				curBoundary = (BoundaryAntiClock)((int)curBoundary + 1);
-				if (curBoundary > BoundaryAntiClock::Top)
-					curBoundary = BoundaryAntiClock::Left;
-			}
-			polygon.push_back(clipLines[next].begin);
+				return a.u1 < b.u1;
+			});
+		}
+		for (auto& cp : l.crossPoints)
+		{
+			clipWindowPoints.push_back(cp.point);
+			pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
 		}
 	}
+	for (auto l : polygonLines)
+	{
+		polygonPoints.push_back(l.begin);
+		pointInfo[polygonPoints.back()].type = PointType::Polygon;
+		pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+
+		if (l.crossPoints.size() > 1)
+		{
+			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+			{
+				return a.u2 < b.u2;
+			});
+		}
+		for (auto& cp : l.crossPoints)
+		{
+			polygonPoints.push_back(cp.point);
+			pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+		}
+	}
+}
+void walkPolygon(std::vector<Point*> polygonPoints, int idx, bool record, std::map<Point*, PointInfo>& pointInfo)
+{
+	auto p = polygonPoints[idx];
+	assert(pointInfo.find(p) != pointInfo.end());
+	pointInfo[p].
+}
+void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	std::vector<Point*> clipWindowPoints;
+	std::vector<Point*> polygonPoints;
+	std::map<Point*, PointInfo> pointInfo;
+	calcPointInfo(clipWindow, polygon, clipWindowPoints, polygonPoints, pointInfo);
+
+
 }
 Point speed = { 12, -8 };
 int lastTick = 0;
