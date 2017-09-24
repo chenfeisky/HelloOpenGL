@@ -5784,6 +5784,13 @@ void drawPolygon(const vector<Point>& polygon)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
 void lineBres(float x0, float y0, float xEnd, float yEnd)
 {
 	glBegin(GL_LINES);
@@ -5828,7 +5835,7 @@ bool calcCrossPoint(Line& clipWindowLine, Line& polygonLine, CrossPointInfo& cro
 	crossPointInfo.u1 = u1;
 	crossPointInfo.u2 = u2;
 	crossPointInfo.point = new Point{ x01 + u1 * dx1, y01 + u1 * dy1 };
-	if (dx1 * dy2 - dy1 * dx2)
+	if (dx1 * dy2 - dy1 * dx2 > 0)
 	{
 		pointInfo[crossPointInfo.point].type = PointType::CrossIn;
 	}
@@ -5896,11 +5903,68 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 		}
 	}
 }
-void walkPolygon(std::vector<Point*> polygonPoints, int idx, bool record, std::map<Point*, PointInfo>& pointInfo)
+bool dealPoint(Point* point, bool record, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
 {
+	assert(pointInfo.find(point) != pointInfo.end());
+	if (pointInfo[point].dealed)
+		return false;
+
+	pointInfo[point].dealed = true;
+
+	if(record)
+		reslutPolygon.back().push_back(*point);
+
+	return true;
+}
+void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon);
+void walkPolygon(std::vector<Point*> polygonPoints, int idx, bool record, std::vector<Point*> clipWindowPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon, bool skipCurPoint = false)
+{
+	if (!skipCurPoint && !dealPoint(polygonPoints[idx], record, pointInfo, reslutPolygon))
+	{
+		if (!reslutPolygon.back().empty())
+			reslutPolygon.push_back(std::vector<Point>());
+		return;
+	}
+
+	idx = idx + 1 >= polygonPoints.size() ? 0 : idx + 1;
+
 	auto p = polygonPoints[idx];
 	assert(pointInfo.find(p) != pointInfo.end());
-	pointInfo[p].
+	if (pointInfo[p].type == PointType::CrossIn)
+	{
+		walkPolygon(polygonPoints, idx, true, clipWindowPoints, pointInfo, reslutPolygon);
+	}		
+	else if (pointInfo[p].type == PointType::CrossOut)
+	{
+		walkClipWindow(clipWindowPoints, pointInfo[p].idx1, polygonPoints, pointInfo, reslutPolygon);
+		walkPolygon(polygonPoints, idx, false, clipWindowPoints, pointInfo, reslutPolygon, true);
+	}
+	else if (pointInfo[p].type == PointType::Polygon)
+	{
+		walkPolygon(polygonPoints, idx, record, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+}
+void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	if (!dealPoint(clipWindowPoints[idx], true, pointInfo, reslutPolygon))
+	{
+		if (!reslutPolygon.back().empty())
+			reslutPolygon.push_back(std::vector<Point>());
+		return;
+	}
+
+	idx = idx + 1 >= clipWindowPoints.size() ? 0 : idx + 1;
+
+	auto p = clipWindowPoints[idx];
+	assert(pointInfo.find(p) != pointInfo.end());
+	if (pointInfo[p].type == PointType::CrossIn)
+	{
+		walkPolygon(polygonPoints, pointInfo[p].idx2, true, clipWindowPoints, pointInfo, reslutPolygon);
+	}		
+	else if (pointInfo[p].type == PointType::ClipWindow)
+	{
+		walkClipWindow(clipWindowPoints, idx, polygonPoints, pointInfo, reslutPolygon);
+	}
 }
 void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<std::vector<Point>>& reslutPolygon)
 {
@@ -5908,102 +5972,48 @@ void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point
 	std::vector<Point*> polygonPoints;
 	std::map<Point*, PointInfo> pointInfo;
 	calcPointInfo(clipWindow, polygon, clipWindowPoints, polygonPoints, pointInfo);
-
-
+	bool firstPointRecord = false;
+	// 找到第一个点是否为内点 
+	for (auto & p : polygonPoints)
+	{
+		assert(pointInfo.find(p) != pointInfo.end());
+		if (pointInfo[p].type != PointType::Polygon)
+		{
+			if(pointInfo[p].type == PointType::CrossOut)
+				firstPointRecord = true;
+			break;
+		}
+	}
+	reslutPolygon.clear();
+	reslutPolygon.push_back(std::vector<Point>());
+	walkPolygon(polygonPoints, 0, firstPointRecord, clipWindowPoints, pointInfo, reslutPolygon);
+	if (reslutPolygon.back().empty())
+		reslutPolygon.erase(reslutPolygon.end() - 1);
 }
-Point speed = { 12, -8 };
-int lastTick = 0;
-float delta = 0.f;
-float curTime = 0;
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	Point winMin = { 55, 250 }, winMax = { 205, 350 };
-	curTime += delta;
-	std::vector<Point> polygon = { { 15, 354 },{ 40, 354 },{ 50, 371 },{ 40, 393 },{ 15, 393 },{ 7, 371 } };
-	std::vector<Point> curPolygon;
-	for (auto & p : polygon)
+	std::vector<Point> polygon = { { 359, 403 },{ 300, 522 },{ 48, 414 },{ 135, 194 },{ 265, 270 },{ 146, 328 } };
+	std::vector<Point> clipWindow = { { 200, 150 },{ 400, 150 },{ 400, 450 },{ 200, 450 }};
+
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+
+	drawPolygon(polygon);
+	std::vector <std::vector<Point>> polygons;
+	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
+	glColor3f(1.0, 0.0, 0.0);
+	for (auto po : polygons)
 	{
-		curPolygon.push_back({ p.x + speed.x * curTime, p.y + speed.y * curTime });
+		drawPolygon(po);
 	}
-
-	if (curPolygon[5].x > winMax.x)
-	{
-		curTime = 0;
-		curPolygon = polygon;
-	}
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0, 260, 0, winHeight);
-
-	// polygonClipLiangBarsk1 整体裁剪，每一边整体裁剪多边形，然后传到下一条边，参见P237
-	auto polygon1 = curPolygon;
-	glViewport(0, 0, 260, winHeight);
-
-	glColor3f(1.0, 1.0, 1.0);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(winMin.x, winMin.y);
-	glVertex2f(winMax.x, winMin.y);
-	glVertex2f(winMax.x, winMax.y);
-	glVertex2f(winMin.x, winMax.y);
-	glEnd();
-
-	drawPolygon(polygon1);
-	polygonClipLiangBarsk1(winMin, winMax, polygon1);
-	glColor3f(1.0, 0.0, 0.0);
-	drawPolygon(polygon1);
-
-	// polygonClipLiangBarsk2 整体裁剪，但使用与P238中不同的保留点规则
-	auto polygon2 = curPolygon;
-	glViewport(260, 0, 260, winHeight);
-
-	glColor3f(1.0, 1.0, 1.0);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(winMin.x, winMin.y);
-	glVertex2f(winMax.x, winMin.y);
-	glVertex2f(winMax.x, winMax.y);
-	glVertex2f(winMin.x, winMax.y);
-	glEnd();
-
-	drawPolygon(polygon2);
-	polygonClipLiangBarsk2(winMin, winMax, polygon2);
-	glColor3f(1.0, 0.0, 0.0);
-	drawPolygon(polygon2);
-
-	// polygonClipLiangBarsk3 并行裁剪，多边形每条边都进行单独裁剪，最后按照裁剪边界添加角点
-	auto polygon3 = curPolygon;
-	glViewport(520, 0, 260, winHeight);
-
-	glColor3f(1.0, 1.0, 1.0);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(winMin.x, winMin.y);
-	glVertex2f(winMax.x, winMin.y);
-	glVertex2f(winMax.x, winMax.y);
-	glVertex2f(winMin.x, winMax.y);
-	glEnd();
-
-	drawPolygon(polygon3);
-	polygonClipLiangBarsk3(winMin, winMax, polygon3);
-	glColor3f(1.0, 0.0, 0.0);
-	drawPolygon(polygon3);
 
 	glFlush();
-}
-void onTimer(int id)
-{
-	int curTick = GetTickCount();
-	delta = (curTick - lastTick) / (float)1000;
-	lastTick = curTick;
-	glutPostRedisplay();
-	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
 }
 void code_8_exercise_16()
 {
 	glutDisplayFunc(drawFunc);
-	lastTick = GetTickCount();
-	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
 }
 #endif
 
