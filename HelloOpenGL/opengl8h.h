@@ -22,7 +22,8 @@
 //#define CHAPTER_8_EXERCISE_13
 //#define CHAPTER_8_EXERCISE_14
 //#define CHAPTER_8_EXERCISE_15
-#define CHAPTER_8_EXERCISE_16
+//#define CHAPTER_8_EXERCISE_16
+#define CHAPTER_8_EXERCISE_16_1 // 检测每个像素点内外的方法求两多边形交，可满足复杂交点情况（上一习题不能满足裁剪窗口和多边形共同交于一点的情况）
 
 #ifdef CHAPTER_8_EXERCISE_5
 #define CHAPTER_8_7_1
@@ -101,5 +102,9 @@
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_16
+#define CHAPTER_8_COMMON
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_16_1
 #define CHAPTER_8_COMMON
 #endif

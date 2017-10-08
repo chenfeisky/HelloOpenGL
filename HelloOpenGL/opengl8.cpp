@@ -5758,7 +5758,7 @@ struct CrossPointInfo
 	float u2 = 0.0f;	// 多边形边	直线参数方程u
 	Point* point;       // 交点
 };
-struct Line
+struct LineWithCross
 {
 	Point* begin;
 	Point* end;
@@ -5777,6 +5777,7 @@ inline GLint Round(const GLfloat a)
 {
 	return GLint(a + 0.5);
 }
+// 只能是凸多边形
 void drawPolygon(const vector<Point>& polygon)
 {
 	glBegin(GL_POLYGON);
@@ -5799,23 +5800,246 @@ void lineBres(float x0, float y0, float xEnd, float yEnd)
 	glEnd();
 	return;
 }
-void calcLines(std::vector<Point>& points, std::vector<Line>& lines)
+//////////////////////////////////////////////////////////////////////////
+// 任意形状多边形填充算法
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int endX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(x, y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<std::vector<Point>> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { (float)line.currentX , (float)curY } });
+
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { (float)line.currentX, (float)curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					if (line.sortedLine.dx > 0)
+						points.back().push_back({ (float)line.currentX - 1, (float)curY });
+					else
+						points.back().push_back({ (float)line.currentX + 1, (float)curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point>& points)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+void calcLines(std::vector<Point>& points, std::vector<LineWithCross>& lines)
 {
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = i + 1 < points.size() ? i + 1 : 0;
-		lines.push_back(Line());
+		lines.push_back(LineWithCross());
 		lines.back().begin = new Point{points[i]};
 		lines.back().end = new Point{ points[next] };
 		lines.back().crossPoints.clear();
 	}
 }
-bool calcCrossPoint(Line& clipWindowLine, Line& polygonLine, CrossPointInfo& crossPointInfo, std::map<Point*, PointInfo>& pointInfo)
+bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
 {
-	float dx1 = clipWindowLine.end->x - clipWindowLine.begin->x;
-	float dy1 = clipWindowLine.end->y - clipWindowLine.begin->y;
-	float dx2 = polygonLine.end->x - polygonLine.begin->x;
-	float dy2 = polygonLine.end->y - polygonLine.begin->y;
+	float dx1 = line1.end->x - line1.begin->x;
+	float dy1 = line1.end->y - line1.begin->y;
+	float dx2 = line2.end->x - line2.begin->x;
+	float dy2 = line2.end->y - line2.begin->y;
 
 	if (dx1 == 0 && dx2 == 0)
 		return false;
@@ -5823,18 +6047,30 @@ bool calcCrossPoint(Line& clipWindowLine, Line& polygonLine, CrossPointInfo& cro
 	if (dy1 / dx1 == dy2 / dx2)
 		return false;
 
-	float x01 = clipWindowLine.begin->x;
-	float y01 = clipWindowLine.begin->y;
-	float x02 = polygonLine.begin->x;
-	float y02 = polygonLine.begin->y;
-	float u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
-	float u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+	float x01 = line1.begin->x;
+	float y01 = line1.begin->y;
+	float x02 = line2.begin->x;
+	float y02 = line2.begin->y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
 	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
 		return false;
 
-	crossPointInfo.u1 = u1;
-	crossPointInfo.u2 = u2;
-	crossPointInfo.point = new Point{ x01 + u1 * dx1, y01 + u1 * dy1 };
+	return true;
+}
+bool calcCrossPoint(LineWithCross& clipWindowLine, LineWithCross& polygonLine, CrossPointInfo& crossPointInfo, std::map<Point*, PointInfo>& pointInfo)
+{
+	if (!crossPoint(clipWindowLine, polygonLine, crossPointInfo.u1, crossPointInfo.u2))
+		return false;
+	
+	float dx1 = clipWindowLine.end->x - clipWindowLine.begin->x;
+	float dy1 = clipWindowLine.end->y - clipWindowLine.begin->y;
+	float dx2 = polygonLine.end->x - polygonLine.begin->x;
+	float dy2 = polygonLine.end->y - polygonLine.begin->y;
+	float x01 = clipWindowLine.begin->x;
+	float y01 = clipWindowLine.begin->y;
+
+	crossPointInfo.point = new Point{ x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
 	if (dx1 * dy2 - dy1 * dx2 > 0)
 	{
 		pointInfo[crossPointInfo.point].type = PointType::CrossIn;
@@ -5847,8 +6083,8 @@ bool calcCrossPoint(Line& clipWindowLine, Line& polygonLine, CrossPointInfo& cro
 }
 void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<Point*>& clipWindowPoints, std::vector<Point*>& polygonPoints, std::map<Point*, PointInfo>& pointInfo)
 {
-	std::vector<Line> clipWindowLines;
-	std::vector<Line> polygonLines;
+	std::vector<LineWithCross> clipWindowLines;
+	std::vector<LineWithCross> polygonLines;
 	calcLines(clipWindow, clipWindowLines);
 	calcLines(polygon, polygonLines);
 
@@ -5966,42 +6202,188 @@ void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<P
 		walkClipWindow(clipWindowPoints, idx, polygonPoints, pointInfo, reslutPolygon);
 	}
 }
+bool sign(float f)
+{
+	return f > 0;
+}
+bool checkVertex(LineWithCross& line, std::vector<Point>& polygon)
+{
+	float dx = line.end->x - line.begin->x;
+	float dy = line.end->y - line.begin->y;
+	for (auto& p : polygon)
+	{
+		bool check = false;
+		float _dx = p.x - line.begin->x;
+		float _dy = p.y - line.begin->y;
+		if (dx)
+		{
+			if (_dx)
+			{
+				if (dy / dx != _dy / _dx)
+				{
+					check = true;
+				}
+				else
+				{
+					if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+						check = false;
+					else
+						check = true;
+				}
+			}
+			else
+			{
+				check = true;
+			}
+		}
+		else
+		{
+			if (_dx)
+			{
+				check = true;
+			}
+			else
+			{
+				if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+					check = false;
+				else
+					check = true;
+			}
+		}
+		if (!check)
+			return false;
+	}
+	return true;
+}
+int crossProduct(LineWithCross& line1, LineWithCross& line2)
+{
+	return (line1.end->x - line1.begin->x) * (line2.end->y - line2.begin->y) - (line1.end->y - line1.begin->y) * (line2.end->x - line2.begin->x);
+}
+void boundBox(std::vector<Point>& polygon, float& minX, float& maxX, float& minY, float& maxY)
+{
+	maxX = polygon[0].x, minX = polygon[0].x, maxY = polygon[0].y, minY = polygon[0].y;
+	for (int i = 1; i < polygon.size(); i++)
+	{
+		if (polygon[i].x < minX)
+			minX = polygon[i].x;
+		if (polygon[i].x > maxX)
+			maxX = polygon[i].x;
+		if (polygon[i].y < minY)
+			minY = polygon[i].y;
+		if (polygon[i].y > maxY)
+			maxY = polygon[i].y;
+	}
+}
+bool checkIn(Point p, std::vector<Point>& polygon)
+{
+	float minX, maxX, minY, maxY;
+	boundBox(polygon, minX, maxX, minY, maxY);
+	float length = (maxX - minX) + (maxY - minY);
+	float theta = 0;
+	float dtheta = PI / 180;
+	while (theta < 2 * PI)
+	{
+		Point end = { p.x + length * cos(theta), p.y + length * sin(theta) };
+		LineWithCross ray;
+		ray.begin = &p;
+		ray.end = &end;
+		if (checkVertex(ray, polygon))
+		{
+			float u1 = 0, u2 = 0;
+			int count = 0;
+			for (int i = 0; i < polygon.size(); i++)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				LineWithCross edge;
+				edge.begin = &polygon[i];
+				edge.end = &polygon[next];
+
+				if (crossPoint(ray, edge, u1, u2))
+				{
+					if (crossProduct(ray, edge) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			return count >= 1;
+		}
+		else
+		{
+			theta += dtheta;
+		}
+	}
+	assert(0 && "can not find suitable ray!!!");
+	return false;
+}
 void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<std::vector<Point>>& reslutPolygon)
 {
 	std::vector<Point*> clipWindowPoints;
 	std::vector<Point*> polygonPoints;
 	std::map<Point*, PointInfo> pointInfo;
 	calcPointInfo(clipWindow, polygon, clipWindowPoints, polygonPoints, pointInfo);
-	bool firstPointRecord = false;
-	// 找到第一个点是否为内点 
-	for (auto & p : polygonPoints)
-	{
-		assert(pointInfo.find(p) != pointInfo.end());
-		if (pointInfo[p].type != PointType::Polygon)
-		{
-			if(pointInfo[p].type == PointType::CrossOut)
-				firstPointRecord = true;
-			break;
-		}
-	}
+
 	reslutPolygon.clear();
 	reslutPolygon.push_back(std::vector<Point>());
-	walkPolygon(polygonPoints, 0, firstPointRecord, clipWindowPoints, pointInfo, reslutPolygon);
+	walkPolygon(polygonPoints, 0, checkIn(polygon[0], clipWindow), clipWindowPoints, pointInfo, reslutPolygon);
 	if (reslutPolygon.back().empty())
 		reslutPolygon.erase(reslutPolygon.end() - 1);
 }
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+	std::vector<Point> polygon, clipWindow;
+	std::vector <std::vector<Point>> polygons;
 
-	std::vector<Point> polygon = { { 359, 403 },{ 300, 522 },{ 48, 414 },{ 135, 194 },{ 265, 270 },{ 146, 328 } };
-	std::vector<Point> clipWindow = { { 200, 150 },{ 400, 150 },{ 400, 450 },{ 200, 450 }};
-
+	glViewport(0, 300, winWidth / 2, winHeight / 2);
+	polygon = { { 54, 227 },{ 85, 145 },{ 207, 183 },{ 191, 267 },{ 104, 283 } };
+	clipWindow = { { 150, 50 },{ 300, 50 },{ 300, 250 },{ 150, 250 } };
 	glColor3f(1.0, 1.0, 1.0);
 	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	polygons.clear();
+	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
+	glColor3f(1.0, 0.0, 0.0);
+	for (auto po : polygons)
+	{
+		drawPolygon(po);
+	}
 
-	drawPolygon(polygon);
-	std::vector <std::vector<Point>> polygons;
+	glViewport(400, 300, winWidth / 2, winHeight / 2);
+	polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{77, 122} };
+	clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	polygons.clear();
+	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
+	glColor3f(1.0, 0.0, 0.0);
+	for (auto po : polygons)
+	{
+		drawPolygon(po);
+	}
+
+	glViewport(0, 0, winWidth / 2, winHeight / 2);
+	polygon = { { 328, 238 },{ 161, 279 },{ 178, 236 },{ 117, 110 },{ 167, 24 },{ 216, 33 } };
+	clipWindow = { { 81, 14 },{ 211, 68 },{ 204, 145 },{ 79, 159 },{ 41, 87 } };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	polygons.clear();
+	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
+	glColor3f(1.0, 0.0, 0.0);
+	for (auto po : polygons)
+	{
+		drawPolygon(po);
+	}
+
+	glViewport(400, 0, winWidth / 2, winHeight / 2);
+	polygon = { { 128, 62 },{ 176, 119 },{ 303, 62 },{ 326, 216 },{ 95, 254 },{ 76, 82 } };
+	clipWindow = { { 184, 30 },{ 290, 115 },{ 169, 95 },{ 145, 131 },{ 88, 107 },{40, 136},{45, 32} };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	polygons.clear();
 	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
 	glColor3f(1.0, 0.0, 0.0);
 	for (auto po : polygons)
@@ -6013,6 +6395,596 @@ void drawFunc()
 }
 void code_8_exercise_16()
 {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 2, 0, winHeight / 2);
+
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_16_1
+class Point
+{
+public:
+	GLfloat x, y;
+};
+struct CrossPointInfo
+{
+	float u1 = 0.0f;	// 裁剪窗口边 直线参数方程u
+	float u2 = 0.0f;	// 多边形边	直线参数方程u
+	Point* point;       // 交点
+};
+struct LineWithCross
+{
+	Point* begin;
+	Point* end;
+	std::vector<CrossPointInfo> crossPoints;
+};
+inline GLint Round(const GLfloat a)
+{
+	return GLint(a + 0.5);
+}
+void drawPoint(float x, float y)
+{
+	glBegin(GL_POINTS);
+	glVertex2f(x, y);
+	glEnd();
+}
+// 只能是凸多边形
+void drawPolygon(const vector<Point>& polygon)
+{
+	glBegin(GL_POLYGON);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+//////////////////////////////////////////////////////////////////////////
+// 任意形状多边形填充算法
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int endX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(x, y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<std::vector<Point>> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { (float)line.currentX , (float)curY } });
+
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { (float)line.currentX, (float)curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					if (line.sortedLine.dx > 0)
+						points.back().push_back({ (float)line.currentX - 1, (float)curY });
+					else
+						points.back().push_back({ (float)line.currentX + 1, (float)curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point>& points)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
+{
+	float dx1 = line1.end->x - line1.begin->x;
+	float dy1 = line1.end->y - line1.begin->y;
+	float dx2 = line2.end->x - line2.begin->x;
+	float dy2 = line2.end->y - line2.begin->y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (dy1 / dx1 == dy2 / dx2)
+		return false;
+
+	float x01 = line1.begin->x;
+	float y01 = line1.begin->y;
+	float x02 = line2.begin->x;
+	float y02 = line2.begin->y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
+		return false;
+
+	return true;
+}
+bool sign(float f)
+{
+	return f > 0;
+}
+bool checkVertex(LineWithCross& line, std::vector<Point>& polygon)
+{
+	float dx = line.end->x - line.begin->x;
+	float dy = line.end->y - line.begin->y;
+	for (auto& p : polygon)
+	{
+		bool check = false;
+		float _dx = p.x - line.begin->x;
+		float _dy = p.y - line.begin->y;
+		if (dx)
+		{
+			if (_dx)
+			{
+				if (dy / dx != _dy / _dx)
+				{
+					check = true;
+				}
+				else
+				{
+					if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+						check = false;
+					else
+						check = true;
+				}
+			}
+			else
+			{
+				check = true;
+			}
+		}
+		else
+		{
+			if (_dx)
+			{
+				check = true;
+			}
+			else
+			{
+				if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+					check = false;
+				else
+					check = true;
+			}
+		}
+		if (!check)
+			return false;
+	}
+	return true;
+}
+int crossProduct(LineWithCross& line1, LineWithCross& line2)
+{
+	float ax = line1.end->x - line1.begin->x;
+	float by = line2.end->y - line2.begin->y;
+	float ay = line1.end->y - line1.begin->y;
+	float bx = line2.end->x - line2.begin->x;
+	auto ret = ax * by - ay * bx;
+	return (line1.end->x - line1.begin->x) * (line2.end->y - line2.begin->y) - (line1.end->y - line1.begin->y) * (line2.end->x - line2.begin->x);
+}
+void boundBox(std::vector<Point>& polygon, float& minX, float& maxX, float& minY, float& maxY)
+{
+	maxX = polygon[0].x, minX = polygon[0].x, maxY = polygon[0].y, minY = polygon[0].y;
+	for (int i = 1; i < polygon.size(); i++)
+	{
+		if (polygon[i].x < minX)
+			minX = polygon[i].x;
+		if (polygon[i].x > maxX)
+			maxX = polygon[i].x;
+		if (polygon[i].y < minY)
+			minY = polygon[i].y;
+		if (polygon[i].y > maxY)
+			maxY = polygon[i].y;
+	}
+}
+bool boundBoxIntersection(std::vector<Point>& polygon1, std::vector<Point>& polygon2, float& minX, float& maxX, float& minY, float& maxY)
+{
+	float minX1, maxX1, minY1, maxY1;
+	boundBox(polygon1, minX1, maxX1, minY1, maxY1);
+	float minX2, maxX2, minY2, maxY2;
+	boundBox(polygon2, minX2, maxX2, minY2, maxY2);
+
+	minX = std::max(minX1, minX2);
+	maxX = std::min(maxX1, maxX2);
+	minY = std::max(minY1, minY2);
+	maxY = std::min(maxY1, maxY2);
+
+	return (maxX > minX && maxY > minY);
+}
+void boundBoxUnion(std::vector<Point>& polygon1, std::vector<Point>& polygon2, float& minX, float& maxX, float& minY, float& maxY)
+{
+	float minX1, maxX1, minY1, maxY1;
+	boundBox(polygon1, minX1, maxX1, minY1, maxY1);
+	float minX2, maxX2, minY2, maxY2;
+	boundBox(polygon2, minX2, maxX2, minY2, maxY2);
+
+	minX = std::min(minX1, minX2);
+	maxX = std::max(maxX1, maxX2);
+	minY = std::min(minY1, minY2);
+	maxY = std::max(maxY1, maxY2);
+}
+bool checkIn(Point p, std::vector<Point>& polygon)
+{
+	float minX, maxX, minY , maxY;
+	boundBox(polygon, minX, maxX, minY, maxY);
+	float length = (maxX - minX) + (maxY - minY);
+	float theta = 0;
+	float dtheta = PI / 180;
+	while (theta < 2 * PI)
+	{
+		Point end = { p.x + length * cos(theta), p.y + length * sin(theta) };
+		LineWithCross ray;
+		ray.begin = &p;
+		ray.end = &end;
+		if (checkVertex(ray, polygon))
+		{
+			float u1 = 0, u2 = 0;
+			int count = 0;
+			for (int i = 0; i < polygon.size(); i++)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				LineWithCross edge;
+				edge.begin = &polygon[i];
+				edge.end = &polygon[next];
+
+				if (crossPoint(ray, edge, u1, u2))
+				{
+					if (crossProduct(ray, edge) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			return count >= 1;
+		}
+		else
+		{
+			theta += dtheta;
+		}
+	}
+	assert(0 && "can not find suitable ray!!!");
+	return false;
+}
+void polygonClipCheckIn(std::vector<Point>& clipWindow, std::vector<Point>& polygon)
+{
+	float minX, maxX, minY, maxY;
+
+	if (boundBoxIntersection(clipWindow, polygon, minX, maxX, minY, maxY))
+	{
+		for (float y = minY; y <= maxY; y++)
+		{
+			for (float x = minX; x <= maxX; x++)
+			{
+				if (checkIn({ x, y }, clipWindow) && checkIn({ x, y }, polygon))
+					drawPoint(x, y);
+			}
+		}
+	}
+}
+bool checkIntersection(Point p, std::vector<Point>& polygon1, std::vector<Point>& polygon2)
+{
+	float minX, maxX, minY, maxY;
+	boundBoxUnion(polygon1, polygon2, minX, maxX, minY, maxY);
+	float length = (maxX - minX) + (maxY - minY);
+	float theta = 0;
+	float dtheta = PI / 180;
+	while (theta < 2 * PI)
+	{
+		Point end = { p.x + length * cos(theta), p.y + length * sin(theta) };
+		LineWithCross ray;
+		ray.begin = &p;
+		ray.end = &end;
+		if (checkVertex(ray, polygon1) && checkVertex(ray, polygon2))
+		{
+			float u1 = 0, u2 = 0;
+			int count = 0;
+			for (int i = 0; i < polygon1.size(); i++)
+			{
+				int next = i + 1 < polygon1.size() ? i + 1 : 0;
+				LineWithCross edge;
+				edge.begin = &polygon1[i];
+				edge.end = &polygon1[next];
+
+				if (crossPoint(ray, edge, u1, u2))
+				{
+					if (crossProduct(ray, edge) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			for (int i = 0; i < polygon2.size(); i++)
+			{
+				int next = i + 1 < polygon2.size() ? i + 1 : 0;
+				LineWithCross edge;
+				edge.begin = &polygon2[i];
+				edge.end = &polygon2[next];
+
+				if (crossPoint(ray, edge, u1, u2))
+				{
+					if (crossProduct(ray, edge) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			return count >= 2;
+		}
+		else
+		{
+			theta += dtheta;
+		}
+	}
+	assert(0 && "can not find suitable ray!!!");
+	return false;
+}
+void polygonClipCheckIntersection(std::vector<Point>& clipWindow, std::vector<Point>& polygon)
+{
+	float minX, maxX, minY, maxY;
+
+	if (boundBoxIntersection(clipWindow, polygon, minX, maxX, minY, maxY))
+	{
+		for (float y = minY; y <= maxY; y++)
+		{
+			for (float x = minX; x <= maxX; x++)
+			{
+				if (checkIntersection({ x, y }, clipWindow, polygon))
+					drawPoint(x, y);
+			}
+		}
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	std::vector<Point> polygon, clipWindow;
+
+	glViewport(0, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 34, 105 },{ 133, 123 },{ 193, 113 },{237, 237},{ 84, 200 },{17, 134} };
+	clipWindow = { { 233, 183 },{ 107, 128 },{ 40, 148 },{ 130, 39 },{170, 94},{226, 75} };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipCheckIntersection(clipWindow, polygon);
+
+	glViewport(winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 56, 62 },{ 114, 123 },{ 29, 158 }};
+	clipWindow = { { 114, 50 },{ 190, 14 },{ 234, 79 },{ 166, 188 },{ 114, 188 } };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipCheckIntersection(clipWindow, polygon);
+
+	glViewport(2 * winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 102, 46 },{ 139, 111 },{ 74, 174 },{49, 82} };
+	clipWindow = { { 139, 111 },{ 121, 26 },{ 236, 71 },{ 127, 196 }};
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipCheckIntersection(clipWindow, polygon);
+
+	glViewport(0, 0, winWidth / 3, winHeight / 2);
+	polygon = { { 54, 118 },{ 116, 76 },{ 218, 174 },{ 124, 207 } };
+	clipWindow = { { 54, 54 },{ 165, 54 },{ 165, 180 },{ 54, 180 } };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipCheckIntersection(clipWindow, polygon);
+
+	glFlush();
+}
+void code_8_exercise_16_1()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 3, 0, winHeight / 2);
+
 	glutDisplayFunc(drawFunc);
 }
 #endif
@@ -6107,6 +7079,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_16
 	code_8_exercise_16();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_16_1
+	code_8_exercise_16_1();
 #endif
 
 	glutMainLoop();
