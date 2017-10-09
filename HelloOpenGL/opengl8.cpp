@@ -6206,7 +6206,7 @@ bool sign(float f)
 {
 	return f > 0;
 }
-bool checkVertex(LineWithCross& line, std::vector<Point>& polygon)
+bool checkRay(LineWithCross& line, std::vector<Point>& polygon)
 {
 	float dx = line.end->x - line.begin->x;
 	float dy = line.end->y - line.begin->y;
@@ -6274,8 +6274,20 @@ void boundBox(std::vector<Point>& polygon, float& minX, float& maxX, float& minY
 			maxY = polygon[i].y;
 	}
 }
+bool checkVertex(Point p, std::vector<Point>& polygon)
+{
+	for (auto& _p : polygon)
+	{
+		if (p.x == _p.x && p.y == _p.y)
+			return false;
+	}
+	return true;
+}
 bool checkIn(Point p, std::vector<Point>& polygon)
 {
+	if (!checkVertex(p, polygon))
+		return false;
+
 	float minX, maxX, minY, maxY;
 	boundBox(polygon, minX, maxX, minY, maxY);
 	float length = (maxX - minX) + (maxY - minY);
@@ -6287,7 +6299,7 @@ bool checkIn(Point p, std::vector<Point>& polygon)
 		LineWithCross ray;
 		ray.begin = &p;
 		ray.end = &end;
-		if (checkVertex(ray, polygon))
+		if (checkRay(ray, polygon))
 		{
 			float u1 = 0, u2 = 0;
 			int count = 0;
@@ -6705,7 +6717,7 @@ bool sign(float f)
 {
 	return f > 0;
 }
-bool checkVertex(LineWithCross& line, std::vector<Point>& polygon)
+bool checkRay(LineWithCross& line, std::vector<Point>& polygon)
 {
 	float dx = line.end->x - line.begin->x;
 	float dy = line.end->y - line.begin->y;
@@ -6804,8 +6816,20 @@ void boundBoxUnion(std::vector<Point>& polygon1, std::vector<Point>& polygon2, f
 	minY = std::min(minY1, minY2);
 	maxY = std::max(maxY1, maxY2);
 }
+bool checkVertex(Point p, std::vector<Point>& polygon)
+{
+	for (auto& _p : polygon)
+	{
+		if (p.x == _p.x && p.y == _p.y)
+			return false;
+	}
+	return true;
+}
 bool checkIn(Point p, std::vector<Point>& polygon)
 {
+	if (!checkVertex(p, polygon))
+		return false;
+
 	float minX, maxX, minY , maxY;
 	boundBox(polygon, minX, maxX, minY, maxY);
 	float length = (maxX - minX) + (maxY - minY);
@@ -6817,7 +6841,7 @@ bool checkIn(Point p, std::vector<Point>& polygon)
 		LineWithCross ray;
 		ray.begin = &p;
 		ray.end = &end;
-		if (checkVertex(ray, polygon))
+		if (checkRay(ray, polygon))
 		{
 			float u1 = 0, u2 = 0;
 			int count = 0;
@@ -6864,6 +6888,9 @@ void polygonClipCheckIn(std::vector<Point>& clipWindow, std::vector<Point>& poly
 }
 bool checkIntersection(Point p, std::vector<Point>& polygon1, std::vector<Point>& polygon2)
 {
+	if (!checkVertex(p, polygon1) || !checkVertex(p, polygon2))
+		return false;
+
 	float minX, maxX, minY, maxY;
 	boundBoxUnion(polygon1, polygon2, minX, maxX, minY, maxY);
 	float length = (maxX - minX) + (maxY - minY);
@@ -6875,7 +6902,7 @@ bool checkIntersection(Point p, std::vector<Point>& polygon1, std::vector<Point>
 		LineWithCross ray;
 		ray.begin = &p;
 		ray.end = &end;
-		if (checkVertex(ray, polygon1) && checkVertex(ray, polygon2))
+		if (checkRay(ray, polygon1) && checkRay(ray, polygon2))
 		{
 			float u1 = 0, u2 = 0;
 			int count = 0;
@@ -6948,7 +6975,7 @@ void drawFunc()
 	drawPolygonLine(clipWindow);
 	fillPolygon(polygon);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipCheckIntersection(clipWindow, polygon);
+	polygonClipCheckIn(clipWindow, polygon);
 
 	glViewport(winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
 	polygon = { { 56, 62 },{ 114, 123 },{ 29, 158 }};
@@ -6957,7 +6984,7 @@ void drawFunc()
 	drawPolygonLine(clipWindow);
 	fillPolygon(polygon);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipCheckIntersection(clipWindow, polygon);
+	polygonClipCheckIn(clipWindow, polygon);
 
 	glViewport(2 * winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
 	polygon = { { 102, 46 },{ 139, 111 },{ 74, 174 },{49, 82} };
@@ -6966,11 +6993,29 @@ void drawFunc()
 	drawPolygonLine(clipWindow);
 	fillPolygon(polygon);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipCheckIntersection(clipWindow, polygon);
+	polygonClipCheckIn(clipWindow, polygon);
 
 	glViewport(0, 0, winWidth / 3, winHeight / 2);
 	polygon = { { 54, 118 },{ 116, 76 },{ 218, 174 },{ 124, 207 } };
 	clipWindow = { { 54, 54 },{ 165, 54 },{ 165, 180 },{ 54, 180 } };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipCheckIntersection(clipWindow, polygon);
+
+	glViewport(winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	polygon = { { 134, 91 },{ 191, 114 },{ 126, 153 },{ 108, 132 } };
+	clipWindow = { { 60, 48 },{ 189, 58 },{ 208, 138 },{ 194, 274 },{50, 252},{ 108, 132 } };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipCheckIntersection(clipWindow, polygon);
+
+	glViewport(2 * winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	polygon = { { 124, 107 },{ 61, 139 },{ 13, 122 },{ 67, 58 } };
+	clipWindow = { { 115, 20 },{ 177, 139 },{ 115, 228 },{ 61, 139 }};
 	glColor3f(1.0, 1.0, 1.0);
 	drawPolygonLine(clipWindow);
 	fillPolygon(polygon);
