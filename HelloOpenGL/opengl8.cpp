@@ -7034,6 +7034,186 @@ void code_8_exercise_16_1()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_20
+struct Rect
+{
+	float minX;
+	float maxX;
+	float minY;
+	float maxY;
+};
+struct EllipseArea
+{
+	bool RightTop;
+	bool RightBottom;
+	bool LeftTop;
+	bool LeftBottom;
+};
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+bool rectIntersection(const Rect& rect1, const Rect& rect2)
+{
+	float minX, maxX, minY, maxY;
+	minX = std::max(minX, minX);
+	maxX = std::min(maxX, maxX);
+	minY = std::max(minY, minY);
+	maxY = std::min(maxY, maxY);
+
+	return (maxX > minX && maxY > minY);
+}
+
+bool hLineEllipsePlot(int y, int x0, int x1, int xc, int yc, Rect clipWindow, EllipseArea area)
+{
+	float begin, end;
+	bool bContinus = true;
+	if (area.LeftTop)
+	{
+		float curY = yc + y;
+		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
+		{
+			begin = std::max((float)xc + x0, clipWindow.minX);
+			end = std::min((float)xc + x1, clipWindow.maxX);
+			for (float x = begin; x <= end; x++)
+			{
+				setPixel(x, curY);
+			}
+		}
+		if (bContinus)
+			bContinus = curY > clipWindow.minY;
+	}
+
+	if (area.LeftBottom)
+	{
+		float curY = yc - y;
+		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
+		{
+			begin = std::max((float)xc + x0, clipWindow.minX);
+			end = std::min((float)xc + x1, clipWindow.maxX);
+			for (float x = begin; x <= end; x++)
+			{
+				setPixel(x, curY);
+			}
+		}
+		if (bContinus)
+			bContinus = curY < clipWindow.maxY;
+	}
+
+	if (area.RightTop)
+	{
+		float curY = yc + y;
+		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
+		{
+			begin = std::min((float)xc - x0, clipWindow.maxX);
+			end = std::max((float)xc - x1, clipWindow.minX);
+			for (float x = begin; x >= end; x--)
+			{
+				setPixel(x, curY);
+			}
+		}
+		if (bContinus)
+			bContinus = curY > clipWindow.minY;
+	}
+
+	if (area.RightBottom)
+	{
+		float curY = yc - y;
+		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
+		{
+			begin = std::min((float)xc - x0, clipWindow.maxX);
+			end = std::max((float)xc - x1, clipWindow.minX);
+			for (float x = begin; x >= end; x--)
+			{
+				setPixel(x, curY);
+			}
+		}
+		if (bContinus)
+			bContinus = curY < clipWindow.maxY;
+	}
+
+	return bContinus;
+}
+void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow, EllipseArea area)
+{
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = Ry;
+	int px = 0;
+	int py = twoRx2*y;
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			if(!hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter, clipWindow , area)) // 绘制上一条x最大的扫描线
+				return; 
+
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	}
+	if (!hLineEllipsePlot(y, 0, x, xCenter, yCenter, clipWindow, area)) // 绘制最后一条扫描线
+		return;
+
+	/*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		if (!hLineEllipsePlot(y, 0, x, xCenter, yCenter, clipWindow, area))
+			return;
+	}
+}
+void clipEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow)
+{
+	EllipseArea area;
+	area.RightTop = rectIntersection(clipWindow, { xCenter, xCenter + Rx, yCenter, yCenter + Ry });
+	area.RightBottom = rectIntersection(clipWindow, { xCenter, xCenter + Rx, yCenter - Ry, yCenter });
+	area.LeftTop = rectIntersection(clipWindow, { xCenter - Rx, xCenter, yCenter, yCenter + Ry });
+	area.LeftBottom = rectIntersection(clipWindow, { xCenter - Rx, xCenter, yCenter - Ry, yCenter });
+
+	if(area.RightTop || area.RightBottom || area.LeftTop || area.LeftBottom)
+		fillEllipse(xCenter, yCenter, Rx, Ry, clipWindow, area);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+	//clipEllipse(200, 200, 100, 50);
+	glFlush();
+}
+void code_8_exercise_20()
+{
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -7128,6 +7308,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_16_1
 	code_8_exercise_16_1();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_20
+	code_8_exercise_20();
 #endif
 
 	glutMainLoop();
