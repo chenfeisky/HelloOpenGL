@@ -7035,11 +7035,23 @@ void code_8_exercise_16_1()
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_20
+class Point
+{
+public:
+	GLfloat x, y;
+};
+struct Ellipse_
+{
+	float xc;
+	float yc;
+	float rx;
+	float ry;
+};
 struct Rect
 {
 	float minX;
-	float maxX;
 	float minY;
+	float maxX;
 	float maxY;
 };
 struct EllipseArea
@@ -7056,61 +7068,89 @@ inline int Round(const float a)
 	else
 		return int(a - 0.5);
 }
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void hLineEllipsePlot(int y, int x0, int x1, float xc, float yc)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(xc + x, yc + y);
+		setPixel(xc - x, yc + y);
+		setPixel(xc + x, yc - y);
+		setPixel(xc - x, yc - y);
+	}
+}
+void fliiEllipse(const Ellipse_& ellipse)
+{
+	int Rx2 = ellipse.rx * ellipse.rx;
+	int Ry2 = ellipse.ry * ellipse.ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int p;
+	int x = 0;
+	int y = ellipse.ry;
+	int px = 0;
+	int py = twoRx2*y;
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	/*Region 1*/
+	p = Round(Ry2 - (Rx2 * ellipse.ry) + (0.25 * Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			hLineEllipsePlot(y, 0, x - 1, ellipse.xc, ellipse.yc); // 绘制上一条x最大的扫描线
+
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
+	}
+	hLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc); // 绘制最后一条扫描线
+
+	/*Region 2*/
+	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		hLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc);
+	}
+}
 bool rectIntersection(const Rect& rect1, const Rect& rect2)
 {
-	float minX, maxX, minY, maxY;
-	minX = std::max(minX, minX);
-	maxX = std::min(maxX, maxX);
-	minY = std::max(minY, minY);
-	maxY = std::min(maxY, maxY);
-
-	return (maxX > minX && maxY > minY);
+	return (std::min(rect1.maxX, rect2.maxX) > std::max(rect1.minX, rect2.minX) &&
+		std::min(rect1.maxY, rect2.maxY) > std::max(rect1.minY, rect2.minY));
 }
-
-bool hLineEllipsePlot(int y, int x0, int x1, int xc, int yc, Rect clipWindow, EllipseArea area)
+bool clipHLineEllipsePlot(int y, int x0, int x1, float xc, float yc, Rect clipWindow, EllipseArea area)
 {
 	float begin, end;
 	bool bContinus = true;
-	if (area.LeftTop)
-	{
-		float curY = yc + y;
-		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
-		{
-			begin = std::max((float)xc + x0, clipWindow.minX);
-			end = std::min((float)xc + x1, clipWindow.maxX);
-			for (float x = begin; x <= end; x++)
-			{
-				setPixel(x, curY);
-			}
-		}
-		if (bContinus)
-			bContinus = curY > clipWindow.minY;
-	}
-
-	if (area.LeftBottom)
-	{
-		float curY = yc - y;
-		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
-		{
-			begin = std::max((float)xc + x0, clipWindow.minX);
-			end = std::min((float)xc + x1, clipWindow.maxX);
-			for (float x = begin; x <= end; x++)
-			{
-				setPixel(x, curY);
-			}
-		}
-		if (bContinus)
-			bContinus = curY < clipWindow.maxY;
-	}
-
 	if (area.RightTop)
 	{
 		float curY = yc + y;
 		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
 		{
-			begin = std::min((float)xc - x0, clipWindow.maxX);
-			end = std::max((float)xc - x1, clipWindow.minX);
-			for (float x = begin; x >= end; x--)
+			begin = std::max(xc + x0, clipWindow.minX);
+			end = std::min(xc + x1, clipWindow.maxX);
+			for (float x = begin; x <= end; x++)
 			{
 				setPixel(x, curY);
 			}
@@ -7124,8 +7164,40 @@ bool hLineEllipsePlot(int y, int x0, int x1, int xc, int yc, Rect clipWindow, El
 		float curY = yc - y;
 		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
 		{
-			begin = std::min((float)xc - x0, clipWindow.maxX);
-			end = std::max((float)xc - x1, clipWindow.minX);
+			begin = std::max(xc + x0, clipWindow.minX);
+			end = std::min(xc + x1, clipWindow.maxX);
+			for (float x = begin; x <= end; x++)
+			{
+				setPixel(x, curY);
+			}
+		}
+		if (bContinus)
+			bContinus = curY < clipWindow.maxY;
+	}
+
+	if (area.LeftTop)
+	{
+		float curY = yc + y;
+		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
+		{
+			begin = std::min(xc - x0, clipWindow.maxX);
+			end = std::max(xc - x1, clipWindow.minX);
+			for (float x = begin; x >= end; x--)
+			{
+				setPixel(x, curY);
+			}
+		}
+		if (bContinus)
+			bContinus = curY > clipWindow.minY;
+	}
+
+	if (area.LeftBottom)
+	{
+		float curY = yc - y;
+		if (curY <= clipWindow.maxY && curY >= clipWindow.minY)
+		{
+			begin = std::min(xc - x0, clipWindow.maxX);
+			end = std::max(xc - x1, clipWindow.minX);
 			for (float x = begin; x >= end; x--)
 			{
 				setPixel(x, curY);
@@ -7137,20 +7209,20 @@ bool hLineEllipsePlot(int y, int x0, int x1, int xc, int yc, Rect clipWindow, El
 
 	return bContinus;
 }
-void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow, EllipseArea area)
+void _clipEllipse(const Ellipse_& ellipse, const Rect& clipWindow, EllipseArea area)
 {
-	int Rx2 = Rx*Rx;
-	int Ry2 = Ry*Ry;
+	int Rx2 = ellipse.rx * ellipse.rx;
+	int Ry2 = ellipse.ry * ellipse.ry;
 	int twoRx2 = 2 * Rx2;
 	int twoRy2 = 2 * Ry2;
 	int p;
 	int x = 0;
-	int y = Ry;
+	int y = ellipse.ry;
 	int px = 0;
 	int py = twoRx2*y;
 	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
 	/*Region 1*/
-	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (Rx2 * ellipse.ry) + (0.25 * Rx2));
 	while (px < py)
 	{
 		x++;
@@ -7159,7 +7231,7 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow, Elli
 			p += Ry2 + px;
 		else
 		{
-			if(!hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter, clipWindow , area)) // 绘制上一条x最大的扫描线
+			if(!clipHLineEllipsePlot(y, 0, x - 1, ellipse.xc, ellipse.yc, clipWindow , area)) // 绘制上一条x最大的扫描线
 				return; 
 
 			y--;
@@ -7168,7 +7240,7 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow, Elli
 		}
 		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y不变时，每次绘制扫描线会造成重复
 	}
-	if (!hLineEllipsePlot(y, 0, x, xCenter, yCenter, clipWindow, area)) // 绘制最后一条扫描线
+	if (!clipHLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc, clipWindow, area)) // 绘制最后一条扫描线
 		return;
 
 	/*Region 2*/
@@ -7185,31 +7257,179 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow, Elli
 			px += twoRy2;
 			p += Rx2 - py + px;
 		}
-		if (!hLineEllipsePlot(y, 0, x, xCenter, yCenter, clipWindow, area))
+		if (!clipHLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc, clipWindow, area))
 			return;
 	}
 }
-void clipEllipse(int xCenter, int yCenter, int Rx, int Ry, Rect clipWindow)
+void clipEllipse(const Ellipse_& ellipse, const Rect& clipWindow)
 {
 	EllipseArea area;
-	area.RightTop = rectIntersection(clipWindow, { xCenter, xCenter + Rx, yCenter, yCenter + Ry });
-	area.RightBottom = rectIntersection(clipWindow, { xCenter, xCenter + Rx, yCenter - Ry, yCenter });
-	area.LeftTop = rectIntersection(clipWindow, { xCenter - Rx, xCenter, yCenter, yCenter + Ry });
-	area.LeftBottom = rectIntersection(clipWindow, { xCenter - Rx, xCenter, yCenter - Ry, yCenter });
+	area.RightTop = rectIntersection(clipWindow, { ellipse.xc, ellipse.yc, ellipse.xc + ellipse.rx, ellipse.yc + ellipse.ry });
+	area.RightBottom = rectIntersection(clipWindow, { ellipse.xc, ellipse.yc - ellipse.ry, ellipse.xc + ellipse.rx, ellipse.yc });
+	area.LeftTop = rectIntersection(clipWindow, { ellipse.xc - ellipse.rx, ellipse.yc, ellipse.xc, ellipse.yc + ellipse.ry });
+	area.LeftBottom = rectIntersection(clipWindow, { ellipse.xc - ellipse.rx, ellipse.yc - ellipse.ry, ellipse.xc, ellipse.yc });
 
 	if(area.RightTop || area.RightBottom || area.LeftTop || area.LeftBottom)
-		fillEllipse(xCenter, yCenter, Rx, Ry, clipWindow, area);
+		_clipEllipse(ellipse, clipWindow, area);
 }
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+	Ellipse_ ellipse;
+	Rect clipWindow;
 
+	glViewport(0, 400, 200, 200);
+	ellipse = { 138 , 142 , 24, 18};
+	clipWindow = { 23, 50, 133, 135 };
 	glColor3f(1.0, 1.0, 1.0);
-	//clipEllipse(200, 200, 100, 50);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY},
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(200, 400, 200, 200);
+	ellipse = { 138 , 59 , 24, 18 };
+	clipWindow = { 23, 50, 133, 135 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(400, 400, 200, 200);
+	ellipse = { 62 , 88 , 24, 18 };
+	clipWindow = { 70, 50, 167, 135 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(600, 400, 200, 200);
+	ellipse = { 72 , 42 , 24, 18 };
+	clipWindow = { 23, 50, 133, 135 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(0, 200, 200, 200);
+	ellipse = { 77 , 127 , 24, 18 };
+	clipWindow = { 70, 50, 167, 135 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(200, 200, 200, 200);
+	ellipse = { 42 , 64 , 24, 18 };
+	clipWindow = { 23, 50, 133, 135 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(400, 200, 200, 200);
+	ellipse = { 100 , 100 , 80, 50 };
+	clipWindow = { 30, 60, 170, 140 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(600, 200, 200, 200);
+	ellipse = { 100 , 100 , 70, 40 };
+	clipWindow = { 20, 70, 120, 115 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(0, 0, 200, 200);
+	ellipse = { 100 , 100 , 70, 40 };
+	clipWindow = { 20, 110, 180, 130 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(200, 0, 200, 200);
+	ellipse = { 100 , 100 , 70, 40 };
+	clipWindow = { 80, 80, 120, 160 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(400, 0, 200, 200);
+	ellipse = { 100 , 100 , 70, 40 };
+	clipWindow = { 60, 80, 120, 120 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
+	glViewport(600, 0, 200, 200);
+	ellipse = { 100 , 100 , 60, 30 };
+	clipWindow = { 30, 60, 170, 140 };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	fliiEllipse(ellipse);
+	glColor3f(1.0, 0.0, 0.0);
+	clipEllipse(ellipse, clipWindow);
+
 	glFlush();
 }
 void code_8_exercise_20()
 {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 200, 0, 200);
+
 	glutDisplayFunc(drawFunc);
 }
 #endif
