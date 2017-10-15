@@ -7443,10 +7443,6 @@ struct Rect
 	float maxX;
 	float maxY;
 };
-struct ClipStringType
-{
-	
-};
 struct Stencil
 {
 	std::vector<std::vector<int>> stencil;
@@ -7491,10 +7487,10 @@ void drawStencil(float x, float y, const Stencil& s, float rotate)
 		}
 	}
 }
-void drawString(int x, int y, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+void drawString(Point pos, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
 {
-	double posX = x;
-	double posY = y;
+	float posX = pos.x;
+	float posY = pos.y;
 	float charRotate = -1 * PI / 2 + info.upVector;
 	for (auto& c : str)
 	{
@@ -7526,61 +7522,206 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 		}
 	}
 }
-void clipString_all_or_none_string_clipping(Rect clipWindow, Point pos, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+bool pointInRect(Point p, Rect rect)
+{
+	return p.x >= rect.minX && p.x <= rect.maxX && p.y >= rect.minY && p.y <= rect.maxY;
+}
+void clipString_all_or_none_string_clipping(Rect clipWindow, Point pos, const std::string& str, const TextInfo& info, std::map<char, Stencil>& texts)
 {
 	Point leftBottom, rightBottom, rightTop, leftTop;
 
 	float width = 0, height = 0;
+
+	if (info.textPath == TextPath::RIGHT)
+	{
+		for (auto& c : str)
+		{
+			if (texts.find(c) != texts.end())
+			{
+				const Stencil& s = texts.find(c)->second;
+				
+				width += s.stencil[0].size();
+				height = std::max(height, (float)s.stencil.size());
+			}
+		}
+		width += (str.size() - 1) * info.space;
+
+		leftBottom = pos;
+		leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+		rightBottom = { leftBottom.x + width * (float)cos(info.upVector - PI / 2), leftBottom.y + width * (float)sin(info.upVector - PI / 2) };
+		rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+	}
+	else if (info.textPath == TextPath::LEFT)
+	{
+		for (auto& c : str)
+		{
+			if (texts.find(c) != texts.end())
+			{
+				const Stencil& s = texts.find(c)->second;
+
+				width += s.stencil[0].size();
+				height = std::max(height, (float)s.stencil.size());
+			}
+		}
+		width += (str.size() - 1) * info.space;
+
+		float firstWidth = texts[str[0]].stencil[0].size();
+		rightBottom = { pos.x + firstWidth * (float)cos(info.upVector - PI / 2), pos.y + firstWidth * (float)sin(info.upVector - PI / 2) };
+		rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+		leftBottom = { rightBottom.x + width * (float)cos(info.upVector + PI / 2), rightBottom.y + width * (float)sin(info.upVector + PI / 2) };
+		leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+	}
+	else if (info.textPath == TextPath::UP)
+	{
+		for (auto& c : str)
+		{
+			if (texts.find(c) != texts.end())
+			{
+				const Stencil& s = texts.find(c)->second;
+
+				height += s.stencil.size();
+				width = std::max(width, (float)s.stencil[0].size());
+			}
+		}
+		height += (str.size() - 1) * info.space;
+
+		leftBottom = pos;
+		leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+		rightBottom = { leftBottom.x + width * (float)cos(info.upVector - PI / 2), leftBottom.y + width * (float)sin(info.upVector - PI / 2) };
+		rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+	}
+	else if (info.textPath == TextPath::DOWN)
+	{
+		for (auto& c : str)
+		{
+			if (texts.find(c) != texts.end())
+			{
+				const Stencil& s = texts.find(c)->second;
+
+				height += s.stencil.size();
+				width = std::max(width, (float)s.stencil[0].size());
+			}
+		}
+		height += (str.size() - 1) * info.space;
+
+		float firstHeight = texts[str[0]].stencil.size();
+		leftTop = { pos.x + firstHeight * (float)cos(info.upVector), pos.y + firstHeight * (float)sin(info.upVector) };
+		leftBottom = { leftTop.x + height * (float)cos(info.upVector + PI), leftTop.y + height * (float)sin(info.upVector + PI) };
+		rightTop = { leftTop.x + width * (float)cos(info.upVector - PI / 2), leftTop.y + width * (float)sin(info.upVector - PI / 2) };
+		rightBottom = { rightTop.x + height * (float)cos(info.upVector + PI), rightTop.y + height * (float)sin(info.upVector + PI) };
+	}
+
+	if (pointInRect(leftBottom, clipWindow) &&
+		pointInRect(rightBottom, clipWindow) &&
+		pointInRect(rightTop, clipWindow) &&
+		pointInRect(leftTop, clipWindow))
+	{
+		drawString(pos, str, info, texts);
+	}	
+}
+void clipString_all_or_none_character_clipping(Rect clipWindow, Point pos, const std::string& str, const TextInfo& info, std::map<char, Stencil>& texts)
+{
+	float charRotate = -1 * PI / 2 + info.upVector;
+
+	Point leftBottom, rightBottom, rightTop, leftTop;
+	switch (info.textPath)
+	{
+	case TextPath::UP:
+	{
+		leftBottom = pos;
+	}
+	break;
+	case TextPath::DOWN:
+	{
+		float firstHeight = texts[str[0]].stencil.size();
+		leftTop = { pos.x + firstHeight * (float)cos(info.upVector), pos.y + firstHeight * (float)sin(info.upVector) };
+	}
+	break;
+	case TextPath::RIGHT:
+	{
+		leftBottom = pos;
+	}
+	break;
+	case TextPath::LEFT:
+	{
+		float firstWidth = texts[str[0]].stencil[0].size();
+		rightBottom = { pos.x + firstWidth * (float)cos(info.upVector - PI / 2), pos.y + firstWidth * (float)sin(info.upVector - PI / 2) };
+	}
+	break;
+	default:
+	break;
+	}
+
+	float width = 0, height = 0;
+
 	for (auto& c : str)
 	{
 		if (texts.find(c) != texts.end())
 		{
 			const Stencil& s = texts.find(c)->second;
+			width = s.stencil[0].size();
+			height = s.stencil.size();
+
 			switch (info.textPath)
 			{
 			case TextPath::UP:
-				height += s.stencil.size() + info.space;
-				width = std::max(width, (float)s.stencil[0].size());
+				leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+				rightBottom = { leftBottom.x + width * (float)cos(info.upVector - PI / 2), leftBottom.y + width * (float)sin(info.upVector - PI / 2) };
+				rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
 				break;
 			case TextPath::DOWN:
-				posX += (s.stencil.size() + info.space) * std::cos(info.upVector + PI);
-				posY += (s.stencil.size() + info.space) * std::sin(info.upVector + PI);
-				break;
-			case TextPath::LEFT:
-				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
-				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
+				leftBottom = { leftTop.x + height * (float)cos(info.upVector + PI), leftTop.y + height * (float)sin(info.upVector + PI) };
+				rightTop = { leftTop.x + width * (float)cos(info.upVector - PI / 2), leftTop.y + width * (float)sin(info.upVector - PI / 2) };
+				rightBottom = { rightTop.x + height * (float)cos(info.upVector + PI), rightTop.y + height * (float)sin(info.upVector + PI) };
 				break;
 			case TextPath::RIGHT:
-				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector - PI / 2);
-				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector - PI / 2);
+				leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+				rightBottom = { leftBottom.x + width * (float)cos(info.upVector - PI / 2), leftBottom.y + width * (float)sin(info.upVector - PI / 2) };
+				rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+				break;
+			case TextPath::LEFT:
+				rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+				leftBottom = { rightBottom.x + width * (float)cos(info.upVector + PI / 2), rightBottom.y + width * (float)sin(info.upVector + PI / 2) };
+				leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+				break;
+			default:
+				break;
+			}
+
+			if (pointInRect(leftBottom, clipWindow) &&
+				pointInRect(rightBottom, clipWindow) &&
+				pointInRect(rightTop, clipWindow) &&
+				pointInRect(leftTop, clipWindow))
+			{
+				drawStencil(leftBottom.x, leftBottom.y, s, charRotate);
+			}
+			
+			switch (info.textPath)
+			{
+			case TextPath::UP:
+				leftBottom = leftTop;
+				break;
+			case TextPath::DOWN:
+				leftTop = leftBottom;
+				break;
+			case TextPath::RIGHT:
+				leftBottom = rightBottom;
+				break;
+			case TextPath::LEFT:
+				rightBottom = leftBottom;
 				break;
 			default:
 				break;
 			}
 		}
 	}
-
-	switch (info.textPath)
-	{
-	case TextPath::UP:
-		leftBottom = pos;
-		rightBottom = { pos.x + s.stencil[0].size() * std::cos(info.upVector - PI / 2), pos.y + s.stencil[0].size() * std::sin(info.upVector - PI / 2) };
-		break;
-	case TextPath::DOWN:
-		posX += (s.stencil.size() + info.space) * std::cos(info.upVector + PI);
-		posY += (s.stencil.size() + info.space) * std::sin(info.upVector + PI);
-		break;
-	case TextPath::LEFT:
-		posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
-		posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
-		break;
-	case TextPath::RIGHT:
-		posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector - PI / 2);
-		posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector - PI / 2);
-		break;
-	default:
-		break;
-	}
+}
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
 }
 void drawFunc()
 {
@@ -7632,81 +7773,52 @@ void drawFunc()
 			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
 			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
 		}, 0, 0 };
+	Stencil D = {
+		{
+			{ 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+	Stencil E = {
+		{
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		}, 0, 0 };
 
 	std::map<char, Stencil> texts;
 	texts['A'] = A;
 	texts['B'] = B;
 	texts['C'] = C;
+	texts['D'] = D;
+	texts['E'] = E;
 
-	// PI/2 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(120, 420, "ABC", { 2, PI / 2, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(120, 380, "ABC", { 2, PI / 2, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(100, 400, "ABC", { 2, PI / 2, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(140, 400, "ABC", { 2, PI / 2, TextPath::RIGHT }, texts);
+	Rect clipWindow = { 200, 200, 550, 400 };
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
 
-	// 0 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(340, 400, "ABC", { 2, 0, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(300, 400, "ABC", { 2, 0, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(320, 420, "ABC", { 2, 0, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(320, 380, "ABC", { 2, 0, TextPath::RIGHT }, texts);
-
-	// PI 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(500, 400, "ABC", { 2, PI, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(540, 400, "ABC", { 2, PI, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(520, 380, "ABC", { 2, PI, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(520, 420, "ABC", { 2, PI, TextPath::RIGHT }, texts);
-
-	// PI/6 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(120, 220, "ABC", { 2, PI / 6, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(120, 180, "ABC", { 2, PI / 6, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(100, 200, "ABC", { 2, PI / 6, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(140, 200, "ABC", { 2, PI / 6, TextPath::RIGHT }, texts);
-
-	// PI/4 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(320, 220, "ABC", { 2, PI / 4, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(320, 180, "ABC", { 2, PI / 4, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(300, 200, "ABC", { 2, PI / 4, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(340, 200, "ABC", { 2, PI / 4, TextPath::RIGHT }, texts);
-
-	// PI*3/4 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(520, 220, "ABC", { 2, PI * 3 / 4, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(520, 180, "ABC", { 2, PI * 3 / 4, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(500, 200, "ABC", { 2, PI * 3 / 4, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(540, 200, "ABC", { 2, PI * 3 / 4, TextPath::RIGHT }, texts);
-
-	// -PI/4 向上向量
-	glColor3f(1.0f, 0.0f, 0.0f);
-	drawString(740, 200, "ABC", { 2, -PI / 4, TextPath::UP }, texts);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	drawString(700, 200, "ABC", { 2, -PI / 4, TextPath::DOWN }, texts);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	drawString(720, 220, "ABC", { 2, -PI / 4, TextPath::LEFT }, texts);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	drawString(720, 180, "ABC", { 2,-PI / 4, TextPath::RIGHT }, texts);
+	clipString_all_or_none_character_clipping(clipWindow, { 370, 210 }, "ABCDE", { 2, PI / 2, TextPath::DOWN }, texts);
 
 	glFlush();
 }
