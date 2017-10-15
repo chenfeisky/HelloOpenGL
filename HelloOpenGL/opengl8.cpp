@@ -7492,11 +7492,11 @@ void drawString(Point pos, const std::string& str, const TextInfo& info, const s
 	float posX = pos.x;
 	float posY = pos.y;
 	float charRotate = -1 * PI / 2 + info.upVector;
-	for (auto& c : str)
+	for (int i = 0; i < str.size(); i++)
 	{
-		if (texts.find(c) != texts.end())
+		if (texts.find(str[i]) != texts.end())
 		{
-			const Stencil& s = texts.find(c)->second;
+			const Stencil& s = texts.find(str[i])->second;
 			drawStencil(posX, posY, s, charRotate);
 			switch (info.textPath)
 			{
@@ -7505,12 +7505,20 @@ void drawString(Point pos, const std::string& str, const TextInfo& info, const s
 				posY += (s.stencil.size() + info.space) * std::sin(info.upVector);
 				break;
 			case TextPath::DOWN:
-				posX += (s.stencil.size() + info.space) * std::cos(info.upVector + PI);
-				posY += (s.stencil.size() + info.space) * std::sin(info.upVector + PI);
+				if (i + 1 < str.size())
+				{
+					const Stencil& nextS = texts.find(str[i + 1])->second;
+					posX += (nextS.stencil.size() + info.space) * std::cos(info.upVector + PI);
+					posY += (nextS.stencil.size() + info.space) * std::sin(info.upVector + PI);
+				}
 				break;
 			case TextPath::LEFT:
-				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
-				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
+				if (i + 1 < str.size())
+				{
+					const Stencil& nextS = texts.find(str[i + 1])->second;
+					posX += (nextS.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
+					posY += (nextS.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
+				}
 				break;
 			case TextPath::RIGHT:
 				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector - PI / 2);
@@ -7699,16 +7707,16 @@ void clipString_all_or_none_character_clipping(Rect clipWindow, Point pos, const
 			switch (info.textPath)
 			{
 			case TextPath::UP:
-				leftBottom = leftTop;
+				leftBottom = { leftTop.x + info.space * (float)cos(info.upVector), leftTop.y + info.space * (float)sin(info.upVector) };
 				break;
 			case TextPath::DOWN:
-				leftTop = leftBottom;
+				leftTop = { leftBottom.x + info.space * (float)cos(info.upVector + PI), leftBottom.y + info.space * (float)sin(info.upVector + PI) };
 				break;
 			case TextPath::RIGHT:
-				leftBottom = rightBottom;
+				leftBottom = { rightBottom.x + info.space * (float)cos(info.upVector - PI / 2), rightBottom.y + info.space * (float)sin(info.upVector - PI / 2) };
 				break;
 			case TextPath::LEFT:
-				rightBottom = leftBottom;
+				rightBottom = { leftBottom.x + info.space * (float)cos(info.upVector + PI / 2), leftBottom.y + info.space * (float)sin(info.upVector + PI / 2) };
 				break;
 			default:
 				break;
@@ -7818,7 +7826,7 @@ void drawFunc()
 	{ clipWindow.maxX, clipWindow.maxY } ,
 	{ clipWindow.minX, clipWindow.maxY } });
 
-	clipString_all_or_none_character_clipping(clipWindow, { 370, 210 }, "ABCDE", { 2, PI / 2, TextPath::DOWN }, texts);
+	clipString_all_or_none_string_clipping(clipWindow, { 250, 300 }, "ABCDE", { 2, PI / 2, TextPath::LEFT }, texts);
 
 	glFlush();
 }

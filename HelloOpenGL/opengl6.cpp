@@ -12089,11 +12089,11 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 	double posX = x;
 	double posY = y;
 	float charRotate = -1 * PI / 2 + info.upVector;
-	for (auto& c : str)
+	for (int i = 0; i < str.size(); i++)
 	{
-		if (texts.find(c) != texts.end())
+		if (texts.find(str[i]) != texts.end())
 		{
-			const Stencil& s = texts.find(c)->second;
+			const Stencil& s = texts.find(str[i])->second;
 			drawStencil(posX, posY, s, charRotate);
 			switch (info.textPath)
 			{
@@ -12102,12 +12102,20 @@ void drawString(int x, int y, const std::string& str, const TextInfo& info, cons
 				posY += (s.stencil.size() + info.space) * std::sin(info.upVector);
 				break;
 			case TextPath::DOWN:
-				posX += (s.stencil.size() + info.space) * std::cos(info.upVector + PI);
-				posY += (s.stencil.size() + info.space) * std::sin(info.upVector + PI);
+				if (i + 1 < str.size())
+				{
+					const Stencil& nextS = texts.find(str[i + 1])->second;
+					posX += (nextS.stencil.size() + info.space) * std::cos(info.upVector + PI);
+					posY += (nextS.stencil.size() + info.space) * std::sin(info.upVector + PI);
+				}
 				break;
 			case TextPath::LEFT:
-				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
-				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
+				if (i + 1 < str.size())
+				{
+					const Stencil& nextS = texts.find(str[i + 1])->second;
+					posX += (nextS.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
+					posY += (nextS.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
+				}
 				break;
 			case TextPath::RIGHT:
 				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector - PI / 2);
