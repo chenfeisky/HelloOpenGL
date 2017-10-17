@@ -8193,19 +8193,7 @@ void code_8_exercise_21()
 #ifdef CHAPTER_8_EXERCISE_22
 float FPS = 60;
 struct Point { float x; float y; };
-struct Rect
-{
-	float minX;
-	float minY;
-	float maxX;
-	float maxY;
-};
-struct Stencil
-{
-	std::vector<std::vector<int>> stencil;
-	int xc;
-	int yc;
-};
+typedef Point Vec;
 enum class TextPath
 {
 	UP,
@@ -8218,6 +8206,31 @@ struct TextInfo
 	int space;
 	double upVector;
 	TextPath textPath;
+};
+struct Text
+{
+	std::string str;
+	Point pos;
+	TextInfo info;
+};
+struct MoveConfig
+{
+	std::vector<Text> texts;
+	Vec speed;
+	float moveTime;
+};
+struct Rect
+{
+	float minX;
+	float minY;
+	float maxX;
+	float maxY;
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
 };
 inline int Round(const float a)
 {
@@ -8490,6 +8503,410 @@ void drawPolygonLine(const vector<Point>& polygon)
 }
 int lastTick = 0;
 float delta = 0.f;
+std::vector<MoveConfig> moveConfig =
+{
+	{{
+		{ "ABCDE",{ -10, 440 },{ 2, 0, TextPath::RIGHT } },
+		{ "ABCDE",{ -21, 385 },{ 2, -PI / 6, TextPath::RIGHT } },
+		{ "ABCDE",{ -62, 329 },{ 2, PI / 4, TextPath::RIGHT } },
+		{ "ABCDE",{ -62, 270 },{ 2, PI / 2, TextPath::RIGHT } },
+		{ "ABCDE",{ -30, 208 },{ 2, PI, TextPath::RIGHT } },
+		}, {30, 0}, (float)480 / 30},
+
+	{ {
+		{ "ABCDE",{ 52, 103 },{ 2, -PI / 6, TextPath::UP } },
+		{ "ABCDE",{ 145, 55 },{ 2, PI / 4, TextPath::UP } },
+		{ "ABCDE",{ 220, 38 },{ 2, PI / 2, TextPath::UP } },
+		{ "ABCDE",{ 310, 70 },{ 2, PI, TextPath::UP } },
+		{ "ABCDE",{ 281, 46 },{ 2, 0, TextPath::UP } },
+		},{ 0, 30 }, (float)480 / 30 },
+
+	{ {
+		{ "ABCDE",{ 453, 139 },{ 2, PI / 4, TextPath::LEFT } },
+		{ "ABCDE",{ 458, 220 },{ 2, PI / 2, TextPath::LEFT } },
+		{ "ABCDE",{ 415, 281 },{ 2, 0, TextPath::LEFT } },
+		{ "ABCDE",{ 455, 357 },{ 2, PI, TextPath::LEFT } },
+		{ "ABCDE",{ 417, 395 },{ 2, -PI / 6, TextPath::LEFT } },
+		},{ -30, 0 }, (float)480 / 30 },
+
+	{ {
+		{ "ABCDE",{ 339, 557 },{ 2, PI / 2, TextPath::DOWN } },
+		{ "ABCDE",{ 298, 514 },{ 2, -PI / 6, TextPath::DOWN } },
+		{ "ABCDE",{ 215, 545 },{ 2, 0, TextPath::DOWN } },
+		{ "ABCDE",{ 123, 509 },{ 2, PI, TextPath::DOWN } },
+		{ "ABCDE",{ 111, 550 },{ 2, PI / 4, TextPath::DOWN } },
+		},{ 0, -30 }, (float)480 / 30 },
+};
+int curConfigIdx = 0;
+float moveTime = 0.f;
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	Stencil A = {
+		{
+			{ 0, 0, 0, 0, 1, 0, 0, 0, 0 },
+			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
+			{ 0, 0, 0, 1, 0, 1, 0, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 1, 0, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 1, 0 },
+			{ 0, 1, 1, 1, 1, 1, 1, 1, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+		}, 0, 0 };
+	Stencil B = {
+		{
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+	Stencil C = {
+		{
+			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 1, 0, 0, 0, 0, 0, 0, 0 },
+			{ 0, 0, 1, 0, 0, 0, 0, 1, 0 },
+			{ 0, 0, 0, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+	Stencil D = {
+		{
+			{ 1, 1, 1, 1, 1, 0, 0 },
+			{ 1, 0, 0, 0, 0, 1, 0 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 0, 1 },
+			{ 1, 0, 0, 0, 0, 1, 0 },
+			{ 1, 1, 1, 1, 1, 0, 0 },
+		}, 0, 0 };
+	Stencil E = {
+		{
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+			{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		}, 0, 0 };
+
+	std::map<char, Stencil> texts;
+	texts['A'] = A;
+	texts['B'] = B;
+	texts['C'] = C;
+	texts['D'] = D;
+	texts['E'] = E;
+
+	Rect clipWindow = { 80, 200, 320, 420 };
+	Point pos;
+	moveTime += delta;
+
+	if (moveTime > moveConfig[curConfigIdx].moveTime)
+	{
+		moveTime = 0;
+		curConfigIdx = (++curConfigIdx) % moveConfig.size();
+	}
+
+	// “全部保留或全部舍弃字符串”
+	glViewport(0, 120, 400, 380);
+	glColor3f(1.f, 1.f, 1.f);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+	
+	for (auto& t : moveConfig[curConfigIdx].texts)
+	{
+		glColor3f(1.f, 1.f, 1.f);
+		pos = { t.pos.x + moveTime * moveConfig[curConfigIdx].speed.x, t.pos.y + moveTime * moveConfig[curConfigIdx].speed.y };
+		drawString(pos, t.str, t.info, texts);
+		glColor3f(1.f, 0.f, 0.f);
+		clipString_all_or_none_string_clipping(clipWindow, pos, t.str, t.info, texts);
+	}
+
+	// “全部保留或全部舍弃字符”
+	glViewport(400, 120, 400, 380);
+	glColor3f(1.f, 1.f, 1.f);
+	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.minY },
+	{ clipWindow.maxX, clipWindow.maxY } ,
+	{ clipWindow.minX, clipWindow.maxY } });
+
+	for (auto& t : moveConfig[curConfigIdx].texts)
+	{
+		glColor3f(1.f, 1.f, 1.f);
+		pos = { t.pos.x + moveTime * moveConfig[curConfigIdx].speed.x, t.pos.y + moveTime * moveConfig[curConfigIdx].speed.y };
+		drawString(pos, t.str, t.info, texts);
+		glColor3f(1.f, 0.f, 0.f);
+		clipString_all_or_none_character_clipping(clipWindow, pos, t.str, t.info, texts);
+	}
+	
+	glFlush();
+}
+void onTimer(int id)
+{
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+void code_8_exercise_22()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 400, 120, 500);
+
+	glutDisplayFunc(drawFunc);
+	lastTick = GetTickCount();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_23
+struct Point { float x; float y; };
+struct Rect
+{
+	float minX;
+	float minY;
+	float maxX;
+	float maxY;
+};
+struct Stencil
+{
+	std::vector<std::vector<int>> stencil;
+	int xc;
+	int yc;
+};
+enum class TextPath
+{
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+};
+struct TextInfo
+{
+	int space;
+	double upVector;
+	TextPath textPath;
+};
+enum LocationType
+{
+	Unkown,  // 不确定
+	Outer,  // 完全在外部
+	Inner,  // 完全在内部
+};
+inline int Round(const float a)
+{
+	if (a >= 0)
+		return int(a + 0.5);
+	else
+		return int(a - 0.5);
+}
+void drawStencil(float x, float y, const Stencil& s, float rotate)
+{
+	float sin = std::sin(rotate);
+	float cos = std::cos(rotate);
+	for (int i = 0; i < s.stencil.size(); i++)
+	{
+		for (int j = 0; j < s.stencil[i].size(); j++)
+		{
+			if (s.stencil[i][j] == 1)
+			{
+				int curX = j;
+				int curY = s.stencil.size() - 1 - i;
+
+				setPixel(Round(x + curX * cos - curY * sin), Round(y + curY * cos + curX * sin));
+			}
+		}
+	}
+}
+void drawString(Point pos, const std::string& str, const TextInfo& info, const std::map<char, Stencil>& texts)
+{
+	float posX = pos.x;
+	float posY = pos.y;
+	float charRotate = -1 * PI / 2 + info.upVector;
+	for (int i = 0; i < str.size(); i++)
+	{
+		if (texts.find(str[i]) != texts.end())
+		{
+			const Stencil& s = texts.find(str[i])->second;
+			drawStencil(posX, posY, s, charRotate);
+			switch (info.textPath)
+			{
+			case TextPath::UP:
+				posX += (s.stencil.size() + info.space) * std::cos(info.upVector);
+				posY += (s.stencil.size() + info.space) * std::sin(info.upVector);
+				break;
+			case TextPath::DOWN:
+				if (i + 1 < str.size())
+				{
+					const Stencil& nextS = texts.find(str[i + 1])->second;
+					posX += (nextS.stencil.size() + info.space) * std::cos(info.upVector + PI);
+					posY += (nextS.stencil.size() + info.space) * std::sin(info.upVector + PI);
+				}
+				break;
+			case TextPath::LEFT:
+				if (i + 1 < str.size())
+				{
+					const Stencil& nextS = texts.find(str[i + 1])->second;
+					posX += (nextS.stencil[0].size() + info.space) * std::cos(info.upVector + PI / 2);
+					posY += (nextS.stencil[0].size() + info.space) * std::sin(info.upVector + PI / 2);
+				}
+				break;
+			case TextPath::RIGHT:
+				posX += (s.stencil[0].size() + info.space) * std::cos(info.upVector - PI / 2);
+				posY += (s.stencil[0].size() + info.space) * std::sin(info.upVector - PI / 2);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+bool pointInRect(Point p, Rect rect)
+{
+	return p.x >= rect.minX && p.x <= rect.maxX && p.y >= rect.minY && p.y <= rect.maxY;
+}
+LocationType checkLocation(Rect clipWindow, const std::vector<Point>& polygon)
+{
+
+}
+void clipString_all_or_none_character_clipping(Rect clipWindow, Point pos, const std::string& str, const TextInfo& info, std::map<char, Stencil>& texts)
+{
+	float charRotate = -1 * PI / 2 + info.upVector;
+
+	Point leftBottom, rightBottom, rightTop, leftTop;
+	switch (info.textPath)
+	{
+	case TextPath::UP:
+	{
+		leftBottom = pos;
+	}
+	break;
+	case TextPath::DOWN:
+	{
+		float firstHeight = texts[str[0]].stencil.size();
+		leftTop = { pos.x + firstHeight * (float)cos(info.upVector), pos.y + firstHeight * (float)sin(info.upVector) };
+	}
+	break;
+	case TextPath::RIGHT:
+	{
+		leftBottom = pos;
+	}
+	break;
+	case TextPath::LEFT:
+	{
+		float firstWidth = texts[str[0]].stencil[0].size();
+		rightBottom = { pos.x + firstWidth * (float)cos(info.upVector - PI / 2), pos.y + firstWidth * (float)sin(info.upVector - PI / 2) };
+	}
+	break;
+	default:
+		break;
+	}
+
+	float width = 0, height = 0;
+
+	for (auto& c : str)
+	{
+		if (texts.find(c) != texts.end())
+		{
+			const Stencil& s = texts.find(c)->second;
+			width = s.stencil[0].size();
+			height = s.stencil.size();
+
+			switch (info.textPath)
+			{
+			case TextPath::UP:
+				leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+				rightBottom = { leftBottom.x + width * (float)cos(info.upVector - PI / 2), leftBottom.y + width * (float)sin(info.upVector - PI / 2) };
+				rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+				break;
+			case TextPath::DOWN:
+				leftBottom = { leftTop.x + height * (float)cos(info.upVector + PI), leftTop.y + height * (float)sin(info.upVector + PI) };
+				rightTop = { leftTop.x + width * (float)cos(info.upVector - PI / 2), leftTop.y + width * (float)sin(info.upVector - PI / 2) };
+				rightBottom = { rightTop.x + height * (float)cos(info.upVector + PI), rightTop.y + height * (float)sin(info.upVector + PI) };
+				break;
+			case TextPath::RIGHT:
+				leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+				rightBottom = { leftBottom.x + width * (float)cos(info.upVector - PI / 2), leftBottom.y + width * (float)sin(info.upVector - PI / 2) };
+				rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+				break;
+			case TextPath::LEFT:
+				rightTop = { rightBottom.x + height * (float)cos(info.upVector), rightBottom.y + height * (float)sin(info.upVector) };
+				leftBottom = { rightBottom.x + width * (float)cos(info.upVector + PI / 2), rightBottom.y + width * (float)sin(info.upVector + PI / 2) };
+				leftTop = { leftBottom.x + height * (float)cos(info.upVector), leftBottom.y + height * (float)sin(info.upVector) };
+				break;
+			default:
+				break;
+			}
+
+			if (pointInRect(leftBottom, clipWindow) &&
+				pointInRect(rightBottom, clipWindow) &&
+				pointInRect(rightTop, clipWindow) &&
+				pointInRect(leftTop, clipWindow))
+			{
+				drawStencil(leftBottom.x, leftBottom.y, s, charRotate);
+			}
+
+			switch (info.textPath)
+			{
+			case TextPath::UP:
+				leftBottom = { leftTop.x + info.space * (float)cos(info.upVector), leftTop.y + info.space * (float)sin(info.upVector) };
+				break;
+			case TextPath::DOWN:
+				leftTop = { leftBottom.x + info.space * (float)cos(info.upVector + PI), leftBottom.y + info.space * (float)sin(info.upVector + PI) };
+				break;
+			case TextPath::RIGHT:
+				leftBottom = { rightBottom.x + info.space * (float)cos(info.upVector - PI / 2), rightBottom.y + info.space * (float)sin(info.upVector - PI / 2) };
+				break;
+			case TextPath::LEFT:
+				rightBottom = { leftBottom.x + info.space * (float)cos(info.upVector + PI / 2), leftBottom.y + info.space * (float)sin(info.upVector + PI / 2) };
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -8939,23 +9356,13 @@ void drawFunc()
 
 	glFlush();
 }
-void onTimer(int id)
-{
-	int curTick = GetTickCount();
-	delta = (curTick - lastTick) / (float)1000;
-	lastTick = curTick;
-	glutPostRedisplay();
-	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
-}
-void code_8_exercise_22()
+void code_8_exercise_23()
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, 200, 0, 300);
 
 	glutDisplayFunc(drawFunc);
-	lastTick = GetTickCount();
-	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
 }
 #endif
 
@@ -9065,6 +9472,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_22
 	code_8_exercise_22();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_23
+	code_8_exercise_23();
 #endif
 
 
