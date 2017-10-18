@@ -30,7 +30,8 @@
 //#define CHAPTER_8_EXERCISE_20
 //#define CHAPTER_8_EXERCISE_21 // 全部保留或全部舍弃字符串 全部保留或全部舍弃字符
 //#define CHAPTER_8_EXERCISE_22
-#define CHAPTER_8_EXERCISE_23
+//#define CHAPTER_8_EXERCISE_23
+#define CHAPTER_8_EXERCISE_24
 
 #ifdef CHAPTER_8_EXERCISE_5
 #define CHAPTER_8_7_1
@@ -141,5 +142,9 @@
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_23
+#define CHAPTER_8_COMMON
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_24
 #define CHAPTER_8_COMMON
 #endif
