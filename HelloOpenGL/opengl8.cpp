@@ -6196,7 +6196,7 @@ void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<P
 	if (pointInfo[p].type == PointType::CrossIn)
 	{
 		walkPolygon(polygonPoints, pointInfo[p].idx2, true, clipWindowPoints, pointInfo, reslutPolygon);
-	}		
+	}
 	else if (pointInfo[p].type == PointType::ClipWindow)
 	{
 		walkClipWindow(clipWindowPoints, idx, polygonPoints, pointInfo, reslutPolygon);
@@ -9706,6 +9706,160 @@ void code_8_exercise_24()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_ADD_1
+struct Point
+{
+	float x, y;
+};
+typedef Point Vec;
+inline bool operator==(const Point& p1, const Point& p2)
+{
+	return p1.x == p2.x && p1.y == p2.y;
+}
+inline bool operator<(const Point& p1, const Point& p2)
+{
+	return p1.x < p2.x && p1.y < p2.y;
+}
+int crossProduct(const Vec& vec1, const Vec& vec2)
+{
+	return vec1.x * vec2.y - vec1.y * vec2.x;
+}
+bool crossPoint(Point lineBegin1, Point lineEnd1, Point lineBegin2, Point lineEnd2, float& u1, float& u2)
+{
+	float dx1 = lineEnd1.x - lineBegin1.x;
+	float dy1 = lineEnd1.y - lineBegin1.y;
+	float dx2 = lineEnd2.x - lineBegin2.x;
+	float dy2 = lineEnd2.y - lineBegin2.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if(dx1 && dx2 && dy1 / dx1 == dy2 / dx2)
+		return false;
+
+	float x01 = lineBegin1.x;
+	float y01 = lineBegin1.y;
+	float x02 = lineBegin2.x;
+	float y02 = lineBegin2.y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+	return true;
+}
+void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point>>& result)
+{
+	std::vector<Vec> edges;
+	for (int i = 0; i < ploygon.size(); i++)
+	{
+		int next = i + 1 < ploygon.size() ? i + 1 : 0;
+		edges.push_back({ ploygon[next].x - ploygon[i].x, ploygon[next].y - ploygon[i].y });
+	}
+	int index = -1;
+	for (int i = 0; i < edges.size(); ++i)
+	{
+		int next = i + 1 < edges.size() ? i + 1 : 0;
+		float xp = crossProduct(edges[i], edges[next]);
+		if (xp < 0)
+		{
+			index = i;
+			break;
+		}
+	}
+	if (index == -1)
+	{
+		result.push_back(ploygon);
+		return;
+	}
+
+	Point cutStartP = ploygon[index];
+	Point cutEndP = ploygon[index + 1 < ploygon.size() ? index + 1 : 0];
+	float A1 = cutEndP.y - cutStartP.y;
+	float B1 = cutStartP.x - cutEndP.x;
+	float C1 = cutEndP.x * cutStartP.y - cutStartP.x * cutEndP.y;
+
+	Point cutPoint;
+	float crossU1 = -1.f;
+	float crossU2 = -1.f;
+	int curIndex = -1;
+	for (int i = 0; i < ploygon.size(); i++)
+	{
+		int next = i + 1 < ploygon.size() ? i + 1 : 0;
+		float u1, u2;
+		if (crossPoint(cutStartP, cutEndP, ploygon[i], ploygon[next], u1, u2))
+		{
+			if (u1 > 1.f && u2 >= 0.f && u2 <= 1.f)
+			{
+				if (u1 < crossU1 || crossU1 == -1.f)
+				{
+					crossU1 = u1;
+					crossU2 = u2;
+					curIndex = i;
+				}
+			}
+		}
+	}
+
+	assert(curIndex >= 0);
+
+	vector<Point> newPloygon = ploygon;
+	if (crossU2 == 0.f)
+	{
+		cutPoint = ploygon[curIndex];
+	}
+	else if(crossU2 == 1.f)
+	{
+		cutPoint = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0];
+	}
+	else
+	{
+		float x0 = ploygon[curIndex].x;
+		float y0 = ploygon[curIndex].y;
+		float xEnd = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0].x;
+		float yEnd = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0].y;
+		cutPoint = {x0 + crossU2 * (xEnd - x0), y0 + crossU2 * (yEnd - y0)};
+		newPloygon.insert(newPloygon.begin() + curIndex + 1, cutPoint);
+	}
+
+
+	vector<Point> newPloygon1;
+	vector<Point> newPloygon2;
+
+	bool f = false;
+	for (int i = 0; i < newPloygon.size(); i++)
+	{
+		if (newPloygon[i] == cutPoint || newPloygon[i] == cutEndP)
+		{
+			if (!f)
+			{
+				newPloygon1.push_back(newPloygon[i]);
+			}
+			else
+			{
+				newPloygon2.push_back(newPloygon[i]);
+			}
+			f = !f;
+		}
+
+		if (!f)
+		{
+			newPloygon1.push_back(newPloygon[i]);
+		}
+		else
+		{
+			newPloygon2.push_back(newPloygon[i]);
+		}
+	}
+	cutPolygon(newPloygon1);
+	cutPolygon(newPloygon2);
+}
+void code_8_exercise_add_1()
+{
+	cutPolygon(ploygon);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glutDisplayFunc(drowPolygon);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -9820,6 +9974,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_24
 	code_8_exercise_24();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_1
+	code_8_exercise_add_1();
 #endif
 
 
