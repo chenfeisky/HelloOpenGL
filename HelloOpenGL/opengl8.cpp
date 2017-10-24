@@ -9711,6 +9711,8 @@ struct Point
 {
 	float x, y;
 };
+//////////////////////////////////////////////////////////////////////////
+// 分割凹多边形
 typedef Point Vec;
 inline bool operator==(const Point& p1, const Point& p2)
 {
@@ -9745,6 +9747,21 @@ bool crossPoint(Point lineBegin1, Point lineEnd1, Point lineBegin2, Point lineEn
 	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
 	return true;
 }
+bool sameLine(Point begin, Point middle, Point end)
+{
+	float dx1 = middle.x - begin.x;
+	float dy1 = middle.y - begin.y;
+	float dx2 = end.x - middle.x;
+	float dy2 = end.y - middle.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return true;
+
+	if (dx1 && dx2 && dy1 / dx1 == dy2 / dx2)
+		return true;
+
+	return false;
+}
 void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point>>& result)
 {
 	std::vector<Vec> edges;
@@ -9772,11 +9789,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 
 	Point cutStartP = ploygon[index];
 	Point cutEndP = ploygon[index + 1 < ploygon.size() ? index + 1 : 0];
-	float A1 = cutEndP.y - cutStartP.y;
-	float B1 = cutStartP.x - cutEndP.x;
-	float C1 = cutEndP.x * cutStartP.y - cutStartP.x * cutEndP.y;
-
-	Point cutPoint;
+	
 	float crossU1 = -1.f;
 	float crossU2 = -1.f;
 	int curIndex = -1;
@@ -9800,6 +9813,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 
 	assert(curIndex >= 0);
 
+	Point cutPoint;
 	vector<Point> newPloygon = ploygon;
 	if (crossU2 == 0.f)
 	{
@@ -9818,15 +9832,65 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 		cutPoint = {x0 + crossU2 * (xEnd - x0), y0 + crossU2 * (yEnd - y0)};
 		newPloygon.insert(newPloygon.begin() + curIndex + 1, cutPoint);
 	}
-
-
+	
 	vector<Point> newPloygon1;
 	vector<Point> newPloygon2;
-
 	bool f = false;
 	for (int i = 0; i < newPloygon.size(); i++)
 	{
-		if (newPloygon[i] == cutPoint || newPloygon[i] == cutEndP)
+		if (newPloygon[i] == cutEndP)
+		{
+			if (!sameLine(newPloygon[i - 1 < ploygon.size() ? i - 1 : 0], cutEndP, cutPoint))
+			{
+				if (!f)
+				{
+					newPloygon1.push_back(newPloygon[i]);
+				}
+				else
+				{
+					newPloygon2.push_back(newPloygon[i]);
+				}
+			}
+			f = !f;
+			if (!sameLine(cutPoint, cutEndP, newPloygon[i + 1 < ploygon.size() ? i + 1 : 0]))
+			{
+				if (!f)
+				{
+					newPloygon1.push_back(newPloygon[i]);
+				}
+				else
+				{
+					newPloygon2.push_back(newPloygon[i]);
+				}
+			}
+		}
+		else if (newPloygon[i] == cutPoint)
+		{
+			if (!sameLine(newPloygon[i - 1 < ploygon.size() ? i - 1 : 0], cutPoint, cutEndP))
+			{
+				if (!f)
+				{
+					newPloygon1.push_back(newPloygon[i]);
+				}
+				else
+				{
+					newPloygon2.push_back(newPloygon[i]);
+				}
+			}
+			f = !f;
+			if (!sameLine(cutEndP, cutPoint, newPloygon[i + 1 < ploygon.size() ? i + 1 : 0]))
+			{
+				if (!f)
+				{
+					newPloygon1.push_back(newPloygon[i]);
+				}
+				else
+				{
+					newPloygon2.push_back(newPloygon[i]);
+				}
+			}
+		}
+		else
 		{
 			if (!f)
 			{
@@ -9836,21 +9900,400 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 			{
 				newPloygon2.push_back(newPloygon[i]);
 			}
-			f = !f;
-		}
-
-		if (!f)
-		{
-			newPloygon1.push_back(newPloygon[i]);
-		}
-		else
-		{
-			newPloygon2.push_back(newPloygon[i]);
 		}
 	}
-	cutPolygon(newPloygon1);
-	cutPolygon(newPloygon2);
+	cutPolygon(newPloygon1, result);
+	cutPolygon(newPloygon2, result);
 }
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// Sutherlan-Hodgman多边形裁剪算法(凸多边形)
+typedef enum { None, Left, Right, Bottom, Top } Boundary;
+typedef Point wcPt2D;
+const GLint nClip = 4;
+vector<wcPt2D> sPoint[nClip];
+GLint inside(wcPt2D p, Boundary b, wcPt2D wMin, wcPt2D wMax)
+{
+	switch (b)
+	{
+	case Left:
+		if (p.x < wMin.x)
+			return (false);
+		break;
+	case Right:
+		if (p.x > wMax.x)
+			return (false);
+		break;
+	case Bottom:
+		if (p.y < wMin.y)
+			return (false);
+		break;
+	case Top:
+		if (p.y > wMax.y)
+			return (false);
+		break;
+	}
+	return (true);
+}
+GLint cross(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax)
+{
+	if (inside(p1, winEdge, wMin, wMax) == inside(p2, winEdge, wMin, wMax))
+		return (false);
+	else
+		return (true);
+}
+wcPt2D intersect(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax)
+{
+	wcPt2D iPt;
+	GLfloat m;
+
+	if (p1.x != p2.x)
+		m = (p1.y - p2.y) / (p1.x - p2.x);
+	switch (winEdge)
+	{
+	case Left:
+		iPt.x = wMin.x;
+		iPt.y = p2.y + (wMin.x - p2.x) * m;
+		break;
+	case Right:
+		iPt.x = wMax.x;
+		iPt.y = p2.y + (wMax.x - p2.x) * m;
+		break;
+	case Bottom:
+		iPt.y = wMin.y;
+		if (p1.x != p2.x)
+			iPt.x = p2.x + (wMin.y - p2.y) / m;
+		else
+			iPt.x = p2.x;
+		break;
+	case Top:
+		iPt.y = wMax.y;
+		if (p1.x != p2.x)
+			iPt.x = p2.x + (wMax.y - p2.y) / m;
+		else
+			iPt.x = p2.x;
+		break;
+	default:
+		break;
+	}
+	return (iPt);
+}
+void clipPoint(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, int* cnt, wcPt2D* first[], wcPt2D* s)
+{
+	wcPt2D iPt;
+	if (!first[winEdge])
+		first[winEdge] = new wcPt2D{ p.x, p.y };
+	else
+	{
+		if (cross(p, s[winEdge], winEdge, wMin, wMax))
+		{
+			iPt = intersect(p, s[winEdge], winEdge, wMin, wMax);
+			if (winEdge < Top)
+				clipPoint(iPt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s);
+			else
+			{
+				pOut[*cnt] = iPt;
+				(*cnt)++;
+			}
+		}
+	}
+
+	s[winEdge] = p;
+	sPoint[winEdge].push_back(p);
+
+	if (inside(p, winEdge, wMin, wMax))
+	{
+		if (winEdge < Top)
+			clipPoint(p, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s);
+		else
+		{
+			pOut[*cnt] = p;
+			(*cnt)++;
+		}
+	}
+}
+void closeClip(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* first[], wcPt2D* s)
+{
+	wcPt2D pt;
+	Boundary winEdge;
+	for (winEdge = Left; winEdge <= Top; winEdge = (Boundary)(winEdge + 1))
+	{
+		if (cross(s[winEdge], *first[winEdge], winEdge, wMin, wMax))
+		{
+			pt = intersect(s[winEdge], *first[winEdge], winEdge, wMin, wMax);
+			if (winEdge < Top)
+				clipPoint(pt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s);
+			else
+			{
+				pOut[*cnt] = pt;
+				(*cnt)++;
+			}
+		}
+	}
+}
+GLint polygonClipSuthHodg(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D* pOut)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		sPoint[i].clear();
+	}
+	wcPt2D* first[nClip] = { 0, 0, 0, 0 }, s[nClip];
+	GLint k, cnt = 0;
+	for (k = 0; k < n; k++)
+		clipPoint(pIn[k], Left, wMin, wMax, pOut, &cnt, first, s);
+	closeClip(wMin, wMax, pOut, &cnt, first, s);
+
+	printf("==================================================\n");
+	for (int i = 0; i < 4; i++)
+	{
+		printf("%0.2f,%0.2f  ", first[i]->x, first[i]->y);
+	}
+	printf("\n");
+
+	int max = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (max < sPoint[i].size())
+			max = sPoint[i].size();
+	}
+
+	for (int i = 0; i < max; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (i < sPoint[j].size())
+			{
+				printf("%0.2f,%0.2f  ", sPoint[j][i].x, sPoint[j][i].y);
+			}
+			else
+			{
+				printf("             ");
+			}
+		}
+		printf("\n");
+	}
+	return (cnt);
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// 合并多边形算法（不允许结果有中空，不允许多个多边形共同交于一交点）
+enum class PointType
+{
+	None,    // 无类型
+	Normal,  // 普通点 
+	Cross,   // 交点 
+};
+struct CrossPointInfo
+{
+	float u1 = 0.0f;	// 裁剪窗口边 直线参数方程u
+	float u2 = 0.0f;	// 多边形边	直线参数方程u
+	Point* point;       // 交点
+};
+struct LineWithCross
+{
+	Point* begin;
+	Point* end;
+	std::vector<CrossPointInfo> crossPoints;
+};
+struct PointInfo
+{
+	PointType type; // 类型
+	std::map<int, int> idxInfo; // 交点索引信息
+	bool dealed; // 是否已处理
+
+	PointInfo::PointInfo() : type(PointType::None), dealed(false) {}
+};
+void calcLines(const std::vector<Point>& points, std::vector<LineWithCross>& lines)
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+		lines.push_back(LineWithCross());
+		lines.back().begin = new Point{ points[i] };
+		lines.back().end = new Point{ points[next] };
+		lines.back().crossPoints.clear();
+	}
+}
+bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
+{
+	float dx1 = line1.end->x - line1.begin->x;
+	float dy1 = line1.end->y - line1.begin->y;
+	float dx2 = line2.end->x - line2.begin->x;
+	float dy2 = line2.end->y - line2.begin->y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (dy1 / dx1 == dy2 / dx2)
+		return false;
+
+	float x01 = line1.begin->x;
+	float y01 = line1.begin->y;
+	float x02 = line2.begin->x;
+	float y02 = line2.begin->y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
+		return false;
+
+	return true;
+}
+bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& crossPointInfo, std::map<Point*, PointInfo>& pointInfo)
+{
+	if (!crossPoint(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
+		return false;
+
+	float dx1 = line1.end->x - line1.begin->x;
+	float dy1 = line1.end->y - line1.begin->y;
+	float dx2 = line2.end->x - line2.begin->x;
+	float dy2 = line2.end->y - line2.begin->y;
+	float x01 = line1.begin->x;
+	float y01 = line1.begin->y;
+
+	crossPointInfo.point = new Point{ x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
+
+	pointInfo[crossPointInfo.point].type = PointType::Cross;
+
+	return true;
+}
+void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& result)
+{
+	std:;vector<std::vector<LineWithCross>> polygonLines;
+	for (auto& polygon : polygons)
+	{
+		polygonLines.push_back(std::vector<LineWithCross>());
+		calcLines(polygon, polygonLines.back());
+	}
+
+	CrossPointInfo crossPointInfo;
+	for (int i = 0; i < polygonLines.size(); i++)
+	{
+		for (int j = i + 1; j < polygonLines.size(); j++)
+		{
+
+			for (int a = 0; a < polygonLines[i].size(); a++)
+			{
+				for (int b = 0; b < polygonLines[j].size(); b++)
+				{
+					if (calcCrossPoint(polygonLines[i][a], polygonLines[j][b], crossPointInfo, pointInfo))
+					{
+						polygonLines[i][a].crossPoints.push_back(crossPointInfo);
+						polygonLines[j][b].crossPoints.push_back(crossPointInfo);
+					}
+				}
+			}
+
+		}
+	}
+	
+
+	for (auto l : clipWindowLines)
+	{
+		clipWindowPoints.push_back(l.begin);
+		pointInfo[clipWindowPoints.back()].type = PointType::ClipWindow;
+		pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
+
+		if (l.crossPoints.size() > 1)
+		{
+			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+			{
+				return a.u1 < b.u1;
+			});
+		}
+		for (auto& cp : l.crossPoints)
+		{
+			clipWindowPoints.push_back(cp.point);
+			pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
+		}
+	}
+	for (auto l : polygonLines)
+	{
+		polygonPoints.push_back(l.begin);
+		pointInfo[polygonPoints.back()].type = PointType::Polygon;
+		pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+
+		if (l.crossPoints.size() > 1)
+		{
+			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+			{
+				return a.u2 < b.u2;
+			});
+		}
+		for (auto& cp : l.crossPoints)
+		{
+			polygonPoints.push_back(cp.point);
+			pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+		}
+	}
+}
+bool dealPoint(Point* point, bool record, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	assert(pointInfo.find(point) != pointInfo.end());
+	if (pointInfo[point].dealed)
+		return false;
+
+	pointInfo[point].dealed = true;
+
+	if (record)
+		reslutPolygon.back().push_back(*point);
+
+	return true;
+}
+void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon);
+void walkPolygon(std::vector<Point*> polygonPoints, int idx, bool record, std::vector<Point*> clipWindowPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon, bool skipCurPoint = false)
+{
+	if (!skipCurPoint && !dealPoint(polygonPoints[idx], record, pointInfo, reslutPolygon))
+	{
+		if (!reslutPolygon.back().empty())
+			reslutPolygon.push_back(std::vector<Point>());
+		return;
+	}
+
+	idx = idx + 1 >= polygonPoints.size() ? 0 : idx + 1;
+
+	auto p = polygonPoints[idx];
+	assert(pointInfo.find(p) != pointInfo.end());
+	if (pointInfo[p].type == PointType::CrossIn)
+	{
+		walkPolygon(polygonPoints, idx, true, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+	else if (pointInfo[p].type == PointType::CrossOut)
+	{
+		walkClipWindow(clipWindowPoints, pointInfo[p].idx1, polygonPoints, pointInfo, reslutPolygon);
+		walkPolygon(polygonPoints, idx, false, clipWindowPoints, pointInfo, reslutPolygon, true);
+	}
+	else if (pointInfo[p].type == PointType::Polygon)
+	{
+		walkPolygon(polygonPoints, idx, record, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+}
+void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	if (!dealPoint(clipWindowPoints[idx], true, pointInfo, reslutPolygon))
+	{
+		if (!reslutPolygon.back().empty())
+			reslutPolygon.push_back(std::vector<Point>());
+		return;
+	}
+
+	idx = idx + 1 >= clipWindowPoints.size() ? 0 : idx + 1;
+
+	auto p = clipWindowPoints[idx];
+	assert(pointInfo.find(p) != pointInfo.end());
+	if (pointInfo[p].type == PointType::CrossIn)
+	{
+		walkPolygon(polygonPoints, pointInfo[p].idx2, true, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+	else if (pointInfo[p].type == PointType::ClipWindow)
+	{
+		walkClipWindow(clipWindowPoints, idx, polygonPoints, pointInfo, reslutPolygon);
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////
 void code_8_exercise_add_1()
 {
 	cutPolygon(ploygon);
