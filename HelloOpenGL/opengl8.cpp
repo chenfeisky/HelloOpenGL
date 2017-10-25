@@ -10087,14 +10087,15 @@ enum class PointType
 };
 struct CrossPointInfo
 {
-	float u1 = 0.0f;	// 裁剪窗口边 直线参数方程u
-	float u2 = 0.0f;	// 多边形边	直线参数方程u
-	Point* point;       // 交点
+	float u1 = 0;
+	float u2 = 0;
+	float u = 0;
+	Point point;       // 交点
 };
 struct LineWithCross
 {
-	Point* begin;
-	Point* end;
+	Point begin;
+	Point end;
 	std::vector<CrossPointInfo> crossPoints;
 };
 struct PointInfo
@@ -10111,17 +10112,17 @@ void calcLines(const std::vector<Point>& points, std::vector<LineWithCross>& lin
 	{
 		int next = i + 1 < points.size() ? i + 1 : 0;
 		lines.push_back(LineWithCross());
-		lines.back().begin = new Point{ points[i] };
-		lines.back().end = new Point{ points[next] };
+		lines.back().begin = points[i];
+		lines.back().end = points[next];
 		lines.back().crossPoints.clear();
 	}
 }
 bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
 {
-	float dx1 = line1.end->x - line1.begin->x;
-	float dy1 = line1.end->y - line1.begin->y;
-	float dx2 = line2.end->x - line2.begin->x;
-	float dy2 = line2.end->y - line2.begin->y;
+	float dx1 = line1.end.x - line1.begin.x;
+	float dy1 = line1.end.y - line1.begin.y;
+	float dx2 = line2.end.x - line2.begin.x;
+	float dy2 = line2.end.y - line2.begin.y;
 
 	if (dx1 == 0 && dx2 == 0)
 		return false;
@@ -10129,10 +10130,10 @@ bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2
 	if (dy1 / dx1 == dy2 / dx2)
 		return false;
 
-	float x01 = line1.begin->x;
-	float y01 = line1.begin->y;
-	float x02 = line2.begin->x;
-	float y02 = line2.begin->y;
+	float x01 = line1.begin.x;
+	float y01 = line1.begin.y;
+	float x02 = line2.begin.x;
+	float y02 = line2.begin.y;
 	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
 	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
 	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
@@ -10140,25 +10141,25 @@ bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2
 
 	return true;
 }
-bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& crossPointInfo, std::map<Point*, PointInfo>& pointInfo)
+bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& crossPointInfo, std::map<Point, PointInfo>& pointInfo)
 {
 	if (!crossPoint(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
 		return false;
 
-	float dx1 = line1.end->x - line1.begin->x;
-	float dy1 = line1.end->y - line1.begin->y;
-	float dx2 = line2.end->x - line2.begin->x;
-	float dy2 = line2.end->y - line2.begin->y;
-	float x01 = line1.begin->x;
-	float y01 = line1.begin->y;
+	float dx1 = line1.end.x - line1.begin.x;
+	float dy1 = line1.end.y - line1.begin.y;
+	float dx2 = line2.end.x - line2.begin.x;
+	float dy2 = line2.end.y - line2.begin.y;
+	float x01 = line1.begin.x;
+	float y01 = line1.begin.y;
 
-	crossPointInfo.point = new Point{ x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
+	crossPointInfo.point = { x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
 
 	pointInfo[crossPointInfo.point].type = PointType::Cross;
 
 	return true;
 }
-void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& result)
+void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point, PointInfo>& pointInfo, std::vector<std::vector<Point>>& polygonPoints)
 {
 	std:;vector<std::vector<LineWithCross>> polygonLines;
 	for (auto& polygon : polygons)
@@ -10179,7 +10180,9 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 				{
 					if (calcCrossPoint(polygonLines[i][a], polygonLines[j][b], crossPointInfo, pointInfo))
 					{
+						crossPointInfo.u = crossPointInfo.u1;
 						polygonLines[i][a].crossPoints.push_back(crossPointInfo);
+						crossPointInfo.u = crossPointInfo.u2;
 						polygonLines[j][b].crossPoints.push_back(crossPointInfo);
 					}
 				}
@@ -10188,43 +10191,28 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 		}
 	}
 	
-
-	for (auto l : clipWindowLines)
+	for (int idx = 0; idx < polygonLines.size(); idx++)
 	{
-		clipWindowPoints.push_back(l.begin);
-		pointInfo[clipWindowPoints.back()].type = PointType::ClipWindow;
-		pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
+		polygonPoints.push_back({});
+		for (auto l : polygonLines[idx])
+		{
+			polygonPoints.back().push_back(l.begin);
+			pointInfo[l.begin].type = PointType::Cross;
+			pointInfo[l.begin].idxInfo[idx] = polygonPoints.back().size() - 1;
 
-		if (l.crossPoints.size() > 1)
-		{
-			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+			if (l.crossPoints.size() > 1)
 			{
-				return a.u1 < b.u1;
-			});
-		}
-		for (auto& cp : l.crossPoints)
-		{
-			clipWindowPoints.push_back(cp.point);
-			pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
-		}
-	}
-	for (auto l : polygonLines)
-	{
-		polygonPoints.push_back(l.begin);
-		pointInfo[polygonPoints.back()].type = PointType::Polygon;
-		pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+				std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+				{
+					return a.u < b.u;
+				});
+			}
+			for (auto& cp : l.crossPoints)
+			{
+				polygonPoints.back().push_back(cp.point);
+				pointInfo[cp.point].idxInfo[idx] =polygonPoints.back().size() - 1;
+			}
 
-		if (l.crossPoints.size() > 1)
-		{
-			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
-			{
-				return a.u2 < b.u2;
-			});
-		}
-		for (auto& cp : l.crossPoints)
-		{
-			polygonPoints.push_back(cp.point);
-			pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
 		}
 	}
 }
@@ -10241,8 +10229,8 @@ bool dealPoint(Point* point, bool record, std::map<Point*, PointInfo>& pointInfo
 
 	return true;
 }
-void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon);
-void walkPolygon(std::vector<Point*> polygonPoints, int idx, bool record, std::vector<Point*> clipWindowPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon, bool skipCurPoint = false)
+void walkClipWindow(std::vector<Point> clipWindowPoints, int idx, std::vector<Point> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon);
+void walkPolygon(std::vector<Point> polygonPoints, int idx, bool record, std::vector<Point> clipWindowPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon, bool skipCurPoint = false)
 {
 	if (!skipCurPoint && !dealPoint(polygonPoints[idx], record, pointInfo, reslutPolygon))
 	{
