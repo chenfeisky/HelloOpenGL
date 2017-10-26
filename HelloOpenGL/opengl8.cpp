@@ -10141,7 +10141,7 @@ bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2
 
 	return true;
 }
-bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& crossPointInfo, std::map<Point, PointInfo>& pointInfo)
+bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& crossPointInfo, std::map<Point, PointInfo>& pointInfoMap)
 {
 	if (!crossPoint(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
 		return false;
@@ -10155,11 +10155,11 @@ bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& 
 
 	crossPointInfo.point = { x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
 
-	pointInfo[crossPointInfo.point].type = PointType::Cross;
+	pointInfoMap[crossPointInfo.point].type = PointType::Cross;
 
 	return true;
 }
-void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point, PointInfo>& pointInfo, std::vector<std::vector<Point>>& polygonPoints)
+void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point, PointInfo>& pointInfoMap, std::vector<std::vector<Point>>& polygonPoints)
 {
 	std:;vector<std::vector<LineWithCross>> polygonLines;
 	for (auto& polygon : polygons)
@@ -10178,7 +10178,7 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 			{
 				for (int b = 0; b < polygonLines[j].size(); b++)
 				{
-					if (calcCrossPoint(polygonLines[i][a], polygonLines[j][b], crossPointInfo, pointInfo))
+					if (calcCrossPoint(polygonLines[i][a], polygonLines[j][b], crossPointInfo, pointInfoMap))
 					{
 						crossPointInfo.u = crossPointInfo.u1;
 						polygonLines[i][a].crossPoints.push_back(crossPointInfo);
@@ -10197,8 +10197,8 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 		for (auto l : polygonLines[idx])
 		{
 			polygonPoints.back().push_back(l.begin);
-			pointInfo[l.begin].type = PointType::Cross;
-			pointInfo[l.begin].idxInfo[idx] = polygonPoints.back().size() - 1;
+			pointInfoMap[l.begin].type = PointType::Cross;
+			pointInfoMap[l.begin].idxInfo[idx] = polygonPoints.back().size() - 1;
 
 			if (l.crossPoints.size() > 1)
 			{
@@ -10210,76 +10210,65 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 			for (auto& cp : l.crossPoints)
 			{
 				polygonPoints.back().push_back(cp.point);
-				pointInfo[cp.point].idxInfo[idx] =polygonPoints.back().size() - 1;
+				pointInfoMap[cp.point].idxInfo[idx] =polygonPoints.back().size() - 1;
 			}
 
 		}
 	}
 }
-bool dealPoint(Point* point, bool record, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+bool dealPoint(const Point& point, std::map<Point, PointInfo>& pointInfoMap, std::vector<Point>& result)
 {
-	assert(pointInfo.find(point) != pointInfo.end());
-	if (pointInfo[point].dealed)
+	assert(pointInfoMap.find(point) != pointInfoMap.end());
+	if (pointInfoMap[point].dealed)
 		return false;
 
-	pointInfo[point].dealed = true;
+	pointInfoMap[point].dealed = true;
 
-	if (record)
-		reslutPolygon.back().push_back(*point);
+	result.push_back(point);
 
 	return true;
 }
-void walkClipWindow(std::vector<Point> clipWindowPoints, int idx, std::vector<Point> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon);
-void walkPolygon(std::vector<Point> polygonPoints, int idx, bool record, std::vector<Point> clipWindowPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon, bool skipCurPoint = false)
+void walkPolygons(const std::vector<std::vector<Point>>& polygonPoints, int polygonIdx, int pointIdx, std::map<Point, PointInfo>& pointInfoMap, std::vector<Point>& result)
 {
-	if (!skipCurPoint && !dealPoint(polygonPoints[idx], record, pointInfo, reslutPolygon))
+	const Point& curPoint = polygonPoints[polygonIdx][pointIdx];
+	if (pointInfoMap[curPoint].type == PointType::Cross)
 	{
-		if (!reslutPolygon.back().empty())
-			reslutPolygon.push_back(std::vector<Point>());
-		return;
-	}
+		int otherPolygonIdx = -1;
+		int otherPointIdx = -1;
+		for (auto& i : pointInfoMap[curPoint].idxInfo)
+		{
+			if (i.first != polygonIdx)
+			{
+				otherPolygonIdx = i.first;
+				otherPointIdx = i.second;
+				break;
+			}
+		}
+		assert(otherPolygonIdx != -1);
+		otherPointIdx = otherPointIdx + 1 < polygonPoints[otherPolygonIdx].size() ? otherPointIdx + 1 : 0;
 
-	idx = idx + 1 >= polygonPoints.size() ? 0 : idx + 1;
+		const Point& nextPoint = polygonPoints[otherPolygonIdx][otherPointIdx];
+		if (!sameLine(result.back(), curPoint, nextPoint))
+		{
+			if (!dealPoint(curPoint, pointInfoMap, result))
+				return;
+		}
+		walkPolygons(polygonPoints, otherPolygonIdx, otherPointIdx, pointInfoMap, result);
+	}
+	else
+	{
+		if (!dealPoint(curPoint, pointInfoMap, result))
+			return;
 
-	auto p = polygonPoints[idx];
-	assert(pointInfo.find(p) != pointInfo.end());
-	if (pointInfo[p].type == PointType::CrossIn)
-	{
-		walkPolygon(polygonPoints, idx, true, clipWindowPoints, pointInfo, reslutPolygon);
-	}
-	else if (pointInfo[p].type == PointType::CrossOut)
-	{
-		walkClipWindow(clipWindowPoints, pointInfo[p].idx1, polygonPoints, pointInfo, reslutPolygon);
-		walkPolygon(polygonPoints, idx, false, clipWindowPoints, pointInfo, reslutPolygon, true);
-	}
-	else if (pointInfo[p].type == PointType::Polygon)
-	{
-		walkPolygon(polygonPoints, idx, record, clipWindowPoints, pointInfo, reslutPolygon);
+		pointIdx = pointIdx + 1 < polygonPoints[polygonIdx].size() ? pointIdx + 1 : 0;
+		walkPolygons(polygonPoints, polygonIdx, pointIdx, pointInfoMap, result);
 	}
 }
-void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, const std::vector<Point>& clipWindow)
 {
-	if (!dealPoint(clipWindowPoints[idx], true, pointInfo, reslutPolygon))
-	{
-		if (!reslutPolygon.back().empty())
-			reslutPolygon.push_back(std::vector<Point>());
-		return;
-	}
+	std::vector<std::vector<Point>> result;
 
-	idx = idx + 1 >= clipWindowPoints.size() ? 0 : idx + 1;
-
-	auto p = clipWindowPoints[idx];
-	assert(pointInfo.find(p) != pointInfo.end());
-	if (pointInfo[p].type == PointType::CrossIn)
-	{
-		walkPolygon(polygonPoints, pointInfo[p].idx2, true, clipWindowPoints, pointInfo, reslutPolygon);
-	}
-	else if (pointInfo[p].type == PointType::ClipWindow)
-	{
-		walkClipWindow(clipWindowPoints, idx, polygonPoints, pointInfo, reslutPolygon);
-	}
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 void code_8_exercise_add_1()
