@@ -10077,8 +10077,6 @@ GLint polygonClipSuthHodg(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D
 }
 //////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////
-// 合并多边形算法（不允许结果有中空，不允许多个多边形共同交于一交点）
 enum class PointType
 {
 	None,    // 无类型
@@ -10098,6 +10096,138 @@ struct LineWithCross
 	Point end;
 	std::vector<CrossPointInfo> crossPoints;
 };
+//////////////////////////////////////////////////////////////////////////
+// 检查内外
+bool sign(float f)
+{
+	return f > 0;
+}
+bool checkRay(LineWithCross& line, const std::vector<Point>& polygon)
+{
+	float dx = line.end.x - line.begin.x;
+	float dy = line.end.y - line.begin.y;
+	for (auto& p : polygon)
+	{
+		bool check = false;
+		float _dx = p.x - line.begin.x;
+		float _dy = p.y - line.begin.y;
+		if (dx)
+		{
+			if (_dx)
+			{
+				if (dy / dx != _dy / _dx)
+				{
+					check = true;
+				}
+				else
+				{
+					if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+						check = false;
+					else
+						check = true;
+				}
+			}
+			else
+			{
+				check = true;
+			}
+		}
+		else
+		{
+			if (_dx)
+			{
+				check = true;
+			}
+			else
+			{
+				if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+					check = false;
+				else
+					check = true;
+			}
+		}
+		if (!check)
+			return false;
+	}
+	return true;
+}
+int crossProduct(LineWithCross& line1, LineWithCross& line2)
+{
+	return (line1.end.x - line1.begin.x) * (line2.end.y - line2.begin.y) - (line1.end.y - line1.begin.y) * (line2.end.x - line2.begin.x);
+}
+void boundBox(const std::vector<Point>& polygon, float& minX, float& maxX, float& minY, float& maxY)
+{
+	maxX = polygon[0].x, minX = polygon[0].x, maxY = polygon[0].y, minY = polygon[0].y;
+	for (int i = 1; i < polygon.size(); i++)
+	{
+		if (polygon[i].x < minX)
+			minX = polygon[i].x;
+		if (polygon[i].x > maxX)
+			maxX = polygon[i].x;
+		if (polygon[i].y < minY)
+			minY = polygon[i].y;
+		if (polygon[i].y > maxY)
+			maxY = polygon[i].y;
+	}
+}
+bool checkVertex(Point p, const std::vector<Point>& polygon)
+{
+	for (auto& _p : polygon)
+	{
+		if (p.x == _p.x && p.y == _p.y)
+			return false;
+	}
+	return true;
+}
+bool checkIn(Point p, const std::vector<Point>& polygon)
+{
+	if (!checkVertex(p, polygon))
+		return false;
+
+	float minX, maxX, minY, maxY;
+	boundBox(polygon, minX, maxX, minY, maxY);
+	float length = (maxX - minX) + (maxY - minY);
+	float theta = 0;
+	float dtheta = PI / 180;
+	while (theta < 2 * PI)
+	{
+		Point end = { p.x + length * cos(theta), p.y + length * sin(theta) };
+		LineWithCross ray;
+		ray.begin = p;
+		ray.end = end;
+		if (checkRay(ray, polygon))
+		{
+			float u1 = 0, u2 = 0;
+			int count = 0;
+			for (int i = 0; i < polygon.size(); i++)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				LineWithCross edge;
+				edge.begin = polygon[i];
+				edge.end = polygon[next];
+
+				if (crossPoint(ray, edge, u1, u2))
+				{
+					if (crossProduct(ray, edge) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			return count >= 1;
+		}
+		else
+		{
+			theta += dtheta;
+		}
+	}
+	assert(0 && "can not find suitable ray!!!");
+	return false;
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// 合并多边形算法（不允许结果有中空，不允许多个多边形共同交于一交点）
 struct PointInfo
 {
 	PointType type; // 类型
@@ -10159,7 +10289,7 @@ bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& 
 
 	return true;
 }
-void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point, PointInfo>& pointInfoMap, std::vector<std::vector<Point>>& polygonPoints)
+void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point, PointInfo>& pointInfoMap, std::map<int, std::map<int, int>>& polygonCrossInfoMap, std::vector<std::vector<Point>>& polygonPoints)
 {
 	std:;vector<std::vector<LineWithCross>> polygonLines;
 	for (auto& polygon : polygons)
@@ -10184,6 +10314,8 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 						polygonLines[i][a].crossPoints.push_back(crossPointInfo);
 						crossPointInfo.u = crossPointInfo.u2;
 						polygonLines[j][b].crossPoints.push_back(crossPointInfo);
+						polygonCrossInfoMap[i][j] = 1;
+						polygonCrossInfoMap[j][i] = 1;
 					}
 				}
 			}
@@ -10214,6 +10346,54 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 			}
 
 		}
+	}
+}
+void calcPolygonCrossInfo(const std::vector<std::vector<Point>>& polygons, std::map<int, std::map<int, int>>& polygonCrossInfoMap)
+{
+	for (int i = 0; i < polygons.size(); i++)
+	{
+		for (int j = i + 1; j < polygons.size(); j++)
+		{
+			if (polygonCrossInfoMap[i][j] != 1)
+			{
+				if (checkIn(polygons[i][0], polygons[j]) || checkIn(polygons[j][0], polygons[i]))
+				{
+					polygonCrossInfoMap[i][j] = 1;
+					polygonCrossInfoMap[j][i] = 1;
+				}
+			}
+		}
+	}
+}
+
+void calcPolygons(const std::vector<std::vector<Point>>& polygons, std::map<int, std::map<int, int>>& polygonCrossInfoMap, std::vector<std::vector<int>>& result)
+{
+	for (int i = 0; i < polygons.size(); i++)
+	{
+		std::vector<int> newIds = { i };
+		for (auto it = result.begin(); it != result.end();)
+		{
+			bool merge = false;
+			for (auto& j : *it)
+			{
+				if (polygonCrossInfoMap[i][j] == 1)
+				{
+					merge = true;
+					break;
+				}
+			}
+
+			if (merge)
+			{
+				newIds.insert(newIds.end(), it->begin(), it->end());
+				it = result.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		result.push_back(newIds);
 	}
 }
 bool dealPoint(const Point& point, std::map<Point, PointInfo>& pointInfoMap, std::vector<Point>& result)
@@ -10264,13 +10444,69 @@ void walkPolygons(const std::vector<std::vector<Point>>& polygonPoints, int poly
 		walkPolygons(polygonPoints, polygonIdx, pointIdx, pointInfoMap, result);
 	}
 }
-void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, const std::vector<Point>& clipWindow)
+void findOutterPointInfo(const std::vector<std::vector<Point>>& polygons, const std::vector<std::vector<int>>& result, std::map<int, int>& resultInfo)
 {
-	std::vector<std::vector<Point>> result;
+	for (auto& r : result)
+	{
+		int polygonIdx = r[0], pointIdx = 0;
+		for (auto& id : r)
+		{
+			for (int i = 0; i < polygons[id].size(); i++)
+			{
+				if (polygons[id][i].x < polygons[polygonIdx][pointIdx].x)
+				{
+					polygonIdx = id;
+					pointIdx = i;
+				}
+				else if (polygons[id][i].x == polygons[polygonIdx][pointIdx].x)
+				{
+					if (polygons[id][i].y < polygons[polygonIdx][pointIdx].y)
+					{
+						polygonIdx = id;
+						pointIdx = i;
+					}
+				}
+			}
+		}
 
+		resultInfo[polygonIdx] = pointIdx;
+	}
+}
+void mergePolygons(const std::vector<std::vector<Point>>& polygons, std::vector<std::vector<Point>>& result)
+{
+	std::vector<std::vector<Point>> walkPoints;
+	std::map<Point, PointInfo> pointInfoMap;
+	std::map<int, std::map<int, int>> polygonCrossInfoMap;
+	calcPointInfo(polygons, pointInfoMap, polygonCrossInfoMap, walkPoints);
+
+	std::vector<std::vector<int>> polygonIdxs;
+	calcPolygons(polygons, polygonCrossInfoMap, polygonIdxs);
+
+	std::map<int, int> beginInfo;
+	findOutterPointInfo(polygons, polygonIdxs, beginInfo);
+
+	for (auto & b : beginInfo)
+	{
+		result.push_back({});
+		walkPolygons(polygons, b.first, b.second, pointInfoMap, result.back());
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+
+void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, const std::vector<Point>& clipWindow, std::vector<std::vector<Point>>& result)
+{
+	std::vector<std::vector<Point>> cutPolygons;
+	cutPolygon(polygon, cutPolygons);
+
+	std::vector<std::vector<Point>> clipPolygons;
+	for (auto& p : cutPolygons)
+	{
+		polygonClipSuthHodg(clipWindow[0], clipWindow[2], cutPolygons.size(), &(cutPolygons[0]), clipPolygons[i]);
+	}
+
+	mergePolygons(clipPolygons, result);
 }
 
-//////////////////////////////////////////////////////////////////////////
 void code_8_exercise_add_1()
 {
 	cutPolygon(ploygon);
