@@ -17,6 +17,11 @@ void setPixel(GLint xCoord, GLint yCoord)
 	//glGetFloatv(GL_CURRENT_COLOR, a);
 	//glDrawPixels(1, 1, GL_RGB, GL_FLOAT, a);
 }
+// 判断浮点数相等
+bool equal(float f1, float f2)
+{
+	return std::abs(f1 - f2) < 0.0001;
+}
 #endif
 
 #ifdef CHAPTER_8_4_16
@@ -9736,7 +9741,7 @@ bool crossPoint(Point lineBegin1, Point lineEnd1, Point lineBegin2, Point lineEn
 	if (dx1 == 0 && dx2 == 0)
 		return false;
 
-	if(dx1 && dx2 && dy1 / dx1 == dy2 / dx2)
+	if(dx1 && dx2 && equal(dy1 / dx1, dy2 / dx2))
 		return false;
 
 	float x01 = lineBegin1.x;
@@ -9757,7 +9762,7 @@ bool sameLine(Point begin, Point middle, Point end)
 	if (dx1 == 0 && dx2 == 0)
 		return true;
 
-	if (dx1 && dx2 && dy1 / dx1 == dy2 / dx2)
+	if (dx1 && dx2 && equal(dy1 / dx1, dy2 / dx2))
 		return true;
 
 	return false;
@@ -9815,11 +9820,11 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 
 	Point cutPoint;
 	vector<Point> newPloygon = ploygon;
-	if (crossU2 == 0.f)
+	if (equal(crossU2, 0.f))
 	{
 		cutPoint = ploygon[curIndex];
 	}
-	else if(crossU2 == 1.f)
+	else if(equal(crossU2, 1.f))
 	{
 		cutPoint = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0];
 	}
@@ -9909,7 +9914,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 
 //////////////////////////////////////////////////////////////////////////
 // Sutherlan-Hodgman多边形裁剪算法(凸多边形)
-typedef enum { None, Left, Right, Bottom, Top } Boundary;
+typedef enum { None = -1, Left, Right, Bottom, Top } Boundary;
 typedef Point wcPt2D;
 const GLint nClip = 4;
 vector<wcPt2D> sPoint[nClip];
@@ -10179,6 +10184,7 @@ bool checkVertex(Point p, const std::vector<Point>& polygon)
 	}
 	return true;
 }
+bool crossPoint_(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2);
 bool checkIn(Point p, const std::vector<Point>& polygon)
 {
 	if (!checkVertex(p, polygon))
@@ -10206,7 +10212,7 @@ bool checkIn(Point p, const std::vector<Point>& polygon)
 				edge.begin = polygon[i];
 				edge.end = polygon[next];
 
-				if (crossPoint(ray, edge, u1, u2))
+				if (crossPoint_(ray, edge, u1, u2))
 				{
 					if (crossProduct(ray, edge) > 0)
 						count++;
@@ -10247,7 +10253,7 @@ void calcLines(const std::vector<Point>& points, std::vector<LineWithCross>& lin
 		lines.back().crossPoints.clear();
 	}
 }
-bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
+bool crossPoint_(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
 {
 	float dx1 = line1.end.x - line1.begin.x;
 	float dy1 = line1.end.y - line1.begin.y;
@@ -10257,7 +10263,7 @@ bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2
 	if (dx1 == 0 && dx2 == 0)
 		return false;
 
-	if (dy1 / dx1 == dy2 / dx2)
+	if (equal(dy1 / dx1, dy2 / dx2))
 		return false;
 
 	float x01 = line1.begin.x;
@@ -10273,7 +10279,7 @@ bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2
 }
 bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& crossPointInfo, std::map<Point, PointInfo>& pointInfoMap)
 {
-	if (!crossPoint(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
+	if (!crossPoint_(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
 		return false;
 
 	float dx1 = line1.end.x - line1.begin.x;
@@ -10488,7 +10494,231 @@ void mergePolygons(const std::vector<std::vector<Point>>& polygons, std::vector<
 	for (auto & b : beginInfo)
 	{
 		result.push_back({});
-		walkPolygons(polygons, b.first, b.second, pointInfoMap, result.back());
+		walkPolygons(walkPoints, b.first, b.second, pointInfoMap, result.back());
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// 任意形状多边形填充算法
+struct Line
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+struct SortedLine
+{
+	int maxY;
+	int minY;
+	int beginX;
+	int endX;
+	int dx;
+	int dy;
+};
+struct SortedLineSet
+{
+	int scanY;
+	std::vector<SortedLine> sortedLines;
+};
+struct ActiveLine
+{
+	SortedLine sortedLine;
+	int counter;
+	int currentX;
+};
+void hLine(int y, int x0, int x1)
+{
+	for (int x = x0; x <= x1; x++)
+	{
+		setPixel(x, y);
+	}
+}
+std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
+{
+	std::vector<Line> lines;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = (i + 1) % points.size();
+		// 跳过水平线
+		if (points[i].y == points[next].y)
+			continue;
+
+		lines.push_back(Line());
+		lines.back().x0 = points[i].x;
+		lines.back().y0 = points[i].y;
+		lines.back().x1 = points[next].x;
+		lines.back().y1 = points[next].y;
+	}
+
+	for (int i = 0; i < lines.size(); i++)
+	{
+		int next = (i + 1) % lines.size();
+		if (lines[i].y1 - lines[i].y0 > 0 && lines[next].y1 - lines[next].y0 > 0)
+			lines[i].y1--;
+		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
+			lines[next].y0--;
+	}
+
+	// 再次检查水平线
+	for (auto it = lines.begin(); it != lines.end();)
+	{
+		if (it->y0 == it->y1)
+		{
+			it = lines.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	for (auto& line : lines)
+	{
+		if (line.y0 > line.y1)
+		{
+			std::swap(line.x0, line.x1);
+			std::swap(line.y0, line.y1);
+		}
+	}
+
+	std::sort(lines.begin(), lines.end(), [](auto& a, auto& b)
+	{
+		if (a.y0 == b.y0)
+		{
+			if (a.x0 == b.x0)
+			{
+				if (a.x1 == b.x1)
+					return a.y1 < b.y1;
+				return a.x1 < b.x1;
+			}
+			return a.x0 < b.x0;
+		}
+		return a.y0 < b.y0;
+	});
+	std::vector<SortedLineSet> lineSet;
+	int lastY = -99999;
+	int maxY = -99999;
+	for (auto& line : lines)
+	{
+		if (line.y0 != lastY)
+		{
+			lineSet.push_back(SortedLineSet());
+		}
+		lineSet.back().scanY = line.y0;
+		lineSet.back().sortedLines.push_back(SortedLine());
+		lineSet.back().sortedLines.back().beginX = line.x0;
+		lineSet.back().sortedLines.back().endX = line.x1;
+		lineSet.back().sortedLines.back().maxY = line.y1;
+		lineSet.back().sortedLines.back().minY = line.y0;
+		lineSet.back().sortedLines.back().dx = line.x1 - line.x0;
+		lineSet.back().sortedLines.back().dy = line.y1 - line.y0;
+		lastY = line.y0;
+
+		if (maxY < line.y1)
+			maxY = line.y1;
+	}
+	lineSet.push_back({ maxY + 1 ,{} }); // 结尾
+	return lineSet;
+}
+void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
+{
+	std::vector<std::vector<Point>> points;
+	for (int curY = beginY; curY < endY; curY++)
+	{
+		for (auto& line : activeLines)
+		{
+			if (curY >= line.sortedLine.minY && curY <= line.sortedLine.maxY)
+			{
+				if (std::abs(line.sortedLine.dy) >= std::abs(line.sortedLine.dx))
+				{// |m|>1			
+					points.push_back({ { (float)line.currentX , (float)curY } });
+
+					line.counter += std::abs(line.sortedLine.dx * 2);
+
+					if (line.counter >= line.sortedLine.dy)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+						line.counter -= line.sortedLine.dy * 2;
+					}
+				}
+				else
+				{// |m|<1
+					points.push_back({ { (float)line.currentX, (float)curY } });
+					while (true)
+					{
+						if (line.sortedLine.dx > 0)
+							line.currentX++;
+						else
+							line.currentX--;
+
+						line.counter += std::abs(line.sortedLine.dy * 2);
+						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* 结束条件*/)
+						{
+							line.counter -= std::abs(line.sortedLine.dx * 2);
+							break;
+						}
+					}
+					if (line.sortedLine.dx > 0)
+						points.back().push_back({ (float)line.currentX - 1, (float)curY });
+					else
+						points.back().push_back({ (float)line.currentX + 1, (float)curY });
+
+					std::sort(points.back().begin(), points.back().end(), [](auto& a, auto&b) {return a.x < b.x;});
+				}
+			}
+		}
+		std::sort(points.begin(), points.end(), [](auto& a, auto&b)
+		{
+			if (a.front().x == b.front().x)
+				return a.back().x < b.back().x;
+			return a.front().x < b.front().x;
+		});
+		for (int i = 0; ; i++)
+		{
+			if (2 * i < points.size() && 2 * i + 1 < points.size())
+			{
+				hLine(points[2 * i].front().y, points[2 * i].front().x, points[2 * i + 1].back().x);
+			}
+			else
+			{
+				points.clear();
+				break;
+			}
+		}
+	}
+}
+void fillPolygon(const std::vector<Point>& points)
+{
+	std::vector<SortedLineSet> sortedLines = SortLines(points);
+	std::vector<ActiveLine> activeLines;
+	for (int i = 0; i < sortedLines.size() - 1; i++)
+	{
+		int curY = sortedLines[i].scanY;
+		for (auto it = activeLines.begin(); it != activeLines.end();)
+		{
+			if (curY > it->sortedLine.maxY)
+			{
+				it = activeLines.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+		for (auto& _sortedLine : sortedLines[i].sortedLines)
+		{
+			activeLines.push_back(ActiveLine());
+			activeLines.back().sortedLine = _sortedLine;
+			activeLines.back().counter = 0;
+			activeLines.back().currentX = _sortedLine.beginX;
+		}
+		fillWithActiveLines(curY, sortedLines[i + 1].scanY, activeLines);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
@@ -10501,15 +10731,29 @@ void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, const std::v
 	std::vector<std::vector<Point>> clipPolygons;
 	for (auto& p : cutPolygons)
 	{
-		polygonClipSuthHodg(clipWindow[0], clipWindow[2], cutPolygons.size(), &(cutPolygons[0]), clipPolygons[i]);
+		Point points[32] = {0};
+		int n = polygonClipSuthHodg(clipWindow[0], clipWindow[2], p.size(), &p[0], points);
+		if (n)
+		{
+			clipPolygons.push_back(std::vector<Point>(points, points + n));
+		}
 	}
 
 	mergePolygons(clipPolygons, result);
 }
-
+void drowPolygon()
+{
+	std::vector<Point> polygon = { {206, 442},{ 258, 286 },{286, 323}, {311, 268},{348, 433},{423, 283}, {474, 500} };
+	std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 }};
+	std::vector<std::vector<Point>> result;
+	polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+}
 void code_8_exercise_add_1()
 {
-	cutPolygon(ploygon);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
 	glutDisplayFunc(drowPolygon);
