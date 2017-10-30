@@ -9723,9 +9723,20 @@ inline bool operator==(const Point& p1, const Point& p2)
 {
 	return p1.x == p2.x && p1.y == p2.y;
 }
-inline bool operator<(const Point& p1, const Point& p2)
+bool operator < (const Point& p1, const Point& p2)
 {
-	return p1.x < p2.x && p1.y < p2.y;
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
 }
 int crossProduct(const Vec& vec1, const Vec& vec2)
 {
@@ -10291,13 +10302,14 @@ bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& 
 
 	crossPointInfo.point = { x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
 
-	pointInfoMap[crossPointInfo.point].type = PointType::Cross;
+	if(pointInfoMap.find(crossPointInfo.point) == pointInfoMap.end())
+		pointInfoMap[crossPointInfo.point].type = PointType::Cross;
 
 	return true;
 }
 void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Point, PointInfo>& pointInfoMap, std::map<int, std::map<int, int>>& polygonCrossInfoMap, std::vector<std::vector<Point>>& polygonPoints)
 {
-	std:;vector<std::vector<LineWithCross>> polygonLines;
+	std::vector<std::vector<LineWithCross>> polygonLines;
 	for (auto& polygon : polygons)
 	{
 		polygonLines.push_back(std::vector<LineWithCross>());
@@ -10332,11 +10344,14 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 	for (int idx = 0; idx < polygonLines.size(); idx++)
 	{
 		polygonPoints.push_back({});
-		for (auto l : polygonLines[idx])
+		for (auto& l : polygonLines[idx])
 		{
-			polygonPoints.back().push_back(l.begin);
-			pointInfoMap[l.begin].type = PointType::Cross;
-			pointInfoMap[l.begin].idxInfo[idx] = polygonPoints.back().size() - 1;
+			if (pointInfoMap.find(l.begin) == pointInfoMap.end())
+			{
+				polygonPoints.back().push_back(l.begin);
+				pointInfoMap[l.begin].type = PointType::Normal;
+				pointInfoMap[l.begin].idxInfo[idx] = polygonPoints.back().size() - 1;
+			}
 
 			if (l.crossPoints.size() > 1)
 			{
@@ -10347,14 +10362,19 @@ void calcPointInfo(const std::vector<std::vector<Point>>& polygons, std::map<Poi
 			}
 			for (auto& cp : l.crossPoints)
 			{
-				polygonPoints.back().push_back(cp.point);
-				pointInfoMap[cp.point].idxInfo[idx] =polygonPoints.back().size() - 1;
+				if (pointInfoMap.find(cp.point) != pointInfoMap.end() && 
+					pointInfoMap[cp.point].idxInfo.find(idx) == pointInfoMap[cp.point].idxInfo.end())
+				{
+					polygonPoints.back().push_back(cp.point);
+					pointInfoMap[cp.point].idxInfo[idx] = polygonPoints.back().size() - 1;
+				}
 			}
 
 		}
 	}
 }
-void calcPolygonCrossInfo(const std::vector<std::vector<Point>>& polygons, std::map<int, std::map<int, int>>& polygonCrossInfoMap)
+
+void calcPolygons(const std::vector<std::vector<Point>>& polygons, std::map<int, std::map<int, int>>& polygonCrossInfoMap, std::vector<std::vector<int>>& result)
 {
 	for (int i = 0; i < polygons.size(); i++)
 	{
@@ -10370,10 +10390,7 @@ void calcPolygonCrossInfo(const std::vector<std::vector<Point>>& polygons, std::
 			}
 		}
 	}
-}
 
-void calcPolygons(const std::vector<std::vector<Point>>& polygons, std::map<int, std::map<int, int>>& polygonCrossInfoMap, std::vector<std::vector<int>>& result)
-{
 	for (int i = 0; i < polygons.size(); i++)
 	{
 		std::vector<int> newIds = { i };
@@ -10741,22 +10758,77 @@ void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, const std::v
 
 	mergePolygons(clipPolygons, result);
 }
-void drowPolygon()
+void drawPolygonLine(const vector<Point>& polygon)
 {
-	std::vector<Point> polygon = { {206, 442},{ 258, 286 },{286, 323}, {311, 268},{348, 433},{423, 283}, {474, 500} };
-	std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 }};
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	//std::vector<Point> polygon = { {206, 442},{ 258, 286 },{286, 323}, {311, 268},{348, 433},{423, 283}, {474, 500} };
+	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 }};
+	//std::vector<std::vector<Point>> result;
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawPolygonLine(clipWindow);
+	//fillPolygon(polygon);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	//for (auto& r : result)
+	//{
+	//	fillPolygon(r);
+	//}
+
+	//std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
+	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
+	//std::vector<std::vector<Point>> result;
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawPolygonLine(clipWindow);
+	//fillPolygon(polygon);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	//for (auto& r : result)
+	//{
+	//	fillPolygon(r);
+	//}
+
+	// µ÷ÊÔÕâ¸ö
+	//std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
+	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
+	//std::vector<std::vector<Point>> result;
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawPolygonLine(clipWindow);
+	//fillPolygon(polygon);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	//for (auto& r : result)
+	//{
+	//	fillPolygon(r);
+	//}
+
+	std::vector<Point> polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
+	std::vector<Point> clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
 	std::vector<std::vector<Point>> result;
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
 	polygonClipSutherlanHodgman(polygon, clipWindow, result);
 	for (auto& r : result)
 	{
 		fillPolygon(r);
 	}
+
+	glFlush();
 }
 void code_8_exercise_add_1()
 {
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
-	glutDisplayFunc(drowPolygon);
+	glutDisplayFunc(drawFunc);
 }
 #endif
 
