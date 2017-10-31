@@ -18,10 +18,11 @@ void setPixel(GLint xCoord, GLint yCoord)
 	//glDrawPixels(1, 1, GL_RGB, GL_FLOAT, a);
 }
 // 判断浮点数相等
-bool equal(float f1, float f2)
-{
-	return std::abs(f1 - f2) < 0.0001;
-}
+inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
+inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
+inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
+inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
+inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 #endif
 
 #ifdef CHAPTER_8_4_16
@@ -9721,7 +9722,8 @@ struct Point
 typedef Point Vec;
 inline bool operator==(const Point& p1, const Point& p2)
 {
-	return p1.x == p2.x && p1.y == p2.y;
+	//return p1.x == p2.x && p1.y == p2.y;
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y);
 }
 bool operator < (const Point& p1, const Point& p2)
 {
@@ -9752,7 +9754,7 @@ bool crossPoint(Point lineBegin1, Point lineEnd1, Point lineBegin2, Point lineEn
 	if (dx1 == 0 && dx2 == 0)
 		return false;
 
-	if(dx1 && dx2 && equal(dy1 / dx1, dy2 / dx2))
+	if(dx1 && dx2 && Equal(dy1 / dx1, dy2 / dx2))
 		return false;
 
 	float x01 = lineBegin1.x;
@@ -9773,24 +9775,27 @@ bool sameLine(Point begin, Point middle, Point end)
 	if (dx1 == 0 && dx2 == 0)
 		return true;
 
-	if (dx1 && dx2 && equal(dy1 / dx1, dy2 / dx2))
+	if (dx1 && dx2 && Equal(dy1 / dx1, dy2 / dx2))
 		return true;
 
 	return false;
+}
+int getRealIndx(const std::vector<Point>& ploygon, int idx)
+{
+	return (idx + ploygon.size()) % ploygon.size();
 }
 void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point>>& result)
 {
 	std::vector<Vec> edges;
 	for (int i = 0; i < ploygon.size(); i++)
 	{
-		int next = i + 1 < ploygon.size() ? i + 1 : 0;
+		int next = getRealIndx(ploygon, i + 1);
 		edges.push_back({ ploygon[next].x - ploygon[i].x, ploygon[next].y - ploygon[i].y });
 	}
 	int index = -1;
 	for (int i = 0; i < edges.size(); ++i)
 	{
-		int next = i + 1 < edges.size() ? i + 1 : 0;
-		float xp = crossProduct(edges[i], edges[next]);
+		float xp = crossProduct(edges[i], edges[getRealIndx(edges, i + 1)]);
 		if (xp < 0)
 		{
 			index = i;
@@ -9804,16 +9809,15 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 	}
 
 	Point cutStartP = ploygon[index];
-	Point cutEndP = ploygon[index + 1 < ploygon.size() ? index + 1 : 0];
+	Point cutEndP = ploygon[getRealIndx(ploygon, index + 1)];
 	
 	float crossU1 = -1.f;
 	float crossU2 = -1.f;
 	int curIndex = -1;
 	for (int i = 0; i < ploygon.size(); i++)
 	{
-		int next = i + 1 < ploygon.size() ? i + 1 : 0;
 		float u1, u2;
-		if (crossPoint(cutStartP, cutEndP, ploygon[i], ploygon[next], u1, u2))
+		if (crossPoint(cutStartP, cutEndP, ploygon[i], ploygon[getRealIndx(ploygon, i + 1)], u1, u2))
 		{
 			if (u1 > 1.f && u2 >= 0.f && u2 <= 1.f)
 			{
@@ -9831,20 +9835,21 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 
 	Point cutPoint;
 	vector<Point> newPloygon = ploygon;
-	if (equal(crossU2, 0.f))
+	if (Equal(crossU2, 0.f))
 	{
 		cutPoint = ploygon[curIndex];
 	}
-	else if(equal(crossU2, 1.f))
+	else if(Equal(crossU2, 1.f))
 	{
-		cutPoint = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0];
+		cutPoint = ploygon[getRealIndx(ploygon, curIndex + 1)];
 	}
 	else
 	{
 		float x0 = ploygon[curIndex].x;
 		float y0 = ploygon[curIndex].y;
-		float xEnd = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0].x;
-		float yEnd = ploygon[curIndex + 1 < ploygon.size() ? curIndex + 1 : 0].y;
+		int next = getRealIndx(ploygon, curIndex + 1);
+		float xEnd = ploygon[next].x;
+		float yEnd = ploygon[next].y;
 		cutPoint = {x0 + crossU2 * (xEnd - x0), y0 + crossU2 * (yEnd - y0)};
 		newPloygon.insert(newPloygon.begin() + curIndex + 1, cutPoint);
 	}
@@ -9856,7 +9861,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 	{
 		if (newPloygon[i] == cutEndP)
 		{
-			if (!sameLine(newPloygon[i - 1 < ploygon.size() ? i - 1 : 0], cutEndP, cutPoint))
+			if (!sameLine(newPloygon[getRealIndx(newPloygon, i - 1)], cutEndP, cutPoint))
 			{
 				if (!f)
 				{
@@ -9868,7 +9873,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 				}
 			}
 			f = !f;
-			if (!sameLine(cutPoint, cutEndP, newPloygon[i + 1 < ploygon.size() ? i + 1 : 0]))
+			if (!sameLine(cutPoint, cutEndP, newPloygon[getRealIndx(newPloygon, i + 1)]))
 			{
 				if (!f)
 				{
@@ -9882,7 +9887,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 		}
 		else if (newPloygon[i] == cutPoint)
 		{
-			if (!sameLine(newPloygon[i - 1 < ploygon.size() ? i - 1 : 0], cutPoint, cutEndP))
+			if (!sameLine(newPloygon[getRealIndx(newPloygon, i - 1)], cutPoint, cutEndP))
 			{
 				if (!f)
 				{
@@ -9894,7 +9899,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 				}
 			}
 			f = !f;
-			if (!sameLine(cutEndP, cutPoint, newPloygon[i + 1 < ploygon.size() ? i + 1 : 0]))
+			if (!sameLine(cutEndP, cutPoint, newPloygon[getRealIndx(newPloygon, i + 1)]))
 			{
 				if (!f)
 				{
@@ -10274,7 +10279,7 @@ bool crossPoint_(LineWithCross& line1, LineWithCross& line2, float& u1, float& u
 	if (dx1 == 0 && dx2 == 0)
 		return false;
 
-	if (equal(dy1 / dx1, dy2 / dx2))
+	if (Equal(dy1 / dx1, dy2 / dx2))
 		return false;
 
 	float x01 = line1.begin.x;
@@ -10283,7 +10288,16 @@ bool crossPoint_(LineWithCross& line1, LineWithCross& line2, float& u1, float& u
 	float y02 = line2.begin.y;
 	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
 	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
-	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
+	if (Equal(u1, 0))
+		u1 = 0;
+	if (Equal(u1, 1))
+		u1 = 1;
+	if (Equal(u2, 0))
+		u2 = 0;
+	if (Equal(u2, 1))
+		u2 = 1;
+
+	if (u1 < 0 || u1 > 1 || u2 < 0 || u2 > 1)
 		return false;
 
 	return true;
@@ -10293,14 +10307,25 @@ bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& 
 	if (!crossPoint_(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
 		return false;
 
-	float dx1 = line1.end.x - line1.begin.x;
-	float dy1 = line1.end.y - line1.begin.y;
-	float dx2 = line2.end.x - line2.begin.x;
-	float dy2 = line2.end.y - line2.begin.y;
-	float x01 = line1.begin.x;
-	float y01 = line1.begin.y;
-
-	crossPointInfo.point = { x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
+	// 如果u1,u2是特殊值，则优先使用
+	if (Equal(crossPointInfo.u1, 0))
+		crossPointInfo.point = line1.begin;
+	else if (Equal(crossPointInfo.u1, 1))
+		crossPointInfo.point = line1.end;
+	else if (Equal(crossPointInfo.u2, 0))
+		crossPointInfo.point = line2.begin;
+	else if (Equal(crossPointInfo.u2, 1))
+		crossPointInfo.point = line2.end;
+	else
+	{
+		float dx1 = line1.end.x - line1.begin.x;
+		float dy1 = line1.end.y - line1.begin.y;
+		float dx2 = line2.end.x - line2.begin.x;
+		float dy2 = line2.end.y - line2.begin.y;
+		float x01 = line1.begin.x;
+		float y01 = line1.begin.y;
+		crossPointInfo.point = { x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
+	}
 
 	if(pointInfoMap.find(crossPointInfo.point) == pointInfoMap.end())
 		pointInfoMap[crossPointInfo.point].type = PointType::Cross;
@@ -10795,22 +10820,8 @@ void drawFunc()
 	//	fillPolygon(r);
 	//}
 
-	// 调试这个
-	//std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
-	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
-	//std::vector<std::vector<Point>> result;
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawPolygonLine(clipWindow);
-	//fillPolygon(polygon);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
-	//for (auto& r : result)
-	//{
-	//	fillPolygon(r);
-	//}
-
-	std::vector<Point> polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
-	std::vector<Point> clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
+	std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
+	std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
 	std::vector<std::vector<Point>> result;
 	glColor3f(1.0, 1.0, 1.0);
 	drawPolygonLine(clipWindow);
@@ -10821,6 +10832,19 @@ void drawFunc()
 	{
 		fillPolygon(r);
 	}
+
+	//std::vector<Point> polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
+	//std::vector<Point> clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
+	//std::vector<std::vector<Point>> result;
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawPolygonLine(clipWindow);
+	//fillPolygon(polygon);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	//for (auto& r : result)
+	//{
+	//	fillPolygon(r);
+	//}
 
 	glFlush();
 }
