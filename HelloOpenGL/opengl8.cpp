@@ -10040,7 +10040,7 @@ void closeClip(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* first
 	Boundary winEdge;
 	for (winEdge = Left; winEdge <= Top; winEdge = (Boundary)(winEdge + 1))
 	{
-		if (cross(s[winEdge], *first[winEdge], winEdge, wMin, wMax))
+		if (first[winEdge] && cross(s[winEdge], *first[winEdge], winEdge, wMin, wMax))
 		{
 			pt = intersect(s[winEdge], *first[winEdge], winEdge, wMin, wMax);
 			if (winEdge < Top)
@@ -10068,7 +10068,8 @@ GLint polygonClipSuthHodg(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D
 	printf("==================================================\n");
 	for (int i = 0; i < 4; i++)
 	{
-		printf("%0.2f,%0.2f  ", first[i]->x, first[i]->y);
+		if(first[i])
+			printf("%0.2f,%0.2f  ", first[i]->x, first[i]->y);
 	}
 	printf("\n");
 
@@ -10780,7 +10781,8 @@ void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, const std::v
 			clipPolygons.push_back(std::vector<Point>(points, points + n));
 		}
 	}
-
+	
+	//mergePolygons({ polygon, clipWindow}, result);
 	mergePolygons(clipPolygons, result);
 }
 void drawPolygonLine(const vector<Point>& polygon)
@@ -10820,18 +10822,18 @@ void drawFunc()
 	//	fillPolygon(r);
 	//}
 
-	std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
-	std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
-	std::vector<std::vector<Point>> result;
-	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
-	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	//std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
+	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
+	//std::vector<std::vector<Point>> result;
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawPolygonLine(clipWindow);
+	//fillPolygon(polygon);
+	//glColor3f(1.0, 0.0, 0.0);
+	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	//for (auto& r : result)
+	//{
+	//	fillPolygon(r);
+	//}
 
 	//std::vector<Point> polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
 	//std::vector<Point> clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
@@ -10845,6 +10847,19 @@ void drawFunc()
 	//{
 	//	fillPolygon(r);
 	//}
+
+	std::vector<Point> polygon = { { 100, 100 },{ 156, 156 },{ 206, 85 },{ 300, 300 }, {240, 240},{151, 326} };
+	std::vector<Point> clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
+	std::vector<std::vector<Point>> result;
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
 
 	glFlush();
 }
