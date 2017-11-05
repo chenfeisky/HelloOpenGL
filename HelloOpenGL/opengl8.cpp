@@ -10795,52 +10795,62 @@ void polygonClipSutherlanHodgman1(const std::vector<Point>& polygon, const std::
 
 //////////////////////////////////////////////////////////////////////////
 // Sutherlan-Hodgman多边形裁剪算法(凸多边形)
-wcPt2D intersect2(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, std::map<Boundary, std::vector<Point>> _boundaryOrderInfo)
+enum class AntiClockBoundary 
+{ None = -1, Left, Bottom, Right, Top } ;
+wcPt2D intersect2(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
 {
 	wcPt2D iPt;
 	GLfloat m;
-	bool recordOrderPoint = false;
 
 	if (p1.x != p2.x)
 		m = (p1.y - p2.y) / (p1.x - p2.x);
 	switch (winEdge)
 	{
-	case Left:
+	case Boundary::Left:
 		iPt.x = wMin.x;
 		iPt.y = p2.y + (wMin.x - p2.x) * m;
-		recordOrderPoint = (iPt.y >= wMin.y && iPt.y <= wMax.y);
+
+		if(iPt.y >= wMin.y && iPt.y <= wMax.y)
+			_boundaryOrderInfo[AntiClockBoundary::Left].push_back(iPt);
+
 		break;
-	case Right:
+	case Boundary::Right:
 		iPt.x = wMax.x;
 		iPt.y = p2.y + (wMax.x - p2.x) * m;
-		recordOrderPoint = (iPt.y >= wMin.y && iPt.y <= wMax.y);
+
+		if(iPt.y >= wMin.y && iPt.y <= wMax.y)
+			_boundaryOrderInfo[AntiClockBoundary::Right].push_back(iPt);
+
 		break;
-	case Bottom:
+	case Boundary::Bottom:
 		iPt.y = wMin.y;
 		if (p1.x != p2.x)
 			iPt.x = p2.x + (wMin.y - p2.y) / m;
 		else
 			iPt.x = p2.x;
-		recordOrderPoint = (iPt.x >= wMin.x && iPt.x <= wMax.x);
+
+		if(iPt.x >= wMin.x && iPt.x <= wMax.x)
+			_boundaryOrderInfo[AntiClockBoundary::Bottom].push_back(iPt);
+
 		break;
-	case Top:
+	case Boundary::Top:
 		iPt.y = wMax.y;
 		if (p1.x != p2.x)
 			iPt.x = p2.x + (wMax.y - p2.y) / m;
 		else
 			iPt.x = p2.x;
-		recordOrderPoint = (iPt.x >= wMin.x && iPt.x <= wMax.x);
+
+		if(iPt.x >= wMin.x && iPt.x <= wMax.x)
+			_boundaryOrderInfo[AntiClockBoundary::Top].push_back(iPt);
+
 		break;
 	default:
 		break;
 	}
 
-	if (recordOrderPoint)
-		_boundaryOrderInfo[winEdge].push_back(iPt);
-
 	return (iPt);
 }
-void clipPoint2(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, int* cnt, wcPt2D* first[], wcPt2D* s, std::map<Boundary, std::vector<Point>> _boundaryOrderInfo)
+void clipPoint2(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, int* cnt, wcPt2D* first[], wcPt2D* s, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
 {
 	wcPt2D iPt;
 	if (!first[winEdge])
@@ -10850,7 +10860,7 @@ void clipPoint2(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pO
 		if (cross(p, s[winEdge], winEdge, wMin, wMax))
 		{
 			iPt = intersect2(p, s[winEdge], winEdge, wMin, wMax, _boundaryOrderInfo);
-			if (winEdge < Top)
+			if (winEdge < Boundary::Top)
 				clipPoint2(iPt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s, _boundaryOrderInfo);
 			else
 			{
@@ -10865,7 +10875,7 @@ void clipPoint2(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pO
 
 	if (inside(p, winEdge, wMin, wMax))
 	{
-		if (winEdge < Top)
+		if (winEdge < Boundary::Top)
 			clipPoint2(p, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s, _boundaryOrderInfo);
 		else
 		{
@@ -10874,16 +10884,16 @@ void clipPoint2(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pO
 		}
 	}
 }
-void closeClip2(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* first[], wcPt2D* s, std::map<Boundary, std::vector<Point>> _boundaryOrderInfo)
+void closeClip2(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* first[], wcPt2D* s, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
 {
 	wcPt2D pt;
 	Boundary winEdge;
-	for (winEdge = Left; winEdge <= Top; winEdge = (Boundary)(winEdge + 1))
+	for (winEdge = Boundary::Left; winEdge <= Boundary::Top; winEdge = (Boundary)(winEdge + 1))
 	{
 		if (first[winEdge] && cross(s[winEdge], *first[winEdge], winEdge, wMin, wMax))
 		{
 			pt = intersect2(s[winEdge], *first[winEdge], winEdge, wMin, wMax, _boundaryOrderInfo);
-			if (winEdge < Top)
+			if (winEdge < Boundary::Top)
 				clipPoint2(pt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s, _boundaryOrderInfo);
 			else
 			{
@@ -10893,7 +10903,7 @@ void closeClip2(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* firs
 		}
 	}
 }
-GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D* pOut, std::map<Boundary, std::vector<Point>> _boundaryOrderInfo)
+GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D* pOut, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
 {
 	for (int i = 0; i < 4; i++)
 	{
@@ -10902,7 +10912,7 @@ GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2
 	wcPt2D* first[nClip] = { 0, 0, 0, 0 }, s[nClip];
 	GLint k, cnt = 0;
 	for (k = 0; k < n; k++)
-		clipPoint2(pIn[k], Left, wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
+		clipPoint2(pIn[k], Boundary::Left, wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
 	closeClip2(wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
 
 	printf("==================================================\n");
@@ -10939,31 +10949,31 @@ GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2
 }
 //////////////////////////////////////////////////////////////////////////
 
-void cutResult(const std::vector<Point>& polygon, std::map<Boundary, std::vector<Point>>& _boundaryOrderInfo, std::vector<std::vector<Point>>& result)
+void cutResult(const std::vector<Point>& polygon, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo, std::vector<std::vector<Point>>& result)
 {
 	for (auto& b : _boundaryOrderInfo)
 	{
 		switch (b.first)
 		{
-		case Boundary::Left:
+		case AntiClockBoundary::Left:
 			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
 			{
 				return a.y > b.y;
 			});
 			break;
-		case Boundary::Bottom:
+		case AntiClockBoundary::Bottom:
 			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
 			{
 				return a.x < b.x;
 			});
 			break;
-		case Boundary::Right:
+		case AntiClockBoundary::Right:
 			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
 			{
 				return a.y < b.y;
 			});
 			break;
-		case Boundary::Top:
+		case AntiClockBoundary::Top:
 			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
 			{
 				return a.x > b.x;
@@ -10977,46 +10987,24 @@ void cutResult(const std::vector<Point>& polygon, std::map<Boundary, std::vector
 	std::map<Point, Point> _pointOrderInfo;
 	for (auto& b : _boundaryOrderInfo)
 	{
-		switch (b.first)
+		for (int i = 0; i < b.second.size(); i++)
 		{
-		case Boundary::Left:
-			for (int i = 0; i < b.second.size(); i++)
+			if (i + 1 < b.second.size())
 			{
-				if (i + 1 < b.second.size())
-					_pointOrderInfo[b.second[i]] = b.second[i + 1];
-				else
-					_pointOrderInfo[b.second[i]] = _boundaryOrderInfo[Boundary::Bottom][0];
+				_pointOrderInfo[b.second[i]] = b.second[i + 1];
 			}
-			break;
-		case Boundary::Bottom:
-			for (int i = 0; i < b.second.size(); i++)
+			else
 			{
-				if (i + 1 < b.second.size())
-					_pointOrderInfo[b.second[i]] = b.second[i + 1];
-				else
-					_pointOrderInfo[b.second[i]] = _boundaryOrderInfo[Boundary::Right][0];
+				for (int j = 0; j < 4; j++)
+				{
+					int edge = ((int)b.first + j + 1) % 4; 
+					if (_boundaryOrderInfo[(AntiClockBoundary)edge].size() > 0)
+					{
+						_pointOrderInfo[b.second[i]] = _boundaryOrderInfo[(AntiClockBoundary)edge][0];
+						break;
+					}
+				}
 			}
-			break;
-		case Boundary::Right:
-			for (int i = 0; i < b.second.size(); i++)
-			{
-				if (i + 1 < b.second.size())
-					_pointOrderInfo[b.second[i]] = b.second[i + 1];
-				else
-					_pointOrderInfo[b.second[i]] = _boundaryOrderInfo[Boundary::Top][0];
-			}
-			break;
-		case Boundary::Top:
-			for (int i = 0; i < b.second.size(); i++)
-			{
-				if (i + 1 < b.second.size())
-					_pointOrderInfo[b.second[i]] = b.second[i + 1];
-				else
-					_pointOrderInfo[b.second[i]] = _boundaryOrderInfo[Boundary::Left][0];
-			}
-			break;
-		default:
-			break;
 		}
 	}
 
@@ -11051,7 +11039,7 @@ void cutResult(const std::vector<Point>& polygon, std::map<Boundary, std::vector
 // 分割边界上的多组顶点
 void polygonClipSutherlanHodgman2(const std::vector<Point>& polygon, const std::vector<Point>& clipWindow, std::vector<std::vector<Point>>& result)
 {
-	std::map<Boundary, std::vector<Point>> _boundaryOrderInfo;
+	std::map<AntiClockBoundary, std::vector<Point>> _boundaryOrderInfo;
 
 	std::vector<Point> points(32, { 0, 0 });
 	int n = polygonClipSuthHodg2(clipWindow[0], clipWindow[2], polygon.size(), (Point*)&polygon[0], &points[0], _boundaryOrderInfo);
@@ -11072,74 +11060,93 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	
-	//std::vector<Point> polygon = { {206, 442},{ 258, 286 },{286, 323}, {311, 268},{348, 433},{423, 283}, {474, 500} };
-	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 }};
-	//std::vector<std::vector<Point>> result;
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawPolygonLine(clipWindow);
-	//fillPolygon(polygon);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
-	//for (auto& r : result)
-	//{
-	//	fillPolygon(r);
-	//}
+	std::vector<Point> polygon, clipWindow;
+	std::vector<std::vector<Point>> result;
 
-	//std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
-	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
-	//std::vector<std::vector<Point>> result;
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawPolygonLine(clipWindow);
-	//fillPolygon(polygon);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
-	//for (auto& r : result)
-	//{
-	//	fillPolygon(r);
-	//}
-
-	//std::vector<Point> polygon = { { 115, 239 },{ 267, 265 },{ 226, 294 },{ 285, 315 },{ 95, 329 },{ 34, 237 },{ 96, 140 },{245, 181},{221, 188},{249, 212} };
-	//std::vector<Point> clipWindow = { { 200, 150 },{ 500, 150 },{ 500, 350 },{ 200, 350 } };
-	//std::vector<std::vector<Point>> result;
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawPolygonLine(clipWindow);
-	//fillPolygon(polygon);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
-	//for (auto& r : result)
-	//{
-	//	fillPolygon(r);
-	//}
-
-	//std::vector<Point> polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
-	//std::vector<Point> clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
-	//std::vector<std::vector<Point>> result;
-	//glColor3f(1.0, 1.0, 1.0);
-	//drawPolygonLine(clipWindow);
-	//fillPolygon(polygon);
-	//glColor3f(1.0, 0.0, 0.0);
-	//polygonClipSutherlanHodgman(polygon, clipWindow, result);
-	//for (auto& r : result)
-	//{
-	//	fillPolygon(r);
-	//}
-	
-	std::vector<Point> polygon = { { 194, 22 },{ 344, 315 },{ 204, 467 },{ 436, 484 },{ 471, 377 }, {579, 512},{110, 559} };
-	std::vector<Point> clipWindow = { { 250, 150 },{ 500, 150 },{ 500, 450 },{ 250, 450 } };
-	std::vector<Point> points(32, {0, 0});
-
-	int n = polygonClipSuthHodg(clipWindow[0], clipWindow[2], polygon.size(), &polygon[0], &points[0]);
-	if (n)
+	glViewport(0, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { {49, 61},{ 99, 72 },{67, 104}, {109, 134},{40, 147}};
+	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
+	for (auto& r : result)
 	{
-		points.resize(n);
+		fillPolygon(r);
 	}
 
+	glViewport(0, 0, winWidth / 3, winHeight / 2);
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 78, 20 },{ 99, 72 },{ 67, 104 },{ 109, 134 },{ 40, 147 } };
+	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(2 * winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 78, 20 },{ 99, 72 },{ 48, 173 },{ 136, 185 },{ 162, 148 },{203, 170},{9, 243} };
+	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(2 * winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+	
 	glFlush();
 }
 void code_8_exercise_add_1()
 {
 	glLoadIdentity();
-	gluOrtho2D(0, winWidth, 0, winHeight);
+	gluOrtho2D(0, winWidth / 3, 0, winHeight / 2);
 	glutDisplayFunc(drawFunc);
 }
 #endif
