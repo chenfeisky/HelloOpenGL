@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <set>
 #include <list>
+#include <bitset>
 
 #include <time.h>
 #include <iostream>

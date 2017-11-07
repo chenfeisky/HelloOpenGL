@@ -11151,6 +11151,273 @@ void code_8_exercise_add_1()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_ADD_1_1
+class Point
+{
+public:
+	GLfloat x, y;
+};
+typedef Point Vec;
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+int crossProduct(const Vec& vec1, const Vec& vec2)
+{
+	return vec1.x * vec2.y - vec1.y * vec2.x;
+}
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLint encode(const std::vector<Point>& polygon, Point p)
+{
+	GLint ret;
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
+		{ polygon[i].x - p.x, polygon[i].y - p.y }) > 0)
+		{
+			ret += std::pow(2, i);
+		}
+	}
+	return ret;
+}
+void swapPts(Point* p1, Point* p2)
+{
+	Point tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2End, float& u1, float& u2)
+{
+	float dx1 = line1End.x - line1Begin.x;
+	float dy1 = line1End.y - line1Begin.y;
+	float dx2 = line2End.x - line2Begin.x;
+	float dy2 = line2End.y - line2Begin.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (Equal(dy1 / dx1, dy2 / dx2))
+		return false;
+
+	float x01 = line1Begin.x;
+	float y01 = line1Begin.y;
+	float x02 = line2Begin.x;
+	float y02 = line2Begin.y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+
+	return true;
+}
+// 按照Cohen-Sutherlan原始算法, 先把p1裁到内点，再交换p1,p2，再将p2裁到内点，可能需要两次遍历所有边进行裁剪
+void lineClipCohSuth1(const std::vector<Point>& polygon, Point p1, Point p2)
+{
+	GLubyte code1, code2;
+	bool done = false, plotLine = false;
+	code1 = encode(polygon, p1);
+	code2 = encode(polygon, p2);
+
+	while (!done)
+	{
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			for (int i = 0; i < polygon.size(); i++)
+			{
+				if (code1 & (int)std::pow(2, i))
+				{
+					int next = i + 1 < polygon.size() ? i + 1 : 0;
+					float u1, u2;
+					assert(crossPoint(p1, p2, polygon[i], polygon[next], u1, u2));
+					p1.x += u1 * (p2.x - p1.x);
+					p1.y += u1 * (p2.y - p1.y);
+					code1 = encode(polygon, p1);
+					break;
+				}
+			}
+		}
+	}
+	if (plotLine)
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+}
+// 改良算法, 一次遍历所有边进行可能的裁剪
+void lineClipCohSuth2(const std::vector<Point>& polygon, Point p1, Point p2)
+{
+	GLubyte code1, code2;
+	bool plotLine = false;
+	code1 = encode(polygon, p1);
+	code2 = encode(polygon, p2);
+
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		if (accept(code1, code2))
+		{
+			plotLine = true;
+			break;
+		}
+		else if (reject(code1, code2))
+		{
+			break;
+		}
+		else
+		{
+			bool clip = false;
+			if (code2 & (int)std::pow(2, i))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+				clip = true;
+			}
+			else
+			{
+				clip = code1 & (int)std::pow(2, i);
+			}
+
+			if (clip)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				float u1, u2;
+				assert(crossPoint(p1, p2, polygon[i], polygon[next], u1, u2));
+				p1.x += u1 * (p2.x - p1.x);
+				p1.y += u1 * (p2.y - p1.y);
+				code1 = encode(polygon, p1);
+			}
+		}
+	}
+	if (plotLine)
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	std::vector<Point> polygon, clipWindow;
+	std::vector<std::vector<Point>> result;
+
+	glViewport(0, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 49, 61 },{ 99, 72 },{ 67, 104 },{ 109, 134 },{ 40, 147 } };
+	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(0, 0, winWidth / 3, winHeight / 2);
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 78, 20 },{ 99, 72 },{ 67, 104 },{ 109, 134 },{ 40, 147 } };
+	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(2 * winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	polygon = { { 78, 20 },{ 99, 72 },{ 48, 173 },{ 136, 185 },{ 162, 148 },{ 203, 170 },{ 9, 243 } };
+	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glViewport(2 * winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	result.clear();
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygonLine(clipWindow);
+	fillPolygon(polygon);
+	glColor3f(1.0, 0.0, 0.0);
+	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
+	for (auto& r : result)
+	{
+		fillPolygon(r);
+	}
+
+	glFlush();
+}
+void code_8_exercise_add_1_1()
+{
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 3, 0, winHeight / 2);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -11269,6 +11536,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_ADD_1
 	code_8_exercise_add_1();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_1_1
+	code_8_exercise_add_1_1();
 #endif
 
 
