@@ -33,7 +33,8 @@
 //#define CHAPTER_8_EXERCISE_23
 //#define CHAPTER_8_EXERCISE_24
 //#define CHAPTER_8_EXERCISE_ADD_1
-#define CHAPTER_8_EXERCISE_ADD_1_1 // Cohen-Sutherland凸多边形裁剪算法
+//#define CHAPTER_8_EXERCISE_ADD_1_1 // Cohen-Sutherland凸多边形裁剪算法
+#define CHAPTER_8_EXERCISE_ADD_1_2 // Cohen-Sutherland凸多边形裁剪算法
 
 #ifdef CHAPTER_8_EXERCISE_5
 #define CHAPTER_8_7_1

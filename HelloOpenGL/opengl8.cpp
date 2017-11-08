@@ -11166,6 +11166,13 @@ void lineBres(float x0, float y0, float xEnd, float yEnd)
 	glEnd();
 	return;
 }
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
 int crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
@@ -11184,7 +11191,7 @@ inline GLint accept(GLint code1, GLint code2)
 }
 GLint encode(const std::vector<Point>& polygon, Point p)
 {
-	GLint ret;
+	GLint ret = 0;
 	for (int i = 0; i < polygon.size(); i++)
 	{
 		int next = i + 1 < polygon.size() ? i + 1 : 0;
@@ -11319,6 +11326,10 @@ void lineClipCohSuth2(const std::vector<Point>& polygon, Point p1, Point p2)
 			}
 		}
 	}
+	if (!plotLine && accept(code1, code2))
+	{
+		plotLine = true;
+	}
 	if (plotLine)
 		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // 精确到浮点数绘图
 		lineBres(p1.x, p1.y, p2.x, p2.y);
@@ -11326,94 +11337,107 @@ void lineClipCohSuth2(const std::vector<Point>& polygon, Point p1, Point p2)
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+	std::vector<Point> polygon = { { 77, 188 },{ 202, 127 },{ 281, 232 },{ 121, 378 } };
+	Point p1, p2;
 
-	std::vector<Point> polygon, clipWindow;
-	std::vector<std::vector<Point>> result;
-
-	glViewport(0, winHeight / 2, winWidth / 3, winHeight / 2);
-	polygon = { { 49, 61 },{ 99, 72 },{ 67, 104 },{ 109, 134 },{ 40, 147 } };
-	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
-	result.clear();
 	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
-	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	glViewport(0, 0, winWidth / 2, winHeight);
+	drawPolygonLine(polygon);
 
-	glViewport(0, 0, winWidth / 3, winHeight / 2);
-	result.clear();
+	p1 = { 56, 53 }, p2 = { 27, 297 };
 	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	lineClipCohSuth1(polygon, p1, p2);
 
-	glViewport(winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
-	polygon = { { 78, 20 },{ 99, 72 },{ 67, 104 },{ 109, 134 },{ 40, 147 } };
-	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
-	result.clear();
+	p1 = { 63, 296 }, p2 = { 103, 142 };
 	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	lineClipCohSuth1(polygon, p1, p2);
 
-	glViewport(winWidth / 3, 0, winWidth / 3, winHeight / 2);
-	result.clear();
+	p1 = { 109, 97 }, p2 = { 191, 390 };
 	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	lineClipCohSuth1(polygon, p1, p2);
 
-	glViewport(2 * winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
-	polygon = { { 78, 20 },{ 99, 72 },{ 48, 173 },{ 136, 185 },{ 162, 148 },{ 203, 170 },{ 9, 243 } };
-	clipWindow = { { 80, 50 },{ 180, 50 },{ 180, 170 },{ 80, 170 } };
-	result.clear();
+	p1 = { 116, 453 }, p2 = { 191, 50 };
 	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman1(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	lineClipCohSuth1(polygon, p1, p2);
 
-	glViewport(2 * winWidth / 3, 0, winWidth / 3, winHeight / 2);
-	result.clear();
+	p1 = { 300, 322 }, p2 = { 175, 274 };
 	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	polygonClipSutherlanHodgman2(polygon, clipWindow, result);
-	for (auto& r : result)
-	{
-		fillPolygon(r);
-	}
+	lineClipCohSuth1(polygon, p1, p2);
+
+	p1 = { 185, 195 }, p2 = { 190, 245 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth1(polygon, p1, p2);
+
+	p1 = { 245, 130 }, p2 = { 313, 143 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth1(polygon, p1, p2);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	drawPolygonLine(polygon);
+
+	p1 = { 56, 53 }, p2 = { 27, 297 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
+
+	p1 = { 63, 296 }, p2 = { 103, 142 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
+
+	p1 = { 109, 97 }, p2 = { 191, 390 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
+
+	p1 = { 116, 453 }, p2 = { 191, 50 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
+
+	p1 = { 300, 322 }, p2 = { 175, 274 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
+
+	p1 = { 185, 195 }, p2 = { 190, 245 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
+
+	p1 = { 245, 130 }, p2 = { 313, 143 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCohSuth2(polygon, p1, p2);
 
 	glFlush();
 }
 void code_8_exercise_add_1_1()
 {
 	glLoadIdentity();
-	gluOrtho2D(0, winWidth / 3, 0, winHeight / 2);
+	gluOrtho2D(0, winWidth / 2, 0, winHeight);
 	glutDisplayFunc(drawFunc);
 }
 #endif
