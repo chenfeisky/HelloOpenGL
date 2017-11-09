@@ -11442,6 +11442,180 @@ void code_8_exercise_add_1_1()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_ADD_1_2
+class Point
+{
+public:
+	GLfloat x, y;
+};
+typedef Point Vec;
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+int crossProduct(const Vec& vec1, const Vec& vec2)
+{
+	return vec1.x * vec2.y - vec1.y * vec2.x;
+}
+
+bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2End, float& u1, float& u2)
+{
+	float dx1 = line1End.x - line1Begin.x;
+	float dy1 = line1End.y - line1Begin.y;
+	float dx2 = line2End.x - line2Begin.x;
+	float dy2 = line2End.y - line2Begin.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (Equal(dy1 / dx1, dy2 / dx2))
+		return false;
+
+	float x01 = line1Begin.x;
+	float y01 = line1Begin.y;
+	float x02 = line2Begin.x;
+	float y02 = line2Begin.y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+
+	return true;
+}
+GLint clipTest(Point p1, Point p2, Point lineBegin, Point lineEnd, float& u1, float& u2)
+{
+	GLfloat r1, r2;
+	GLint returnValue = true;
+
+	if (crossPoint(p1, p2, lineBegin, lineEnd, r1, r2))
+	{
+		if (crossProduct({ lineEnd.x - lineBegin.x, lineEnd.y - lineBegin.y },
+		{ p2.x - p1.x, p2.y - p1.y }) > 0)
+		{
+			if (r1 > u2)
+				returnValue = false;
+			else if (r1 > u1)
+				u1 = r1;
+		}
+		else
+		{
+			if (r1 < u1)
+				returnValue = false;
+			else if (r1 < u2)
+				u2 = r1;
+		}
+	}
+	else
+	{
+		if (crossProduct({ lineEnd.x - lineBegin.x, lineEnd.y - lineBegin.y },
+		{ lineBegin.x - p1.x, lineBegin.y - p1.y }) > 0)
+		{
+			returnValue = false;
+		}
+	}
+
+	return (returnValue);
+}
+void lineClipLiangBarsk(const std::vector<Point>& polygon, Point p1, Point p2)
+{
+	float u1 = 0.f, u2 = 1.f;
+	bool test = true;
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		if (!clipTest(p1, p2, polygon[i], polygon[next], u1, u2))
+		{
+			test = false;
+			break;
+		}
+	}
+	if (test)
+	{
+		float dx = p2.x - p1.x, dy = p2.y - p1.y;
+		if (u2 < 1.0)
+		{
+			p2.x = p1.x + u2 * dx;
+			p2.y = p1.y + u2 * dy;
+		}
+		if (u1 > 0.0)
+		{
+			p1.x = p1.x + u1 * dx;
+			p1.y = p1.y + u1 * dy;;
+		}
+		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	std::vector<Point> polygon = { { 77, 188 },{ 202, 127 },{ 281, 232 },{ 121, 378 } };
+	Point p1, p2;
+
+	glColor3f(1.0, 1.0, 1.0);
+	glViewport(0, 0, winWidth / 2, winHeight);
+	drawPolygonLine(polygon);
+
+	p1 = { 56, 53 }, p2 = { 27, 297 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 63, 296 }, p2 = { 103, 142 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 109, 97 }, p2 = { 191, 390 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 116, 453 }, p2 = { 191, 50 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 300, 322 }, p2 = { 175, 274 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 185, 195 }, p2 = { 190, 245 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 245, 130 }, p2 = { 313, 143 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	glFlush();
+}
+void code_8_exercise_add_1_2()
+{
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 2, 0, winHeight);
+	glutDisplayFunc(drawFunc);
+}
+#endif
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -11564,6 +11738,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_ADD_1_1
 	code_8_exercise_add_1_1();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_1_2
+	code_8_exercise_add_1_2();
 #endif
 
 

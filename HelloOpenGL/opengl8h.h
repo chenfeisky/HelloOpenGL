@@ -159,3 +159,7 @@
 #ifdef CHAPTER_8_EXERCISE_ADD_1_1
 #define CHAPTER_8_COMMON
 #endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_1_2
+#define CHAPTER_8_COMMON
+#endif
