@@ -18,7 +18,7 @@
 //#define CHAPTER_8_EXERCISE_9
 //#define CHAPTER_8_EXERCISE_10
 //#define CHAPTER_8_EXERCISE_11
-//#define CHAPTER_8_EXERCISE_12
+#define CHAPTER_8_EXERCISE_12
 //#define CHAPTER_8_EXERCISE_13
 //#define CHAPTER_8_EXERCISE_14
 //#define CHAPTER_8_EXERCISE_15
@@ -34,7 +34,7 @@
 //#define CHAPTER_8_EXERCISE_24
 //#define CHAPTER_8_EXERCISE_ADD_1
 //#define CHAPTER_8_EXERCISE_ADD_1_1 // Cohen-Sutherland凸多边形裁剪算法
-#define CHAPTER_8_EXERCISE_ADD_1_2 // Cohen-Sutherland凸多边形裁剪算法
+//#define CHAPTER_8_EXERCISE_ADD_1_2 // Liang-Barsky凸多边形裁剪算法
 
 #ifdef CHAPTER_8_EXERCISE_5
 #define CHAPTER_8_7_1

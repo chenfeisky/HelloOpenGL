@@ -3335,10 +3335,40 @@ void rect(Point winMin, Point winMax)
 void rorate(Point& p1, Point& p2, Point& winMin, Point& winMax, float angle)
 {
 	Point center = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
-	auto m = rotateMatrix(center, angle * PI / 180);
-	transformPoint(m, p1);
-	transformPoint(m, p2);
-	if (angle == 90 || angle == 270)
+	//auto m = rotateMatrix(center, angle * PI / 180);
+	//transformPoint(m, p1);
+	//transformPoint(m, p2);
+	// 简化计算
+	float temp = 0.f;
+	if (angle == 90 || angle == -270)
+	{
+		temp = p1.x;
+		p1.x = -(p1.y -center.y) + center.x;
+		p1.y = (temp - center.x) + center.y;
+
+		temp = p2.x;
+		p2.x = -(p2.y - center.y) + center.x;
+		p2.y = (temp - center.x) + center.y;
+	}
+	else if(angle == 180 || angle == -180)
+	{
+		p1.x = -(p1.x - center.x) + center.x;
+		p1.y = -(p1.y - center.y) + center.y;
+
+		p2.x = -(p2.x - center.x) + center.x;
+		p2.y = -(p2.y - center.y) + center.y;
+	}
+	else if (angle == 270 || angle == -90)
+	{
+		temp = p1.x;
+		p1.x = (p1.y - center.y) + center.x;
+		p1.y = -(temp - center.x) + center.y;
+
+		temp = p2.x;
+		p2.x = (p2.y - center.y) + center.x;
+		p2.y = -(temp - center.x) + center.y;
+	}
+	if (angle == 90 || angle == 270 || angle == -90 || angle == -270)
 	{
 		float w = winMax.x - winMin.x;
 		float h = winMax.y - winMin.y;
@@ -3681,7 +3711,7 @@ bool lineClipNLNStandard(Point winMin, Point winMax, Point& p1, Point& p2, GLint
 	}
 	else if (leftTop(code1))
 	{
-		if(fabs(p1.y - winMax.y) > fabs(p1.x - winMin.x))
+		if((p1.y - winMin.y) / (p1.x - winMax.x) < (winMax.y - winMin.y) / (winMin.x - winMax.x))
 			return lineClipNLNStandardLeftL(winMin, winMax, p1, p2);
 		else
 			return lineClipNLNStandardLeftT(winMin, winMax, p1, p2);
@@ -3759,7 +3789,7 @@ void drawFunc()
 	glEnd();
 
 	Point p1, p2;
-
+	
 	p1 = { 106, 475 }, p2 = { 578, 120 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
@@ -4322,10 +4352,46 @@ void rorate(Point& p1, Point& p2, Point& winMin, Point& winMax, float angle)
 	opCountRotate[ADD] += 2;
 	opCountRotate[DIVISION] += 2;
 	Point center = { (winMin.x + winMax.x) / 2, (winMin.y + winMax.y) / 2 };
-	auto m = rotateMatrix(center, angle * PI / 180);
-	transformPoint(m, p1);
-	transformPoint(m, p2);
-	if (angle == 90 || angle == 270)
+	//auto m = rotateMatrix(center, angle * PI / 180);
+	//transformPoint(m, p1);
+	//transformPoint(m, p2);
+	// 简化计算
+	float temp = 0.f;
+	if (angle == 90 || angle == -270)
+	{
+		opCountRotate[ADD] += 4;
+		opCountRotate[MINUS] += 4;
+		temp = p1.x;
+		p1.x = -(p1.y - center.y) + center.x;
+		p1.y = (temp - center.x) + center.y;
+
+		temp = p2.x;
+		p2.x = -(p2.y - center.y) + center.x;
+		p2.y = (temp - center.x) + center.y;
+	}
+	else if (angle == 180 || angle == -180)
+	{
+		opCountRotate[ADD] += 4;
+		opCountRotate[MINUS] += 4;
+		p1.x = -(p1.x - center.x) + center.x;
+		p1.y = -(p1.y - center.y) + center.y;
+
+		p2.x = -(p2.x - center.x) + center.x;
+		p2.y = -(p2.y - center.y) + center.y;
+	}
+	else if (angle == 270 || angle == -90)
+	{
+		opCountRotate[ADD] += 4;
+		opCountRotate[MINUS] += 4;
+		temp = p1.x;
+		p1.x = (p1.y - center.y) + center.x;
+		p1.y = -(temp - center.x) + center.y;
+
+		temp = p2.x;
+		p2.x = (p2.y - center.y) + center.x;
+		p2.y = -(temp - center.x) + center.y;
+	}
+	if (angle == 90 || angle == 270 || angle == -90 || angle == -270)
 	{
 		opCountRotate[ADD] += 2;
 		opCountRotate[MINUS] += 4;
