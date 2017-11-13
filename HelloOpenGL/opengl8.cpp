@@ -4843,8 +4843,9 @@ bool lineClipNLNStandard(Point winMin, Point winMax, Point& p1, Point& p2, GLint
 	}
 	else if (leftTop(code1))
 	{
-		opCount[MINUS] += 2;
-		if (fabs(p1.y - winMax.y) > fabs(p1.x - winMin.x))
+		opCount[MINUS] += 4;
+		opCount[DIVISION] += 2;
+		if ((p1.y - winMin.y) / (p1.x - winMax.x) < (winMax.y - winMin.y) / (winMin.x - winMax.x))
 			return lineClipNLNStandardLeftL(winMin, winMax, p1, p2);
 		else
 			return lineClipNLNStandardLeftT(winMin, winMax, p1, p2);
