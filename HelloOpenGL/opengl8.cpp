@@ -11683,6 +11683,185 @@ void code_8_exercise_add_1_2()
 	glutDisplayFunc(drawFunc);
 }
 #endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_1_3
+class Point
+{
+public:
+	GLfloat x, y;
+};
+typedef Point Vec;
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+int crossProduct(const Vec& vec1, const Vec& vec2)
+{
+	return vec1.x * vec2.y - vec1.y * vec2.x;
+}
+int smallVec(const Vec& vec1, const Vec& vec2)
+{
+	return crossProduct(vec1, vec2) > 0;
+}
+int realIdx(const std::vector<Point>& ploygon, int idx)
+{
+	return (idx + ploygon.size()) % ploygon.size();
+}
+int findFirstIdx(Point p0, const std::vector<Point>& polygon)
+{
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		Vec curVec = { polygon[i].x - p0.x, polygon[i].y - p0.y };
+		if (smallVec(curVec, { polygon[realIdx(polygon, i + 1)].x - p0.x, polygon[realIdx(polygon, i + 1)].y - p0.y }) &&
+			smallVec(curVec, { polygon[realIdx(polygon, i - 1)].x - p0.x, polygon[realIdx(polygon, i - 1)].y - p0.y }))
+		{
+			return i;
+		}
+	}
+	assert(0);
+	return -1;
+}
+bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2End, float& u1, float& u2)
+{
+	float dx1 = line1End.x - line1Begin.x;
+	float dy1 = line1End.y - line1Begin.y;
+	float dx2 = line2End.x - line2Begin.x;
+	float dy2 = line2End.y - line2Begin.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (Equal(dy1 / dx1, dy2 / dx2))
+		return false;
+
+	float x01 = line1Begin.x;
+	float y01 = line1Begin.y;
+	float x02 = line2Begin.x;
+	float y02 = line2Begin.y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+
+	return true;
+}
+void drawLine(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon, Point p1, Point p2)
+{
+
+}
+void walkPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon, Point p1, Point p2)
+{
+	Vec lineVec = { p2.x - p1.x, p2.y - p1.y };
+	if (clockIdx == antiClockIdx)
+	{
+		if (smallVec(lineVec, { polygon[clockIdx].x - p1.x, polygon[clockIdx].y - p1.y }))
+		{
+			drawLine(clockIdx, antiClockIdx, polygon, p1, p2);
+		}
+	}
+	else
+	{
+		if (smallVec({ polygon[clockIdx].x - p1.x, polygon[clockIdx].y - p1.y }, { polygon[antiClockIdx].x - p1.x, polygon[antiClockIdx].y - p1.y }))
+		{
+			if (smallVec(lineVec, { polygon[clockIdx].x - p1.x, polygon[clockIdx].y - p1.y }))
+			{
+				drawLine(clockIdx, antiClockIdx, polygon, p1, p2);
+			}
+			else
+			{
+				walkPoint(realIdx(polygon, clockIdx - 1), antiClockIdx, polygon, p1, p2);
+			}
+		}
+		else
+		{
+			if (smallVec(lineVec, { polygon[antiClockIdx].x - p1.x, polygon[antiClockIdx].y - p1.y }))
+			{
+				drawLine(clockIdx, antiClockIdx, polygon, p1, p2);
+			}
+			else
+			{
+				walkPoint(clockIdx, realIdx(polygon, antiClockIdx + 1), polygon, p1, p2);
+			}
+		}
+	}
+}
+void lineClipNLN(const std::vector<Point>& polygon, Point p1, Point p2)
+{
+
+	//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	std::vector<Point> polygon = { { 77, 188 },{ 202, 127 },{ 281, 232 },{ 121, 378 } };
+	Point p1, p2;
+
+	glColor3f(1.0, 1.0, 1.0);
+	glViewport(0, 0, winWidth / 2, winHeight);
+	drawPolygonLine(polygon);
+
+	p1 = { 56, 53 }, p2 = { 27, 297 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 63, 296 }, p2 = { 103, 142 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 109, 97 }, p2 = { 191, 390 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 116, 453 }, p2 = { 191, 50 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 300, 322 }, p2 = { 175, 274 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 185, 195 }, p2 = { 190, 245 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	p1 = { 245, 130 }, p2 = { 313, 143 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipLiangBarsk(polygon, p1, p2);
+
+	glFlush();
+}
+void code_8_exercise_add_1_3()
+{
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 2, 0, winHeight);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -11811,6 +11990,9 @@ void main(int argc, char** argv)
 	code_8_exercise_add_1_2();
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_ADD_1_3
+	code_8_exercise_add_1_3();
+#endif
 
 	glutMainLoop();
 }
