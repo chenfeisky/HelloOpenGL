@@ -11710,9 +11710,49 @@ int crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+void swapPts(Point& p1, Point& p2)
+{
+	Point tmp;
+	tmp = p1;
+	p1 = p2;
+	p2 = tmp;
+}
+void swapCodes(GLubyte& c1, GLubyte& c2)
+{
+	GLubyte tmp;
+	tmp = c1;
+	c1 = c2;
+	c2 = tmp;
+}
+GLint encode(const std::vector<Point>& polygon, Point p)
+{
+	GLint ret = 0;
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
+		{ polygon[i].x - p.x, polygon[i].y - p.y }) > 0)
+		{
+			ret += std::pow(2, i);
+		}
+	}
+	return ret;
+}
 int smallVec(const Vec& vec1, const Vec& vec2)
 {
-	return crossProduct(vec1, vec2) > 0;
+	return crossProduct(vec1, vec2) >= 0;
 }
 int realIdx(const std::vector<Point>& ploygon, int idx)
 {
@@ -11754,19 +11794,42 @@ bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2E
 
 	return true;
 }
-void drawLine(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon, Point p1, Point p2)
+void calcClipPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon, Point& p1, Point& p2)
 {
-
+	int nextClockIdx = realIdx(polygon, clockIdx + 1);
+	int nextAntiClockIdx = realIdx(polygon, antiClockIdx - 1);
+	
+	float dx = p2.x - p1.x, dy = p2.y - p1.y;
+	auto _p1 = p1;
+	float u1, u2;
+	if (crossPoint(_p1, p2, polygon[clockIdx], polygon[nextClockIdx], u1, u2))
+	{
+		if (0 <= u1 && u1 <= 1 && 0 <= u2 && u2 <= 1)
+		{
+			p1.x = _p1.x + u1 * dx;
+			p1.y = _p1.y + u1 * dy;
+		}
+	}
+	if (crossPoint(_p1, p2, polygon[antiClockIdx], polygon[nextAntiClockIdx], u1, u2))
+	{
+		if (0 <= u1 && u1 <= 1 && 0 <= u2 && u2 <= 1)
+		{
+			p2.x = _p1.x + u1 * dx;
+			p2.y = _p1.y + u1 * dy;
+		}
+	}
 }
-void walkPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon, Point p1, Point p2)
+bool walkPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon, Point& p1, Point& p2)
 {
 	Vec lineVec = { p2.x - p1.x, p2.y - p1.y };
 	if (clockIdx == antiClockIdx)
 	{
 		if (smallVec(lineVec, { polygon[clockIdx].x - p1.x, polygon[clockIdx].y - p1.y }))
 		{
-			drawLine(clockIdx, antiClockIdx, polygon, p1, p2);
+			calcClipPoint(clockIdx, antiClockIdx, polygon, p1, p2);
+			return true;
 		}
+		return false;
 	}
 	else
 	{
@@ -11774,31 +11837,95 @@ void walkPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& polygon
 		{
 			if (smallVec(lineVec, { polygon[clockIdx].x - p1.x, polygon[clockIdx].y - p1.y }))
 			{
-				drawLine(clockIdx, antiClockIdx, polygon, p1, p2);
+				calcClipPoint(clockIdx, antiClockIdx, polygon, p1, p2);
+				return true;
 			}
 			else
 			{
-				walkPoint(realIdx(polygon, clockIdx - 1), antiClockIdx, polygon, p1, p2);
+				return walkPoint(realIdx(polygon, clockIdx - 1), antiClockIdx, polygon, p1, p2);
 			}
 		}
 		else
 		{
 			if (smallVec(lineVec, { polygon[antiClockIdx].x - p1.x, polygon[antiClockIdx].y - p1.y }))
 			{
-				drawLine(clockIdx, antiClockIdx, polygon, p1, p2);
+				calcClipPoint(clockIdx, antiClockIdx, polygon, p1, p2);
+				return true;
 			}
 			else
 			{
-				walkPoint(clockIdx, realIdx(polygon, antiClockIdx + 1), polygon, p1, p2);
+				return walkPoint(clockIdx, realIdx(polygon, antiClockIdx + 1), polygon, p1, p2);
 			}
 		}
 	}
 }
+bool lineClipNLNOutter(const std::vector<Point>& polygon, Point& p1, Point& p2)
+{
+	bool ret = false;
+	int firstIdx = findFirstIdx(p1, polygon);
+	if (smallVec({ polygon[firstIdx].x - p1.x, polygon[firstIdx].y - p1.y }, { p2.x - p1.x, p2.y - p1.y }))
+	{
+		ret = walkPoint(realIdx(polygon, firstIdx - 1), realIdx(polygon, firstIdx + 1), polygon, p1, p2);
+	}
+	return ret;
+}
+bool lineClipNLNInside(const std::vector<Point>& polygon, Point& p1, Point& p2)
+{
+	Vec lineVec = { p2.x - p1.x, p2.y - p1.y };
+
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		if (smallVec({ polygon[i].x - p1.x, polygon[i].y - p1.y }, lineVec) &&
+			smallVec(lineVec, { polygon[next].x - p1.x, polygon[next].y - p1.y }))
+		{
+			float u1, u2;
+			if (crossPoint(p1, p2, polygon[i], polygon[next], u1, u2))
+			{
+				if (0 <= u1 && u1 <= 1 && 0 <= u2 && u2 <= 1)
+				{
+					p2.x = p1.x + u1 * (p2.x - p1.x);
+					p2.y = p1.y + u1 * (p2.y - p1.y);
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
 void lineClipNLN(const std::vector<Point>& polygon, Point p1, Point p2)
 {
+	GLubyte code1 = encode(polygon, p1);
+	GLubyte code2 = encode(polygon, p2);
+	bool draw = false;
+	if (accept(code1, code2))
+	{
+		draw = true;
+	}
+	else if (reject(code1, code2))
+	{
+		
+	}
+	else
+	{
+		if (inside(code2))
+		{
+			swapPts(p1, p2);
+			swapCodes(code1, code2);
+		}
+		if (inside(code1))
+		{
+			draw = lineClipNLNInside(polygon, p1, p2);
+		}
+		else
+		{
+			draw = lineClipNLNOutter(polygon, p1, p2);
+		}
+	}
 
-	//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
-	lineBres(p1.x, p1.y, p2.x, p2.y);
+	if (draw)
+		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+		lineBres(p1.x, p1.y, p2.x, p2.y);
 }
 void drawFunc()
 {
