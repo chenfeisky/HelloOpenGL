@@ -11799,6 +11799,13 @@ void calcClipPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& pol
 	int nextClockIdx = realIdx(polygon, clockIdx + 1);
 	int nextAntiClockIdx = realIdx(polygon, antiClockIdx - 1);
 	
+	// 直线从外到内，一定是先进入clock边，再离开antiClock边，理由如下：
+	// 由于第一个初始点是逆时针方向的第一个点，逆时针即叉积正方向，即第一个初始点是沿直线方向的最右点，而其他点则是由初始点从右往左。
+	// 1.对于顺时针点：
+	// 有（直线方向）X（初始点到顺时针点）为正，而初始点到顺时针点的方向与该边方向相反（边为逆时针），即有（直线方向）X（该边方向）为负，即有（该边方向）X（直线方向）为正，即直线进入该边（顺时针点边）
+	// 2.对于逆时针点：
+	// 有（直线方向）X（初始点到逆时针点）为正，而初始点到逆时针点的方向与该边方向相同（边为逆时针），即有（直线方向）X（该边方向）为正，即有（该边方向）X（直线方向）为负，即直线离开该边（逆时针点边）
+	// 而进入一定在前，离开一定在后，所以按直线P1到P2的方向一定是P1进入，P2离开
 	float dx = p2.x - p1.x, dy = p2.y - p1.y;
 	auto _p1 = p1;
 	float u1, u2;
@@ -11930,54 +11937,121 @@ void lineClipNLN(const std::vector<Point>& polygon, Point p1, Point p2)
 void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	std::vector<Point> polygon = { { 77, 188 },{ 202, 127 },{ 281, 232 },{ 121, 378 } };
+
+	std::vector<Point> polygon;
 	Point p1, p2;
 
 	glColor3f(1.0, 1.0, 1.0);
 	glViewport(0, 0, winWidth / 2, winHeight);
+	polygon = { { 100, 220 },{ 300, 220 },{ 300, 360 },{ 100, 360 }};
 	drawPolygonLine(polygon);
 
-	p1 = { 56, 53 }, p2 = { 27, 297 };
+	p1 = { 208, 428 }, p2 = { 119, 109 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
 
-	p1 = { 63, 296 }, p2 = { 103, 142 };
+	p1 = { 224, 262 }, p2 = { 68, 431 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
 
-	p1 = { 109, 97 }, p2 = { 191, 390 };
+	p1 = { 166, 230 }, p2 = { 53, 355 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
 
-	p1 = { 116, 453 }, p2 = { 191, 50 };
+	p1 = { 131, 237 }, p2 = { 41, 237 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
 
-	p1 = { 300, 322 }, p2 = { 175, 274 };
+	p1 = { 334, 310 }, p2 = { 239, 204 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
 
-	p1 = { 185, 195 }, p2 = { 190, 245 };
+	p1 = { 371, 239 }, p2 = { 204, 157 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
 
-	p1 = { 245, 130 }, p2 = { 313, 143 };
+	p1 = { 264, 413 }, p2 = { 264, 252 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipLiangBarsk(polygon, p1, p2);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 50, 170 }, p2 = { 300, 420 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 350, 410 }, p2 = { 250, 310 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	polygon = { { 178, 212 },{ 316, 234 },{ 312, 307 },{ 193, 389 },{ 128, 293 } };
+	drawPolygonLine(polygon);
+
+	p1 = { 85, 242 }, p2 = { 248, 58 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 147, 360 }, p2 = { 251, 396 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 89, 351 }, p2 = { 374, 235 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 170, 290 }, p2 = { 136, 217 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 243, 233 }, p2 = { 185, 334 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 280, 147 }, p2 = { 304, 193 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 128, 162 }, p2 = { 328, 362 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 362, 357 }, p2 = { 282, 277 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
 
 	glFlush();
 }
