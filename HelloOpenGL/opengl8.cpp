@@ -12063,6 +12063,422 @@ void code_8_exercise_add_1_3()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_ADD_1_4
+class Point
+{
+public:
+	GLfloat x, y;
+};
+typedef Point Vec;
+void lineBres(float x0, float y0, float xEnd, float yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex2f(x0, y0);
+	glVertex2f(xEnd, yEnd);
+	glEnd();
+	return;
+}
+void drawPolygonLine(const vector<Point>& polygon)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto& p : polygon)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+int crossProduct(const Vec& vec1, const Vec& vec2)
+{
+	return vec1.x * vec2.y - vec1.y * vec2.x;
+}
+bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2End, float& u1, float& u2)
+{
+	float dx1 = line1End.x - line1Begin.x;
+	float dy1 = line1End.y - line1Begin.y;
+	float dx2 = line2End.x - line2Begin.x;
+	float dy2 = line2End.y - line2Begin.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (Equal(dy1 / dx1, dy2 / dx2))
+		return false;
+
+	float x01 = line1Begin.x;
+	float y01 = line1Begin.y;
+	float x02 = line2Begin.x;
+	float y02 = line2Begin.y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+
+	if (u1 < 0 || u1 > 1 || u2 < 0 || u2 > 1)
+		return false;
+
+	return true;
+}
+//////////////////////////////////////////////////////////////////////////
+// 检查内外
+bool sign(float f)
+{
+	return f > 0;
+}
+bool checkRay(Point begin, Point end, const std::vector<Point>& polygon)
+{
+	float dx = end.x - begin.x;
+	float dy = end.y - begin.y;
+	for (auto& p : polygon)
+	{
+		bool check = false;
+		float _dx = p.x - begin.x;
+		float _dy = p.y - begin.y;
+		if (dx)
+		{
+			if (_dx)
+			{
+				if (dy / dx != _dy / _dx)
+				{
+					check = true;
+				}
+				else
+				{
+					if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+						check = false;
+					else
+						check = true;
+				}
+			}
+			else
+			{
+				check = true;
+			}
+		}
+		else
+		{
+			if (_dx)
+			{
+				check = true;
+			}
+			else
+			{
+				if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+					check = false;
+				else
+					check = true;
+			}
+		}
+		if (!check)
+			return false;
+	}
+	return true;
+}
+void boundBox(const std::vector<Point>& polygon, float& minX, float& maxX, float& minY, float& maxY)
+{
+	maxX = polygon[0].x, minX = polygon[0].x, maxY = polygon[0].y, minY = polygon[0].y;
+	for (int i = 1; i < polygon.size(); i++)
+	{
+		if (polygon[i].x < minX)
+			minX = polygon[i].x;
+		if (polygon[i].x > maxX)
+			maxX = polygon[i].x;
+		if (polygon[i].y < minY)
+			minY = polygon[i].y;
+		if (polygon[i].y > maxY)
+			maxY = polygon[i].y;
+	}
+}
+bool checkVertex(Point p, const std::vector<Point>& polygon)
+{
+	for (auto& _p : polygon)
+	{
+		if (p.x == _p.x && p.y == _p.y)
+			return false;
+	}
+	return true;
+}
+bool checkIn(Point p, const std::vector<Point>& polygon)
+{
+	if (!checkVertex(p, polygon))
+		return false;
+
+	float minX, maxX, minY, maxY;
+	boundBox(polygon, minX, maxX, minY, maxY);
+	float length = (maxX - minX) + (maxY - minY);
+	float theta = 0;
+	float dtheta = PI / 180;
+	while (theta < 2 * PI)
+	{
+		Point end = { p.x + length * cos(theta), p.y + length * sin(theta) };
+		if (checkRay(p, end, polygon))
+		{
+			float u1 = 0, u2 = 0;
+			int count = 0;
+			for (int i = 0; i < polygon.size(); i++)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				if (crossPoint(p, end, polygon[i], polygon[next], u1, u2))
+				{
+					if (crossProduct({ end.x - p.x, end.y - p.y }, 
+					{ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y }) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			return count >= 1;
+		}
+		else
+		{
+			theta += dtheta;
+		}
+	}
+	assert(0 && "can not find suitable ray!!!");
+	return false;
+}
+//////////////////////////////////////////////////////////////////////////
+enum class CrossPointType
+{
+	Enter, // 进入
+	Exit, // 离开
+};
+struct CrossPointInfo
+{
+	float u;
+	CrossPointType type;
+};
+bool calcCrossPoint(const std::vector<Point>& polygon, Point p1, Point p2, std::vector<CrossPointInfo>& crossPoints)
+{
+	for (int i = 0; i < polygon.size(); i ++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		float u1, u2;
+		if (crossPoint(p1, p2, polygon[i], polygon[next], u1, u2))
+		{
+			if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
+			{ p2.x - p1.x, p2.y - p1.y }) > 0)
+			{
+				crossPoints.push_back({ u1, CrossPointType::Enter});
+			}
+			else
+			{
+				crossPoints.push_back({ u1, CrossPointType::Exit });
+			}
+		}
+	}
+}
+void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vector<CrossPointInfo>& crossPoints)
+{
+	std::sort(crossPoints.begin(), crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+	{
+		return a.u < b.u;
+	});
+
+	auto last = crossPoints.end();
+	for (auto it = crossPoints.begin(); it < crossPoints.end();)
+	{
+		if (last < crossPoints.end())
+		{
+			if (it->u == last->u)
+			{
+				if (it->type == last->type)
+				{
+					it = crossPoints.erase(it);
+				}
+				else
+				{
+					CrossPointType lltype;
+					if (last > crossPoints.begin())
+					{
+						auto llast = last - 1;
+						lltype = llast->type;
+					}
+					else
+					{
+						lltype = checkIn(p1, polygon) ? CrossPointType::Enter : CrossPointType::Exit;
+					}
+
+					if (lltype == CrossPointType::Enter)
+					{
+						last->type = CrossPointType::Exit;
+						it->type = CrossPointType::Enter;
+					}
+					else
+					{
+						last->type = CrossPointType::Enter;
+						it->type = CrossPointType::Exit;
+					}
+					it++;
+				}
+			}
+		}
+		last = it;
+	}
+
+	if (crossPoints.size() > 0)
+	{
+		crossPoints.insert(crossPoints.begin(), { 0, crossPoints[0].type == CrossPointType::Enter ? CrossPointType::Exit : CrossPointType::Enter });
+	}
+	else
+	{
+		crossPoints.push_back({ 0, checkIn(p1, polygon) ? CrossPointType::Enter : CrossPointType::Exit });
+	}
+
+	crossPoints.push_back({ 1, (crossPoints.end() - 1)->type == CrossPointType::Enter ? CrossPointType::Exit : CrossPointType::Enter });
+}
+
+void lineClipCrossPoint(const std::vector<Point>& polygon, Point p1, Point p2)
+{
+	std::vector<CrossPointInfo> crossPoints;
+	calcCrossPoint(polygon, p1, p2, crossPoints);
+	checkCross(polygon, p1, p2, crossPoints);
+
+	float dx = p2.x - p1.x, dy = p2.y - p1.y;
+	std::vector<std::vector<Point>> result;
+	for (int i = 0; i < crossPoints.size(); i++)
+	{
+		if (crossPoints[i].type == CrossPointType::Exit)
+		{
+			int last = i - 1;
+			if (last >= 0 && crossPoints[last].type == CrossPointType::Enter && crossPoints[i].u != crossPoints[last].u)
+			{
+				result.push_back({ { p1.x + crossPoints[last].u * dx, p1.y + crossPoints[last].u * dy },
+				{ p1.x + crossPoints[i].u * dx, p1.y + crossPoints[i].u * dy } });
+			}
+		}
+	}
+
+	for (auto line : result)
+	{
+		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+		lineBres(line[0].x, line[0].y, line[1].x, line[1].y);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	std::vector<Point> polygon;
+	Point p1, p2;
+
+	glColor3f(1.0, 1.0, 1.0);
+	glViewport(0, 0, winWidth / 2, winHeight);
+	polygon = { { 100, 220 },{ 300, 220 },{ 300, 360 },{ 100, 360 } };
+	drawPolygonLine(polygon);
+
+	p1 = { 208, 428 }, p2 = { 119, 109 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 224, 262 }, p2 = { 68, 431 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 166, 230 }, p2 = { 53, 355 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 131, 237 }, p2 = { 41, 237 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 334, 310 }, p2 = { 239, 204 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 371, 239 }, p2 = { 204, 157 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 264, 413 }, p2 = { 264, 252 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 50, 170 }, p2 = { 300, 420 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 350, 410 }, p2 = { 250, 310 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	polygon = { { 178, 212 },{ 316, 234 },{ 312, 307 },{ 193, 389 },{ 128, 293 } };
+	drawPolygonLine(polygon);
+
+	p1 = { 85, 242 }, p2 = { 248, 58 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 147, 360 }, p2 = { 251, 396 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 89, 351 }, p2 = { 374, 235 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 170, 290 }, p2 = { 136, 217 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 243, 233 }, p2 = { 185, 334 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 280, 147 }, p2 = { 304, 193 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 128, 162 }, p2 = { 328, 362 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	p1 = { 362, 357 }, p2 = { 282, 277 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipNLN(polygon, p1, p2);
+
+	glFlush();
+}
+void code_8_exercise_add_1_4()
+{
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 2, 0, winHeight);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -12193,6 +12609,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_ADD_1_3
 	code_8_exercise_add_1_3();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_1_4
+	code_8_exercise_add_1_4();
 #endif
 
 	glutMainLoop();
