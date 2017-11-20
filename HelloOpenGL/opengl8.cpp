@@ -12309,11 +12309,13 @@ void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vect
 					}
 				}
 			}
-		}
-		last = it;
+		}		
 
 		if (!updateIt)
+		{
+			last = it;
 			it++;
+		}			
 	}
 
 	if (crossPoints.size() > 0)
@@ -12362,31 +12364,29 @@ void drawFunc()
 	std::vector<Point> polygon;
 	Point p1, p2;
 
-	glLoadIdentity();
-	gluOrtho2D(0, winWidth / 2, 0, winHeight / 2);
 	glViewport(0, winHeight / 2, winWidth / 2, winHeight / 2);
 
 	glColor3f(1.0, 1.0, 1.0);
 	polygon = { { 177, 86 },{ 272, 42 },{ 361, 260 },{ 183, 149 }, {126, 216},{88, 62} };
 	drawPolygonLine(polygon);
 
-	//p1 = { 88, 199 }, p2 = { 374, 227 };
-	//glColor3f(1.0, 1.0, 1.0);
-	//lineBres(p1.x, p1.y, p2.x, p2.y);
-	//glColor3f(1.0, 0.0, 0.0);
-	//lineClipCrossPoint(polygon, p1, p2);
-
-	//p1 = { 135, 190 }, p2 = { 296, 172 };
-	//glColor3f(1.0, 1.0, 1.0);
-	//lineBres(p1.x, p1.y, p2.x, p2.y);
-	//glColor3f(1.0, 0.0, 0.0);
-	//lineClipCrossPoint(polygon, p1, p2);
-
-	/*p1 = { 98, 180 }, p2 = { 246, 155 };
+	/*p1 = { 88, 199 }, p2 = { 374, 227 };
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
-	lineClipCrossPoint(polygon, p1, p2);*/
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 135, 190 }, p2 = { 296, 172 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 98, 180 }, p2 = { 246, 155 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
 
 	p1 = { 195, 176 }, p2 = { 212, 260 };
 	glColor3f(1.0, 1.0, 1.0);
@@ -12416,12 +12416,112 @@ void drawFunc()
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(p1.x, p1.y, p2.x, p2.y);
 	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);*/
+
+	glViewport(winWidth / 2, winHeight / 2, winWidth / 2, winHeight / 2);
+
+	glColor3f(1.0, 1.0, 1.0);
+	polygon = { { 80, 100 },{ 290, 100 },{ 290, 220 },{ 80, 220 }};
+	drawPolygonLine(polygon);
+
+	/*p1 = { 305, 23 }, p2 = { 60, 285 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 209, 75 }, p2 = { 350, 149 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 207, 187 }, p2 = { 381, 157 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 113, 35 }, p2 = { 229, 61 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 103, 259 }, p2 = { 103, 68 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 10, 30 }, p2 = { 260, 280 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 240, 170 }, p2 = { 350, 280 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);*/
+
+	
+	glViewport(0, 0, winWidth / 2, winHeight / 2);
+
+	glColor3f(1.0, 1.0, 1.0);
+	polygon = { { 44, 43 },{ 353, 70 },{ 290, 213 },{ 248, 162 },{226, 278},{175, 100},{146, 227},{106, 140},{77, 195} };
+	drawPolygonLine(polygon);
+
+	//p1 = { 40, 140 }, p2 = { 179, 140 };
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(p1.x, p1.y, p2.x, p2.y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineClipCrossPoint(polygon, p1, p2);
+
+	//p1 = { 140, 100 }, p2 = { 202, 100 };
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(p1.x, p1.y, p2.x, p2.y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineClipCrossPoint(polygon, p1, p2);
+
+	//p1 = { 127, 227 }, p2 = { 260, 227 };
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(p1.x, p1.y, p2.x, p2.y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineClipCrossPoint(polygon, p1, p2);
+
+	//p1 = { 193, 213 }, p2 = { 318, 213 };
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(p1.x, p1.y, p2.x, p2.y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineClipCrossPoint(polygon, p1, p2);
+
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight / 2);
+
+	glColor3f(1.0, 1.0, 1.0);
+	polygon = { { 66, 58 },{ 256, 58 },{ 256, 145 },{ 228, 145 },{ 228, 95 },{ 180, 95 },{ 180, 240 },{ 120, 240 },{ 120, 166 },{66, 166} };
+	drawPolygonLine(polygon);
+
+	//p1 = { 32, 166 }, p2 = { 137, 166 };
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(p1.x, p1.y, p2.x, p2.y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineClipCrossPoint(polygon, p1, p2);
+
+	p1 = { 84, 240 }, p2 = { 153, 240 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
 	lineClipCrossPoint(polygon, p1, p2);
 
 	glFlush();
 }
 void code_8_exercise_add_1_4()
 {
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 2, 0, winHeight / 2);
+
 	glutDisplayFunc(drawFunc);
 }
 #endif
