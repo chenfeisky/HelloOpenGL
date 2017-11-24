@@ -12184,19 +12184,56 @@ void boundBox(const std::vector<Point>& polygon, float& minX, float& maxX, float
 			maxY = polygon[i].y;
 	}
 }
-bool checkVertex(Point p, const std::vector<Point>& polygon)
+bool checkEdge(Point p, const std::vector<Point>& polygon)
 {
-	for (auto& _p : polygon)
+	for (int i = 0; i < polygon.size(); i++)
 	{
-		if (p.x == _p.x && p.y == _p.y)
-			return false;
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+
+		float dx1 = p.x - polygon[i].x;
+		float dy1 = p.y - polygon[i].y;
+		float dx2 = polygon[next].x - polygon[i].x;
+		float dy2 = polygon[next].y - polygon[i].y;
+
+		if (dx1 == 0 && dy1 == 0)
+			return true;
+
+		bool isParallel = false;
+		if (dx1 == 0 && dx2 == 0)
+		{
+			isParallel = true;
+		}
+		else if (dx1 == 0 || dx2 == 0)
+		{
+			isParallel = false;
+		}
+		else
+		{
+			isParallel = dy1 / dx1 == dy2 / dx2;
+		}
+
+
+		if (isParallel)
+		{
+			float u = -1;
+			if (dx1 == 0)
+			{
+				u = dy1 / dy2;
+			}
+			else
+			{
+				u = dx1 / dx2;
+			}
+			if (u >= 0 && u <= 1)
+				return true;
+		}
 	}
-	return true;
+	return false;
 }
 bool checkIn(Point p, const std::vector<Point>& polygon)
 {
-	if (!checkVertex(p, polygon))
-		return false;
+	if (checkEdge(p, polygon))
+		return true;
 
 	float minX, maxX, minY, maxY;
 	boundBox(polygon, minX, maxX, minY, maxY);
@@ -12302,7 +12339,6 @@ void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vect
 		return a.u1 < b.u1;
 	});
 
-	CrossPointType p1Type = CrossPointType::None;
 	bool updateIt = false;
 	auto last = crossPoints.end();
 	for (auto it = crossPoints.begin(); it < crossPoints.end();)
@@ -12321,8 +12357,7 @@ void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vect
 				}
 				else
 				{
-					lltype = checkIn(p1, polygon) ? CrossPointType::Enter : CrossPointType::Exit;
-					p1Type = lltype;
+					lltype = CrossPointType::Exit;
 				}
 
 				if (lltype == CrossPointType::Enter)
@@ -12387,37 +12422,6 @@ void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vect
 					}
 				}
 			}
-
-
-			/*if (it->type == last->type)
-			{
-				it = crossPoints.erase(it);
-				updateIt = true;
-			}
-			else
-			{
-				CrossPointType lltype;
-				if (last > crossPoints.begin())
-				{
-					auto llast = last - 1;
-					lltype = llast->type;
-				}
-				else
-				{
-					lltype = checkIn(p1, polygon) ? CrossPointType::Enter : CrossPointType::Exit;
-				}
-
-				if (lltype == CrossPointType::Enter)
-				{
-					last->type = CrossPointType::Exit;
-					it->type = CrossPointType::Enter;
-				}
-				else
-				{
-					last->type = CrossPointType::Enter;
-					it->type = CrossPointType::Exit;
-				}
-			}*/
 		}		
 
 		if (!updateIt)
@@ -12440,24 +12444,30 @@ void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vect
 	}
 
 	auto beginType = CrossPointType::None;
+
+	bool and = true;
 	if (crossPoints.size() > 0)
 	{
-		beginType = crossPoints[0].type == CrossPointType::Enter ? CrossPointType::Exit : CrossPointType::Enter;
-	}
-	else
-	{
-		if (p1Type != CrossPointType::None)
+		if (crossPoints[0].u1 == 0)
 		{
-			beginType = p1Type;
+			and = false;
 		}
 		else
 		{
-			beginType = checkIn(p1, polygon) ? CrossPointType::Enter : CrossPointType::Exit;
+			beginType = crossPoints[0].type == CrossPointType::Enter ? CrossPointType::Exit : CrossPointType::Enter;
 		}
 	}
-	crossPoints.insert(crossPoints.begin(), { 0, -1, -1, -1, beginType });
+	else
+	{
+		beginType = checkIn(p1, polygon) ? CrossPointType::Enter : CrossPointType::Exit;
+	}
+	if(and)
+		crossPoints.insert(crossPoints.begin(), { 0, -1, -1, -1, beginType });
 
-	crossPoints.push_back({ 1, -1, -1, -1, (crossPoints.end() - 1)->type == CrossPointType::Enter ? CrossPointType::Exit : CrossPointType::Enter });
+	auto end = crossPoints.end() - 1;
+	and = end->u1 < 1;
+	if(and)
+		crossPoints.push_back({ 1, -1, -1, -1, end->type == CrossPointType::Enter ? CrossPointType::Exit : CrossPointType::Enter });
 }
 
 void lineClipCrossPoint(const std::vector<Point>& polygon, Point p1, Point p2)
@@ -12693,11 +12703,11 @@ void drawFunc()
 	//glColor3f(1.0, 0.0, 0.0);
 	//lineClipCrossPoint(polygon, p1, p2);
 
-	p1 = { 155, 40 }, p2 = { 197, 40 };
-	glColor3f(1.0, 1.0, 1.0);
-	lineBres(p1.x, p1.y, p2.x, p2.y);
-	glColor3f(1.0, 0.0, 0.0);
-	lineClipCrossPoint(polygon, p1, p2);
+	//p1 = { 155, 40 }, p2 = { 197, 40 };
+	//glColor3f(1.0, 1.0, 1.0);
+	//lineBres(p1.x, p1.y, p2.x, p2.y);
+	//glColor3f(1.0, 0.0, 0.0);
+	//lineClipCrossPoint(polygon, p1, p2);
 
 	//p1 = { 296, 213 }, p2 = { 266, 106 };
 	//glColor3f(1.0, 1.0, 1.0);
@@ -12705,11 +12715,11 @@ void drawFunc()
 	//glColor3f(1.0, 0.0, 0.0);
 	//lineClipCrossPoint(polygon, p1, p2);
 
-	//p1 = { 120, 52 }, p2 = { 240, 172 };
-	//glColor3f(1.0, 1.0, 1.0);
-	//lineBres(p1.x, p1.y, p2.x, p2.y);
-	//glColor3f(1.0, 0.0, 0.0);
-	//lineClipCrossPoint(polygon, p1, p2);
+	p1 = { 120, 52 }, p2 = { 240, 172 };
+	glColor3f(1.0, 1.0, 1.0);
+	lineBres(p1.x, p1.y, p2.x, p2.y);
+	glColor3f(1.0, 0.0, 0.0);
+	lineClipCrossPoint(polygon, p1, p2);
 
 
 	glFlush();
