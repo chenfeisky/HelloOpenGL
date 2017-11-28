@@ -12746,6 +12746,1002 @@ void code_8_exercise_add_1_4()
 }
 #endif
 
+#ifdef CHAPTER_8_EXERCISE_ADD_2
+struct Point { float x; float y; };
+struct Rect 
+{
+	float x; 
+	float y; 
+	float width;
+	float height;
+};
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	std::vector<std::vector<float>> _data;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+struct Path
+{
+	struct PathLine
+	{
+		Point begin;
+		Point end;
+		float sin;
+		float cos;
+		float length;
+	};
+	std::vector<PathLine> _pathLines;
+	float curLength;
+	int curPathIdx;
+	Path(const std::vector<Point>& points)
+	{
+		curLength = 0.f;
+		curPathIdx = 0;
+		for (int i = 0; i < points.size() - 1; i++)
+		{
+			float dx = points[i + 1].x - points[i].x;
+			float dy = points[i + 1].y - points[i].y;
+			float length = std::sqrt(dx * dx + dy * dy);
+			_pathLines.push_back({ points[i], points[i + 1], dy / length, dx / length, length });
+		}
+	}
+	Point move(float distance)
+	{
+		curLength += distance;
+		float dMaxLength = curLength - _pathLines[curPathIdx].length;
+		float dMinLength = curLength - 0;
+		if (dMaxLength > 0)
+		{
+			curPathIdx = (curPathIdx + 1) % _pathLines.size();
+			curLength = 0;
+			return move(dMaxLength);
+		}
+		else if (dMinLength < 0)
+		{
+			curPathIdx = (curPathIdx - 1 + _pathLines.size()) % _pathLines.size();
+			curLength = _pathLines[curPathIdx].length;
+			return move(dMinLength);
+		}
+		return{ _pathLines[curPathIdx].begin.x + curLength * _pathLines[curPathIdx].cos, _pathLines[curPathIdx].begin.y + curLength * _pathLines[curPathIdx].sin };
+	}
+};
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix rotateByPointMatrix(Point p, float theta)
+{
+	// 基于指定点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
+	return ret;
+}
+Matrix scaleMatrix(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix scaleByPointMatrix(Point p, float sx, float sy)
+{
+	// 基于指定点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+Matrix shearXMatrix(float shx)
+{
+	// 基于原点的x方向错切
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][1] = shx;
+	return ret;
+}
+void transformPoint(Matrix& m, Point& point)
+{
+	Matrix _point(3, 1);
+	Matrix temp(3, 1);
+	_point[0][0] = point.x;
+	_point[1][0] = point.y;
+	_point[2][0] = 1;
+	temp = m * _point;
+	point.x = temp[0][0];
+	point.y = temp[1][0];
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+std::vector<Point> road = { { -400, 0 },{ 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 },{ 2600, 0 },{ 2600, 200 },{ 2800, 200 } ,{ 2800, 0 } ,{ 3200, 0 },{ 3600, 0 } };
+std::vector<Point> car = { { 0, 0 },{ -70, 0 },{ -70, -12 },{ 30, -12 },{ 30, -2 },{ 15, 26 },{ 0, 26 } };
+std::vector<Point> goods = { { -30, -20 },{ 30, -20 },{ 30, 20 },{ -30, 20 } };
+Point wheelPoint = { 0, 0 };
+std::vector<Point> wheelHolder;
+
+std::vector<Point> curCar;
+std::vector<Point> curGoods;
+Point curWheelPoint1;
+Point curWheelPoint2;
+std::vector<Point> curWheel1;
+std::vector<Point> curWheel2;
+std::vector<Point> curWheelRoundHolder;
+std::vector<Point> curWheelHolder1;
+std::vector<Point> curWheelHolder2;
+
+Rect window = {};
+Rect viewPort = {};
+
+float FPS = 60;
+int deltaFPS = 5;
+float speed = 100;
+float deltaSpeed = 10;
+float scaleX = 1;
+float deltaScaleX = 2;
+float scaleY = 1;
+float deltaScaleY = 2;
+float shx = 0;
+float tansShx = 0;
+float deltaShear = 1;
+
+int lastTick = 0;
+float delta = 0.0;
+Point curPosition;
+float curDirection;
+float wheelRadius = 0;
+Path* path = nullptr;
+void initPath()
+{
+	auto temp = road;
+	temp.erase(temp.begin());
+	temp.erase(temp.end() - 1);
+	path = new Path(temp);
+}
+void drawPoint(Point p)
+{
+	glBegin(GL_POINTS);
+	glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawPoints(const std::vector<Point>& points)
+{
+	glBegin(GL_POINTS);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawStrip(const std::vector<Point>& points)
+{
+	glBegin(GL_LINE_STRIP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void drawLoop(const std::vector<Point>& points)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto & p : points)
+		glVertex2f(p.x, p.y);
+	glEnd();
+}
+void circlePlot(Point p0, Point p, std::vector<Point>& points)
+{
+	points.push_back({ p0.x + p.x, p0.y + p.y });
+	points.push_back({ p0.x - p.x, p0.y + p.y });
+	points.push_back({ p0.x + p.x, p0.y - p.y });
+	points.push_back({ p0.x - p.x, p0.y - p.y });
+	points.push_back({ p0.x + p.y, p0.y + p.x });
+	points.push_back({ p0.x - p.y, p0.y + p.x });
+	points.push_back({ p0.x + p.y, p0.y - p.x });
+	points.push_back({ p0.x - p.y, p0.y - p.x });
+}
+void circle(Point p0, float r, std::vector<Point>& points)
+{
+	points.clear();
+	float x = r;
+	float y = 0;
+	int d2x = 2 * r;
+	int d2y = 0;
+	int p = 1 - r;
+	circlePlot(p0, { x, y }, points);
+	while (x > y)
+	{
+		y++;
+		d2y += 2;
+		if (p < 0)
+		{
+			p += d2y + 1;
+		}
+		else
+		{
+			x--;
+			d2x -= 2;
+			p += d2y + 1 - d2x;
+		}
+		circlePlot(p0, { x, y }, points);
+	}
+}
+inline int64_t Round(const double a)
+{
+	if (a >= 0)
+		return int64_t(a + 0.5);
+	else
+		return int64_t(a - 0.5);
+}
+void ellipsePlot(Point p0, int x, int y, std::vector<Point>& points)
+{
+	points.push_back({ p0.x + x, p0.y + y });
+	points.push_back({ p0.x - x, p0.y + y });
+	points.push_back({ p0.x + x, p0.y - y });
+	points.push_back({ p0.x - x, p0.y - y });
+}
+void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
+{
+	points.clear();
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	ellipsePlot(p0, x, y, points);
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		ellipsePlot(p0, x, y, points);
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		ellipsePlot(p0, x, y, points);
+	}
+}
+void drawRoad()
+{
+	drawStrip(road);
+}
+void drawCar()
+{
+	drawLoop(curCar);
+}
+void drawGoods()
+{
+	drawLoop(curGoods);
+}
+void drawWheel()
+{
+	drawPoints(curWheel1);
+	for (auto & p : curWheelHolder1)
+	{
+		drawStrip({ curWheelPoint1, p });
+	}
+	drawPoints(curWheel2);
+	for (auto & p : curWheelHolder2)
+	{
+		drawStrip({ curWheelPoint2, p });
+	}
+}
+void scale(float sx, float sy)
+{
+	scaleX *= sx;
+	scaleY *= sy;
+	auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
+	transformPoints(m, curCar);
+	transformPoints(m, curGoods);
+	transformPoint(m, curWheelPoint1);
+	transformPoint(m, curWheelPoint2);
+	transformPoints(m, curWheelHolder1);
+	transformPoints(m, curWheelHolder2);
+
+	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
+	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
+	tansShx *= (sx / sy);
+	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection) * shearXMatrix(tansShx), curWheel1);
+	curWheel2 = curWheel1;
+	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheel1);
+	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheel2);
+}
+void shear(float sh)
+{
+	shx += sh;
+	tansShx += sh;
+	auto m = translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(sh) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y);
+	transformPoints(m, curCar);
+	transformPoints(m, curGoods);
+	transformPoint(m, curWheelPoint1);
+	transformPoint(m, curWheelPoint2);
+	transformPoints(m, curWheelHolder1);
+	transformPoints(m, curWheelHolder2);
+	transformPoints(m, curWheel1);
+	transformPoints(m, curWheel2);
+}
+void reset()
+{
+	FPS = 60;
+	deltaFPS = 5;
+	speed = 100;
+	deltaSpeed = 10;
+	scale(1 / scaleX, 1 / scaleY);
+	deltaScaleX = 2;
+	deltaScaleY = 2;
+	shear(-tansShx);
+	deltaShear = 1;
+}
+void initWheel()
+{
+	for (int i = 0; i <= 4; i++)
+	{
+		float angle = (90 + i * 360 / 5) * PI / 180;
+		wheelHolder.push_back({ std::cos(angle) * wheelRadius, std::sin(angle) * wheelRadius });
+	}
+}
+void initCarData()
+{
+	initPath();
+	lastTick = GetTickCount();
+	curPosition = { 0.f, 0.f };
+	curDirection = 0.f;
+	wheelRadius = 10;
+	initWheel();
+	curCar = car;
+	curGoods = goods;
+	curWheelPoint1 = wheelPoint;
+	curWheelPoint2 = wheelPoint;
+	curWheelHolder1 = wheelHolder;
+	curWheelHolder2 = wheelHolder;
+	curWheelRoundHolder = wheelHolder;
+	transformPoints(translateMatrix(20, 22), curCar);
+	transformPoints(translateMatrix(-15, 47), curGoods);
+	transformPoint(translateMatrix(32, 10), curWheelPoint1);
+	transformPoint(translateMatrix(-32, 10), curWheelPoint2);
+	transformPoints(translateMatrix(32, 10), curWheelHolder1);
+	transformPoints(translateMatrix(-32, 10), curWheelHolder2);
+	circle({ 32, 10 }, wheelRadius, curWheel1);
+	circle({ -32, 10 }, wheelRadius, curWheel2);
+}
+float distance(const Point& p1, const Point& p2)
+{
+	auto dx = p2.x - p1.x;
+	auto dy = p2.y - p1.y;
+	return std::sqrt(dx * dx + dy * dy);
+}
+void updateWindowPosition()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(curPosition.x - winWidth / 2, curPosition.x + winWidth / 2, -150, -150 + winHeight);
+}
+void updateDirection(float diretion)
+{
+	auto d = diretion - curDirection;
+	transformPoints(rotateByPointMatrix(curPosition, d), curCar);
+	transformPoints(rotateByPointMatrix(curPosition, d), curGoods);
+	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint1);
+	transformPoint(rotateByPointMatrix(curPosition, d), curWheelPoint2);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheel1);
+	transformPoints(rotateByPointMatrix(curPosition, d), curWheel2);
+
+	transformPoints(translateMatrix(curWheelPoint1.x, curWheelPoint1.y), curWheelHolder1);
+	transformPoints(translateMatrix(curWheelPoint2.x, curWheelPoint2.y), curWheelHolder2);
+	transformPoints(rotateByPointMatrix(curWheelPoint1, diretion), curWheelHolder1);
+	transformPoints(rotateByPointMatrix(curWheelPoint2, diretion), curWheelHolder2);
+}
+void updateMove(Point p)
+{
+	auto dx = p.x - curPosition.x;
+	auto dy = p.y - curPosition.y;
+	transformPoints(translateMatrix(dx, dy), curCar);
+	transformPoints(translateMatrix(dx, dy), curGoods);
+	transformPoint(translateMatrix(dx, dy), curWheelPoint1);
+	transformPoint(translateMatrix(dx, dy), curWheelPoint2);
+	transformPoints(translateMatrix(dx, dy), curWheel1);
+	transformPoints(translateMatrix(dx, dy), curWheel2);
+}
+void updateTransform()
+{
+	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
+
+	float deltaA = delta  * speed / l;
+	transformPoints(rotateByPointMatrix({ 0, 0 }, -deltaA), curWheelRoundHolder);
+	curWheelHolder1 = curWheelRoundHolder;
+	transformPoints(shearXMatrix(tansShx) * scaleByPointMatrix({ 0, 0 }, scaleX, scaleY), curWheelHolder1);
+	curWheelHolder2 = curWheelHolder1;
+}
+void update()
+{
+	//printf("update: %f\n", delta);
+
+	Point nextP = path->move(delta * speed);
+	auto dx = nextP.x - curPosition.x;
+	auto dy = nextP.y - curPosition.y;
+	float dir = 0;
+	if (dx)
+	{
+		dir = std::atan(dy / dx);
+	}
+	else
+	{
+		if (dy)
+		{
+			auto signDy = dy > 0 ? 1 : -1;
+			auto signSpeed = speed > 0 ? 1 : -1;
+			dir = signDy * signSpeed * PI / 2;
+		}
+		else
+		{
+			dir = curDirection;
+		}
+	}
+	
+	updateTransform();
+	updateMove(nextP);
+	curPosition = nextP;
+	updateDirection(dir);
+	curDirection = dir;
+
+	updateWindowPosition();
+}
+bool isNumber(string s)
+{
+	std::stringstream sin(s);
+	double d;
+	char c;
+	if (!(sin >> d))
+		return false;
+	if (sin >> c)
+		return false;
+	return true;
+}
+bool setFPS(int value)
+{
+	if (value <= 0)
+	{
+		return false;
+	}
+	else
+	{
+		FPS = value;
+		return true;
+	}
+}
+void dealFPSCommand()
+{
+	printf("input fps value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("fps must be a number!!!\n");
+		dealFPSCommand();
+		return;
+	}
+	int value = std::stoi(str);
+	if (!setFPS(value))
+	{
+		printf("fps must be a positive number!!!\n");
+		dealFPSCommand();
+	}
+}
+void dealDeltaFPSCommand()
+{
+	printf("input fps delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("fps delta must be a number!!!\n");
+		dealDeltaFPSCommand();
+		return;
+	}
+	int value = std::stoi(str);
+	deltaFPS = value;
+}
+void dealSpeedCommand()
+{
+	printf("input speed value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("speed must be a number!!!\n");
+		dealSpeedCommand();
+		return;
+	}
+	float value = std::stof(str);
+	speed = value;
+}
+void dealDeltaSpeedCommand()
+{
+	printf("input speed delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("speed delta must be a number!!!\n");
+		dealDeltaSpeedCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaSpeed = value;
+}
+void dealScaleXCommand()
+{
+	printf("input scale x value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale x must be a number!!!\n");
+		dealScaleXCommand();
+		return;
+	}
+	float value = std::stof(str);
+	scale(value / scaleX, 1);
+}
+void dealDeltaScaleXCommand()
+{
+	printf("input scale x delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale x delta must be a number!!!\n");
+		dealDeltaScaleXCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaScaleX = value;
+}
+void dealScaleYCommand()
+{
+	printf("input scale y value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale y must be a number!!!\n");
+		dealScaleYCommand();
+		return;
+	}
+	float value = std::stof(str);
+	scale(1, value / scaleY);
+}
+void dealDeltaScaleYCommand()
+{
+	printf("input scale y delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale y delta must be a number!!!\n");
+		dealDeltaScaleYCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaScaleY = value;
+}
+void dealShearCommand()
+{
+	printf("input shear value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("shear must be a number!!!\n");
+		dealShearCommand();
+		return;
+	}
+	float value = std::stof(str);
+	shear(value - tansShx);
+}
+void dealDeltaShearCommand()
+{
+	printf("input shear delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("shear delta must be a number!!!\n");
+		dealDeltaShearCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaShear = value;
+}
+
+void showOperatorNotice();
+bool _dealCommand(string commandString)
+{
+	if (commandString == "fps" || commandString == "FPS")
+	{
+		dealFPSCommand();
+		return true;
+	}
+	else if (commandString == "dfps" || commandString == "DFPS")
+	{
+		dealDeltaFPSCommand();
+		return true;
+	}
+	else if (commandString == "speed" || commandString == "SPEED")
+	{
+		dealSpeedCommand();
+		return true;
+	}
+	else if (commandString == "dspeed" || commandString == "DSPEED")
+	{
+		dealDeltaSpeedCommand();
+		return true;
+	}
+	else if (commandString == "scalex" || commandString == "SCALEX")
+	{
+		dealScaleXCommand();
+		return true;
+	}
+	else if (commandString == "dscalex" || commandString == "DSCALEX")
+	{
+		dealDeltaScaleXCommand();
+		return true;
+	}
+	else if (commandString == "scaley" || commandString == "SCALEY")
+	{
+		dealScaleYCommand();
+		return true;
+	}
+	else if (commandString == "dscaley" || commandString == "DSCALEY")
+	{
+		dealDeltaScaleYCommand();
+		return true;
+	}
+	else if (commandString == "shear" || commandString == "SHEAR")
+	{
+		dealShearCommand();
+		return true;
+	}
+	else if (commandString == "dshear" || commandString == "DSHEAR")
+	{
+		dealDeltaShearCommand();
+		return true;
+	}
+	else if (commandString == "reset" || commandString == "RESET")
+	{
+		reset();
+		return true;
+	}
+	else if (commandString == "exit" || commandString == "EXIT")
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+void dealCommand()
+{
+	printf("Input Command: ");
+	std::string commandString;
+	std::cin >> commandString;
+	if (!_dealCommand(commandString))
+	{
+		printf("error command!!!\n");
+		dealCommand();
+		return;
+	}
+	showOperatorNotice();
+	lastTick = GetTickCount();
+}
+void drawString(Point point, string word)
+{
+	glRasterPos2i(point.x, point.y);
+	for (char c : word)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+	}
+}
+void showState()
+{
+	float leftX = curPosition.x - winWidth / 2 + 10;
+	float topY = -150 + winHeight;
+	int space = 20;
+	char s[128] = {};
+
+	int realFPS = 0;
+	if (delta)
+		realFPS = 1 / delta;
+	sprintf_s(s, "FPS: %d", realFPS);
+	drawString({ leftX, topY - space * 1 }, s);
+
+	sprintf_s(s, "position: %.02f, %.02f", curPosition.x, curPosition.y);
+	drawString({ leftX, topY - space * 2 }, s);
+
+	sprintf_s(s, "speed: %.02f pixel/s", speed);
+	drawString({ leftX, topY - space * 3 }, s);
+
+	float angle = curDirection * 180 / PI;
+	sprintf_s(s, "angle: %.02f", angle);
+	drawString({ leftX, topY - space * 4 }, s);
+
+	sprintf_s(s, "scale x: %.02f", scaleX);
+	drawString({ leftX, topY - space * 5 }, s);
+
+	sprintf_s(s, "scale y: %.02f", scaleY);
+	drawString({ leftX, topY - space * 6 }, s);
+
+	sprintf_s(s, "shear: %.02f", tansShx);
+	drawString({ leftX, topY - space * 7 }, s);
+}
+void showOperatorNotice()
+{
+	system("cls");
+	printf("Operator: \n");
+	printf("W: add FPS.\n");
+	printf("S: decrease FPS.\n");
+	printf("D: add speed.\n");
+	printf("A: decrease speed.\n");
+	printf("→: add scale x.\n");
+	printf("←: decrease scale x.\n");
+	printf("↑: add scale y.\n");
+	printf("↓: decrease scale y.\n");
+	printf("CTRL →: reflect to +x.\n");
+	printf("CTRL ←: reflect to -x.\n");
+	printf("CTRL ↑: reflect to +y.\n");
+	printf("CTRL ↓: reflect to -y.\n");
+	printf("SHIFT →: add shear.\n");
+	printf("SHIFT ←: decrease shear.\n");
+	printf("R: reset state\n");
+	printf("ESC: command mode.\n");
+}
+void showCommandNotice()
+{
+	system("cls");
+	printf("Command Mode: \n");
+	printf("fps: set FPS.\n");
+	printf("dfps: set FPS delta.\n");
+	printf("speed: set speed.\n");
+	printf("dspeed: set speed delta.\n");
+	printf("scalex: set scale x.\n");
+	printf("dscalex: set scale x delta.\n");
+	printf("scaley: set scale y.\n");
+	printf("dscaley: set scale y delta.\n");
+	printf("shear: set shear.\n");
+	printf("dshear: set shear delta.\n");
+	printf("reset: reset state.\n");
+	printf("exit: exit command mode.\n");
+	dealCommand();
+}
+void normalKeyFcn(unsigned char key, int x, int y)
+{
+	//printf("normalKeyFcn %d, %d, %d\n", key, x, y);
+	switch (key)
+	{
+	case 27:
+		showCommandNotice();
+		break;
+	case 'r':
+	case 'R':
+		reset();
+		break;
+	case 'w':
+	case 'W':
+		setFPS(FPS + deltaFPS);
+		break;
+	case 's':
+	case 'S':
+		setFPS(FPS - deltaFPS);
+		break;
+	case 'a':
+	case 'A':
+		speed -= deltaSpeed;
+		break;
+	case 'd':
+	case 'D':
+		speed += deltaSpeed;
+		break;
+	default:
+		break;
+	}
+
+}
+void specialKeyFcn(int key, int x, int y)
+{
+	//printf("specialKeyFcn %d, %d, %d\n", key, x, y);
+	int mod = glutGetModifiers();
+	switch (key)
+	{
+	case GLUT_KEY_RIGHT:
+		if (mod == 0)
+		{
+			scale(deltaScaleX, 1);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleX < 0)
+				scale(-1, 1);
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			shear(deltaShear);
+		}
+		break;
+	case GLUT_KEY_LEFT:
+		if (mod == 0)
+		{
+			scale(1 / deltaScaleX, 1);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleX > 0)
+				scale(-1, 1);
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			shear(-deltaShear);
+		}
+		break;
+	case GLUT_KEY_UP:
+		if (mod == 0)
+		{
+			scale(1, deltaScaleY);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleY < 0)
+				scale(1, -1);
+		}
+		break;
+	case GLUT_KEY_DOWN:
+		if (mod == 0)
+		{
+			scale(1, 1 / deltaScaleY);
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (scaleY > 0)
+				scale(1, -1);
+		}
+		break;
+	default:
+		break;
+	}
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	update();
+
+	drawRoad();
+	drawCar();
+	drawGoods();
+	drawWheel();
+	showState();
+
+	glFlush();
+}
+void onTimer(int id)
+{
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+void code_8_exercise_add_2()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glColor3f(0.0, 0.0, 0.0);
+
+	initCarData();
+	showOperatorNotice();
+
+	glutDisplayFunc(displayFcn);
+	glutKeyboardFunc(normalKeyFcn);
+	glutSpecialFunc(specialKeyFcn);
+
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_8_COMMON
 
@@ -12880,6 +13876,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_8_EXERCISE_ADD_1_4
 	code_8_exercise_add_1_4();
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_2
+	code_8_exercise_add_2();
 #endif
 
 	glutMainLoop();
