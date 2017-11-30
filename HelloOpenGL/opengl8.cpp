@@ -12963,6 +12963,15 @@ Point curPosition;
 float curDirection;
 float wheelRadius = 0;
 Path* path = nullptr;
+
+// 裁剪窗口
+float up = PI / 2;
+Point windowPos = { 0, 0 };
+float width = 0;
+float height = 0;
+// 视口
+float xvmin = 600, yvmin = 450, xvmax = 760, yvmax = 570;
+
 void initPath()
 {
 	auto temp = road;
@@ -13120,6 +13129,32 @@ void drawWheel()
 	{
 		drawStrip({ curWheelPoint2, p });
 	}
+}
+Matrix updateViewCoord()
+{
+
+}
+Matrix updateNormalView()
+{
+
+}
+void updateClip()
+{
+
+}
+Matrix updateViewport()
+{
+
+}
+void updateView()
+{
+	// 变换到观察坐标系
+	
+	// 规范化视口
+
+	// 裁剪
+
+	// 视口
 }
 void scale(float sx, float sy)
 {
