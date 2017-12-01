@@ -12926,6 +12926,328 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 		p.y = temp[1][0];
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+// 裁剪
+//////////////////////////////////////////////////////////////////////////
+// Sutherlan-Hodgman多边形裁剪算法(凸多边形)
+inline bool operator==(const Point& p1, const Point& p2)
+{
+	//return p1.x == p2.x && p1.y == p2.y;
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y);
+}
+inline bool operator!=(const Point& p1, const Point& p2)
+{
+	//return p1.x == p2.x && p1.y == p2.y;
+	return !(p1 == p2);
+}
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
+typedef Point wcPt2D;
+typedef enum { None = -1, Left, Right, Bottom, Top } Boundary;
+enum class AntiClockBoundary
+{
+	None = -1, Left, Bottom, Right, Top
+};
+const GLint nClip = 4;
+vector<wcPt2D> sPoint[nClip];
+GLint inside(wcPt2D p, Boundary b, wcPt2D wMin, wcPt2D wMax)
+{
+	switch (b)
+	{
+	case Left:
+		if (p.x < wMin.x)
+			return (false);
+		break;
+	case Right:
+		if (p.x > wMax.x)
+			return (false);
+		break;
+	case Bottom:
+		if (p.y < wMin.y)
+			return (false);
+		break;
+	case Top:
+		if (p.y > wMax.y)
+			return (false);
+		break;
+	}
+	return (true);
+}
+GLint cross(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax)
+{
+	if (inside(p1, winEdge, wMin, wMax) == inside(p2, winEdge, wMin, wMax))
+		return (false);
+	else
+		return (true);
+}
+wcPt2D intersect2(wcPt2D p1, wcPt2D p2, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
+{
+	wcPt2D iPt;
+	GLfloat m;
+
+	if (p1.x != p2.x)
+		m = (p1.y - p2.y) / (p1.x - p2.x);
+	switch (winEdge)
+	{
+	case Boundary::Left:
+		iPt.x = wMin.x;
+		iPt.y = p2.y + (wMin.x - p2.x) * m;
+
+		if (iPt.y >= wMin.y && iPt.y <= wMax.y)
+			_boundaryOrderInfo[AntiClockBoundary::Left].push_back(iPt);
+
+		break;
+	case Boundary::Right:
+		iPt.x = wMax.x;
+		iPt.y = p2.y + (wMax.x - p2.x) * m;
+
+		if (iPt.y >= wMin.y && iPt.y <= wMax.y)
+			_boundaryOrderInfo[AntiClockBoundary::Right].push_back(iPt);
+
+		break;
+	case Boundary::Bottom:
+		iPt.y = wMin.y;
+		if (p1.x != p2.x)
+			iPt.x = p2.x + (wMin.y - p2.y) / m;
+		else
+			iPt.x = p2.x;
+
+		if (iPt.x >= wMin.x && iPt.x <= wMax.x)
+			_boundaryOrderInfo[AntiClockBoundary::Bottom].push_back(iPt);
+
+		break;
+	case Boundary::Top:
+		iPt.y = wMax.y;
+		if (p1.x != p2.x)
+			iPt.x = p2.x + (wMax.y - p2.y) / m;
+		else
+			iPt.x = p2.x;
+
+		if (iPt.x >= wMin.x && iPt.x <= wMax.x)
+			_boundaryOrderInfo[AntiClockBoundary::Top].push_back(iPt);
+
+		break;
+	default:
+		break;
+	}
+
+	return (iPt);
+}
+void clipPoint2(wcPt2D p, Boundary winEdge, wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, int* cnt, wcPt2D* first[], wcPt2D* s, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
+{
+	wcPt2D iPt;
+	if (!first[winEdge])
+		first[winEdge] = new wcPt2D{ p.x, p.y };
+	else
+	{
+		if (cross(p, s[winEdge], winEdge, wMin, wMax))
+		{
+			iPt = intersect2(p, s[winEdge], winEdge, wMin, wMax, _boundaryOrderInfo);
+			if (winEdge < Boundary::Top)
+				clipPoint2(iPt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s, _boundaryOrderInfo);
+			else
+			{
+				pOut[*cnt] = iPt;
+				(*cnt)++;
+			}
+		}
+	}
+
+	s[winEdge] = p;
+	sPoint[winEdge].push_back(p);
+
+	if (inside(p, winEdge, wMin, wMax))
+	{
+		if (winEdge < Boundary::Top)
+			clipPoint2(p, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s, _boundaryOrderInfo);
+		else
+		{
+			pOut[*cnt] = p;
+			(*cnt)++;
+		}
+	}
+}
+void closeClip2(wcPt2D wMin, wcPt2D wMax, wcPt2D* pOut, GLint* cnt, wcPt2D* first[], wcPt2D* s, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
+{
+	wcPt2D pt;
+	Boundary winEdge;
+	for (winEdge = Boundary::Left; winEdge <= Boundary::Top; winEdge = (Boundary)(winEdge + 1))
+	{
+		if (first[winEdge] && cross(s[winEdge], *first[winEdge], winEdge, wMin, wMax))
+		{
+			pt = intersect2(s[winEdge], *first[winEdge], winEdge, wMin, wMax, _boundaryOrderInfo);
+			if (winEdge < Boundary::Top)
+				clipPoint2(pt, (Boundary)(winEdge + 1), wMin, wMax, pOut, cnt, first, s, _boundaryOrderInfo);
+			else
+			{
+				pOut[*cnt] = pt;
+				(*cnt)++;
+			}
+		}
+	}
+}
+GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2D* pOut, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		sPoint[i].clear();
+	}
+	wcPt2D* first[nClip] = { 0, 0, 0, 0 }, s[nClip];
+	GLint k, cnt = 0;
+	for (k = 0; k < n; k++)
+		clipPoint2(pIn[k], Boundary::Left, wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
+	closeClip2(wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
+
+	printf("==================================================\n");
+	for (int i = 0; i < 4; i++)
+	{
+		if (first[i])
+			printf("%0.2f,%0.2f  ", first[i]->x, first[i]->y);
+	}
+	printf("\n");
+
+	int max = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (max < sPoint[i].size())
+			max = sPoint[i].size();
+	}
+
+	for (int i = 0; i < max; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (i < sPoint[j].size())
+			{
+				printf("%0.2f,%0.2f  ", sPoint[j][i].x, sPoint[j][i].y);
+			}
+			else
+			{
+				printf("             ");
+			}
+		}
+		printf("\n");
+	}
+	return (cnt);
+}
+//////////////////////////////////////////////////////////////////////////
+
+void cutResult(const std::vector<Point>& polygon, std::map<AntiClockBoundary, std::vector<Point>>& _boundaryOrderInfo, std::vector<std::vector<Point>>& result)
+{
+	for (auto& b : _boundaryOrderInfo)
+	{
+		switch (b.first)
+		{
+		case AntiClockBoundary::Left:
+			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
+			{
+				return a.y > b.y;
+			});
+			break;
+		case AntiClockBoundary::Bottom:
+			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
+			{
+				return a.x < b.x;
+			});
+			break;
+		case AntiClockBoundary::Right:
+			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
+			{
+				return a.y < b.y;
+			});
+			break;
+		case AntiClockBoundary::Top:
+			std::sort(b.second.begin(), b.second.end(), [](Point& a, Point& b)
+			{
+				return a.x > b.x;
+			});
+			break;
+		default:
+			break;
+		}
+	}
+
+	std::map<Point, Point> _pointOrderInfo;
+	for (auto& b : _boundaryOrderInfo)
+	{
+		for (int i = 0; i < b.second.size(); i++)
+		{
+			if (i + 1 < b.second.size())
+			{
+				_pointOrderInfo[b.second[i]] = b.second[i + 1];
+			}
+			else
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					int edge = ((int)b.first + j + 1) % 4;
+					if (_boundaryOrderInfo[(AntiClockBoundary)edge].size() > 0)
+					{
+						_pointOrderInfo[b.second[i]] = _boundaryOrderInfo[(AntiClockBoundary)edge][0];
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	result.push_back({});
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		result.back().push_back(polygon[i]);
+
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		if (_pointOrderInfo.find(polygon[i]) != _pointOrderInfo.end() &&
+			_pointOrderInfo.find(polygon[next]) != _pointOrderInfo.end() &&
+			_pointOrderInfo[polygon[i]] != polygon[next])
+		{
+			result.push_back({});
+		}
+	}
+	if (result.size() > 1)
+	{
+		result[0].insert(result[0].end(), result[result.size() - 1].begin(), result[result.size() - 1].end());
+		result.erase(result.end() - 1);
+	}
+
+	for (auto it = result.begin(); it != result.end(); )
+	{
+		if (it->size() < 3)
+			it = result.erase(it);
+		else
+			it++;
+	}
+}
+
+// 分割边界上的多组顶点 算法
+void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, wcPt2D wMin, wcPt2D wMax, std::vector<std::vector<Point>>& result)
+{
+	std::map<AntiClockBoundary, std::vector<Point>> _boundaryOrderInfo;
+
+	std::vector<Point> points(32, { 0, 0 });
+	int n = polygonClipSuthHodg2(wMin, wMax, polygon.size(), (Point*)&polygon[0], &points[0], _boundaryOrderInfo);
+	if (n)
+	{
+		points.resize(n);
+		cutResult(points, _boundaryOrderInfo, result);
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+
 std::vector<Point> road = { { -400, 0 },{ 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 },{ 2600, 0 },{ 2600, 200 },{ 2800, 200 } ,{ 2800, 0 } ,{ 3200, 0 },{ 3600, 0 } };
 std::vector<Point> car = { { 0, 0 },{ -70, 0 },{ -70, -12 },{ 30, -12 },{ 30, -2 },{ 15, 26 },{ 0, 26 } };
 std::vector<Point> goods = { { -30, -20 },{ 30, -20 },{ 30, 20 },{ -30, 20 } };
@@ -12965,12 +13287,15 @@ float wheelRadius = 0;
 Path* path = nullptr;
 
 // 裁剪窗口
-float up = PI / 2;
+float windowRotate = 0;
 Point windowPos = { 0, 0 };
-float width = 0;
-float height = 0;
+float windowWidth = 0;
+float windowHeight = 0;
 // 视口
 float xvmin = 600, yvmin = 450, xvmax = 760, yvmax = 570;
+bool viewTransformDirty = false;
+
+std::vector<std::vector<Point>> viewCar;
 
 void initPath()
 {
@@ -13132,29 +13457,74 @@ void drawWheel()
 }
 Matrix updateViewCoord()
 {
+	// 这里将观察坐标系原点默认为裁剪窗口左下角。其实观察坐标系的原点影响的就是点在观察坐标系中
+	// 的绝对坐标值，但这个绝对坐标值的数值并不重要，重要的是点和裁剪窗口的相对位置关系，因为最终视
+	// 口中显示的是裁剪后的内容，而裁剪后的内容就是这个相对位置关系决定的，跟两者的绝对坐标值无关。
+	// 而由于是刚体变换（旋转，平移），相对位置关系都不会变，所以方便后续计算，这里选观察坐标系原点
+	// 为裁剪窗口左下角（裁剪窗口变换后在观察坐标系的原点）
 
+	return rotateMatrix(-windowRotate) * translateMatrix(-windowPos.x, -windowPos.y);
 }
 Matrix updateNormalView()
 {
+	float xwmin = 0;
+	float xwmax = windowWidth;
+	float ywmin = 0;
+	float ywmax = windowHeight;
 
-}
-void updateClip()
-{
-
+	float xnvmin = xvmin / winWidth;
+	float xnvmax = xvmax / winWidth;
+	float ynvmin = yvmin / winHeight;
+	float ynvmax = yvmax / winHeight;
+	
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
+	ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
+	ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
+	ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
+	return ret;
 }
 Matrix updateViewport()
 {
-
+	return scaleMatrix(winWidth, winHeight);
 }
 void updateView()
 {
-	// 变换到观察坐标系
+	static Matrix viewTransform(3, 3);
+	if (viewTransformDirty)
+	{
+		viewTransformDirty = false;
+
+		matrixSetIdentity(viewTransform);
+
+		viewTransform = updateNormalView() * updateViewCoord();
+	}
+
+	static std::vector<Point> tempCar;
+	tempCar = curCar;
+	transformPoints(viewTransform, tempCar);
+
+	float xnvmin = xvmin / winWidth;
+	float xnvmax = xvmax / winWidth;
+	float ynvmin = yvmin / winHeight;
+	float ynvmax = yvmax / winHeight;
+
+	viewCar.clear();
+	polygonClipSutherlanHodgman(tempCar, { xnvmin, xnvmax }, { ynvmin, ynvmax }, viewCar);
 	
-	// 规范化视口
-
-	// 裁剪
-
-	// 视口
+	auto viewTrans = updateViewport();
+	for (auto & c : viewCar)
+	{
+		transformPoints(viewTrans, c);
+	}
+}
+void drawViewCar()
+{
+	for (auto & c : viewCar)
+	{
+		drawLoop(c);
+	}
 }
 void scale(float sx, float sy)
 {
@@ -13313,6 +13683,8 @@ void update()
 	curPosition = nextP;
 	updateDirection(dir);
 	curDirection = dir;
+
+	updateView();
 
 	updateWindowPosition();
 }
@@ -13750,6 +14122,8 @@ void displayFcn(void)
 	drawGoods();
 	drawWheel();
 	showState();
+
+	drawViewCar();
 
 	glFlush();
 }
