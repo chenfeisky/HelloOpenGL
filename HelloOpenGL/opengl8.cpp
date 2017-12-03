@@ -13288,12 +13288,12 @@ Path* path = nullptr;
 
 // 裁剪窗口
 float windowRotate = 0;
-Point windowPos = { 0, 0 };
-float windowWidth = 0;
-float windowHeight = 0;
+Point windowPos = { 0, 0 }; // 中心点
+float windowWidth = 160;
+float windowHeight = 120;
 // 视口
-float xvmin = 600, yvmin = 450, xvmax = 760, yvmax = 570;
-bool viewTransformDirty = false;
+float xvmin = 220, yvmin = 310, xvmax = 380, yvmax = 430;
+bool viewTransformDirty = true;
 
 std::vector<std::vector<Point>> viewCar;
 
@@ -13457,25 +13457,25 @@ void drawWheel()
 }
 Matrix updateViewCoord()
 {
-	// 这里将观察坐标系原点默认为裁剪窗口左下角。其实观察坐标系的原点影响的就是点在观察坐标系中
+	// 这里将观察坐标系原点默认为裁剪窗口中心点。其实观察坐标系的原点影响的就是点在观察坐标系中
 	// 的绝对坐标值，但这个绝对坐标值的数值并不重要，重要的是点和裁剪窗口的相对位置关系，因为最终视
 	// 口中显示的是裁剪后的内容，而裁剪后的内容就是这个相对位置关系决定的，跟两者的绝对坐标值无关。
 	// 而由于是刚体变换（旋转，平移），相对位置关系都不会变，所以方便后续计算，这里选观察坐标系原点
-	// 为裁剪窗口左下角（裁剪窗口变换后在观察坐标系的原点）
+	// 为裁剪窗口中心点（裁剪窗口变换后在观察坐标系的原点）
 
 	return rotateMatrix(-windowRotate) * translateMatrix(-windowPos.x, -windowPos.y);
 }
 Matrix updateNormalView()
 {
-	float xwmin = 0;
-	float xwmax = windowWidth;
-	float ywmin = 0;
-	float ywmax = windowHeight;
+	float xwmin = -windowWidth / 2;
+	float xwmax = windowWidth / 2;
+	float ywmin = -windowHeight / 2;
+	float ywmax = windowHeight / 2;
 
-	float xnvmin = xvmin / winWidth;
-	float xnvmax = xvmax / winWidth;
-	float ynvmin = yvmin / winHeight;
-	float ynvmax = yvmax / winHeight;
+	float xnvmin = xvmin / (winWidth / 2);
+	float xnvmax = xvmax / (winWidth / 2);
+	float ynvmin = yvmin / (winHeight - 150);
+	float ynvmax = yvmax / (winHeight - 150);
 	
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
@@ -13487,15 +13487,13 @@ Matrix updateNormalView()
 }
 Matrix updateViewport()
 {
-	return scaleMatrix(winWidth, winHeight);
+	return scaleMatrix(winWidth / 2, winHeight - 150);
 }
 void updateView()
 {
 	static Matrix viewTransform(3, 3);
 	if (viewTransformDirty)
 	{
-		viewTransformDirty = false;
-
 		matrixSetIdentity(viewTransform);
 
 		viewTransform = updateNormalView() * updateViewCoord();
@@ -13505,13 +13503,13 @@ void updateView()
 	tempCar = curCar;
 	transformPoints(viewTransform, tempCar);
 
-	float xnvmin = xvmin / winWidth;
-	float xnvmax = xvmax / winWidth;
-	float ynvmin = yvmin / winHeight;
-	float ynvmax = yvmax / winHeight;
+	float xnvmin = xvmin / (winWidth / 2);
+	float xnvmax = xvmax / (winWidth / 2);
+	float ynvmin = yvmin / (winHeight - 150);
+	float ynvmax = yvmax / (winHeight - 150);
 
 	viewCar.clear();
-	polygonClipSutherlanHodgman(tempCar, { xnvmin, xnvmax }, { ynvmin, ynvmax }, viewCar);
+	polygonClipSutherlanHodgman(tempCar, { xnvmin, ynvmin }, { xnvmax, ynvmax }, viewCar);
 	
 	auto viewTrans = updateViewport();
 	for (auto & c : viewCar)
@@ -13519,10 +13517,38 @@ void updateView()
 		transformPoints(viewTrans, c);
 	}
 }
+void drawWindow()
+{
+	static std::vector<Point> window(4);
+
+	if (viewTransformDirty)
+	{
+		window[0] = { -windowWidth / 2, -windowHeight / 2 };
+		window[1] = { windowWidth / 2, -windowHeight / 2 };
+		window[2] = { windowWidth / 2, windowHeight / 2 };
+		window[3] = { -windowWidth / 2, windowHeight / 2 };
+
+		transformPoints(translateMatrix(windowPos.x, windowPos.y) * rotateMatrix(windowRotate), window);
+	}
+
+	drawLoop(window);
+}
+void drawViewport()
+{
+	drawLoop({ 
+	{ xvmin + curPosition.x, yvmin },
+	{ xvmax + curPosition.x, yvmin },
+	{ xvmax + curPosition.x, yvmax },
+	{ xvmin + curPosition.x, yvmax } });
+}
 void drawViewCar()
 {
 	for (auto & c : viewCar)
 	{
+		for (auto& p : c)
+		{
+			p.x += curPosition.x;
+		}
 		drawLoop(c);
 	}
 }
@@ -14122,6 +14148,10 @@ void displayFcn(void)
 	drawGoods();
 	drawWheel();
 	showState();
+
+	drawWindow();
+	drawViewport();
+	viewTransformDirty = false;
 
 	drawViewCar();
 

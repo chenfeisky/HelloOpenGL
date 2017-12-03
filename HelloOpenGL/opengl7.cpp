@@ -7255,7 +7255,7 @@ void specialKeyFcn(int key, int x, int y)
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	
+
 	update();
 
 	drawRoad();
