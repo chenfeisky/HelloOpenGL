@@ -13112,7 +13112,7 @@ GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2
 		clipPoint2(pIn[k], Boundary::Left, wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
 	closeClip2(wMin, wMax, pOut, &cnt, first, s, _boundaryOrderInfo);
 
-	printf("==================================================\n");
+	/*printf("==================================================\n");
 	for (int i = 0; i < 4; i++)
 	{
 		if (first[i])
@@ -13141,7 +13141,7 @@ GLint polygonClipSuthHodg2(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2
 			}
 		}
 		printf("\n");
-	}
+	}*/
 	return (cnt);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -13248,6 +13248,103 @@ void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, wcPt2D wMin,
 }
 //////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////
+// 线段裁剪算法
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(wcPt2D pt, wcPt2D winMin, wcPt2D winMax)
+{
+	GLubyte code = 0x00;
+	if (pt.x < winMin.x)
+		code = code | winLeftBitCode;
+	if (pt.x > winMax.x)
+		code = code | winRightBitCode;
+	if (pt.y < winMin.y)
+		code = code | winBottomBitCode;
+	if (pt.y > winMax.y)
+		code = code | winTopBitCode;
+	return (code);
+}
+void swapPts(wcPt2D* p1, wcPt2D* p2)
+{
+	wcPt2D tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+bool lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D& p1, wcPt2D& p2)
+{
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	GLfloat m;
+	while (!done)
+	{
+		code1 = encode(p1, winMin, winMax);
+		code2 = encode(p2, winMin, winMax);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			if (p2.x != p1.x)
+				m = (p2.y - p1.y) / (p2.x - p1.x);
+			if (code1 & winLeftBitCode)
+			{
+				p1.y += (winMin.x - p1.x) * m;
+				p1.x = winMin.x;
+			}
+			else if (code1 & winRightBitCode)
+			{
+				p1.y += (winMax.x - p1.x) * m;
+				p1.x = winMax.x;
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				if (p2.x != p1.x)
+					p1.x += (winMin.y - p1.y) / m;
+				p1.y = winMin.y;
+			}
+			else if (code1 & winTopBitCode)
+			{
+				if (p2.x != p1.x)
+					p1.x += (winMax.y - p1.y) / m;
+				p1.y = winMax.y;
+			}
+		}
+	}
+	return plotLine;
+}
+//////////////////////////////////////////////////////////////////////////
 std::vector<Point> road = { { -400, 0 },{ 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 },{ 2600, 0 },{ 2600, 200 },{ 2800, 200 } ,{ 2800, 0 } ,{ 3200, 0 },{ 3600, 0 } };
 std::vector<Point> car = { { 0, 0 },{ -70, 0 },{ -70, -12 },{ 30, -12 },{ 30, -2 },{ 15, 26 },{ 0, 26 } };
 std::vector<Point> goods = { { -30, -20 },{ 30, -20 },{ 30, 20 },{ -30, 20 } };
@@ -13292,10 +13389,18 @@ Point windowPos = { 0, 0 }; // 中心点
 float windowWidth = 160;
 float windowHeight = 120;
 // 视口
-float xvmin = 220, yvmin = 310, xvmax = 380, yvmax = 430;
+float xvmin = 620, yvmin = 460, xvmax = 780, yvmax = 580;
+float xnvmin = xvmin / winWidth;
+float xnvmax = xvmax / winWidth;
+float ynvmin = yvmin / winHeight;
+float ynvmax = yvmax / winHeight;
 bool viewTransformDirty = true;
 
 std::vector<std::vector<Point>> viewCar;
+std::vector<std::vector<Point>> viewGoods;
+std::vector<std::vector<Point>> viewWheelHolder;
+std::vector<Point> viewWheels1;
+std::vector<Point> viewWheels2;
 
 void initPath()
 {
@@ -13472,11 +13577,6 @@ Matrix updateNormalView()
 	float ywmin = -windowHeight / 2;
 	float ywmax = windowHeight / 2;
 
-	float xnvmin = xvmin / (winWidth / 2);
-	float xnvmax = xvmax / (winWidth / 2);
-	float ynvmin = yvmin / (winHeight - 150);
-	float ynvmax = yvmax / (winHeight - 150);
-	
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
@@ -13487,7 +13587,37 @@ Matrix updateNormalView()
 }
 Matrix updateViewport()
 {
-	return scaleMatrix(winWidth / 2, winHeight - 150);
+	static auto ret = scaleMatrix(winWidth, winHeight);
+	return ret;
+}
+void clipPolygon(const std::vector<Point>& in, std::vector<std::vector<Point>>& out)
+{
+	out.clear();
+
+	if(in.size())
+		polygonClipSutherlanHodgman(in, { xnvmin , ynvmin }, { xnvmax, ynvmax }, out);
+}
+void clipLine(const Point& p1, const Point& p2, std::vector<Point>& out)
+{
+	out.clear();
+	auto _p1 = p1;
+	auto _p2 = p2;
+	if (lineClipCohSuth({ xnvmin , ynvmin }, { xnvmax, ynvmax }, _p1, _p2))
+	{
+		out.push_back(_p1);
+		out.push_back(_p2);
+	}
+}
+void clipPoint(std::vector<Point>& points)
+{
+	for (auto it = points.begin(); it < points.end();)
+	{
+		if (it->x >= xvmin && it->x <= xvmax && it->y >= yvmin && it->y <= yvmax)
+			it++;
+		else
+			it = points.erase(it);
+
+	}
 }
 void updateView()
 {
@@ -13499,23 +13629,69 @@ void updateView()
 		viewTransform = updateNormalView() * updateViewCoord();
 	}
 
-	static std::vector<Point> tempCar;
-	tempCar = curCar;
-	transformPoints(viewTransform, tempCar);
+	static std::vector<Point> temp;
+	static Point tempp1;
+	static Point tempp2;
 
-	float xnvmin = xvmin / (winWidth / 2);
-	float xnvmax = xvmax / (winWidth / 2);
-	float ynvmin = yvmin / (winHeight - 150);
-	float ynvmax = yvmax / (winHeight - 150);
-
-	viewCar.clear();
-	polygonClipSutherlanHodgman(tempCar, { xnvmin, ynvmin }, { xnvmax, ynvmax }, viewCar);
-	
-	auto viewTrans = updateViewport();
+	temp = curCar;
+	transformPoints(viewTransform, temp);
+	clipPolygon(temp, viewCar);
 	for (auto & c : viewCar)
+		transformPoints(updateViewport(), c);
+
+	temp = curGoods;
+	transformPoints(viewTransform, temp);
+	clipPolygon(temp, viewGoods);
+	for (auto & c : viewGoods)
+		transformPoints(updateViewport(), c);
+
+	tempp1 = curWheelPoint1;
+	transformPoint(viewTransform, tempp1);
+
+	tempp2 = curWheelPoint2;
+	transformPoint(viewTransform, tempp2);
+
+	viewWheelHolder.clear();
+	temp = curWheelHolder1;
+	transformPoints(viewTransform, temp);
+	for (auto& wheel : temp)
 	{
-		transformPoints(viewTrans, c);
+		static std::vector<Point> tempLine;
+		clipLine(tempp1, wheel, tempLine);
+		if (tempLine.size())
+		{
+			transformPoints(updateViewport(), tempLine);
+			viewWheelHolder.push_back(tempLine);
+		}			
 	}
+
+	temp = curWheelHolder2;
+	transformPoints(viewTransform, temp);
+	for (auto& wheel : temp)
+	{
+		static std::vector<Point> tempLine;
+		clipLine(tempp2, wheel, tempLine);
+		if (tempLine.size())
+		{
+			transformPoints(updateViewport(), tempLine);
+			viewWheelHolder.push_back(tempLine);
+		}
+	}
+
+	transformPoint(updateViewport(), tempp1);
+	transformPoint(updateViewport(), tempp2);
+	auto sviewX = (xvmax - xvmin) / windowWidth;
+	auto sviewY = (yvmax - yvmin) / windowHeight;
+	ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
+	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
+	tansShx *= (sviewX / sviewY);
+	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(tansShx), viewWheels1);
+	viewWheels2 = viewWheels1;
+	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	clipPoint(viewWheels1);
+	clipPoint(viewWheels2);
+
 }
 void drawWindow()
 {
@@ -13536,21 +13712,33 @@ void drawWindow()
 void drawViewport()
 {
 	drawLoop({ 
-	{ xvmin + curPosition.x, yvmin },
-	{ xvmax + curPosition.x, yvmin },
-	{ xvmax + curPosition.x, yvmax },
-	{ xvmin + curPosition.x, yvmax } });
+	{ xvmin, yvmin },
+	{ xvmax, yvmin },
+	{ xvmax, yvmax },
+	{ xvmin, yvmax } });
 }
 void drawViewCar()
 {
 	for (auto & c : viewCar)
 	{
-		for (auto& p : c)
-		{
-			p.x += curPosition.x;
-		}
 		drawLoop(c);
 	}
+}
+void drawViewGoods()
+{
+	for (auto & c : viewGoods)
+	{
+		drawLoop(c);
+	}
+}
+void drawViewWheel()
+{
+	for (auto & c : viewWheelHolder)
+	{
+		drawLoop(c);
+	}
+	drawPoints(viewWheels1);
+	drawPoints(viewWheels2);
 }
 void scale(float sx, float sy)
 {
@@ -13642,6 +13830,10 @@ void updateWindowPosition()
 	glLoadIdentity();
 	gluOrtho2D(curPosition.x - winWidth / 2, curPosition.x + winWidth / 2, -150, -150 + winHeight);
 }
+void updateWindowPos()
+{
+	windowPos = curPosition;
+}
 void updateDirection(float diretion)
 {
 	auto d = diretion - curDirection;
@@ -13713,6 +13905,8 @@ void update()
 	updateView();
 
 	updateWindowPosition();
+
+	updateWindowPos();
 }
 bool isNumber(string s)
 {
@@ -13973,8 +14167,8 @@ void drawString(Point point, string word)
 }
 void showState()
 {
-	float leftX = curPosition.x - winWidth / 2 + 10;
-	float topY = -150 + winHeight;
+	float leftX = 10;
+	float topY = winHeight;
 	int space = 20;
 	char s[128] = {};
 
@@ -14147,13 +14341,18 @@ void displayFcn(void)
 	drawCar();
 	drawGoods();
 	drawWheel();
-	showState();
-
 	drawWindow();
-	drawViewport();
-	viewTransformDirty = false;
+	//viewTransformDirty = false;
+	
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
 
+	showState();
+	drawViewport();
 	drawViewCar();
+	drawViewGoods();
+	drawViewWheel();
 
 	glFlush();
 }
