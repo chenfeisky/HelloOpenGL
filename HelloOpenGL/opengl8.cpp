@@ -13386,10 +13386,10 @@ Path* path = nullptr;
 // 裁剪窗口
 float windowRotate = 0;
 Point windowPos = { 0, 0 }; // 中心点
-float windowWidth = 160;
-float windowHeight = 120;
+float windowWidth = 200;
+float windowHeight = 150;
 // 视口
-float xvmin = 620, yvmin = 460, xvmax = 780, yvmax = 580;
+float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
 float xnvmin = xvmin / winWidth;
 float xnvmax = xvmax / winWidth;
 float ynvmin = yvmin / winHeight;
@@ -13401,6 +13401,7 @@ std::vector<std::vector<Point>> viewGoods;
 std::vector<std::vector<Point>> viewWheelHolder;
 std::vector<Point> viewWheels1;
 std::vector<Point> viewWheels2;
+std::vector<std::vector<Point>> viewRoad;
 
 void initPath()
 {
@@ -13633,66 +13634,86 @@ void updateView()
 	static Point tempp1;
 	static Point tempp2;
 
+	//////////////////////////////////////////////////////////////////////////
 	temp = curCar;
 	transformPoints(viewTransform, temp);
 	clipPolygon(temp, viewCar);
 	for (auto & c : viewCar)
 		transformPoints(updateViewport(), c);
+	
+	////////////////////////////////////////////////////////////////////////////
+	//temp = curGoods;
+	//transformPoints(viewTransform, temp);
+	//clipPolygon(temp, viewGoods);
+	//for (auto & c : viewGoods)
+	//	transformPoints(updateViewport(), c);
 
-	temp = curGoods;
-	transformPoints(viewTransform, temp);
-	clipPolygon(temp, viewGoods);
-	for (auto & c : viewGoods)
-		transformPoints(updateViewport(), c);
+	////////////////////////////////////////////////////////////////////////////
+	//tempp1 = curWheelPoint1;
+	//transformPoint(viewTransform, tempp1);
 
-	tempp1 = curWheelPoint1;
-	transformPoint(viewTransform, tempp1);
+	//tempp2 = curWheelPoint2;
+	//transformPoint(viewTransform, tempp2);
 
-	tempp2 = curWheelPoint2;
-	transformPoint(viewTransform, tempp2);
+	////////////////////////////////////////////////////////////////////////////
+	//viewWheelHolder.clear();
+	//temp = curWheelHolder1;
+	//transformPoints(viewTransform, temp);
+	//for (auto& wheel : temp)
+	//{
+	//	static std::vector<Point> tempLine;
+	//	clipLine(tempp1, wheel, tempLine);
+	//	if (tempLine.size())
+	//	{
+	//		transformPoints(updateViewport(), tempLine);
+	//		viewWheelHolder.push_back(tempLine);
+	//	}			
+	//}
 
-	viewWheelHolder.clear();
-	temp = curWheelHolder1;
-	transformPoints(viewTransform, temp);
-	for (auto& wheel : temp)
-	{
-		static std::vector<Point> tempLine;
-		clipLine(tempp1, wheel, tempLine);
-		if (tempLine.size())
-		{
-			transformPoints(updateViewport(), tempLine);
-			viewWheelHolder.push_back(tempLine);
-		}			
-	}
+	//temp = curWheelHolder2;
+	//transformPoints(viewTransform, temp);
+	//for (auto& wheel : temp)
+	//{
+	//	static std::vector<Point> tempLine;
+	//	clipLine(tempp2, wheel, tempLine);
+	//	if (tempLine.size())
+	//	{
+	//		transformPoints(updateViewport(), tempLine);
+	//		viewWheelHolder.push_back(tempLine);
+	//	}
+	//}
 
-	temp = curWheelHolder2;
-	transformPoints(viewTransform, temp);
-	for (auto& wheel : temp)
-	{
-		static std::vector<Point> tempLine;
-		clipLine(tempp2, wheel, tempLine);
-		if (tempLine.size())
-		{
-			transformPoints(updateViewport(), tempLine);
-			viewWheelHolder.push_back(tempLine);
-		}
-	}
+	////////////////////////////////////////////////////////////////////////////
+	//transformPoint(updateViewport(), tempp1);
+	//transformPoint(updateViewport(), tempp2);
+	//auto sviewX = (xvmax - xvmin) / windowWidth;
+	//auto sviewY = (yvmax - yvmin) / windowHeight;
+	//ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
+	//// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
+	//auto viewShx = tansShx;
+	//viewShx *= (sviewX / sviewY);
+	//transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(viewShx), viewWheels1);
+	//viewWheels2 = viewWheels1;
+	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	//clipPoint(viewWheels1);
+	//clipPoint(viewWheels2);
 
-	transformPoint(updateViewport(), tempp1);
-	transformPoint(updateViewport(), tempp2);
-	auto sviewX = (xvmax - xvmin) / windowWidth;
-	auto sviewY = (yvmax - yvmin) / windowHeight;
-	ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
-	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
-	tansShx *= (sviewX / sviewY);
-	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(tansShx), viewWheels1);
-	viewWheels2 = viewWheels1;
-	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
-	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
-	clipPoint(viewWheels1);
-	clipPoint(viewWheels2);
-
+	////////////////////////////////////////////////////////////////////////////
+	//temp = road;
+	//transformPoints(viewTransform, temp);
+	//static std::vector<Point> tempLine;
+	//viewRoad.clear();
+	//for (int i = 0; i < temp.size() - 1; i++)
+	//{
+	//	clipLine(temp[i], temp[i + 1], tempLine);
+	//	if (tempLine.size())
+	//		viewRoad.push_back(tempLine);
+	//}
+	//for (auto & c : viewRoad)
+	//	transformPoints(updateViewport(), c);
 }
+
 void drawWindow()
 {
 	static std::vector<Point> window(4);
@@ -13739,6 +13760,13 @@ void drawViewWheel()
 	}
 	drawPoints(viewWheels1);
 	drawPoints(viewWheels2);
+}
+void drawViewRoad()
+{
+	for (auto & c : viewRoad)
+	{
+		drawLoop(c);
+	}
 }
 void scale(float sx, float sy)
 {
@@ -13901,12 +13929,11 @@ void update()
 	curPosition = nextP;
 	updateDirection(dir);
 	curDirection = dir;
-
-	updateView();
-
+	
 	updateWindowPosition();
 
 	updateWindowPos();
+	updateView();
 }
 bool isNumber(string s)
 {
@@ -14289,6 +14316,10 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			shear(deltaShear);
 		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			windowWidth += 10;
+		}
 		break;
 	case GLUT_KEY_LEFT:
 		if (mod == 0)
@@ -14303,6 +14334,10 @@ void specialKeyFcn(int key, int x, int y)
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
 			shear(-deltaShear);
+		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			windowWidth -= 10;
 		}
 		break;
 	case GLUT_KEY_UP:
@@ -14351,8 +14386,9 @@ void displayFcn(void)
 	showState();
 	drawViewport();
 	drawViewCar();
-	drawViewGoods();
-	drawViewWheel();
+	//drawViewGoods();
+	//drawViewWheel();
+	//drawViewRoad();
 
 	glFlush();
 }
