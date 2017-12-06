@@ -13640,78 +13640,84 @@ void updateView()
 	clipPolygon(temp, viewCar);
 	for (auto & c : viewCar)
 		transformPoints(updateViewport(), c);
+
+	temp = curCar;
+	transformPoints(viewTransform, temp);
+	clipPolygon(temp, viewCar);
+	for (auto & c : viewCar)
+		transformPoints(updateViewport(), c);
 	
-	////////////////////////////////////////////////////////////////////////////
-	//temp = curGoods;
-	//transformPoints(viewTransform, temp);
-	//clipPolygon(temp, viewGoods);
-	//for (auto & c : viewGoods)
-	//	transformPoints(updateViewport(), c);
+	//////////////////////////////////////////////////////////////////////////
+	temp = curGoods;
+	transformPoints(viewTransform, temp);
+	clipPolygon(temp, viewGoods);
+	for (auto & c : viewGoods)
+		transformPoints(updateViewport(), c);
 
-	////////////////////////////////////////////////////////////////////////////
-	//tempp1 = curWheelPoint1;
-	//transformPoint(viewTransform, tempp1);
+	//////////////////////////////////////////////////////////////////////////
+	tempp1 = curWheelPoint1;
+	transformPoint(viewTransform, tempp1);
 
-	//tempp2 = curWheelPoint2;
-	//transformPoint(viewTransform, tempp2);
+	tempp2 = curWheelPoint2;
+	transformPoint(viewTransform, tempp2);
 
-	////////////////////////////////////////////////////////////////////////////
-	//viewWheelHolder.clear();
-	//temp = curWheelHolder1;
-	//transformPoints(viewTransform, temp);
-	//for (auto& wheel : temp)
-	//{
-	//	static std::vector<Point> tempLine;
-	//	clipLine(tempp1, wheel, tempLine);
-	//	if (tempLine.size())
-	//	{
-	//		transformPoints(updateViewport(), tempLine);
-	//		viewWheelHolder.push_back(tempLine);
-	//	}			
-	//}
+	//////////////////////////////////////////////////////////////////////////
+	viewWheelHolder.clear();
+	temp = curWheelHolder1;
+	transformPoints(viewTransform, temp);
+	for (auto& wheel : temp)
+	{
+		static std::vector<Point> tempLine;
+		clipLine(tempp1, wheel, tempLine);
+		if (tempLine.size())
+		{
+			transformPoints(updateViewport(), tempLine);
+			viewWheelHolder.push_back(tempLine);
+		}			
+	}
 
-	//temp = curWheelHolder2;
-	//transformPoints(viewTransform, temp);
-	//for (auto& wheel : temp)
-	//{
-	//	static std::vector<Point> tempLine;
-	//	clipLine(tempp2, wheel, tempLine);
-	//	if (tempLine.size())
-	//	{
-	//		transformPoints(updateViewport(), tempLine);
-	//		viewWheelHolder.push_back(tempLine);
-	//	}
-	//}
+	temp = curWheelHolder2;
+	transformPoints(viewTransform, temp);
+	for (auto& wheel : temp)
+	{
+		static std::vector<Point> tempLine;
+		clipLine(tempp2, wheel, tempLine);
+		if (tempLine.size())
+		{
+			transformPoints(updateViewport(), tempLine);
+			viewWheelHolder.push_back(tempLine);
+		}
+	}
 
-	////////////////////////////////////////////////////////////////////////////
-	//transformPoint(updateViewport(), tempp1);
-	//transformPoint(updateViewport(), tempp2);
-	//auto sviewX = (xvmax - xvmin) / windowWidth;
-	//auto sviewY = (yvmax - yvmin) / windowHeight;
-	//ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
-	//// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
-	//auto viewShx = tansShx;
-	//viewShx *= (sviewX / sviewY);
-	//transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(viewShx), viewWheels1);
-	//viewWheels2 = viewWheels1;
-	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
-	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
-	//clipPoint(viewWheels1);
-	//clipPoint(viewWheels2);
+	//////////////////////////////////////////////////////////////////////////
+	transformPoint(updateViewport(), tempp1);
+	transformPoint(updateViewport(), tempp2);
+	auto sviewX = (xvmax - xvmin) / windowWidth;
+	auto sviewY = (yvmax - yvmin) / windowHeight;
+	ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
+	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
+	auto viewShx = tansShx;
+	viewShx *= (sviewX / sviewY);
+	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(viewShx), viewWheels1);
+	viewWheels2 = viewWheels1;
+	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	clipPoint(viewWheels1);
+	clipPoint(viewWheels2);
 
-	////////////////////////////////////////////////////////////////////////////
-	//temp = road;
-	//transformPoints(viewTransform, temp);
-	//static std::vector<Point> tempLine;
-	//viewRoad.clear();
-	//for (int i = 0; i < temp.size() - 1; i++)
-	//{
-	//	clipLine(temp[i], temp[i + 1], tempLine);
-	//	if (tempLine.size())
-	//		viewRoad.push_back(tempLine);
-	//}
-	//for (auto & c : viewRoad)
-	//	transformPoints(updateViewport(), c);
+	//////////////////////////////////////////////////////////////////////////
+	temp = road;
+	transformPoints(viewTransform, temp);
+	static std::vector<Point> tempLine;
+	viewRoad.clear();
+	for (int i = 0; i < temp.size() - 1; i++)
+	{
+		clipLine(temp[i], temp[i + 1], tempLine);
+		if (tempLine.size())
+			viewRoad.push_back(tempLine);
+	}
+	for (auto & c : viewRoad)
+		transformPoints(updateViewport(), c);
 }
 
 void drawWindow()
@@ -13772,14 +13778,22 @@ void scale(float sx, float sy)
 {
 	scaleX *= sx;
 	scaleY *= sy;
-	auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
+	//auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
+	auto m = translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * scaleMatrix(sx, sy) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y);
+
+	bool turnOrder = (sx > 0 && sy < 0) || (sx < 0 && sy > 0);
 	transformPoints(m, curCar);
 	transformPoints(m, curGoods);
+	if (turnOrder)
+	{
+		std::reverse(curCar.begin(), curCar.end());
+		std::reverse(curGoods.begin(), curGoods.end());
+	}	
 	transformPoint(m, curWheelPoint1);
 	transformPoint(m, curWheelPoint2);
 	transformPoints(m, curWheelHolder1);
 	transformPoints(m, curWheelHolder2);
-
+	
 	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
 	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
 	tansShx *= (sx / sy);
@@ -14386,9 +14400,9 @@ void displayFcn(void)
 	showState();
 	drawViewport();
 	drawViewCar();
-	//drawViewGoods();
-	//drawViewWheel();
-	//drawViewRoad();
+	drawViewGoods();
+	drawViewWheel();
+	drawViewRoad();
 
 	glFlush();
 }
