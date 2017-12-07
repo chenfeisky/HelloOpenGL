@@ -13396,6 +13396,9 @@ float ynvmin = yvmin / winHeight;
 float ynvmax = yvmax / winHeight;
 bool viewTransformDirty = true;
 
+// Opengl视口
+float _xvmin = 330, _yvmin = 420, _xvmax = 530, _yvmax = 570;
+
 std::vector<std::vector<Point>> viewCar;
 std::vector<std::vector<Point>> viewGoods;
 std::vector<std::vector<Point>> viewWheelHolder;
@@ -13566,8 +13569,8 @@ Matrix updateViewCoord()
 	// 这里将观察坐标系原点默认为裁剪窗口中心点。其实观察坐标系的原点影响的就是点在观察坐标系中
 	// 的绝对坐标值，但这个绝对坐标值的数值并不重要，重要的是点和裁剪窗口的相对位置关系，因为最终视
 	// 口中显示的是裁剪后的内容，而裁剪后的内容就是这个相对位置关系决定的，跟两者的绝对坐标值无关。
-	// 而由于是刚体变换（旋转，平移），相对位置关系都不会变，所以方便后续计算，这里选观察坐标系原点
-	// 为裁剪窗口中心点（裁剪窗口变换后在观察坐标系的原点）
+	// 而由于是刚体变换（旋转，平移），相对位置关系都不会变，所以，为了方便后续计算(不然裁剪窗口位
+	// 置还要计算)，这里选观察坐标系原点为裁剪窗口中心点（裁剪窗口变换后在观察坐标系的原点）
 
 	return rotateMatrix(-windowRotate) * translateMatrix(-windowPos.x, -windowPos.y);
 }
@@ -13589,6 +13592,7 @@ Matrix updateNormalView()
 Matrix updateViewport()
 {
 	static auto ret = scaleMatrix(winWidth, winHeight);
+
 	return ret;
 }
 void clipPolygon(const std::vector<Point>& in, std::vector<std::vector<Point>>& out)
@@ -13640,12 +13644,6 @@ void updateView()
 	clipPolygon(temp, viewCar);
 	for (auto & c : viewCar)
 		transformPoints(updateViewport(), c);
-
-	temp = curCar;
-	transformPoints(viewTransform, temp);
-	clipPolygon(temp, viewCar);
-	for (auto & c : viewCar)
-		transformPoints(updateViewport(), c);
 	
 	//////////////////////////////////////////////////////////////////////////
 	temp = curGoods;
@@ -13690,20 +13688,32 @@ void updateView()
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	transformPoint(updateViewport(), tempp1);
-	transformPoint(updateViewport(), tempp2);
-	auto sviewX = (xvmax - xvmin) / windowWidth;
-	auto sviewY = (yvmax - yvmin) / windowHeight;
-	ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
-	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
-	auto viewShx = tansShx;
-	viewShx *= (sviewX / sviewY);
-	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(viewShx), viewWheels1);
-	viewWheels2 = viewWheels1;
-	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
-	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
-	clipPoint(viewWheels1);
-	clipPoint(viewWheels2);
+	//transformPoint(updateViewport(), tempp1);
+	//transformPoint(updateViewport(), tempp2);
+	//auto sviewX = (xvmax - xvmin) / windowWidth;
+	//auto sviewY = (yvmax - yvmin) / windowHeight;
+	//ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
+	//// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
+	//auto viewShx = tansShx;
+	//viewShx *= (sviewX / sviewY);
+	//transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(viewShx), viewWheels1);
+	//viewWheels2 = viewWheels1;
+	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	//clipPoint(viewWheels1);
+	//clipPoint(viewWheels2);
+
+	temp = curWheel1;
+	transformPoints(viewTransform, temp);
+	transformPoints(updateViewport(), temp);
+	clipPoint(temp);
+	viewWheels1 = temp;
+
+	temp = curWheel2;
+	transformPoints(viewTransform, temp);
+	transformPoints(updateViewport(), temp);
+	clipPoint(temp);
+	viewWheels2 = temp;
 
 	//////////////////////////////////////////////////////////////////////////
 	temp = road;
@@ -13743,6 +13753,12 @@ void drawViewport()
 	{ xvmax, yvmin },
 	{ xvmax, yvmax },
 	{ xvmin, yvmax } });
+
+	drawLoop({
+		{ _xvmin, _yvmin },
+		{ _xvmax, _yvmin },
+		{ _xvmax, _yvmax },
+		{ _xvmin, _yvmax } });
 }
 void drawViewCar()
 {
@@ -14334,6 +14350,10 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			windowWidth += 10;
 		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			windowPos.x += 10;
+		}
 		break;
 	case GLUT_KEY_LEFT:
 		if (mod == 0)
@@ -14353,6 +14373,10 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			windowWidth -= 10;
 		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			windowPos.x -= 10;
+		}
 		break;
 	case GLUT_KEY_UP:
 		if (mod == 0)
@@ -14363,6 +14387,18 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			if (scaleY < 0)
 				scale(1, -1);
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			
+		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			windowHeight += 10;
+		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			windowPos.y += 10;
 		}
 		break;
 	case GLUT_KEY_DOWN:
@@ -14375,6 +14411,18 @@ void specialKeyFcn(int key, int x, int y)
 			if (scaleY > 0)
 				scale(1, -1);
 		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+
+		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			windowHeight -= 10;
+		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			windowPos.y -= 10;
+		}
 		break;
 	default:
 		break;
@@ -14385,6 +14433,7 @@ void displayFcn(void)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	update();
+	glViewport(0, 0, winWidth, winHeight);
 
 	drawRoad();
 	drawCar();
@@ -14396,6 +14445,7 @@ void displayFcn(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
+	glViewport(0, 0, winWidth, winHeight);
 
 	showState();
 	drawViewport();
@@ -14403,6 +14453,15 @@ void displayFcn(void)
 	drawViewGoods();
 	drawViewWheel();
 	drawViewRoad();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(windowPos.x - windowWidth / 2, windowPos.x + windowWidth / 2, windowPos.y - windowHeight / 2, windowPos.y + windowHeight / 2);
+	glViewport(_xvmin, _yvmin, _xvmax - _xvmin, _yvmax - _yvmin);
+	drawRoad();
+	drawCar();
+	drawGoods();
+	drawWheel();
 
 	glFlush();
 }
