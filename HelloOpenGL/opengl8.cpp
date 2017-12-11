@@ -13688,32 +13688,54 @@ void updateView()
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	//transformPoint(updateViewport(), tempp1);
-	//transformPoint(updateViewport(), tempp2);
-	//auto sviewX = (xvmax - xvmin) / windowWidth;
-	//auto sviewY = (yvmax - yvmin) / windowHeight;
-	//ellipse({ 0, 0 }, std::abs(scaleX * sviewX) * wheelRadius, std::abs(scaleY * sviewY) * wheelRadius, viewWheels1);
-	//// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
-	//auto viewShx = tansShx;
-	//viewShx *= (sviewX / sviewY);
-	//transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection - windowRotate) * shearXMatrix(viewShx), viewWheels1);
-	//viewWheels2 = viewWheels1;
-	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
-	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
-	//clipPoint(viewWheels1);
-	//clipPoint(viewWheels2);
+	// 直接对点进行处理
+	//temp = curWheel1;
+	//transformPoints(viewTransform, temp);
+	//transformPoints(updateViewport(), temp);
+	//clipPoint(temp);
+	//viewWheels1 = temp;
 
-	temp = curWheel1;
-	transformPoints(viewTransform, temp);
-	transformPoints(updateViewport(), temp);
-	clipPoint(temp);
-	viewWheels1 = temp;
+	//temp = curWheel2;
+	//transformPoints(viewTransform, temp);
+	//transformPoints(updateViewport(), temp);
+	//clipPoint(temp);
+	//viewWheels2 = temp;
+	
+	transformPoint(updateViewport(), tempp1);
+	transformPoint(updateViewport(), tempp2);
+	auto sviewX = (xvmax - xvmin) / windowWidth;
+	auto sviewY = (yvmax - yvmin) / windowHeight;
+	auto m = scaleMatrix(sviewX, sviewY) * rotateMatrix(curDirection - windowRotate) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY);
+	Point ellipseY = { 0, wheelRadius };
+	transformPoint(m, ellipseY);
 
-	temp = curWheel2;
-	transformPoints(viewTransform, temp);
-	transformPoints(updateViewport(), temp);
-	clipPoint(temp);
-	viewWheels2 = temp;
+	float l = std::sqrt(ellipseY.x * ellipseY.x + ellipseY.y * ellipseY.y);
+	Point v = { ellipseY.x / l, ellipseY.y / l };
+	Point u = { v.y, -v.x };
+	Matrix tranToXY(3, 3);
+	matrixSetIdentity(tranToXY);
+	tranToXY[0][0] = u.x;
+	tranToXY[0][1] = u.y;
+	tranToXY[1][0] = v.x;
+	tranToXY[1][1] = v.y;
+
+	transformPoint(tranToXY, ellipseY);
+
+	Point ellipseX = { wheelRadius, 0 };
+	transformPoint(tranToXY * m, ellipseX);
+
+	ellipse({ 0, 0 }, std::abs(ellipseX.x), std::abs(ellipseY.y), viewWheels1);
+	tranToXY[0][1] = -tranToXY[0][1];
+	tranToXY[1][0] = -tranToXY[1][0];
+	
+	transformPoints(tranToXY, viewWheels1);
+
+	viewWheels2 = viewWheels1;
+	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	clipPoint(viewWheels1);
+	clipPoint(viewWheels2);
+	
 
 	//////////////////////////////////////////////////////////////////////////
 	temp = road;
@@ -14390,7 +14412,7 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			
+			windowRotate += 10 * PI / 180;
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
@@ -14413,7 +14435,7 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-
+			windowRotate -= 10 * PI / 180;
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
