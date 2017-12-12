@@ -14454,6 +14454,8 @@ void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	update();
 	glViewport(0, 0, winWidth, winHeight);
 
@@ -14480,6 +14482,11 @@ void displayFcn(void)
 	glLoadIdentity();
 	gluOrtho2D(windowPos.x - windowWidth / 2, windowPos.x + windowWidth / 2, windowPos.y - windowHeight / 2, windowPos.y + windowHeight / 2);
 	glViewport(_xvmin, _yvmin, _xvmax - _xvmin, _yvmax - _yvmin);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(windowPos.x, windowPos.y, 0);
+	glRotatef(-windowRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-windowPos.x, -windowPos.y, 0);
 	drawRoad();
 	drawCar();
 	drawGoods();
