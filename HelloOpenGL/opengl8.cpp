@@ -13385,9 +13385,13 @@ Path* path = nullptr;
 
 // 裁剪窗口
 float windowRotate = 0;
+float deltaWindowRotate = 5 * PI / 180;
 Point windowPos = { 0, 0 }; // 中心点
+float deltaWindowPos = 5;
 float windowWidth = 200;
 float windowHeight = 150;
+float deltaWindowSize = 10;
+
 // 视口
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
 float xnvmin = xvmin / winWidth;
@@ -13632,15 +13636,20 @@ void updateView()
 		matrixSetIdentity(viewTransform);
 
 		viewTransform = updateNormalView() * updateViewCoord();
+
 	}
 
 	static std::vector<Point> temp;
 	static Point tempp1;
 	static Point tempp2;
-
+	bool turnOrder = (windowWidth > 0 && windowHeight < 0 || windowWidth < 0 && windowHeight > 0);
 	//////////////////////////////////////////////////////////////////////////
 	temp = curCar;
 	transformPoints(viewTransform, temp);
+	if (turnOrder)
+	{
+		std::reverse(temp.begin(), temp.end());
+	}
 	clipPolygon(temp, viewCar);
 	for (auto & c : viewCar)
 		transformPoints(updateViewport(), c);
@@ -13648,6 +13657,10 @@ void updateView()
 	//////////////////////////////////////////////////////////////////////////
 	temp = curGoods;
 	transformPoints(viewTransform, temp);
+	if (turnOrder)
+	{
+		std::reverse(temp.begin(), temp.end());
+	}
 	clipPolygon(temp, viewGoods);
 	for (auto & c : viewGoods)
 		transformPoints(updateViewport(), c);
@@ -13819,14 +13832,15 @@ void scale(float sx, float sy)
 	//auto m = rotateByPointMatrix(curPosition, curDirection) * scaleByPointMatrix(curPosition, sx, sy) * rotateByPointMatrix(curPosition, -curDirection);
 	auto m = translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * scaleMatrix(sx, sy) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y);
 
-	bool turnOrder = (sx > 0 && sy < 0) || (sx < 0 && sy > 0);
 	transformPoints(m, curCar);
 	transformPoints(m, curGoods);
+	bool turnOrder = (sx > 0 && sy < 0) || (sx < 0 && sy > 0);
 	if (turnOrder)
 	{
 		std::reverse(curCar.begin(), curCar.end());
 		std::reverse(curGoods.begin(), curGoods.end());
-	}	
+	}
+
 	transformPoint(m, curWheelPoint1);
 	transformPoint(m, curWheelPoint2);
 	transformPoints(m, curWheelHolder1);
@@ -14009,6 +14023,15 @@ bool setFPS(int value)
 		FPS = value;
 		return true;
 	}
+}
+void setWindowSize(float width, float height)
+{
+	//int dWidth = (windowWidth > 0 && width <= 0 || windowWidth <= 0 && width > 0);
+	//int dHeight = (windowHeight > 0 && height <= 0 || windowHeight <= 0 && height > 0);
+	//turnOrder = dWidth ^ dHeight;
+	//
+	windowWidth = width;
+	windowHeight = height;
 }
 void dealFPSCommand()
 {
@@ -14370,11 +14393,11 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			windowWidth += 10;
+			setWindowSize(windowWidth + 10, windowHeight);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
-			windowPos.x += 10;
+			windowPos.x += deltaWindowPos;
 		}
 		break;
 	case GLUT_KEY_LEFT:
@@ -14393,11 +14416,11 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			windowWidth -= 10;
+			setWindowSize(windowWidth - 10, windowHeight);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
-			windowPos.x -= 10;
+			windowPos.x -= deltaWindowPos;
 		}
 		break;
 	case GLUT_KEY_UP:
@@ -14412,11 +14435,11 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			windowRotate += 10 * PI / 180;
+			windowRotate += deltaWindowRotate;
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			windowHeight += 10;
+			setWindowSize(windowWidth, windowHeight + 10);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
@@ -14435,11 +14458,11 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			windowRotate -= 10 * PI / 180;
+			windowRotate -= deltaWindowRotate;
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			windowHeight -= 10;
+			setWindowSize(windowWidth, windowHeight - 10);
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
