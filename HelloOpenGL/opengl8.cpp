@@ -13714,7 +13714,8 @@ void updateView()
 	//clipPoint(temp);
 	//viewWheels2 = temp;
 	
-	transformPoint(updateViewport(), tempp1);
+	// 根据长轴计算
+	/*transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
 	auto sviewX = (xvmax - xvmin) / windowWidth;
 	auto sviewY = (yvmax - yvmin) / windowHeight;
@@ -13740,15 +13741,46 @@ void updateView()
 	ellipse({ 0, 0 }, std::abs(ellipseX.x), std::abs(ellipseY.y), viewWheels1);
 	tranToXY[0][1] = -tranToXY[0][1];
 	tranToXY[1][0] = -tranToXY[1][0];
-	
+
 	transformPoints(tranToXY, viewWheels1);
 
 	viewWheels2 = viewWheels1;
 	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
 	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
 	clipPoint(viewWheels1);
+	clipPoint(viewWheels2);*/
+
+
+	transformPoint(updateViewport(), tempp1);
+	transformPoint(updateViewport(), tempp2);
+	auto sx = (xvmax - xvmin) / windowWidth;
+	auto sy = (yvmax - yvmin) / windowHeight;
+	auto cos = std::cos(curDirection - windowRotate);
+	auto sin = std::sin(curDirection - windowRotate);
+
+	auto sx_ = std::sqrt(sx * sx * cos * cos + sy * sy * sin * sin);
+	auto sy_ = sx * sy / sx_;
+	auto cos_ = sx * cos / sx_;
+	auto sin_ = sy * sin / sx_;
+	auto shx_ = (sx * cos * tansShx - sx * sin + sin_ * sy_) / (sy_ * cos_); // cos_ == 0附近 用sin_ 来计算shx_
+
+	ellipse({ 0, 0 }, std::abs(sx_ * scaleX * wheelRadius), std::abs(sy_ * scaleY * wheelRadius), viewWheels1);
+
+	Matrix r(3, 3);
+	matrixSetIdentity(r);
+	r[0][0] = cos_;
+	r[0][1] = -sin_;
+	r[1][0] = sin_;
+	r[1][1] = cos_;
+	auto m = r * shearXMatrix(shx_);
+	transformPoints(m, viewWheels1);
+
+	viewWheels2 = viewWheels1;
+	transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	clipPoint(viewWheels1);
 	clipPoint(viewWheels2);
-	
+
 
 	//////////////////////////////////////////////////////////////////////////
 	temp = road;
@@ -14023,15 +14055,6 @@ bool setFPS(int value)
 		FPS = value;
 		return true;
 	}
-}
-void setWindowSize(float width, float height)
-{
-	//int dWidth = (windowWidth > 0 && width <= 0 || windowWidth <= 0 && width > 0);
-	//int dHeight = (windowHeight > 0 && height <= 0 || windowHeight <= 0 && height > 0);
-	//turnOrder = dWidth ^ dHeight;
-	//
-	windowWidth = width;
-	windowHeight = height;
 }
 void dealFPSCommand()
 {
@@ -14393,7 +14416,7 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			setWindowSize(windowWidth + 10, windowHeight);
+			windowWidth += deltaWindowSize;
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
@@ -14416,7 +14439,7 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			setWindowSize(windowWidth - 10, windowHeight);
+			windowWidth -= deltaWindowSize;
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
@@ -14436,14 +14459,15 @@ void specialKeyFcn(int key, int x, int y)
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
 			windowRotate += deltaWindowRotate;
+			windowRotate = fmod(windowRotate, 2 * PI);
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			setWindowSize(windowWidth, windowHeight + 10);
+			windowHeight += deltaWindowSize;
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
-			windowPos.y += 10;
+			windowPos.y += deltaWindowPos;
 		}
 		break;
 	case GLUT_KEY_DOWN:
@@ -14459,14 +14483,15 @@ void specialKeyFcn(int key, int x, int y)
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
 			windowRotate -= deltaWindowRotate;
+			windowRotate = fmod(windowRotate, 2 * PI);
 		}
 		else if (mod == GLUT_ACTIVE_ALT)
 		{
-			setWindowSize(windowWidth, windowHeight - 10);
+			windowHeight -= deltaWindowSize;
 		}
 		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
 		{
-			windowPos.y -= 10;
+			windowPos.y -= deltaWindowPos;
 		}
 		break;
 	default:
