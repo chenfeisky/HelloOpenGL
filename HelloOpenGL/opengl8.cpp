@@ -13384,13 +13384,15 @@ float wheelRadius = 0;
 Path* path = nullptr;
 
 // 裁剪窗口
-float windowRotate = 0;
-float deltaWindowRotate = 5 * PI / 180;
-Point windowPos = { 0, 0 }; // 中心点
-float deltaWindowPos = 5;
-float windowWidth = 200;
-float windowHeight = 150;
-float deltaWindowSize = 10;
+float clipwinRotate = 0;
+float deltaClipwinRotate = 5 * PI / 180;
+Point clipwinPos = { 0, 0 }; // 中心点
+float deltaClipwinPos = 5;
+float clipwinWidth = 200;
+float clipwinHeight = 150;
+float deltaClipwinSize = 10;
+bool clipwinFollow = true;
+bool clipwinMode = false;
 
 // 视口
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
@@ -13576,14 +13578,14 @@ Matrix updateViewCoord()
 	// 而由于是刚体变换（旋转，平移），相对位置关系都不会变，所以，为了方便后续计算(不然裁剪窗口位
 	// 置还要计算)，这里选观察坐标系原点为裁剪窗口中心点（裁剪窗口变换后在观察坐标系的原点）
 
-	return rotateMatrix(-windowRotate) * translateMatrix(-windowPos.x, -windowPos.y);
+	return rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y);
 }
 Matrix updateNormalView()
 {
-	float xwmin = -windowWidth / 2;
-	float xwmax = windowWidth / 2;
-	float ywmin = -windowHeight / 2;
-	float ywmax = windowHeight / 2;
+	float xwmin = -clipwinWidth / 2;
+	float xwmax = clipwinWidth / 2;
+	float ywmin = -clipwinHeight / 2;
+	float ywmax = clipwinHeight / 2;
 
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
@@ -13636,13 +13638,12 @@ void updateView()
 		matrixSetIdentity(viewTransform);
 
 		viewTransform = updateNormalView() * updateViewCoord();
-
 	}
 
 	static std::vector<Point> temp;
 	static Point tempp1;
 	static Point tempp2;
-	bool turnOrder = (windowWidth > 0 && windowHeight < 0 || windowWidth < 0 && windowHeight > 0);
+	bool turnOrder = (clipwinWidth > 0 && clipwinHeight < 0 || clipwinWidth < 0 && clipwinHeight > 0);
 	//////////////////////////////////////////////////////////////////////////
 	temp = curCar;
 	transformPoints(viewTransform, temp);
@@ -13717,9 +13718,9 @@ void updateView()
 	// 根据长轴计算
 	/*transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
-	auto sviewX = (xvmax - xvmin) / windowWidth;
-	auto sviewY = (yvmax - yvmin) / windowHeight;
-	auto m = scaleMatrix(sviewX, sviewY) * rotateMatrix(curDirection - windowRotate) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY);
+	auto sviewX = (xvmax - xvmin) / clipwinWidth;
+	auto sviewY = (yvmax - yvmin) / clipwinHeight;
+	auto m = scaleMatrix(sviewX, sviewY) * rotateMatrix(curDirection - clipwinRotate) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY);
 	Point ellipseY = { 0, wheelRadius };
 	transformPoint(m, ellipseY);
 
@@ -13750,19 +13751,31 @@ void updateView()
 	clipPoint(viewWheels1);
 	clipPoint(viewWheels2);*/
 
-
+	// 轮子绘制为椭圆，是为了保证像素的连贯性，否则缩放后会出现像素间的间隔
+	// 观察变换过程为 斜切->旋转->XY方向缩放，因椭圆旋转后再缩放无法得知椭圆的参数，
+	// 所以将变换过程改为 XY方向缩放（椭圆轴向）->斜切->旋转
+	// 方法为 计算两个矩阵并令其相等
 	transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
-	auto sx = (xvmax - xvmin) / windowWidth;
-	auto sy = (yvmax - yvmin) / windowHeight;
-	auto cos = std::cos(curDirection - windowRotate);
-	auto sin = std::sin(curDirection - windowRotate);
+	auto sx = (xvmax - xvmin) / clipwinWidth;
+	auto sy = (yvmax - yvmin) / clipwinHeight;
+	auto cos = std::cos(curDirection - clipwinRotate);
+	auto sin = std::sin(curDirection - clipwinRotate);
 
 	auto sx_ = std::sqrt(sx * sx * cos * cos + sy * sy * sin * sin);
 	auto sy_ = sx * sy / sx_;
 	auto cos_ = sx * cos / sx_;
 	auto sin_ = sy * sin / sx_;
-	auto shx_ = (sx * cos * tansShx - sx * sin + sin_ * sy_) / (sy_ * cos_); // cos_ == 0附近 用sin_ 来计算shx_
+
+	auto shx_ = tansShx;
+	if (!Equal(sy_ * cos_, 0.f))
+	{
+		shx_ = (sx * cos * tansShx - sx * sin + sin_ * sy_) / (sy_ * cos_);
+	}
+	else
+	{
+		shx_ = (sy * sin * tansShx + sy * cos - cos_ * sy_) / (sy_ * sin_);
+	} 
 
 	ellipse({ 0, 0 }, std::abs(sx_ * scaleX * wheelRadius), std::abs(sy_ * scaleY * wheelRadius), viewWheels1);
 
@@ -13803,12 +13816,12 @@ void drawWindow()
 
 	if (viewTransformDirty)
 	{
-		window[0] = { -windowWidth / 2, -windowHeight / 2 };
-		window[1] = { windowWidth / 2, -windowHeight / 2 };
-		window[2] = { windowWidth / 2, windowHeight / 2 };
-		window[3] = { -windowWidth / 2, windowHeight / 2 };
+		window[0] = { -clipwinWidth / 2, -clipwinHeight / 2 };
+		window[1] = { clipwinWidth / 2, -clipwinHeight / 2 };
+		window[2] = { clipwinWidth / 2, clipwinHeight / 2 };
+		window[3] = { -clipwinWidth / 2, clipwinHeight / 2 };
 
-		transformPoints(translateMatrix(windowPos.x, windowPos.y) * rotateMatrix(windowRotate), window);
+		transformPoints(translateMatrix(clipwinPos.x, clipwinPos.y) * rotateMatrix(clipwinRotate), window);
 	}
 
 	drawLoop(window);
@@ -13912,6 +13925,18 @@ void reset()
 	shear(-tansShx);
 	deltaShear = 1;
 }
+void clipwinReset()
+{
+	clipwinRotate = 0;
+	deltaClipwinRotate = 5 * PI / 180;
+	clipwinPos = curPosition;
+	deltaClipwinPos = 5;
+	clipwinWidth = 200;
+	clipwinHeight = 150;
+	deltaClipwinSize = 10;
+	clipwinFollow = true;
+	viewTransformDirty = true;
+}
 void initWheel()
 {
 	for (int i = 0; i <= 4; i++)
@@ -13956,9 +13981,10 @@ void updateWindowPosition()
 	glLoadIdentity();
 	gluOrtho2D(curPosition.x - winWidth / 2, curPosition.x + winWidth / 2, -150, -150 + winHeight);
 }
-void updateWindowPos()
+void updateClipwinPos()
 {
-	windowPos = curPosition;
+	if (clipwinFollow)
+		clipwinPos = curPosition;
 }
 void updateDirection(float diretion)
 {
@@ -14030,7 +14056,7 @@ void update()
 	
 	updateWindowPosition();
 
-	updateWindowPos();
+	updateClipwinPos();
 	updateView();
 }
 bool isNumber(string s)
@@ -14361,33 +14387,93 @@ void showCommandNotice()
 	printf("exit: exit command mode.\n");
 	dealCommand();
 }
+void showViewOperatorNotice()
+{
+	system("cls");
+	printf("Clip Window Operator: \n");
+	printf("F: fllow the car.\n");
+	printf("→: move right.\n");
+	printf("←: move left.\n");
+	printf("↑: move up.\n");
+	printf("↓: move down.\n");
+	printf("CTRL →: add width.\n");
+	printf("CTRL ←: decrease width.\n");
+	printf("CTRL ↑: add height. \n");
+	printf("CTRL ↓: decrease height. \n");
+	printf("SHIFT ↑: add angle.\n");
+	printf("SHIFT ↓: decrease angle.\n");
+	printf("R: reset state\n");
+	printf("ESC: back.\n");
+}
 void normalKeyFcn(unsigned char key, int x, int y)
 {
 	//printf("normalKeyFcn %d, %d, %d\n", key, x, y);
 	switch (key)
 	{
 	case 27:
-		showCommandNotice();
+		if (!clipwinMode)
+		{
+			showCommandNotice();
+		}			
+		else
+		{
+			clipwinMode = false;
+			showOperatorNotice();
+		}
 		break;
 	case 'r':
 	case 'R':
-		reset();
+		if (!clipwinMode)
+		{
+			reset();
+		}
+		else
+		{
+			clipwinReset();
+		}
 		break;
 	case 'w':
 	case 'W':
-		setFPS(FPS + deltaFPS);
+		if (!clipwinMode)
+		{
+			setFPS(FPS + deltaFPS);
+		}
 		break;
 	case 's':
 	case 'S':
-		setFPS(FPS - deltaFPS);
+		if (!clipwinMode)
+		{
+			setFPS(FPS - deltaFPS);
+		}		
 		break;
 	case 'a':
 	case 'A':
-		speed -= deltaSpeed;
+		if (!clipwinMode)
+		{
+			speed -= deltaSpeed;
+		}
 		break;
 	case 'd':
 	case 'D':
-		speed += deltaSpeed;
+		if (!clipwinMode)
+		{
+			speed += deltaSpeed;
+		}		
+		break;
+	case 'v':
+	case 'V':
+		if (!clipwinMode)
+		{
+			showViewOperatorNotice();
+			clipwinMode = true;
+		}
+		break;
+	case 'f':
+	case 'F':
+		if (clipwinMode)
+		{
+			clipwinFollow = !clipwinFollow;
+		}		
 		break;
 	default:
 		break;
@@ -14403,95 +14489,135 @@ void specialKeyFcn(int key, int x, int y)
 	case GLUT_KEY_RIGHT:
 		if (mod == 0)
 		{
-			scale(deltaScaleX, 1);
+			if (!clipwinMode)
+			{
+				scale(deltaScaleX, 1);
+			}
+			else
+			{
+				clipwinPos.x += deltaClipwinPos;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
-			if (scaleX < 0)
-				scale(-1, 1);
+			if (!clipwinMode)
+			{
+				if (scaleX < 0)
+					scale(-1, 1);
+			}
+			else
+			{
+				clipwinWidth += deltaClipwinSize;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
 			shear(deltaShear);
 		}
-		else if (mod == GLUT_ACTIVE_ALT)
-		{
-			windowWidth += deltaWindowSize;
-		}
-		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
-		{
-			windowPos.x += deltaWindowPos;
-		}
 		break;
 	case GLUT_KEY_LEFT:
 		if (mod == 0)
 		{
-			scale(1 / deltaScaleX, 1);
+			if (!clipwinMode)
+			{
+				scale(1 / deltaScaleX, 1);
+			}
+			else
+			{
+				clipwinPos.x -= deltaClipwinPos;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
-			if (scaleX > 0)
-				scale(-1, 1);
+			if (!clipwinMode)
+			{
+				if (scaleX > 0)
+					scale(-1, 1);
+			}
+			else
+			{
+				clipwinWidth -= deltaClipwinSize;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
 			shear(-deltaShear);
 		}
-		else if (mod == GLUT_ACTIVE_ALT)
-		{
-			windowWidth -= deltaWindowSize;
-		}
-		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
-		{
-			windowPos.x -= deltaWindowPos;
-		}
 		break;
 	case GLUT_KEY_UP:
 		if (mod == 0)
 		{
-			scale(1, deltaScaleY);
+			if (!clipwinMode)
+			{
+				scale(1, deltaScaleY);
+			}
+			else
+			{
+				clipwinPos.y += deltaClipwinPos;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
-			if (scaleY < 0)
-				scale(1, -1);
+			if (!clipwinMode)
+			{
+				if (scaleY < 0)
+					scale(1, -1);
+			}
+			else
+			{
+				clipwinHeight += deltaClipwinSize;
+				viewTransformDirty = true;
+			}	
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			windowRotate += deltaWindowRotate;
-			windowRotate = fmod(windowRotate, 2 * PI);
-		}
-		else if (mod == GLUT_ACTIVE_ALT)
-		{
-			windowHeight += deltaWindowSize;
-		}
-		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
-		{
-			windowPos.y += deltaWindowPos;
+			if (clipwinMode)
+			{
+				clipwinRotate += deltaClipwinRotate;
+				clipwinRotate = fmod(clipwinRotate, 2 * PI);
+				viewTransformDirty = true;
+			}
 		}
 		break;
 	case GLUT_KEY_DOWN:
 		if (mod == 0)
 		{
-			scale(1, 1 / deltaScaleY);
+			if (!clipwinMode)
+			{
+				scale(1, 1 / deltaScaleY);
+			}
+			else
+			{
+				clipwinPos.y -= deltaClipwinPos;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_CTRL)
 		{
-			if (scaleY > 0)
-				scale(1, -1);
+			if (!clipwinMode)
+			{
+				if (scaleY > 0)
+					scale(1, -1);
+			}
+			else
+			{
+				clipwinHeight -= deltaClipwinSize;
+				viewTransformDirty = true;
+			}
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			windowRotate -= deltaWindowRotate;
-			windowRotate = fmod(windowRotate, 2 * PI);
-		}
-		else if (mod == GLUT_ACTIVE_ALT)
-		{
-			windowHeight -= deltaWindowSize;
-		}
-		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
-		{
-			windowPos.y -= deltaWindowPos;
+			if (clipwinMode)
+			{
+				clipwinRotate -= deltaClipwinRotate;
+				clipwinRotate = fmod(clipwinRotate, 2 * PI);
+				viewTransformDirty = true;
+			}
 		}
 		break;
 	default:
@@ -14512,7 +14638,7 @@ void displayFcn(void)
 	drawGoods();
 	drawWheel();
 	drawWindow();
-	//viewTransformDirty = false;
+	viewTransformDirty = clipwinFollow;
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -14528,13 +14654,13 @@ void displayFcn(void)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(windowPos.x - windowWidth / 2, windowPos.x + windowWidth / 2, windowPos.y - windowHeight / 2, windowPos.y + windowHeight / 2);
+	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
 	glViewport(_xvmin, _yvmin, _xvmax - _xvmin, _yvmax - _yvmin);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glTranslatef(windowPos.x, windowPos.y, 0);
-	glRotatef(-windowRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-windowPos.x, -windowPos.y, 0);
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	drawRoad();
 	drawCar();
 	drawGoods();
