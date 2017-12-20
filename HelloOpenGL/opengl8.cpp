@@ -13779,7 +13779,7 @@ void updateView()
 	} 
 
 	ellipse({ 0, 0 }, std::abs(sx_ * scaleX * wheelRadius), std::abs(sy_ * scaleY * wheelRadius), viewWheels1);
-
+	
 	Matrix r(3, 3);
 	matrixSetIdentity(r);
 	r[0][0] = cos_;
@@ -14336,6 +14336,7 @@ void dealClipWindowFollowCommand()
 	if (str == "true" || str == "TRUE")
 	{
 		clipwinFollow = true;
+		clipwinPos = curPosition;
 	}
 	else if (str == "false" || str == "FALSE")
 	{
