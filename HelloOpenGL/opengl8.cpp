@@ -13379,6 +13379,7 @@ float deltaShear = 1;
 int lastTick = 0;
 float delta = 0.0;
 Point curPosition;
+Point deltaPosition;
 float curDirection;
 float wheelRadius = 0;
 Path* path = nullptr;
@@ -13950,6 +13951,7 @@ void initCarData()
 	initPath();
 	lastTick = GetTickCount();
 	curPosition = { 0.f, 0.f };
+	deltaPosition = { 0.f, 0.f };
 	curDirection = 0.f;
 	wheelRadius = 10;
 	initWheel();
@@ -13984,7 +13986,10 @@ void updateWindowPosition()
 void updateClipwinPos()
 {
 	if (clipwinFollow)
-		clipwinPos = curPosition;
+	{
+		clipwinPos.x += deltaPosition.x;
+		clipwinPos.y += deltaPosition.y;
+	}		
 }
 void updateDirection(float diretion)
 {
@@ -14050,6 +14055,7 @@ void update()
 	
 	updateTransform();
 	updateMove(nextP);
+	deltaPosition = { nextP.x - curPosition.x, nextP.y - curPosition.y };
 	curPosition = nextP;
 	updateDirection(dir);
 	curDirection = dir;
@@ -14226,6 +14232,123 @@ void dealDeltaShearCommand()
 	float value = std::stof(str);
 	deltaShear = value;
 }
+void dealClipWindowPositionCommand()
+{
+	printf("input clip window position value: ");
+	float x, y;
+	if (scanf_s("%f,%f", &x, &y) != 2)
+	{
+		printf("clip window position must be two numbers!!!\n");
+		dealClipWindowPositionCommand();
+		return;
+	}
+	clipwinPos = { x, y };
+}
+void dealDeltaClipWindowPositionCommand()
+{
+	printf("input clip window position delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window position delta must be a number!!!\n");
+		dealDeltaClipWindowPositionCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaClipwinPos = value;
+}
+void dealClipWindowRotateCommand()
+{
+	printf("input clip window rotate value(angle): ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window rotate must be a number!!!\n");
+		dealClipWindowRotateCommand();
+		return;
+	}
+	float value = std::stof(str);
+	clipwinRotate = value * PI / 180;
+}
+void dealDeltaClipWindowRotateCommand()
+{
+	printf("input clip window rotate delta value(angle): ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window rotate delta must be a number!!!\n");
+		dealDeltaClipWindowRotateCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaClipwinRotate = value * PI / 180;
+}
+void dealClipWindowWidthCommand()
+{
+	printf("input clip window width value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window width must be a number!!!\n");
+		dealClipWindowWidthCommand();
+		return;
+	}
+	float value = std::stof(str);
+	clipwinWidth = value;
+}
+void dealClipWindowHeightCommand()
+{
+	printf("input clip window height value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window width must be a number!!!\n");
+		dealClipWindowHeightCommand();
+		return;
+	}
+	float value = std::stof(str);
+	clipwinHeight = value;
+}
+void dealDeltaClipWindowSizeCommand()
+{
+	printf("input clip window size delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window size delta must be a number!!!\n");
+		dealDeltaClipWindowSizeCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaClipwinSize = value;
+}
+void dealClipWindowFollowCommand()
+{
+	printf("input clip window follow value: ");
+	std::string str;
+	std::cin >> str;
+	if (str == "true" || str == "TRUE")
+	{
+		clipwinFollow = true;
+	}
+	else if (str == "false" || str == "FALSE")
+	{
+		clipwinFollow = false;
+	}
+	else
+	{
+		printf("clip window follow must be bool value!!!\n");
+		dealClipWindowFollowCommand();
+		return;
+	}
+}
+
 
 void showOperatorNotice();
 bool _dealCommand(string commandString)
@@ -14280,6 +14403,51 @@ bool _dealCommand(string commandString)
 		dealDeltaShearCommand();
 		return true;
 	}
+	else if (commandString == "cwp" || commandString == "CWP")
+	{
+		dealClipWindowPositionCommand();
+		return true;
+	}
+	else if (commandString == "dcwp" || commandString == "DCWP")
+	{
+		dealDeltaClipWindowPositionCommand();
+		return true;
+	}
+	else if (commandString == "cwr" || commandString == "CWR")
+	{
+		dealClipWindowRotateCommand();
+		return true;
+	}
+	else if (commandString == "dcwr" || commandString == "DCWR")
+	{
+		dealDeltaClipWindowRotateCommand();
+		return true;
+	}
+	else if (commandString == "cww" || commandString == "CWW")
+	{
+		dealClipWindowWidthCommand();
+		return true;
+	}
+	else if (commandString == "cwh" || commandString == "CWH")
+	{
+		dealClipWindowHeightCommand();
+		return true;
+	}
+	else if (commandString == "dcws" || commandString == "DCWS")
+	{
+		dealDeltaClipWindowSizeCommand();
+		return true;
+	}
+	else if (commandString == "cwf" || commandString == "CWF")
+	{
+		dealClipWindowFollowCommand();
+		return true;
+	}
+	else if (commandString == "cwreset" || commandString == "CWRESET")
+	{
+		clipwinReset();
+		return true;
+	}	
 	else if (commandString == "reset" || commandString == "RESET")
 	{
 		reset();
@@ -14347,6 +14515,21 @@ void showState()
 
 	sprintf_s(s, "shear: %.02f", tansShx);
 	drawString({ leftX, topY - space * 7 }, s);
+
+	sprintf_s(s, "clip window postion: %.02f, %.02f", clipwinPos.x, clipwinPos.y);
+	drawString({ leftX, topY - space * 8 }, s);
+
+	sprintf_s(s, "clip window width: %.02f", clipwinWidth);
+	drawString({ leftX, topY - space * 9 }, s);
+
+	sprintf_s(s, "clip window height: %.02f", clipwinHeight);
+	drawString({ leftX, topY - space * 10 }, s);
+
+	sprintf_s(s, "clip window rotate: %.02f", clipwinRotate * 180 / PI);
+	drawString({ leftX, topY - space * 11 }, s);
+
+	sprintf_s(s, "clip window follow: %s", clipwinFollow ? "true" : "false");
+	drawString({ leftX, topY - space * 12 }, s);
 }
 void showOperatorNotice()
 {
@@ -14366,7 +14549,8 @@ void showOperatorNotice()
 	printf("CTRL ¡ý: reflect to -y.\n");
 	printf("SHIFT ¡ú: add shear.\n");
 	printf("SHIFT ¡û: decrease shear.\n");
-	printf("R: reset state\n");
+	printf("R: reset state. \n");
+	printf("V: clip window mode. \n");
 	printf("ESC: command mode.\n");
 }
 void showCommandNotice()
@@ -14383,6 +14567,15 @@ void showCommandNotice()
 	printf("dscaley: set scale y delta.\n");
 	printf("shear: set shear.\n");
 	printf("dshear: set shear delta.\n");
+	printf("cwp: set clip window position.\n");
+	printf("dcwp: set clip window position delta.\n");
+	printf("cwr: set clip window rotate.\n");
+	printf("dcwr: set clip window rotate delta.\n");
+	printf("cww: set clip window width.\n");
+	printf("cwh: set clip window height.\n");
+	printf("dcws: set clip window size delta.\n");
+	printf("cwf: set clip window follow.\n");
+	printf("cwreset: set clip window reset.\n");
 	printf("reset: reset state.\n");
 	printf("exit: exit command mode.\n");
 	dealCommand();
@@ -14473,7 +14666,10 @@ void normalKeyFcn(unsigned char key, int x, int y)
 		if (clipwinMode)
 		{
 			clipwinFollow = !clipwinFollow;
-		}		
+
+			if (clipwinFollow)
+				clipwinPos = curPosition;
+		}
 		break;
 	default:
 		break;
@@ -14514,7 +14710,10 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			shear(deltaShear);
+			if (!clipwinMode)
+			{
+				shear(deltaShear);
+			}
 		}
 		break;
 	case GLUT_KEY_LEFT:
@@ -14545,7 +14744,10 @@ void specialKeyFcn(int key, int x, int y)
 		}
 		else if (mod == GLUT_ACTIVE_SHIFT)
 		{
-			shear(-deltaShear);
+			if (!clipwinMode)
+			{
+				shear(-deltaShear);
+			}			
 		}
 		break;
 	case GLUT_KEY_UP:
