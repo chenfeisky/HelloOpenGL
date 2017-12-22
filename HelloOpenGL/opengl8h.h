@@ -37,7 +37,8 @@
 //#define CHAPTER_8_EXERCISE_ADD_1_2 // Liang-Barsky凸多边形裁剪算法
 //#define CHAPTER_8_EXERCISE_ADD_1_3 // NLN凸多边形裁剪算法
 //#define CHAPTER_8_EXERCISE_ADD_1_4 // 凸多边形裁剪算法（直接计算各交点，然后根据进出关系组合）
-#define CHAPTER_8_EXERCISE_ADD_2
+//#define CHAPTER_8_EXERCISE_ADD_2
+#define CHAPTER_8_EXERCISE_ADD_2_1
 
 #ifdef CHAPTER_8_EXERCISE_5
 #define CHAPTER_8_7_1
@@ -176,5 +177,9 @@
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_ADD_2
+#define CHAPTER_8_COMMON
+#endif
+
+#ifdef CHAPTER_8_EXERCISE_ADD_2_1
 #define CHAPTER_8_COMMON
 #endif

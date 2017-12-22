@@ -7549,7 +7549,7 @@ void drawWheelHolder()
 	for (auto & p : wheelHolder)
 	{
 		drawStrip({ {0, 0}, p });
-	};
+	}
 }
 void scale(float sx, float sy)
 {
