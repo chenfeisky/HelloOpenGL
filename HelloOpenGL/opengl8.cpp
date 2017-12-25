@@ -15100,6 +15100,7 @@ Matrix shearXMatrix4(float shx)
 	return ret;
 }
 //////////////////////////////////////////////////////////////////////////
+// 多边形裁剪
 enum class PointType
 {
 	None,    // 无类型
@@ -15447,6 +15448,128 @@ void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point
 	if (reslutPolygon.back().empty())
 		reslutPolygon.erase(reslutPolygon.end() - 1);
 }
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// 线段裁剪算法
+typedef Point Vec;
+int crossProduct(const Vec& vec1, const Vec& vec2)
+{
+	return vec1.x * vec2.y - vec1.y * vec2.x;
+}
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLint encode(const std::vector<Point>& polygon, Point p)
+{
+	GLint ret = 0;
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		int next = i + 1 < polygon.size() ? i + 1 : 0;
+		if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
+		{ polygon[i].x - p.x, polygon[i].y - p.y }) > 0)
+		{
+			ret += std::pow(2, i);
+		}
+	}
+	return ret;
+}
+void swapPts(Point* p1, Point* p2)
+{
+	Point tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2End, float& u1, float& u2)
+{
+	float dx1 = line1End.x - line1Begin.x;
+	float dy1 = line1End.y - line1Begin.y;
+	float dx2 = line2End.x - line2Begin.x;
+	float dy2 = line2End.y - line2Begin.y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (Equal(dy1 / dx1, dy2 / dx2))
+		return false;
+
+	float x01 = line1Begin.x;
+	float y01 = line1Begin.y;
+	float x02 = line2Begin.x;
+	float y02 = line2Begin.y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+
+	return true;
+}
+bool lineClipCohSuth2(const std::vector<Point>& polygon, Point& p1, Point& p2)
+{
+	GLubyte code1, code2;
+	bool plotLine = false;
+	code1 = encode(polygon, p1);
+	code2 = encode(polygon, p2);
+
+	for (int i = 0; i < polygon.size(); i++)
+	{
+		if (accept(code1, code2))
+		{
+			plotLine = true;
+			break;
+		}
+		else if (reject(code1, code2))
+		{
+			break;
+		}
+		else
+		{
+			bool clip = false;
+			if (code2 & (int)std::pow(2, i))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+				clip = true;
+			}
+			else
+			{
+				clip = code1 & (int)std::pow(2, i);
+			}
+
+			if (clip)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				float u1, u2;
+				assert(crossPoint(p1, p2, polygon[i], polygon[next], u1, u2));
+				p1.x += u1 * (p2.x - p1.x);
+				p1.y += u1 * (p2.y - p1.y);
+				code1 = encode(polygon, p1);
+			}
+		}
+	}
+	if (!plotLine && accept(code1, code2))
+	{
+		plotLine = true;
+	}
+
+	return plotLine;
+}
+//////////////////////////////////////////////////////////////////////////
 
 void clipPolygon(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<std::vector<Point>>& out)
 {
@@ -15468,6 +15591,17 @@ void clipPoint(std::vector<Point>& clipWindow, std::vector<Point>& points, std::
 				out.push_back(p);
 			}
 		}
+	}
+}
+void clipLine(std::vector<Point>& clipWindow, const Point& p1, const Point& p2, std::vector<Point>& out)
+{
+	out.clear();
+	auto _p1 = p1;
+	auto _p2 = p2;
+	if (lineClipCohSuth2(clipWindow, _p1, _p2))
+	{
+		out.push_back(_p1);
+		out.push_back(_p2);
 	}
 }
 
@@ -15779,6 +15913,318 @@ void updateClipwinPos()
 		clipwinPos.y = curPosition.y;
 	}
 }
+void updateViewport1()
+{
+	// 绘制视口1
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
+	glViewport(_xvmin, _yvmin, _xvmax - _xvmin, _yvmax - _yvmin);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	drawRoad();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(20, 22, 0);
+	drawCar();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-15, 47, 0);
+	drawGoods();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix4(tansShx));
+	glTranslated(32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix4(tansShx));
+	glTranslated(-32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+}
+void updateViewport2()
+{
+	// 绘制视口2
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glViewport(0, 0, winWidth, winHeight);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+{
+		Matrix m(3, 3);
+		matrixSetIdentity(m);
+		m = rotateByPointMatrix(clipwinPos, clipwinRotate);
+		vector<Point> clipwin = {
+			{ clipwinPos.x - clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+			{ clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+			{ clipwinPos.x + clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 },
+			{ clipwinPos.x - clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 }, };
+		transformPoints(m, clipwin);
+		bool turnOrder2 = (clipwinWidth > 0 && clipwinHeight < 0 || clipwinWidth < 0 && clipwinHeight > 0);
+		if (turnOrder2)
+		{
+			std::reverse(clipwin.begin(), clipwin.end());
+		}
+
+		std::vector<std::vector<Point>> viewRoad;
+		static std::vector<Point> tempLine;
+		viewRoad.clear();
+		for (int i = 0; i < road.size() - 1; i++)
+		{
+			clipLine(clipwin, road[i], road[i + 1], tempLine);
+			if (tempLine.size())
+				viewRoad.push_back(tempLine);
+		}
+
+		float xwmin = -clipwinWidth / 2;
+		float xwmax = clipwinWidth / 2;
+		float ywmin = -clipwinHeight / 2;
+		float ywmax = clipwinHeight / 2;
+
+		Matrix ret(3, 3);
+		matrixSetIdentity(ret);
+		ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
+		ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
+		ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
+		ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
+		auto vm = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y);
+
+		for (auto & c : viewRoad)
+			transformPoints(vm, c);
+
+		for (auto& vc : viewRoad)
+		{
+			drawLoop(vc);
+		}
+}
+
+// car
+{
+	Matrix m(3, 3);
+	matrixSetIdentity(m);
+	m = translateMatrix(-20, -22) * scaleMatrix(1 / scaleX, 1 / scaleY) * shearXMatrix(-tansShx) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y) * rotateByPointMatrix(clipwinPos, clipwinRotate);
+	vector<Point> clipwin = {
+		{ clipwinPos.x - clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+		{ clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+		{ clipwinPos.x + clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 },
+		{ clipwinPos.x - clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 }, };
+
+	bool turnOrder1 = (scaleX > 0 && scaleY < 0) || (scaleX < 0 && scaleY > 0);
+	bool turnOrder2 = (clipwinWidth > 0 && clipwinHeight < 0 || clipwinWidth < 0 && clipwinHeight > 0);
+	if (turnOrder1 ^ turnOrder2)
+	{
+		std::reverse(clipwin.begin(), clipwin.end());
+	}
+
+	transformPoints(m, clipwin);
+
+	std::vector<std::vector<Point>> viewCar;
+	clipPolygon(clipwin, car, viewCar);
+
+	float xwmin = -clipwinWidth / 2;
+	float xwmax = clipwinWidth / 2;
+	float ywmin = -clipwinHeight / 2;
+	float ywmax = clipwinHeight / 2;
+
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
+	ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
+	ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
+	ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
+	auto vm = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
+		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY) * translateMatrix(20, 22);
+	for (auto& vc : viewCar)
+	{
+		transformPoints(vm, vc);
+	}
+	for (auto& vc : viewCar)
+	{
+		drawLoop(vc);
+	}
+}
+
+// 轮子
+{
+	float xwmin = -clipwinWidth / 2;
+	float xwmax = clipwinWidth / 2;
+	float ywmin = -clipwinHeight / 2;
+	float ywmax = clipwinHeight / 2;
+
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
+	ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
+	ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
+	ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
+	Point tempp1 = { 32, 10 };
+	auto vm1 = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
+		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY);
+	transformPoint(vm1, tempp1);
+	auto sx = (xvmax - xvmin) / clipwinWidth;
+	auto sy = (yvmax - yvmin) / clipwinHeight;
+	auto cos = std::cos(curDirection - clipwinRotate);
+	auto sin = std::sin(curDirection - clipwinRotate);
+
+	auto sx_ = std::sqrt(sx * sx * cos * cos + sy * sy * sin * sin);
+	auto sy_ = sx * sy / sx_;
+	auto cos_ = sx * cos / sx_;
+	auto sin_ = sy * sin / sx_;
+
+	auto shx_ = tansShx;
+	if (!Equal(sy_ * cos_, 0.f))
+	{
+		shx_ = (sx * cos * tansShx - sx * sin + sin_ * sy_) / (sy_ * cos_);
+	}
+	else
+	{
+		shx_ = (sy * sin * tansShx + sy * cos - cos_ * sy_) / (sy_ * sin_);
+	}
+
+	std::vector<Point> viewWheels1;
+	ellipse({ 0, 0 }, std::abs(sx_ * scaleX * wheelRadius), std::abs(sy_ * scaleY * wheelRadius), viewWheels1);
+
+	Matrix r(3, 3);
+	matrixSetIdentity(r);
+	r[0][0] = cos_;
+	r[0][1] = -sin_;
+	r[1][0] = sin_;
+	r[1][1] = cos_;
+	//auto m = r * shearXMatrix(shx_);
+	//transformPoints(m, viewWheels1);
+
+	//viewWheels2 = viewWheels1;
+	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	//clipPoint(viewWheels1);
+	//clipPoint(viewWheels2);
+
+	r[0][1] = sin_;
+	r[1][0] = -sin_;
+	auto m1 = shearXMatrix(-shx_) * r * translateMatrix(-tempp1.x, -tempp1.y);
+	vector<Point> viewwin = {
+		{ xvmin, yvmin },
+		{ xvmax, yvmin },
+		{ xvmax, yvmax },
+		{ xvmin, yvmax }, };
+	transformPoints(m1, viewwin);
+
+	std::vector<Point> viewW;
+	clipPoint(viewwin, viewWheels1, viewW);
+
+	r[0][1] = -sin_;
+	r[1][0] = sin_;
+	transformPoints(translateMatrix(tempp1.x, tempp1.y) * r * shearXMatrix(shx_), viewW);
+	for (auto& p : viewW)
+	{
+		drawPoint(p);
+	}
+}
+
+// 轮轴
+{
+	Matrix m(3, 3);
+	matrixSetIdentity(m);
+	m = rotateMatrix(-wheelRadian * PI / 180) * translateMatrix(-32, -10) * scaleMatrix(1 / scaleX, 1 / scaleY) * shearXMatrix(-tansShx) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y) * rotateByPointMatrix(clipwinPos, clipwinRotate);
+	vector<Point> clipwin = {
+		{ clipwinPos.x - clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+		{ clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+		{ clipwinPos.x + clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 },
+		{ clipwinPos.x - clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 }, };
+
+	transformPoints(m, clipwin);
+
+	bool turnOrder1 = (scaleX > 0 && scaleY < 0) || (scaleX < 0 && scaleY > 0);
+	bool turnOrder2 = (clipwinWidth > 0 && clipwinHeight < 0 || clipwinWidth < 0 && clipwinHeight > 0);
+	if (turnOrder1 ^ turnOrder2)
+	{
+		std::reverse(clipwin.begin(), clipwin.end());
+	}
+
+	std::vector<std::vector<Point>> viewR;
+	static std::vector<Point> tempLine;
+	viewR.clear();
+	for (auto & p : wheelHolder)
+	{
+		clipLine(clipwin, {0, 0}, p, tempLine);
+		if (tempLine.size())
+			viewR.push_back(tempLine);
+	}
+
+	float xwmin = -clipwinWidth / 2;
+	float xwmax = clipwinWidth / 2;
+	float ywmin = -clipwinHeight / 2;
+	float ywmax = clipwinHeight / 2;
+
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
+	ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
+	ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
+	ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
+	auto vm = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
+		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY) * translateMatrix(32, 10) * rotateMatrix(wheelRadian * PI / 180);
+
+	for (auto & c : viewR)
+		transformPoints(vm, c);
+
+	for (auto& vc : viewR)
+	{
+		drawLoop(vc);
+	}
+}
+
+}
 void showState();
 void update()
 {
@@ -15886,198 +16332,8 @@ void update()
 	glRotatef(clipwinRotate * 180 / PI, 0.0, 0.0, 1.0);
 	drawWindow();
 
-	// 绘制视口1
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
-	glViewport(_xvmin, _yvmin, _xvmax - _xvmin, _yvmax - _yvmin);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	drawRoad();
-
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	glTranslatef(curPosition.x, curPosition.y, 0.f);
-	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(curTransform);
-	glTranslated(20, 22, 0);
-	drawCar();
-
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	glTranslatef(curPosition.x, curPosition.y, 0.f);
-	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(curTransform);
-	glTranslated(-15, 47, 0);
-	drawGoods();
-
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	glTranslatef(curPosition.x, curPosition.y, 0.f);
-	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(curTransform);
-	glTranslated(32, 10, 0);
-	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
-	drawWheelHolder();
-
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	glTranslatef(curPosition.x, curPosition.y, 0.f);
-	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(curTransform);
-	glTranslated(-32, 10, 0);
-	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
-	drawWheelHolder();
-
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	glTranslatef(curPosition.x, curPosition.y, 0.f);
-	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(shearXMatrix4(tansShx));
-	glTranslated(32 * scaleX, 10 * scaleY, 0);
-	drawWheel();
-
-	glLoadIdentity();
-	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
-	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
-	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
-	glTranslatef(curPosition.x, curPosition.y, 0.f);
-	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(shearXMatrix4(tansShx));
-	glTranslated(-32 * scaleX, 10 * scaleY, 0);
-	drawWheel();
-
-
-	// 绘制视口2
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(0, winWidth, 0, winHeight);
-	glViewport(0, 0, winWidth, winHeight);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	Matrix m(3, 3);
-	matrixSetIdentity(m);
-	m = translateMatrix(-20, -22) * scaleMatrix(1 / scaleX, 1 / scaleY) * shearXMatrix(-tansShx) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y) * rotateByPointMatrix(clipwinPos, clipwinRotate);
-	vector<Point> clipwin = { 
-		{clipwinPos.x - clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2},
-		{clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
-		{clipwinPos.x + clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2},
-		{clipwinPos.x - clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 }, };
-
-	bool turnOrder1 = (scaleX > 0 && scaleY < 0) || (scaleX < 0 && scaleY > 0);
-	bool turnOrder2 = (clipwinWidth > 0 && clipwinHeight < 0 || clipwinWidth < 0 && clipwinHeight > 0);
-	if (turnOrder1 ^ turnOrder2)
-	{
-		std::reverse(clipwin.begin(), clipwin.end());
-	}
-
-	transformPoints(m, clipwin);
-
-	std::vector<std::vector<Point>> viewCar;
-	clipPolygon(clipwin, car, viewCar);
-
-	float xwmin = -clipwinWidth / 2;
-	float xwmax = clipwinWidth / 2;
-	float ywmin = -clipwinHeight / 2;
-	float ywmax = clipwinHeight / 2;
-
-	Matrix ret(3, 3);
-	matrixSetIdentity(ret);
-	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
-	ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
-	ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
-	ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
-	auto vm = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
-		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY) * translateMatrix(20, 22);
-	for (auto& vc : viewCar)
-	{
-		transformPoints(vm, vc);
-	}
-	for (auto& vc : viewCar)
-	{
-		drawLoop(vc);
-	}
-
-
-	// 轮子
-	Point tempp1 = { 32, 10 };
-	auto vm1 = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
-		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY);
-	transformPoint(vm1, tempp1);
-	auto sx = (xvmax - xvmin) / clipwinWidth;
-	auto sy = (yvmax - yvmin) / clipwinHeight;
-	auto cos = std::cos(curDirection - clipwinRotate);
-	auto sin = std::sin(curDirection - clipwinRotate);
-
-	auto sx_ = std::sqrt(sx * sx * cos * cos + sy * sy * sin * sin);
-	auto sy_ = sx * sy / sx_;
-	auto cos_ = sx * cos / sx_;
-	auto sin_ = sy * sin / sx_;
-
-	auto shx_ = tansShx;
-	if (!Equal(sy_ * cos_, 0.f))
-	{
-		shx_ = (sx * cos * tansShx - sx * sin + sin_ * sy_) / (sy_ * cos_);
-	}
-	else
-	{
-		shx_ = (sy * sin * tansShx + sy * cos - cos_ * sy_) / (sy_ * sin_);
-	}
-
-	std::vector<Point> viewWheels1;
-	ellipse({ 0, 0 }, std::abs(sx_ * scaleX * wheelRadius), std::abs(sy_ * scaleY * wheelRadius), viewWheels1);
-
-	Matrix r(3, 3);
-	matrixSetIdentity(r);
-	r[0][0] = cos_;
-	r[0][1] = -sin_;
-	r[1][0] = sin_;
-	r[1][1] = cos_;
-	//auto m = r * shearXMatrix(shx_);
-	//transformPoints(m, viewWheels1);
-
-	//viewWheels2 = viewWheels1;
-	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
-	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
-	//clipPoint(viewWheels1);
-	//clipPoint(viewWheels2);
-
-	r[0][1] = sin_;
-	r[1][0] = -sin_;
-	auto m1 = shearXMatrix(-shx_) * r * translateMatrix(-tempp1.x, -tempp1.y);
-	vector<Point> viewwin = {
-		{ xvmin, yvmin },
-		{ xvmax, yvmin },
-		{ xvmax, yvmax },
-		{ xvmin, yvmax }, };
-	transformPoints(m1, viewwin);
-
-	std::vector<Point> viewW;
-	clipPoint(viewwin, viewWheels1, viewW);
-
-	r[0][1] = -sin_;
-	r[1][0] = sin_;
-	transformPoints(translateMatrix(tempp1.x, tempp1.y) * r * shearXMatrix(shx_), viewW);
-	for (auto& p : viewW)
-	{
-		drawPoint(p);
-	}
-
+	updateViewport1();
+	updateViewport2();
 }
 bool isNumber(string s)
 {
