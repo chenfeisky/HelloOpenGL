@@ -14996,7 +14996,93 @@ void matrixSetIdentity(Matrix& m)
 		for (int col = 0; col < m._col; col++)
 			m[row][col] = (row == col);
 }
+Matrix translateMatrix(float tx, float ty)
+{
+	// 平移
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][2] = tx;
+	ret[1][2] = ty;
+	return ret;
+}
+Matrix rotateMatrix(float theta)
+{
+	// 基于原点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	return ret;
+}
+Matrix rotateByPointMatrix(Point p, float theta)
+{
+	// 基于指定点旋转
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = std::cos(theta);
+	ret[0][1] = -std::sin(theta);
+	ret[0][2] = p.x * (1 - std::cos(theta)) + p.y * std::sin(theta);
+	ret[1][0] = std::sin(theta);
+	ret[1][1] = std::cos(theta);
+	ret[1][2] = p.y * (1 - std::cos(theta)) - p.x * std::sin(theta);
+	return ret;
+}
 Matrix scaleMatrix(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix scaleByPointMatrix(Point p, float sx, float sy)
+{
+	// 基于指定点缩放
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][2] = p.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][2] = p.y * (1 - sy);
+	return ret;
+}
+Matrix shearXMatrix(float shx)
+{
+	// 基于原点的x方向错切
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][1] = shx;
+	return ret;
+}
+void transformPoint(Matrix& m, Point& point)
+{
+	Matrix _point(3, 1);
+	Matrix temp(3, 1);
+	_point[0][0] = point.x;
+	_point[1][0] = point.y;
+	_point[2][0] = 1;
+	temp = m * _point;
+	point.x = temp[0][0];
+	point.y = temp[1][0];
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(3, 1);
+	Matrix temp(3, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = 1;
+		temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+	}
+}
+Matrix scaleMatrix4(float sx, float sy)
 {
 	// 基于原点缩放
 	Matrix ret(4, 4);
@@ -15005,7 +15091,7 @@ Matrix scaleMatrix(float sx, float sy)
 	ret[1][1] = sy;
 	return ret;
 }
-Matrix shearXMatrix(float shx)
+Matrix shearXMatrix4(float shx)
 {
 	// 基于原点的x方向错切
 	Matrix ret(4, 4);
@@ -15013,6 +15099,378 @@ Matrix shearXMatrix(float shx)
 	ret[0][1] = shx;
 	return ret;
 }
+//////////////////////////////////////////////////////////////////////////
+enum class PointType
+{
+	None,    // 无类型
+	Polygon, // 多边形点
+	ClipWindow,	 // 裁剪窗口点
+	CrossIn, // 裁剪窗口进交点
+	CrossOut, //裁剪窗口出交点
+};
+struct CrossPointInfo
+{
+	float u1 = 0.0f;	// 裁剪窗口边 直线参数方程u
+	float u2 = 0.0f;	// 多边形边	直线参数方程u
+	Point* point;       // 交点
+};
+struct LineWithCross
+{
+	Point* begin;
+	Point* end;
+	std::vector<CrossPointInfo> crossPoints;
+};
+struct PointInfo
+{
+	PointType type; // 类型
+	int idx1;   // 裁剪窗口顶点 数组索引
+	int idx2;	// 多边形顶点 数组索引
+	bool dealed; // 是否已处理
+
+	PointInfo::PointInfo() : type(PointType::None), idx1(-1), idx2(-1), dealed(false) {}
+};
+void calcLines(std::vector<Point>& points, std::vector<LineWithCross>& lines)
+{
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+		lines.push_back(LineWithCross());
+		lines.back().begin = new Point{ points[i] };
+		lines.back().end = new Point{ points[next] };
+		lines.back().crossPoints.clear();
+	}
+}
+bool crossPoint(LineWithCross& line1, LineWithCross& line2, float& u1, float& u2)
+{
+	float dx1 = line1.end->x - line1.begin->x;
+	float dy1 = line1.end->y - line1.begin->y;
+	float dx2 = line2.end->x - line2.begin->x;
+	float dy2 = line2.end->y - line2.begin->y;
+
+	if (dx1 == 0 && dx2 == 0)
+		return false;
+
+	if (dy1 / dx1 == dy2 / dx2)
+		return false;
+
+	float x01 = line1.begin->x;
+	float y01 = line1.begin->y;
+	float x02 = line2.begin->x;
+	float y02 = line2.begin->y;
+	u1 = (dy2 * (x02 - x01) + dx2 * (y01 - y02)) / (dy2 * dx1 - dy1 * dx2);
+	u2 = (dy1 * (x01 - x02) + dx1 * (y02 - y01)) / (dy1 * dx2 - dy2 * dx1);
+	if ((u1 < 0 || u1 > 1) || (u2 < 0 || u2 > 1))
+		return false;
+
+	return true;
+}
+bool calcCrossPoint(LineWithCross& clipWindowLine, LineWithCross& polygonLine, CrossPointInfo& crossPointInfo, std::map<Point*, PointInfo>& pointInfo)
+{
+	if (!crossPoint(clipWindowLine, polygonLine, crossPointInfo.u1, crossPointInfo.u2))
+		return false;
+
+	float dx1 = clipWindowLine.end->x - clipWindowLine.begin->x;
+	float dy1 = clipWindowLine.end->y - clipWindowLine.begin->y;
+	float dx2 = polygonLine.end->x - polygonLine.begin->x;
+	float dy2 = polygonLine.end->y - polygonLine.begin->y;
+	float x01 = clipWindowLine.begin->x;
+	float y01 = clipWindowLine.begin->y;
+
+	crossPointInfo.point = new Point{ x01 + crossPointInfo.u1 * dx1, y01 + crossPointInfo.u1 * dy1 };
+	if (dx1 * dy2 - dy1 * dx2 > 0)
+	{
+		pointInfo[crossPointInfo.point].type = PointType::CrossIn;
+	}
+	else
+	{
+		pointInfo[crossPointInfo.point].type = PointType::CrossOut;
+	}
+	return true;
+}
+void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<Point*>& clipWindowPoints, std::vector<Point*>& polygonPoints, std::map<Point*, PointInfo>& pointInfo)
+{
+	std::vector<LineWithCross> clipWindowLines;
+	std::vector<LineWithCross> polygonLines;
+	calcLines(clipWindow, clipWindowLines);
+	calcLines(polygon, polygonLines);
+
+	CrossPointInfo crossPointInfo;
+	for (int i = 0; i < clipWindowLines.size(); i++)
+	{
+		for (int j = 0; j < polygonLines.size(); j++)
+		{
+			if (calcCrossPoint(clipWindowLines[i], polygonLines[j], crossPointInfo, pointInfo))
+			{
+				clipWindowLines[i].crossPoints.push_back(crossPointInfo);
+				polygonLines[j].crossPoints.push_back(crossPointInfo);
+			}
+		}
+	}
+	for (auto l : clipWindowLines)
+	{
+		clipWindowPoints.push_back(l.begin);
+		pointInfo[clipWindowPoints.back()].type = PointType::ClipWindow;
+		pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
+
+		if (l.crossPoints.size() > 1)
+		{
+			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+			{
+				return a.u1 < b.u1;
+			});
+		}
+		for (auto& cp : l.crossPoints)
+		{
+			clipWindowPoints.push_back(cp.point);
+			pointInfo[clipWindowPoints.back()].idx1 = clipWindowPoints.size() - 1;
+		}
+	}
+	for (auto l : polygonLines)
+	{
+		polygonPoints.push_back(l.begin);
+		pointInfo[polygonPoints.back()].type = PointType::Polygon;
+		pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+
+		if (l.crossPoints.size() > 1)
+		{
+			std::sort(l.crossPoints.begin(), l.crossPoints.end(), [](CrossPointInfo& a, CrossPointInfo& b)
+			{
+				return a.u2 < b.u2;
+			});
+		}
+		for (auto& cp : l.crossPoints)
+		{
+			polygonPoints.push_back(cp.point);
+			pointInfo[polygonPoints.back()].idx2 = polygonPoints.size() - 1;
+		}
+	}
+}
+bool dealPoint(Point* point, bool record, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	assert(pointInfo.find(point) != pointInfo.end());
+	if (pointInfo[point].dealed)
+		return false;
+
+	pointInfo[point].dealed = true;
+
+	if (record)
+		reslutPolygon.back().push_back(*point);
+
+	return true;
+}
+void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon);
+void walkPolygon(std::vector<Point*> polygonPoints, int idx, bool record, std::vector<Point*> clipWindowPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon, bool skipCurPoint = false)
+{
+	if (!skipCurPoint && !dealPoint(polygonPoints[idx], record, pointInfo, reslutPolygon))
+	{
+		if (!reslutPolygon.back().empty())
+			reslutPolygon.push_back(std::vector<Point>());
+		return;
+	}
+
+	idx = idx + 1 >= polygonPoints.size() ? 0 : idx + 1;
+
+	auto p = polygonPoints[idx];
+	assert(pointInfo.find(p) != pointInfo.end());
+	if (pointInfo[p].type == PointType::CrossIn)
+	{
+		walkPolygon(polygonPoints, idx, true, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+	else if (pointInfo[p].type == PointType::CrossOut)
+	{
+		walkClipWindow(clipWindowPoints, pointInfo[p].idx1, polygonPoints, pointInfo, reslutPolygon);
+		walkPolygon(polygonPoints, idx, false, clipWindowPoints, pointInfo, reslutPolygon, true);
+	}
+	else if (pointInfo[p].type == PointType::Polygon)
+	{
+		walkPolygon(polygonPoints, idx, record, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+}
+void walkClipWindow(std::vector<Point*> clipWindowPoints, int idx, std::vector<Point*> polygonPoints, std::map<Point*, PointInfo>& pointInfo, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	if (!dealPoint(clipWindowPoints[idx], true, pointInfo, reslutPolygon))
+	{
+		if (!reslutPolygon.back().empty())
+			reslutPolygon.push_back(std::vector<Point>());
+		return;
+	}
+
+	idx = idx + 1 >= clipWindowPoints.size() ? 0 : idx + 1;
+
+	auto p = clipWindowPoints[idx];
+	assert(pointInfo.find(p) != pointInfo.end());
+	if (pointInfo[p].type == PointType::CrossIn)
+	{
+		walkPolygon(polygonPoints, pointInfo[p].idx2, true, clipWindowPoints, pointInfo, reslutPolygon);
+	}
+	else if (pointInfo[p].type == PointType::ClipWindow)
+	{
+		walkClipWindow(clipWindowPoints, idx, polygonPoints, pointInfo, reslutPolygon);
+	}
+}
+bool sign(float f)
+{
+	return f > 0;
+}
+bool checkRay(LineWithCross& line, std::vector<Point>& polygon)
+{
+	float dx = line.end->x - line.begin->x;
+	float dy = line.end->y - line.begin->y;
+	for (auto& p : polygon)
+	{
+		bool check = false;
+		float _dx = p.x - line.begin->x;
+		float _dy = p.y - line.begin->y;
+		if (dx)
+		{
+			if (_dx)
+			{
+				if (dy / dx != _dy / _dx)
+				{
+					check = true;
+				}
+				else
+				{
+					if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+						check = false;
+					else
+						check = true;
+				}
+			}
+			else
+			{
+				check = true;
+			}
+		}
+		else
+		{
+			if (_dx)
+			{
+				check = true;
+			}
+			else
+			{
+				if (sign(dx) == sign(_dx) && sign(dy) == sign(_dy))
+					check = false;
+				else
+					check = true;
+			}
+		}
+		if (!check)
+			return false;
+	}
+	return true;
+}
+int crossProduct(LineWithCross& line1, LineWithCross& line2)
+{
+	return (line1.end->x - line1.begin->x) * (line2.end->y - line2.begin->y) - (line1.end->y - line1.begin->y) * (line2.end->x - line2.begin->x);
+}
+void boundBox(std::vector<Point>& polygon, float& minX, float& maxX, float& minY, float& maxY)
+{
+	maxX = polygon[0].x, minX = polygon[0].x, maxY = polygon[0].y, minY = polygon[0].y;
+	for (int i = 1; i < polygon.size(); i++)
+	{
+		if (polygon[i].x < minX)
+			minX = polygon[i].x;
+		if (polygon[i].x > maxX)
+			maxX = polygon[i].x;
+		if (polygon[i].y < minY)
+			minY = polygon[i].y;
+		if (polygon[i].y > maxY)
+			maxY = polygon[i].y;
+	}
+}
+bool checkVertex(Point p, std::vector<Point>& polygon)
+{
+	for (auto& _p : polygon)
+	{
+		if (p.x == _p.x && p.y == _p.y)
+			return false;
+	}
+	return true;
+}
+bool checkIn(Point p, std::vector<Point>& polygon)
+{
+	if (!checkVertex(p, polygon))
+		return false;
+
+	float minX, maxX, minY, maxY;
+	boundBox(polygon, minX, maxX, minY, maxY);
+	float length = (maxX - minX) + (maxY - minY);
+	float theta = 0;
+	float dtheta = PI / 180;
+	while (theta < 2 * PI)
+	{
+		Point end = { p.x + length * cos(theta), p.y + length * sin(theta) };
+		LineWithCross ray;
+		ray.begin = &p;
+		ray.end = &end;
+		if (checkRay(ray, polygon))
+		{
+			float u1 = 0, u2 = 0;
+			int count = 0;
+			for (int i = 0; i < polygon.size(); i++)
+			{
+				int next = i + 1 < polygon.size() ? i + 1 : 0;
+				LineWithCross edge;
+				edge.begin = &polygon[i];
+				edge.end = &polygon[next];
+
+				if (crossPoint(ray, edge, u1, u2))
+				{
+					if (crossProduct(ray, edge) > 0)
+						count++;
+					else
+						count--;
+				}
+			}
+			return count >= 1;
+		}
+		else
+		{
+			theta += dtheta;
+		}
+	}
+	assert(0 && "can not find suitable ray!!!");
+	return false;
+}
+void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<std::vector<Point>>& reslutPolygon)
+{
+	std::vector<Point*> clipWindowPoints;
+	std::vector<Point*> polygonPoints;
+	std::map<Point*, PointInfo> pointInfo;
+	calcPointInfo(clipWindow, polygon, clipWindowPoints, polygonPoints, pointInfo);
+
+	reslutPolygon.clear();
+	reslutPolygon.push_back(std::vector<Point>());
+	walkPolygon(polygonPoints, 0, checkIn(polygon[0], clipWindow), clipWindowPoints, pointInfo, reslutPolygon);
+	if (reslutPolygon.back().empty())
+		reslutPolygon.erase(reslutPolygon.end() - 1);
+}
+
+void clipPolygon(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<std::vector<Point>>& out)
+{
+	out.clear();
+
+	if (polygon.size())
+		polygonClipWeilerAtherton(clipWindow, polygon, out);
+}
+void clipPoint(std::vector<Point>& clipWindow, std::vector<Point>& points, std::vector<Point>& out)
+{
+	out.clear();
+
+	if (points.size())
+	{
+		for (auto& p : points)
+		{
+			if (checkIn(p, clipWindow))
+			{
+				out.push_back(p);
+			}
+		}
+	}
+}
+
 std::vector<Point> road = { { -400, 0 },{ 0, 0 },{ 1000, 0 },{ 1200, 150 },{ 1600, 150 },{ 2000, 0 },{ 2600, 0 },{ 2600, 200 },{ 2800, 200 } ,{ 2800, 0 } ,{ 3200, 0 },{ 3600, 0 } };
 std::vector<Point> car = { { 0, 0 },{ -70, 0 },{ -70, -12 },{ 30, -12 },{ 30, -2 },{ 15, 26 },{ 0, 26 } };
 std::vector<Point> goods = { { -30, -20 },{ 30, -20 },{ 30, 20 },{ -30, 20 } };
@@ -15050,8 +15508,18 @@ float deltaClipwinSize = 10;
 bool clipwinFollow = true;
 bool clipwinMode = false;
 
-// Opengl视口
+// 视口1
+float _xvmin = 330, _yvmin = 420, _xvmax = 530, _yvmax = 570;
+
+// 视口2
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
+float xnvmin = xvmin / winWidth;
+float xnvmax = xvmax / winWidth;
+float ynvmin = yvmin / winHeight;
+float ynvmax = yvmax / winHeight;
+bool viewTransformDirty = true;
+
+
 
 void initPath()
 {
@@ -15148,6 +15616,61 @@ void ellipse(Point p0, int Rx, int Ry)
 		ellipsePlot(p0, x, y);
 	}
 }
+void ellipsePlot(Point p0, int x, int y, std::vector<Point>& points)
+{
+	points.push_back({ p0.x + x, p0.y + y });
+	points.push_back({ p0.x - x, p0.y + y });
+	points.push_back({ p0.x + x, p0.y - y });
+	points.push_back({ p0.x - x, p0.y - y });
+}
+void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
+{
+	points.clear();
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	ellipsePlot(p0, x, y, points);
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		ellipsePlot(p0, x, y, points);
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		ellipsePlot(p0, x, y, points);
+	}
+}
 void drawRoad()
 {
 	drawStrip(road);
@@ -15182,6 +15705,12 @@ void drawWindow()
 void drawViewport()
 {
 	drawLoop({
+		{ _xvmin, _yvmin },
+		{ _xvmax, _yvmin },
+		{ _xvmax, _yvmax },
+		{ _xvmin, _yvmax } });
+
+	drawLoop({
 		{ xvmin, yvmin },
 		{ xvmax, yvmin },
 		{ xvmax, yvmax },
@@ -15194,13 +15723,13 @@ void scale(float sx, float sy)
 
 	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
 	tansShx *= (sx / sy);
-	curTransform = scaleMatrix(sx, sy) * curTransform;
+	curTransform = scaleMatrix4(sx, sy) * curTransform;
 }
 void shear(float sh)
 {
 	shx += sh;
 	tansShx += sh;
-	curTransform = shearXMatrix(sh) * curTransform;
+	curTransform = shearXMatrix4(sh) * curTransform;
 }
 void reset()
 {
@@ -15279,6 +15808,17 @@ void update()
 	curPosition = nextP;
 	curDirection = dir;
 
+	// 绘制状态文字，视口
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glViewport(0, 0, winWidth, winHeight);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	showState();
+	drawViewport();
+
 	// gluOrtho2D之后的绘制才会使用新的视口，否则若在gluOrtho2D之前绘制，绘制使用之前的视口，下次新视口才生效
 	// 因此第一次绘制的效果是绘制图形移动，但视口不动，即绘制图形超前视口一个delta*speed距离
 	// 下次绘制时，会首先生效上次的视口设置，即视口中心为绘制图形中心，但是图形此时又会移动，即绘制图形又会超前视口一个delta*speed距离
@@ -15329,14 +15869,14 @@ void update()
 	glLoadIdentity();
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(shearXMatrix(tansShx));
+	glMultMatrixf(shearXMatrix4(tansShx));
 	glTranslated(32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
 
 	glLoadIdentity();
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(shearXMatrix(tansShx));
+	glMultMatrixf(shearXMatrix4(tansShx));
 	glTranslated(-32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
 
@@ -15346,17 +15886,23 @@ void update()
 	glRotatef(clipwinRotate * 180 / PI, 0.0, 0.0, 1.0);
 	drawWindow();
 
-	// 绘制视口
+	// 绘制视口1
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
-	glViewport(xvmin, yvmin, xvmax - xvmin, yvmax - yvmin);
+	glViewport(_xvmin, _yvmin, _xvmax - _xvmin, _yvmax - _yvmin);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	drawRoad();
 
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
 	glMultMatrixf(curTransform);
@@ -15364,6 +15910,9 @@ void update()
 	drawCar();
 
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
 	glMultMatrixf(curTransform);
@@ -15371,6 +15920,9 @@ void update()
 	drawGoods();
 
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
 	glMultMatrixf(curTransform);
@@ -15379,6 +15931,9 @@ void update()
 	drawWheelHolder();
 
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
 	glMultMatrixf(curTransform);
@@ -15387,20 +15942,27 @@ void update()
 	drawWheelHolder();
 
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(shearXMatrix(tansShx));
+	glMultMatrixf(shearXMatrix4(tansShx));
 	glTranslated(32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
 
 	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
 	glTranslatef(curPosition.x, curPosition.y, 0.f);
 	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
-	glMultMatrixf(shearXMatrix(tansShx));
+	glMultMatrixf(shearXMatrix4(tansShx));
 	glTranslated(-32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
-	
-	// 绘制状态文字，视口
+
+
+	// 绘制视口2
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
@@ -15408,8 +15970,114 @@ void update()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	showState();
-	drawViewport();
+	Matrix m(3, 3);
+	matrixSetIdentity(m);
+	m = translateMatrix(-20, -22) * scaleMatrix(1 / scaleX, 1 / scaleY) * shearXMatrix(-tansShx) * rotateMatrix(-curDirection) * translateMatrix(-curPosition.x, -curPosition.y) * rotateByPointMatrix(clipwinPos, clipwinRotate);
+	vector<Point> clipwin = { 
+		{clipwinPos.x - clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2},
+		{clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2 },
+		{clipwinPos.x + clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2},
+		{clipwinPos.x - clipwinWidth / 2, clipwinPos.y + clipwinHeight / 2 }, };
+
+	bool turnOrder1 = (scaleX > 0 && scaleY < 0) || (scaleX < 0 && scaleY > 0);
+	bool turnOrder2 = (clipwinWidth > 0 && clipwinHeight < 0 || clipwinWidth < 0 && clipwinHeight > 0);
+	if (turnOrder1 ^ turnOrder2)
+	{
+		std::reverse(clipwin.begin(), clipwin.end());
+	}
+
+	transformPoints(m, clipwin);
+
+	std::vector<std::vector<Point>> viewCar;
+	clipPolygon(clipwin, car, viewCar);
+
+	float xwmin = -clipwinWidth / 2;
+	float xwmax = clipwinWidth / 2;
+	float ywmin = -clipwinHeight / 2;
+	float ywmax = clipwinHeight / 2;
+
+	Matrix ret(3, 3);
+	matrixSetIdentity(ret);
+	ret[0][0] = (xnvmax - xnvmin) / (xwmax - xwmin);
+	ret[1][1] = (ynvmax - ynvmin) / (ywmax - ywmin);
+	ret[0][2] = (xwmax * xnvmin - xwmin * xnvmax) / (xwmax - xwmin);
+	ret[1][2] = (ywmax * ynvmin - ywmin * ynvmax) / (ywmax - ywmin);
+	auto vm = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
+		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY) * translateMatrix(20, 22);
+	for (auto& vc : viewCar)
+	{
+		transformPoints(vm, vc);
+	}
+	for (auto& vc : viewCar)
+	{
+		drawLoop(vc);
+	}
+
+
+	// 轮子
+	Point tempp1 = { 32, 10 };
+	auto vm1 = scaleMatrix(winWidth, winHeight) * ret * rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y)
+		* translateMatrix(curPosition.x, curPosition.y) * rotateMatrix(curDirection) * shearXMatrix(tansShx) * scaleMatrix(scaleX, scaleY);
+	transformPoint(vm1, tempp1);
+	auto sx = (xvmax - xvmin) / clipwinWidth;
+	auto sy = (yvmax - yvmin) / clipwinHeight;
+	auto cos = std::cos(curDirection - clipwinRotate);
+	auto sin = std::sin(curDirection - clipwinRotate);
+
+	auto sx_ = std::sqrt(sx * sx * cos * cos + sy * sy * sin * sin);
+	auto sy_ = sx * sy / sx_;
+	auto cos_ = sx * cos / sx_;
+	auto sin_ = sy * sin / sx_;
+
+	auto shx_ = tansShx;
+	if (!Equal(sy_ * cos_, 0.f))
+	{
+		shx_ = (sx * cos * tansShx - sx * sin + sin_ * sy_) / (sy_ * cos_);
+	}
+	else
+	{
+		shx_ = (sy * sin * tansShx + sy * cos - cos_ * sy_) / (sy_ * sin_);
+	}
+
+	std::vector<Point> viewWheels1;
+	ellipse({ 0, 0 }, std::abs(sx_ * scaleX * wheelRadius), std::abs(sy_ * scaleY * wheelRadius), viewWheels1);
+
+	Matrix r(3, 3);
+	matrixSetIdentity(r);
+	r[0][0] = cos_;
+	r[0][1] = -sin_;
+	r[1][0] = sin_;
+	r[1][1] = cos_;
+	//auto m = r * shearXMatrix(shx_);
+	//transformPoints(m, viewWheels1);
+
+	//viewWheels2 = viewWheels1;
+	//transformPoints(translateMatrix(tempp1.x, tempp1.y), viewWheels1);
+	//transformPoints(translateMatrix(tempp2.x, tempp2.y), viewWheels2);
+	//clipPoint(viewWheels1);
+	//clipPoint(viewWheels2);
+
+	r[0][1] = sin_;
+	r[1][0] = -sin_;
+	auto m1 = shearXMatrix(-shx_) * r * translateMatrix(-tempp1.x, -tempp1.y);
+	vector<Point> viewwin = {
+		{ xvmin, yvmin },
+		{ xvmax, yvmin },
+		{ xvmax, yvmax },
+		{ xvmin, yvmax }, };
+	transformPoints(m1, viewwin);
+
+	std::vector<Point> viewW;
+	clipPoint(viewwin, viewWheels1, viewW);
+
+	r[0][1] = -sin_;
+	r[1][0] = sin_;
+	transformPoints(translateMatrix(tempp1.x, tempp1.y) * r * shearXMatrix(shx_), viewW);
+	for (auto& p : viewW)
+	{
+		drawPoint(p);
+	}
+
 }
 bool isNumber(string s)
 {
@@ -15794,6 +16462,14 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			shear(deltaShear);
 		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			clipwinWidth += 10;
+		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			clipwinPos.x += 10;
+		}
 		break;
 	case GLUT_KEY_LEFT:
 		if (mod == 0)
@@ -15809,6 +16485,14 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			shear(-deltaShear);
 		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			clipwinWidth -= 10;
+		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			clipwinPos.x -= 10;
+		}
 		break;
 	case GLUT_KEY_UP:
 		if (mod == 0)
@@ -15820,6 +16504,18 @@ void specialKeyFcn(int key, int x, int y)
 			if (scaleY < 0)
 				scale(1, -1);
 		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			clipwinRotate += 10 * PI / 180;
+		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			clipwinHeight += 10;
+		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			clipwinPos.y += 10;
+		}
 		break;
 	case GLUT_KEY_DOWN:
 		if (mod == 0)
@@ -15830,6 +16526,18 @@ void specialKeyFcn(int key, int x, int y)
 		{
 			if (scaleY > 0)
 				scale(1, -1);
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			clipwinRotate -= 10 * PI / 180;
+		}
+		else if (mod == GLUT_ACTIVE_ALT)
+		{
+			clipwinHeight -= 10;
+		}
+		else if (mod == GLUT_ACTIVE_CTRL | GLUT_ACTIVE_SHIFT)
+		{
+			clipwinPos.y -= 10;
 		}
 		break;
 	default:
