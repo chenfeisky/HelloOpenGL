@@ -6494,6 +6494,31 @@ class Point
 public:
 	GLfloat x, y;
 };
+inline bool operator==(const Point& p1, const Point& p2)
+{
+	//return p1.x == p2.x && p1.y == p2.y;
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y);
+}
+inline bool operator!=(const Point& p1, const Point& p2)
+{
+	//return p1.x == p2.x && p1.y == p2.y;
+	return !(p1 == p2);
+}
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (p1.x < p2.x)
+	{
+		return true;
+	}
+	else if (p2.x < p1.x)
+	{
+		return false;
+	}
+	else
+	{
+		return p1.y < p2.y;
+	}
+}
 enum class PointType
 {
 	None,    // ÎÞÀàÐÍ
@@ -6855,11 +6880,41 @@ PointType combinePointType(PointType type1, PointType type2)
 }
 bool sameEdge(LineWithCross& e1, LineWithCross& e2)
 {
+	float dx1 = e1.end.x - e1.begin.x;
+	float dy1 = e1.end.y - e1.begin.y;
+	float dx2 = e2.end.x - e2.begin.x;
+	float dy2 = e2.end.y - e2.begin.y;
 
+	return (dx1 * dy2 - dy1 * dx2 == 0) &&
+		(dx1 * dx2 >= 0 && dy1 * dy2 >= 0) &&
+		(e1.begin == e2.begin || e1.end == e2.end);
 }
-PointType calcEdgeType(LineWithCross& e, std::vector<Point>& clipWindow)
+PointType calcEdgeType(LineWithCross& e, float crossU, std::vector<Point>& clipWindow)
 {
-
+	if (crossU == 1.f)
+	{
+		float u = 0.f;
+		for (auto it = e.tempCrossPoints.begin(); it != e.tempCrossPoints.end(); it++)
+		{
+			if (it->first < crossU && it->first > u)
+				u = it->first;
+		}
+		u = (crossU + u) / 2;
+		Point testP = { e.begin.x + u * (e.end.x - e.begin.x), e.begin.y + u * (e.end.y - e.begin.y) };
+		return checkIn(testP, clipWindow) ? PointType::CrossOut : PointType::CrossIn;
+	}
+	else if (crossU == 0.f)
+	{
+		float u = 1.f;
+		for (auto it = e.tempCrossPoints.begin(); it != e.tempCrossPoints.end(); it++)
+		{
+			if (it->first > crossU && it->first < u)
+				u = it->first;
+		}
+		u = (crossU + u) / 2;
+		Point testP = { e.begin.x + u * (e.end.x - e.begin.x), e.begin.y + u * (e.end.y - e.begin.y) };
+		return checkIn(testP, clipWindow) ? PointType::CrossIn : PointType::CrossOut;
+	}
 }
 void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, std::vector<PointInfo>& clipWindowPointInfos, std::vector<PointInfo>& polygonPointInfos)
 {
@@ -6977,7 +7032,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 							type1 = combinePointType(it.second[0].type, it.second[1].type);
 							if (type1 == PointType::None)
 							{
-								type1 = calcEdgeType(polygonLines[i], clipWindow);
+								type1 = calcEdgeType(polygonLines[i], it.first, clipWindow);
 							}
 						}
 					}
@@ -7002,7 +7057,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 							type2 = combinePointType(polygonLines[nexti].tempCrossPoints[nextu2][0].type, polygonLines[nexti].tempCrossPoints[nextu2][1].type);
 							if (type2 == PointType::None)
 							{
-								type2 = calcEdgeType(polygonLines[nexti], clipWindow);
+								type2 = calcEdgeType(polygonLines[nexti], nextu2, clipWindow);
 							}
 						}
 					}
