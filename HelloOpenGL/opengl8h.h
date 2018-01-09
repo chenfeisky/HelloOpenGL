@@ -5,7 +5,7 @@
 //#define CHAPTER_8_4_16_test // 多视口，多窗口，子窗口等示例 二维观察
 //#define CHAPTER_8_7_1 // Cohen-Sutherland线段裁剪算法
 //#define CHAPTER_8_7_2 // 梁友栋-Barsky线段裁剪算法
-#define CHAPTER_8_8_1 // Sutherland-Hodgman多边形裁剪算法
+//#define CHAPTER_8_8_1 // Sutherland-Hodgman多边形裁剪算法
 //#define CHAPTER_8_EXERCISE_1
 //#define CHAPTER_8_EXERCISE_2
 //#define CHAPTER_8_EXERCISE_3
@@ -23,7 +23,7 @@
 //#define CHAPTER_8_EXERCISE_14
 //#define CHAPTER_8_EXERCISE_15
 //#define CHAPTER_8_EXERCISE_16 // 简单的Weiler-Atherton算法，没有考虑多边相交于一点等复杂情况
-//#define CHAPTER_8_EXERCISE_16_1 // 考虑了上述复杂情况的完整Weiler-Atherton算法，应该是能取代上者
+#define CHAPTER_8_EXERCISE_16_1 // 考虑了上述复杂情况的完整Weiler-Atherton算法，应该是能取代上者
 //#define CHAPTER_8_EXERCISE_16_2 // 检测每个像素点内外的方法求两多边形交，可满足复杂交点情况（计算每个像素的内外，性能低）
 //#define CHAPTER_8_EXERCISE_17
 //#define CHAPTER_8_EXERCISE_18
