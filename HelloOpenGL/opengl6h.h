@@ -24,8 +24,8 @@
 //#define CHAPTER_6_EXERCISE_14
 //#define CHAPTER_6_EXERCISE_15
 //#define CHAPTER_6_EXERCISE_16   // 三阶泰勒展开式中点算法(决策参数简化为有限次加法)
-//#define CHAPTER_6_EXERCISE_16_Test1   // n阶泰勒展开式中点算法(决策参数需要加法和乘法)
-#define CHAPTER_6_EXERCISE_17
+#define CHAPTER_6_EXERCISE_16_Test1   // n阶泰勒展开式中点算法(决策参数需要加法和乘法)
+//#define CHAPTER_6_EXERCISE_17
 //#define CHAPTER_6_EXERCISE_18
 //#define CHAPTER_6_EXERCISE_19
 //#define CHAPTER_6_EXERCISE_20

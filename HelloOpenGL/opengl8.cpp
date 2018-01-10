@@ -6530,12 +6530,12 @@ enum class PointType
 };
 struct CrossPointInfo
 {
-	PointType type;
+	Point point = { 0, 0 };
+	PointType type = PointType::None;
 	float u1 = 0.0f;	// 裁剪窗口边 直线参数方程u
 	float u2 = 0.0f;	// 多边形边	直线参数方程u
 	int lineIdx1 = 0; // 裁剪窗口边索引
 	int lineIdx2 = 0; // 多边形边索引
-	bool dealed; // 是否已处理
 };
 struct LineWithCross
 {
@@ -6545,13 +6545,11 @@ struct LineWithCross
 };
 struct PointInfo
 {
-	Point point;
-	PointType type; // 类型
-	int idx1;   // 裁剪窗口顶点 数组索引
-	int idx2;	// 多边形顶点 数组索引
-	bool dealed; // 是否已处理
-
-	PointInfo::PointInfo() : type(PointType::None), idx1(-1), idx2(-1), dealed(false) {}
+	Point point = {0, 0};
+	PointType type = PointType::None; // 类型
+	int idx1 = -1;   // 裁剪窗口顶点 数组索引
+	int idx2 = -1;	// 多边形顶点 数组索引
+	bool dealed = false; // 是否已处理
 };
 inline GLint Round(const GLfloat a)
 {
@@ -6958,7 +6956,10 @@ bool checkIn(Point p, std::vector<Point>& polygon)
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////
-
+Point calcCrossPointByU(const Point& begin, const Point& end, float u)
+{
+	return { begin.x + (end.x - begin.x) * u, begin.y + (end.y - begin.y) * u };
+}
 void calcLines(std::vector<Point>& points, std::vector<LineWithCross>& lines)
 {
 	for (int i = 0; i < points.size(); i++)
@@ -7062,6 +7063,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 		{
 			if (calcCrossPoint(clipWindowLines[i], polygonLines[j], crossPointInfo))
 			{
+				crossPointInfo.point = calcCrossPointByU(polygonLines[j].begin, polygonLines[j].end, crossPointInfo.u2);
 				crossPointInfo.lineIdx1 = i;
 				crossPointInfo.lineIdx2 = j;
 				polygonLines[j].tempCrossPoints[crossPointInfo.u2].push_back(crossPointInfo);
@@ -7071,13 +7073,13 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 
 	for (int i = 0; i < polygonLines.size(); i++)
 	{
-		for (auto it : polygonLines[i].tempCrossPoints)
+		for (auto& it : polygonLines[i].tempCrossPoints)
 		{
 			
 			if (it.first == 0.f || it.first == 1.f)
 			{
 				if (it.second.size() == 1 &&
-					(it.second[0].u1 != 0 || it.second[0].u1 != 1))
+					(it.second[0].u1 != 0 && it.second[0].u1 != 1))
 				{
 					int nexti = -1;
 					float nextu2 = -1.f;
@@ -7113,7 +7115,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 						type2 = PointType::Polygon;
 						type1 = PointType::ClipWindow;
 	
-						spNonePoints.push_back({ polygonLines[i].begin.x * it.first, polygonLines[i].begin.y * it.first });
+						spNonePoints.push_back(cp.point);
 					}
 					else
 					{
@@ -7147,7 +7149,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 
 					bool same1 = false;
 					assert(polygonLines[nexti].tempCrossPoints[nextu2].size() > 0);
-					for (auto cp : polygonLines[nexti].tempCrossPoints[nextu2])
+					for (auto& cp : polygonLines[nexti].tempCrossPoints[nextu2])
 					{
 						if (sameEdge(polygonLines[i], clipWindowLines[cp.lineIdx1]))
 						{
@@ -7172,7 +7174,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 					}
 
 					bool same2 = false;
-					for (auto cp : it.second)
+					for (auto& cp : it.second)
 					{
 						if (sameEdge(polygonLines[nexti], clipWindowLines[cp.lineIdx1]))
 						{
@@ -7219,7 +7221,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 						type2 = PointType::Polygon;
 						type1 = PointType::ClipWindow;
 
-						spNonePoints.push_back({ polygonLines[i].begin.x * it.first, polygonLines[i].begin.y * it.first });
+						spNonePoints.push_back(it.second[0].point);
 					}
 					else
 					{
@@ -7228,7 +7230,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 					}
 					auto cp = it.second[0];
 					it.second.clear();
-					polygonLines[nexti].tempCrossPoints[nextu2].clear();
+					polygonLines[nexti].tempCrossPoints.erase(nextu2);
 					cp.type = type2;
 					it.second.push_back(cp);
 
@@ -7245,7 +7247,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 					type2 = PointType::Polygon;
 					type1 = PointType::ClipWindow;
 
-					spNonePoints.push_back({ polygonLines[i].begin.x * it.first, polygonLines[i].begin.y * it.first });
+					spNonePoints.push_back(it.second[0].point);
 				}
 				else
 				{
@@ -7275,16 +7277,21 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 
 	for (int i = 0; i < clipWindowLines.size(); i++)
 	{
+		bool find = false;
 		int nexti = (i - 1 + clipWindowLines.size()) % clipWindowLines.size();
 		auto it = clipWindowLines[i].tempCrossPoints.find(0.f);
-		if (it == clipWindowLines[i].tempCrossPoints.end())
+		if (it != clipWindowLines[i].tempCrossPoints.end())
+		{
+			find = true;
+		}
+		else
 		{
 			it = clipWindowLines[nexti].tempCrossPoints.find(1.f);
+			find = it != clipWindowLines[nexti].tempCrossPoints.end();
 		}
 
 		PointInfo pi;
-		pi.dealed = false;
-		if (it != clipWindowLines[i].tempCrossPoints.end() && it != clipWindowLines[nexti].tempCrossPoints.end())
+		if (find)
 		{
 			assert(it->second.size() == 1);
 			pi.type = it->second[0].type;
@@ -7301,8 +7308,8 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 			if (it.first != 0.f && it.first != 1.f)
 			{
 				assert(it.second.size() == 1);
-
-				pi.point = { clipWindowLines[i].begin.x * it.first, clipWindowLines[i].begin.y * it.first };
+				
+				pi.point = it.second[0].point;
 				pi.type = it.second[0].type;
 				clipWindowPointInfos.push_back(pi);
 			}
@@ -7311,23 +7318,28 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 
 	for (int i = 0; i < polygonLines.size(); i++)
 	{
+		bool find = false;
 		int nexti = (i - 1 + polygonLines.size()) % polygonLines.size();
 		auto it = polygonLines[i].tempCrossPoints.find(0.f);
-		if (it == polygonLines[i].tempCrossPoints.end())
+		if (it != polygonLines[i].tempCrossPoints.end())
+		{
+			find = true;
+		}
+		else
 		{
 			it = polygonLines[nexti].tempCrossPoints.find(1.f);
+			find = it != polygonLines[nexti].tempCrossPoints.end();
 		}
 
 		PointInfo pi;
-		pi.dealed = false;
-		if (it != polygonLines[i].tempCrossPoints.end() && it != polygonLines[nexti].tempCrossPoints.end())
+		if (find)
 		{
 			assert(it->second.size() == 1);
 			pi.type = it->second[0].type;
 		}
 		else
 		{
-			pi.type = PointType::ClipWindow;
+			pi.type = PointType::Polygon;
 		}
 		pi.point = polygonLines[i].begin;
 		polygonPointInfos.push_back(pi);
@@ -7338,7 +7350,7 @@ void calcPointInfo(std::vector<Point>& clipWindow, std::vector<Point>& polygon, 
 			{
 				assert(it.second.size() == 1);
 
-				pi.point = { polygonLines[i].begin.x * it.first, polygonLines[i].begin.y * it.first };
+				pi.point = it.second[0].point;
 				pi.type = it.second[0].type;
 				polygonPointInfos.push_back(pi);
 			}
@@ -7409,7 +7421,7 @@ void genResultPolygon(std::vector<std::vector<Point>>& reslutPolygon, Point clos
 void walkClipWindow(int idx, std::vector<PointInfo>& clipWindowPointInfos, std::vector<PointInfo>& polygonPointInfos, std::vector<std::vector<Point>>& reslutPolygon);
 void walkPolygon(int idx, bool record, std::vector<PointInfo>& clipWindowPointInfos, std::vector<PointInfo>& polygonPointInfos, std::vector<std::vector<Point>>& reslutPolygon)
 {
-	auto pointInfo = polygonPointInfos[idx];
+	auto& pointInfo = polygonPointInfos[idx];
 	if (pointInfo.type == PointType::CrossIn)
 	{
 		record = true;
@@ -7458,7 +7470,7 @@ void walkPolygon(int idx, bool record, std::vector<PointInfo>& clipWindowPointIn
 }
 void walkClipWindow(int idx, std::vector<PointInfo>& clipWindowPointInfos, std::vector<PointInfo>& polygonPointInfos, std::vector<std::vector<Point>>& reslutPolygon)
 {
-	auto pointInfo = clipWindowPointInfos[idx];
+	auto& pointInfo = clipWindowPointInfos[idx];
 
 	if (pointInfo.dealed)
 	{
@@ -7513,8 +7525,8 @@ void drawFunc()
 	std::vector <std::vector<Point>> polygons;
 
 	glViewport(0, 300, winWidth / 2, winHeight / 2);
-	polygon = { { 54, 227 },{ 85, 145 },{ 207, 183 },{ 191, 267 },{ 104, 283 } };
-	clipWindow = { { 150, 50 },{ 300, 50 },{ 300, 250 },{ 150, 250 } };
+	polygon = { { 26, 122 },{ 90, 78 },{ 170, 78 },{ 170, 187 },{ 90, 187 } };
+	clipWindow = { {26, 122}, { 48, 78 },{ 90, 78 },{ 90, 187 },{ 52, 187 } };
 	glColor3f(1.0, 1.0, 1.0);
 	drawPolygonLine(clipWindow);
 	fillPolygon(polygon);
@@ -7526,47 +7538,19 @@ void drawFunc()
 		drawPolygon(po);
 	}
 
-	glViewport(400, 300, winWidth / 2, winHeight / 2);
-	polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
-	clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
-	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
-	polygons.clear();
-	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
-	glColor3f(1.0, 0.0, 0.0);
-	for (auto po : polygons)
-	{
-		drawPolygon(po);
-	}
-
-	glViewport(0, 0, winWidth / 2, winHeight / 2);
-	polygon = { { 328, 238 },{ 161, 279 },{ 178, 236 },{ 117, 110 },{ 167, 24 },{ 216, 33 } };
-	clipWindow = { { 81, 14 },{ 211, 68 },{ 204, 145 },{ 79, 159 },{ 41, 87 } };
-	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
-	polygons.clear();
-	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
-	glColor3f(1.0, 0.0, 0.0);
-	for (auto po : polygons)
-	{
-		drawPolygon(po);
-	}
-
-	glViewport(400, 0, winWidth / 2, winHeight / 2);
-	polygon = { { 128, 62 },{ 176, 119 },{ 303, 62 },{ 326, 216 },{ 95, 254 },{ 76, 82 } };
-	clipWindow = { { 184, 30 },{ 290, 115 },{ 169, 95 },{ 145, 131 },{ 88, 107 },{ 40, 136 },{ 45, 32 } };
-	glColor3f(1.0, 1.0, 1.0);
-	drawPolygonLine(clipWindow);
-	fillPolygon(polygon);
-	polygons.clear();
-	polygonClipWeilerAtherton(clipWindow, polygon, polygons);
-	glColor3f(1.0, 0.0, 0.0);
-	for (auto po : polygons)
-	{
-		drawPolygon(po);
-	}
+	//glViewport(400, 300, winWidth / 2, winHeight / 2);
+	//polygon = { { 238, 182 },{ 207, 276 },{ 9, 165 },{ 74, 58 },{ 198, 95 },{ 77, 122 } };
+	//clipWindow = { { 150, 50 },{ 350, 50 },{ 350, 220 },{ 150, 220 } };
+	//glColor3f(1.0, 1.0, 1.0);
+	//drawPolygonLine(clipWindow);
+	//fillPolygon(polygon);
+	//polygons.clear();
+	//polygonClipWeilerAtherton(clipWindow, polygon, polygons);
+	//glColor3f(1.0, 0.0, 0.0);
+	//for (auto po : polygons)
+	//{
+	//	drawPolygon(po);
+	//}
 
 	glFlush();
 }
