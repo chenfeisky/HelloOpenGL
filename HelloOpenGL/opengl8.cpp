@@ -6328,7 +6328,7 @@ bool checkRay(LineWithCross& line, std::vector<Point>& polygon)
 	}
 	return true;
 }
-int crossProduct(LineWithCross& line1, LineWithCross& line2)
+float crossProduct(LineWithCross& line1, LineWithCross& line2)
 {
 	return (line1.end->x - line1.begin->x) * (line2.end->y - line2.begin->y) - (line1.end->y - line1.begin->y) * (line2.end->x - line2.begin->x);
 }
@@ -6809,7 +6809,7 @@ bool sign(float f)
 {
 	return f > 0;
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -8162,7 +8162,7 @@ bool checkRay(LineWithCross& line, std::vector<Point>& polygon)
 	}
 	return true;
 }
-int crossProduct(LineWithCross& line1, LineWithCross& line2)
+float crossProduct(LineWithCross& line1, LineWithCross& line2)
 {
 	float ax = line1.end->x - line1.begin->x;
 	float by = line2.end->y - line2.begin->y;
@@ -11139,7 +11139,7 @@ bool operator < (const Point& p1, const Point& p2)
 		return p1.y < p2.y;
 	}
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -11572,7 +11572,7 @@ bool checkRay(LineWithCross& line, const std::vector<Point>& polygon)
 	}
 	return true;
 }
-int crossProduct(LineWithCross& line1, LineWithCross& line2)
+float crossProduct(LineWithCross& line1, LineWithCross& line2)
 {
 	return (line1.end.x - line1.begin.x) * (line2.end.y - line2.begin.y) - (line1.end.y - line1.begin.y) * (line2.end.x - line2.begin.x);
 }
@@ -12290,7 +12290,7 @@ bool sign(float f)
 {
 	return f > 0;
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -13472,7 +13472,7 @@ void drawPolygonLine(const vector<Point>& polygon)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -13488,11 +13488,13 @@ inline GLint accept(GLint code1, GLint code2)
 {
 	return GLint(!(code1 | code2));
 }
-GLint encode(const std::vector<Point>& polygon, Point p)
+GLint encode(const std::vector<Point>& polygon, Point p, int exceptI = -1)
 {
 	GLint ret = 0;
 	for (int i = 0; i < polygon.size(); i++)
 	{
+		if (i == exceptI)
+			continue;
 		int next = i + 1 < polygon.size() ? i + 1 : 0;
 		if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
 		{ polygon[i].x - p.x, polygon[i].y - p.y }) > 0)
@@ -13571,7 +13573,7 @@ void lineClipCohSuth1(const std::vector<Point>& polygon, Point p1, Point p2)
 					assert(crossPoint(p1, p2, polygon[i], polygon[next], u1, u2));
 					p1.x += u1 * (p2.x - p1.x);
 					p1.y += u1 * (p2.y - p1.y);
-					code1 = encode(polygon, p1);
+					code1 = encode(polygon, p1, i);
 					break;
 				}
 			}
@@ -13621,7 +13623,7 @@ void lineClipCohSuth2(const std::vector<Point>& polygon, Point p1, Point p2)
 				assert(crossPoint(p1, p2, polygon[i], polygon[next], u1, u2));
 				p1.x += u1 * (p2.x - p1.x);
 				p1.y += u1 * (p2.y - p1.y);
-				code1 = encode(polygon, p1);
+				code1 = encode(polygon, p1, i);
 			}
 		}
 	}
@@ -13763,7 +13765,7 @@ void drawPolygonLine(const vector<Point>& polygon)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -13938,7 +13940,7 @@ void drawPolygonLine(const vector<Point>& polygon)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -13968,11 +13970,13 @@ void swapCodes(GLubyte& c1, GLubyte& c2)
 	c1 = c2;
 	c2 = tmp;
 }
-GLint encode(const std::vector<Point>& polygon, Point p)
+GLint encode(const std::vector<Point>& polygon, Point p, int exceptI = -1)
 {
 	GLint ret = 0;
 	for (int i = 0; i < polygon.size(); i++)
 	{
+		if (i == exceptI)
+			continue;
 		int next = i + 1 < polygon.size() ? i + 1 : 0;
 		if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
 		{ polygon[i].x - p.x, polygon[i].y - p.y }) > 0)
@@ -14317,7 +14321,7 @@ void drawPolygonLine(const vector<Point>& polygon)
 		glVertex2f(p.x, p.y);
 	glEnd();
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -18284,7 +18288,7 @@ bool sign(float f)
 {
 	return f > 0;
 }
-int crossProduct(const Vec& vec1, const Vec& vec2)
+float crossProduct(const Vec& vec1, const Vec& vec2)
 {
 	return vec1.x * vec2.y - vec1.y * vec2.x;
 }
@@ -19102,11 +19106,14 @@ inline GLint accept(GLint code1, GLint code2)
 {
 	return GLint(!(code1 | code2));
 }
-GLint encode(const std::vector<Point>& polygon, Point p)
+GLint encode(const std::vector<Point>& polygon, Point p, int exceptI = -1)
 {
 	GLint ret = 0;
 	for (int i = 0; i < polygon.size(); i++)
 	{
+		if (i == exceptI)
+			continue;
+
 		int next = i + 1 < polygon.size() ? i + 1 : 0;
 		if (crossProduct({ polygon[next].x - polygon[i].x, polygon[next].y - polygon[i].y },
 		{ polygon[i].x - p.x, polygon[i].y - p.y }) > 0)
@@ -19191,7 +19198,7 @@ bool lineClipCohSuth2(const std::vector<Point>& polygon, Point& p1, Point& p2)
 				assert(crossPoint_IgnorCross(p1, p2, polygon[i], polygon[next], u1, u2));
 				p1.x += u1 * (p2.x - p1.x);
 				p1.y += u1 * (p2.y - p1.y);
-				code1 = encode(polygon, p1);
+				code1 = encode(polygon, p1, i);
 			}
 		}
 	}
