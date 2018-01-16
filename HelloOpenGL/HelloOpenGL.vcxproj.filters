@@ -36,6 +36,9 @@
     <ClInclude Include="opengl8h.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="opengl9h.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl4.cpp">
@@ -57,6 +60,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="opengl8.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl9.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
