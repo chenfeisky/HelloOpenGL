@@ -542,6 +542,372 @@ void code_9_4()
 }
 #endif
 
+#ifdef CHAPTER_9_9_1
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glColor3f(0.0, 0.0, 1.0);
+	glRecti(50, 100, 200, 150);
+	
+	glPushMatrix();
+	glColor3f(1.0, 0.0, 0.0);
+
+	glTranslatef(-200.0, -50.0, 0.0);
+	glRecti(50, 100, 200, 150);
+
+	glPopMatrix();
+	glPushMatrix();
+
+	glRotatef(90.0, 0.0, 0.0, 1.0);
+	glRecti(50, 100, 200, 150);
+
+	glPopMatrix();
+	glScalef(-0.5, 1.0, 1.0);
+	glRecti(50, 100, 200, 150);
+
+	glFlush();
+}
+void code_9_1_1()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-400, 400, -300, 300);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_9_2
+class wcPt3D
+{
+public:
+	GLfloat x, y, z;
+};
+void rotate3D(wcPt3D p1, wcPt3D p2, GLfloat thetaDegrees)
+{
+	float vx = (p2.x - p1.x);
+	float vy = (p2.y - p1.y);
+	float vz = (p2.z - p1.z);
+
+	glTranslatef(p1.x, p1.y, p1.z);
+	glRotatef(thetaDegrees, vx, vy, vz);
+	glTranslatef(-p1.x, -p1.y, -p1.z);
+}
+void scale3D(GLfloat sx, GLfloat sy, GLfloat sz, wcPt3D fixedPt)
+{
+	glTranslatef(fixedPt.x, fixedPt.y, fixedPt.z);
+	glScalef(sx, sy, sz);
+	glTranslatef(-fixedPt.x, -fixedPt.y, -fixedPt.z);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glTranslatef(350, 250, 0);
+	scale3D(2, 2, 1, { 50, 50, 0 });
+	rotate3D({ 50, 50, -100 }, { 50, 50, 0 }, 45);
+
+	std::vector<wcPt3D> pt = { { 0, 0, -100 },{ 100, 0, -100 },{ 100, 100, -100 },{ 0, 100, -100 },{ 0, 0, 0 },{ 100, 0, 0 },{ 100, 100, 0 },{ 0, 100, 0 } };
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, &pt[0]);
+
+	std::vector<wcPt3D> color = { { 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 } };
+	glColorPointer(3, GL_FLOAT, 0, &color[0]);
+	std::vector<GLubyte> vertIndex = { 4,5,6,7 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 } };
+	vertIndex = { 5,1,2,6 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 } };
+	vertIndex = { 0,4,7,3 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 } };
+	vertIndex = { 0,3,2,1 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 1, 1, 1 },{ 1, 1,1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 } };
+	vertIndex = { 6,2,3,7 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 } };
+	vertIndex = { 0,1,5,4 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	glFlush();
+}
+void code_9_1_2()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_9_2
+class wcPt3D
+{
+public:
+	GLfloat x, y, z;
+};
+void rotate3D(wcPt3D p1, wcPt3D p2, GLfloat thetaDegrees)
+{
+	float vx = (p2.x - p1.x);
+	float vy = (p2.y - p1.y);
+	float vz = (p2.z - p1.z);
+
+	glTranslatef(p1.x, p1.y, p1.z);
+	glRotatef(thetaDegrees, vx, vy, vz);
+	glTranslatef(-p1.x, -p1.y, -p1.z);
+}
+void scale3D(GLfloat sx, GLfloat sy, GLfloat sz, wcPt3D fixedPt)
+{
+	glTranslatef(fixedPt.x, fixedPt.y, fixedPt.z);
+	glScalef(sx, sy, sz);
+	glTranslatef(-fixedPt.x, -fixedPt.y, -fixedPt.z);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glTranslatef(350, 250, 0);
+	scale3D(2, 2, 1, { 50, 50, 0 });
+	rotate3D({ 50, 50, -100 }, { 50, 50, 0 }, 45);
+
+	std::vector<wcPt3D> pt = { { 0, 0, -100 },{ 100, 0, -100 },{ 100, 100, -100 },{ 0, 100, -100 },{ 0, 0, 0 },{ 100, 0, 0 },{ 100, 100, 0 },{ 0, 100, 0 } };
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, &pt[0]);
+
+	std::vector<wcPt3D> color = { { 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 },{ 1, 0, 0 } };
+	glColorPointer(3, GL_FLOAT, 0, &color[0]);
+	std::vector<GLubyte> vertIndex = { 4,5,6,7 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 },{ 0, 1, 0 } };
+	vertIndex = { 5,1,2,6 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 },{ 0, 0, 1 } };
+	vertIndex = { 0,4,7,3 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 },{ 1, 1, 0 } };
+	vertIndex = { 0,3,2,1 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 1, 1, 1 },{ 1, 1,1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 },{ 1, 1, 1 } };
+	vertIndex = { 6,2,3,7 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	color = { { 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 },{ 1, 0, 1 } };
+	vertIndex = { 0,1,5,4 };
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, &vertIndex[0]);
+
+	glFlush();
+}
+void code_9_1_2()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_1
+class wcPt3D
+{
+public:
+	GLfloat x, y, z;
+};
+typedef wcPt3D Vec3;
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+Vec3 cross(const Vec3& v1, const Vec3& v2)
+{
+	return { v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
+}
+float length(const Vec3& v)
+{
+	return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+void normal(Vec3& v)
+{
+	float len = length(v);
+	v.x = v.x / len;
+	v.y = v.y / len;
+	v.z = v.z / len;
+}
+Matrix RotateMatrix1(Vec3 u)
+{
+	Matrix ret(4, 4);
+	matrixSetIdentity(ret);
+
+	normal(u);
+	Vec3 ux = { 1, 0, 0 };
+	Vec3 uy = { 0, 1, 0 };
+	Vec3 uz = { 0, 0, 1 };
+	
+	Vec3 uz_ = u;
+	Vec3 uy_ = cross(u, ux);
+	normal(uy_);
+	Vec3 ux_ = cross(uy_, uz_);
+
+	ret[0][0] = ux_.x;
+	ret[0][1] = ux_.y;
+	ret[0][2] = ux_.z;
+
+	ret[1][0] = uy_.x;
+	ret[1][1] = uy_.y;
+	ret[1][2] = uy_.z;
+
+	ret[2][0] = uz_.x;
+	ret[2][1] = uz_.y;
+	ret[2][2] = uz_.z;
+
+	return ret;
+}
+Matrix RotateMatrix2(Vec3 u)
+{
+	Matrix ret(4, 4);
+	matrixSetIdentity(ret);
+
+	normal(u);
+	
+	float a = u.x;
+	float b = u.y;
+	float c = u.z;
+	float d = std::sqrt(b * b + c * c);
+
+	Matrix Rxa(4, 4);
+	matrixSetIdentity(Rxa);
+	Rxa[1][1] = c / d;
+	Rxa[1][2] = -b / d;
+	Rxa[2][1] = b / d;
+	Rxa[2][2] = c / d;
+
+	Matrix Ryb(4, 4);
+	matrixSetIdentity(Ryb);
+	Ryb[0][0] = d;
+	Ryb[0][2] = -a;
+	Ryb[2][0] = a;
+	Ryb[2][2] = d;
+
+	ret = Ryb * Rxa;
+	return ret;
+}
+bool same(Matrix& m1, Matrix& m2)
+{
+	if (!(m1._row == m2._row && m1._col == m2._col))
+		return false;
+
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m1._col; col++)
+		{
+			if (!Equal(m1[row][col], m2[row][col]))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+void test()
+{
+	Vec3 u = {1, 1.5, 0.7};
+	Matrix m1 = RotateMatrix1(u);
+	Matrix m2 = RotateMatrix2(u);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, same(m1, m2) ? "true" : "false");
+
+	u = { 0, 0, 1 };
+	m1 = RotateMatrix1(u);
+	m2 = RotateMatrix2(u);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, same(m1, m2) ? "true" : "false");
+
+	u = { 0, 1, 0};
+	m1 = RotateMatrix1(u);
+	m2 = RotateMatrix2(u);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, same(m1, m2) ? "true" : "false");
+	
+	// 注意这里不能用u=(1,0,0)，因为RotateMatrix2计算d=0,RotateMatrix1计算uy_模长也是0
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	test();
+
+	glFlush();
+}
+void code_9_exercise_1()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -580,6 +946,18 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_4
 	code_9_4();
+#endif
+
+#ifdef CHAPTER_9_9_1
+	code_9_1_1();
+#endif
+
+#ifdef CHAPTER_9_9_2
+	code_9_1_2();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_1
+	code_9_exercise_1();
 #endif
 
 	glutMainLoop();
