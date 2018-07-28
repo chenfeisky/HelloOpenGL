@@ -5,12 +5,114 @@
 
 #ifdef CHAPTER_9_COMMON
 GLsizei winWidth = 800, winHeight = 600;
+
 // 判断浮点数相等
 inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
 inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
 inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
+
+// 公共定义
+class Point
+{
+public:
+	GLfloat x, y, z;
+};
+typedef Point Vec3;
+
+// 自定义矩阵
+struct Matrix
+{
+	Matrix(int row, int col)
+	{
+		_data.assign(row, std::vector<float>(col, 0));
+		_row = row;
+		_col = col;
+	}
+	std::vector<float>& operator [](int row)
+	{
+		return _data[row];
+	}
+	operator GLfloat *()
+	{
+		_elementData.clear();
+		for (int j = 0; j < _col; j++)
+		{
+			for (int i = 0; i < _row; i++)
+			{
+				_elementData.push_back(_data[i][j]);
+			}
+		}
+		return &_elementData[0];
+	}
+	std::vector<std::vector<float>> _data;
+	std::vector<float> _elementData;
+	int _row;
+	int _col;
+};
+Matrix operator *(Matrix& m1, Matrix& m2)
+{
+	assert(m1._col == m2._row);
+
+	Matrix ret(m1._row, m2._col);
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m2._col; col++)
+		{
+			ret[row][col] = 0;
+			for (int i = 0; i < m1._col; i++)
+			{
+				ret[row][col] += m1[row][i] * m2[i][col];
+			}
+		}
+	}
+	return ret;
+}
+void matrixSetIdentity(Matrix& m)
+{
+	for (int row = 0; row < m._row; row++)
+		for (int col = 0; col < m._col; col++)
+			m[row][col] = (row == col);
+}
+
+// 向量相关
+Vec3 cross(const Vec3& v1, const Vec3& v2)
+{
+	return{ v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
+}
+float dot(const Vec3& v1, const Vec3& v2)
+{
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+Vec3 operator *(float f, const Vec3& v)
+{
+	Vec3 ret;
+	ret.x = f * v.x;
+	ret.y = f * v.y;
+	ret.z = f * v.z;
+	return ret;
+}
+Vec3 operator +(const Vec3& v1, const Vec3& v2)
+{
+	Vec3 ret;
+	ret.x = v1.x + v2.x;
+	ret.y = v1.y + v2.y;
+	ret.z = v1.z + v2.z;
+	return ret;
+}
+float length(const Vec3& v)
+{
+	return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+void normal(Vec3& v)
+{
+	float len = length(v);
+	v.x = v.x / len;
+	v.y = v.y / len;
+	v.z = v.z / len;
+}
+
 #endif
 
 #ifdef CHAPTER_9_1
@@ -726,80 +828,6 @@ void code_9_1_2()
 #endif
 
 #ifdef CHAPTER_9_EXERCISE_1
-class wcPt3D
-{
-public:
-	GLfloat x, y, z;
-};
-typedef wcPt3D Vec3;
-struct Matrix
-{
-	Matrix(int row, int col)
-	{
-		_data.assign(row, std::vector<float>(col, 0));
-		_row = row;
-		_col = col;
-	}
-	std::vector<float>& operator [](int row)
-	{
-		return _data[row];
-	}
-	operator GLfloat *()
-	{
-		_elementData.clear();
-		for (int j = 0; j < _col; j++)
-		{
-			for (int i = 0; i < _row; i++)
-			{
-				_elementData.push_back(_data[i][j]);
-			}
-		}
-		return &_elementData[0];
-	}
-	std::vector<std::vector<float>> _data;
-	std::vector<float> _elementData;
-	int _row;
-	int _col;
-};
-Matrix operator *(Matrix& m1, Matrix& m2)
-{
-	assert(m1._col == m2._row);
-
-	Matrix ret(m1._row, m2._col);
-	for (int row = 0; row < m1._row; row++)
-	{
-		for (int col = 0; col < m2._col; col++)
-		{
-			ret[row][col] = 0;
-			for (int i = 0; i < m1._col; i++)
-			{
-				ret[row][col] += m1[row][i] * m2[i][col];
-			}
-		}
-	}
-	return ret;
-}
-void matrixSetIdentity(Matrix& m)
-{
-	for (int row = 0; row < m._row; row++)
-		for (int col = 0; col < m._col; col++)
-			m[row][col] = (row == col);
-}
-Vec3 cross(const Vec3& v1, const Vec3& v2)
-{
-	return { v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
-}
-float length(const Vec3& v)
-{
-	return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-}
-void normal(Vec3& v)
-{
-	float len = length(v);
-	v.x = v.x / len;
-	v.y = v.y / len;
-	v.z = v.z / len;
-}
 Matrix RotateMatrix1(Vec3 u)
 {
 	Matrix ret(4, 4);
@@ -908,6 +936,150 @@ void code_9_exercise_1()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_2
+struct Quaternion
+{
+	float s, i, j, k;
+};
+Quaternion operator *(const Quaternion& q1, const Quaternion& q2)
+{
+	Quaternion ret;
+	ret.s = q1.s * q2.s - q1.i * q2.i - q1.j * q2.j - q1.k * q2.k;
+	ret.i = q1.i * q2.s + q1.s * q2.i + q1.j * q2.k - q1.k * q2.j;
+	ret.j = q1.j * q2.s + q1.s * q2.j + q1.k * q2.i - q1.i * q2.k;
+	ret.k = q1.k * q2.s + q1.s * q2.k + q1.i * q2.j - q1.j * q2.i;
+	return ret;
+}
+Quaternion operator +(const Quaternion& q1, const Quaternion& q2)
+{
+	Quaternion ret;
+	ret.s = q1.s + q2.s;
+	ret.i = q1.i + q2.i;
+	ret.j = q1.j + q2.j;
+	ret.k = q1.k + q2.k;
+	return ret;
+}
+float length(const Quaternion& q)
+{
+	return std::sqrt(q.s * q.s + q.i * q.i + q.j * q.j + q.k * q.k);
+}
+Quaternion inverse(const Quaternion& q)
+{
+	float l = length(q);
+	float f = 1 / (l * l);
+	Quaternion ret;
+	ret.s = f * q.s;
+	ret.i = f * (-q.i);
+	ret.j = f * (-q.j);
+	ret.k = f * (-q.k);
+	return ret;
+}
+Point rotatePoint1(float s, float a, float b, float c, Point p)
+{
+	Vec3 v = {a, b, c};
+	Vec3 p_ = s * s * p + dot(p, v) * v + 2 * s * cross(v, p) + cross(v, cross(v, p));
+	return p_;
+}
+Point rotatePoint2(float s, float a, float b, float c, Point ponit)
+{
+	Quaternion ret;
+
+	Quaternion q = { s, a, b, c };
+	Quaternion p = { 0, ponit.x, ponit.y, ponit.z };
+
+	Quaternion q_inverse = inverse(q);
+	ret = q * p * q_inverse;
+
+	assert(Equal(ret.s, 0));
+	return{ ret.i, ret.j, ret.k };
+}
+Point rotatePoint3(float s, float a, float b, float c, Point ponit)
+{
+	Matrix m(3, 3);
+	matrixSetIdentity(m);
+	m[0][0] = 1 - 2 * b * b - 2 * c * c;
+	m[0][1] = 2 * a * b - 2 * s * c;
+	m[0][2] = 2 * a * c + 2 * s * b;
+	m[1][0] = 2 * a * b + 2 * s * c;
+	m[1][1] = 1 - 2 * a * a - 2 * c * c;
+	m[1][2] = 2 * b * c - 2 * s * a;
+	m[2][0] = 2 * a * c - 2 * s * b;
+	m[2][1] = 2 * b * c + 2 * s * a;
+	m[2][2] = 1 - 2 * a * a - 2 * b * b;
+
+	Matrix p(3, 1);
+	p[0][0] = ponit.x;
+	p[1][0] = ponit.y;
+	p[2][0] = ponit.z;
+	Matrix ret = m * p;
+	return{ ret[0][0], ret[1][0], ret[2][0] };
+}
+bool same(const Point& p1, const Point& p2)
+{
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y) && Equal(p1.z, p2.z);
+}
+void test()
+{
+	Point p = { 2,3,4 };
+
+	float theta = 30 * PI / 180;
+	Vec3 u = { 1, 1.3, 0.7 };
+	normal(u);
+	float s = cos(theta / 2);
+	float a = u.x * sin(theta / 2);
+	float b = u.y * sin(theta / 2);
+	float c = u.z * sin(theta / 2);
+	Point p1 = rotatePoint1(s, a, b, c, p);
+	Point p2 = rotatePoint2(s, a, b, c, p);
+	Point p3 = rotatePoint3(s, a, b, c, p);
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+
+	u = { 1, 0, 0 };
+	normal(u);
+	a = u.x * sin(theta / 2);
+	b = u.y * sin(theta / 2);
+	c = u.z * sin(theta / 2);
+	p1 = rotatePoint1(s, a, b, c, p);
+	p2 = rotatePoint2(s, a, b, c, p);
+	p3 = rotatePoint3(s, a, b, c, p);
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+
+	u = { 0, 1, 0 };
+	normal(u);
+	a = u.x * sin(theta / 2);
+	b = u.y * sin(theta / 2);
+	c = u.z * sin(theta / 2);
+	p1 = rotatePoint1(s, a, b, c, p);
+	p2 = rotatePoint2(s, a, b, c, p);
+	p3 = rotatePoint3(s, a, b, c, p);
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+
+	u = { 0, 0, 1 };
+	normal(u);
+	a = u.x * sin(theta / 2);
+	b = u.y * sin(theta / 2);
+	c = u.z * sin(theta / 2);
+	p1 = rotatePoint1(s, a, b, c, p);
+	p2 = rotatePoint2(s, a, b, c, p);
+	p3 = rotatePoint3(s, a, b, c, p);
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+
+
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	test();
+
+	glFlush();
+}
+void code_9_exercise_2()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -958,6 +1130,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_1
 	code_9_exercise_1();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_2
+	code_9_exercise_2();
 #endif
 
 	glutMainLoop();

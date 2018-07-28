@@ -7,7 +7,8 @@
 //#define CHAPTER_9_4
 //#define CHAPTER_9_9_1
 //#define CHAPTER_9_9_2
-#define CHAPTER_9_EXERCISE_1
+//#define CHAPTER_9_EXERCISE_1
+#define CHAPTER_9_EXERCISE_2
 
 //////////////////////////////////////////////////////////////////////////
 #define CHAPTER_9_COMMON
