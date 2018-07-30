@@ -13,15 +13,18 @@ inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2);
 inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
 inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 
-// 公共定义
+// 点，向量
 class Point
 {
 public:
 	GLfloat x, y, z;
 };
-typedef Point Vec3;
+bool operator ==(const Point& p1, const Point& p2)
+{
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y) && Equal(p1.z, p2.z);
+}
 
-// 自定义矩阵
+// 矩阵
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -75,8 +78,42 @@ void matrixSetIdentity(Matrix& m)
 		for (int col = 0; col < m._col; col++)
 			m[row][col] = (row == col);
 }
+bool operator ==(Matrix& m1, Matrix& m2)
+{
+	if (!(m1._row == m2._row && m1._col == m2._col))
+		return false;
 
-// 向量相关
+	for (int row = 0; row < m1._row; row++)
+	{
+		for (int col = 0; col < m1._col; col++)
+		{
+			if (!Equal(m1[row][col], m2[row][col]))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+void transformPoints(Matrix& m, std::vector<Point>& points)
+{
+	Matrix point(4, 1);
+	Matrix temp(4, 1);
+	for (auto& p : points)
+	{
+		point[0][0] = p.x;
+		point[1][0] = p.y;
+		point[2][0] = p.z;
+		point[3][0] = 1;
+		auto temp = m * point;
+		p.x = temp[0][0];
+		p.y = temp[1][0];
+		p.z = temp[2][0];
+	}
+}
+
+// 向量
+typedef Point Vec3;
 Vec3 cross(const Vec3& v1, const Vec3& v2)
 {
 	return{ v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
@@ -111,6 +148,15 @@ void normal(Vec3& v)
 	v.x = v.x / len;
 	v.y = v.y / len;
 	v.z = v.z / len;
+}
+
+// 绘制
+void drawPolygon(const std::vector<Point>& points)
+{
+	glBegin(GL_POLYGON);
+	for (auto & p : points)
+		glVertex3f(p.x, p.y, p.z);
+	glEnd();
 }
 
 #endif
@@ -886,39 +932,22 @@ Matrix RotateMatrix2(Vec3 u)
 	ret = Ryb * Rxa;
 	return ret;
 }
-bool same(Matrix& m1, Matrix& m2)
-{
-	if (!(m1._row == m2._row && m1._col == m2._col))
-		return false;
-
-	for (int row = 0; row < m1._row; row++)
-	{
-		for (int col = 0; col < m1._col; col++)
-		{
-			if (!Equal(m1[row][col], m2[row][col]))
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
 void test()
 {
 	Vec3 u = {1, 1.5, 0.7};
 	Matrix m1 = RotateMatrix1(u);
 	Matrix m2 = RotateMatrix2(u);
-	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, same(m1, m2) ? "true" : "false");
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
 
 	u = { 0, 0, 1 };
 	m1 = RotateMatrix1(u);
 	m2 = RotateMatrix2(u);
-	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, same(m1, m2) ? "true" : "false");
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
 
 	u = { 0, 1, 0};
 	m1 = RotateMatrix1(u);
 	m2 = RotateMatrix2(u);
-	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, same(m1, m2) ? "true" : "false");
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
 	
 	// 注意这里不能用u=(1,0,0)，因为RotateMatrix2计算d=0,RotateMatrix1计算uy_模长也是0
 }
@@ -1014,10 +1043,7 @@ Point rotatePoint3(float s, float a, float b, float c, Point ponit)
 	Matrix ret = m * p;
 	return{ ret[0][0], ret[1][0], ret[2][0] };
 }
-bool same(const Point& p1, const Point& p2)
-{
-	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y) && Equal(p1.z, p2.z);
-}
+
 void test()
 {
 	Point p = { 2,3,4 };
@@ -1032,7 +1058,7 @@ void test()
 	Point p1 = rotatePoint1(s, a, b, c, p);
 	Point p2 = rotatePoint2(s, a, b, c, p);
 	Point p3 = rotatePoint3(s, a, b, c, p);
-	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, p1 == p2 && p2 == p3 ? "true" : "false");
 
 	u = { 1, 0, 0 };
 	normal(u);
@@ -1042,7 +1068,7 @@ void test()
 	p1 = rotatePoint1(s, a, b, c, p);
 	p2 = rotatePoint2(s, a, b, c, p);
 	p3 = rotatePoint3(s, a, b, c, p);
-	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, p1 == p2 && p2 == p3 ? "true" : "false");
 
 	u = { 0, 1, 0 };
 	normal(u);
@@ -1052,7 +1078,7 @@ void test()
 	p1 = rotatePoint1(s, a, b, c, p);
 	p2 = rotatePoint2(s, a, b, c, p);
 	p3 = rotatePoint3(s, a, b, c, p);
-	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, p1 == p2 && p2 == p3 ? "true" : "false");
 
 	u = { 0, 0, 1 };
 	normal(u);
@@ -1062,7 +1088,7 @@ void test()
 	p1 = rotatePoint1(s, a, b, c, p);
 	p2 = rotatePoint2(s, a, b, c, p);
 	p3 = rotatePoint3(s, a, b, c, p);
-	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, same(p1, p2) && same(p2, p3) ? "true" : "false");
+	printf("theta = %f, u = (%f, %f, %f) same = %s\n", theta, u.x, u.y, u.z, p1 == p2 && p2 == p3 ? "true" : "false");
 
 
 }
@@ -1080,6 +1106,296 @@ void code_9_exercise_2()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_3
+Matrix RotateZMatrix1(float theta)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+		
+	m[0][0] = cos(theta);
+	m[0][1] = -sin(theta);
+	m[1][0] = sin(theta);
+	m[1][1] = cos(theta);
+
+	return m;
+}
+Matrix RotateZMatrix2(float theta)
+{
+	float s = cos(theta / 2);
+	float a = 0;
+	float b = 0;
+	float c = sin(theta / 2);
+
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][0] = 1 - 2 * b * b - 2 * c * c;
+	m[0][1] = 2 * a * b - 2 * s * c;
+	m[0][2] = 2 * a * c + 2 * s * b;
+	m[1][0] = 2 * a * b + 2 * s * c;
+	m[1][1] = 1 - 2 * a * a - 2 * c * c;
+	m[1][2] = 2 * b * c - 2 * s * a;
+	m[2][0] = 2 * a * c - 2 * s * b;
+	m[2][1] = 2 * b * c + 2 * s * a;
+	m[2][2] = 1 - 2 * a * a - 2 * b * b;
+
+	return m;
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+		glVertex3f(-winWidth, 0, 0);
+		glVertex3f(winWidth, 0, 0);
+		glVertex3f(0, -winHeight, 0);
+		glVertex3f(0, winHeight, 0);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	Point p = { 2,3,4 };
+
+	float theta = 45 * PI / 180;
+		
+	Matrix m1 = RotateZMatrix1(theta);
+	Matrix m2 = RotateZMatrix1(theta);
+	printf("same = %s\n", m1 == m2 ? "true" : "false");
+
+	std::vector<Point> rect = { {-50, -50, 0}, {50, -50, 0},{50, 50, 0},{-50, 50, 0} };
+
+	auto rect1 = rect;
+	glViewport(0, 0, winWidth / 2, winHeight);
+	drawCoordinate();
+	transformPoints(m1, rect1);
+	drawPolygon(rect1);
+
+	auto rect2 = rect;
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	drawCoordinate();
+	transformPoints(m1, rect2);
+	drawPolygon(rect2);
+
+	glFlush();
+}
+void code_9_exercise_3()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_4
+Matrix rotateMatrix1(float tx, float ty, float tz, Vec3 u, float theta)
+{
+	normal(u);
+
+	float a = u.x;
+	float b = u.y;
+	float c = u.z;
+	float d = std::sqrt(b * b + c * c);
+
+	Matrix T_inverse(4, 4);
+	matrixSetIdentity(T_inverse);
+	T_inverse[0][3] = tx;
+	T_inverse[1][3] = ty;
+	T_inverse[2][3] = tz;
+
+	Matrix Rxa_inverse(4, 4);
+	matrixSetIdentity(Rxa_inverse);
+	Rxa_inverse[1][1] = c / d;
+	Rxa_inverse[1][2] = b / d;
+	Rxa_inverse[2][1] = -b / d;
+	Rxa_inverse[2][2] = c / d;
+
+	Matrix Ryb_inverse(4, 4);
+	matrixSetIdentity(Ryb_inverse);
+	Ryb_inverse[0][0] = d;
+	Ryb_inverse[0][2] = a;
+	Ryb_inverse[2][0] = -a;
+	Ryb_inverse[2][2] = d;
+
+	Matrix Rz(4, 4);
+	matrixSetIdentity(Rz);
+	Rz[0][0] = cos(theta);
+	Rz[0][1] = -sin(theta);
+	Rz[1][0] = sin(theta);
+	Rz[1][1] = cos(theta);
+
+	Matrix Ryb(4, 4);
+	matrixSetIdentity(Ryb);
+	Ryb[0][0] = d;
+	Ryb[0][2] = -a;
+	Ryb[2][0] = a;
+	Ryb[2][2] = d;
+
+	Matrix Rxa(4, 4);
+	matrixSetIdentity(Rxa);
+	Rxa[1][1] = c / d;
+	Rxa[1][2] = -b / d;
+	Rxa[2][1] = b / d;
+	Rxa[2][2] = c / d;
+	
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -tx;
+	T[1][3] = -ty;
+	T[2][3] = -tz;
+
+	return T_inverse * Rxa_inverse * Ryb_inverse * Rz * Ryb * Rxa * T;
+}
+Matrix rotateMatrix2(float tx, float ty, float tz, Vec3 u, float theta)
+{
+	normal(u);
+
+	Matrix T_inverse(4, 4);
+	matrixSetIdentity(T_inverse);
+	T_inverse[0][3] = tx;
+	T_inverse[1][3] = ty;
+	T_inverse[2][3] = tz;
+
+	Matrix MR(4, 4);
+	matrixSetIdentity(MR);
+	MR[0][0] = u.x * u.x * (1 - cos(theta)) + cos(theta);
+	MR[0][1] = u.x * u.y * (1 - cos(theta)) - u.z * sin(theta);
+	MR[0][2] = u.x * u.z * (1 - cos(theta)) + u.y * sin(theta);
+	
+	MR[1][0] = u.y * u.x * (1 - cos(theta)) + u.z * sin(theta);
+	MR[1][1] = u.y * u.y * (1 - cos(theta)) + cos(theta);
+	MR[1][2] = u.y * u.z * (1 - cos(theta)) - u.x * sin(theta);
+
+	MR[2][0] = u.z * u.x * (1 - cos(theta)) - u.y * sin(theta);
+	MR[2][1] = u.z * u.y * (1 - cos(theta)) + u.x * sin(theta);
+	MR[2][2] = u.z * u.z * (1 - cos(theta)) + cos(theta);
+
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -tx;
+	T[1][3] = -ty;
+	T[2][3] = -tz;
+
+	return T_inverse * MR * T;
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	float tx = 3, ty = 4, tz = 5;
+	Vec3 u = { 1, 1.5, 0.7 };
+	float theta = 30 * PI / 180;
+
+	Matrix m1 = rotateMatrix1(tx, ty, tz, u, theta);
+	Matrix m2 = rotateMatrix2(tx, ty, tz, u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	u = { 0, 0, 1 };
+	m1 = rotateMatrix1(tx, ty, tz, u, theta);
+	m2 = rotateMatrix2(tx, ty, tz, u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	u = { 0, 1, 0 };
+	m1 = rotateMatrix1(tx, ty, tz, u, theta);
+	m2 = rotateMatrix2(tx, ty, tz, u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	// 注意这里不能用u=(1,0,0)，因为rotateMatrix1计算分母d=0。但化简后可消去d，即（9.39）式
+	// 故化简后（在rotateMatrix2中）可使用u=(1,0,0)
+	//u = { 1, 0, 0 };
+	//m1 = rotateMatrix1(tx, ty, tz, u, theta);
+	//m2 = rotateMatrix2(tx, ty, tz, u, theta);
+	//printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	glFlush();
+}
+void code_9_exercise_4()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_5
+Matrix rotateMatrix1(Vec3 u, float theta)
+{
+	normal(u);
+
+	float s = cos(theta / 2);
+	float a = u.x * sin(theta / 2);
+	float b = u.y * sin(theta / 2);
+	float c = u.z * sin(theta / 2);
+	
+	Matrix MR(4, 4);
+	matrixSetIdentity(MR);
+	MR[0][0] = 1 - 2 * b * b - 2 * c * c;
+	MR[0][1] = 2 * a * b - 2 * s * c;
+	MR[0][2] = 2 * a * c + 2 * s * b;
+
+	MR[1][0] = 2 * a * b + 2 * s * c;
+	MR[1][1] = 1 - 2 * a * a - 2 * c * c;
+	MR[1][2] = 2 * b * c - 2 * s * a;
+
+	MR[2][0] = 2 * a * c - 2 * s * b;
+	MR[2][1] = 2 * b * c + 2 * s * a;
+	MR[2][2] = 1 - 2 * a * a - 2 * b * b;
+
+	return MR;
+}
+Matrix rotateMatrix2(Vec3 u, float theta)
+{
+	normal(u);
+
+	Matrix MR(4, 4);
+	matrixSetIdentity(MR);
+	MR[0][0] = u.x * u.x * (1 - cos(theta)) + cos(theta);
+	MR[0][1] = u.x * u.y * (1 - cos(theta)) - u.z * sin(theta);
+	MR[0][2] = u.x * u.z * (1 - cos(theta)) + u.y * sin(theta);
+
+	MR[1][0] = u.y * u.x * (1 - cos(theta)) + u.z * sin(theta);
+	MR[1][1] = u.y * u.y * (1 - cos(theta)) + cos(theta);
+	MR[1][2] = u.y * u.z * (1 - cos(theta)) - u.x * sin(theta);
+
+	MR[2][0] = u.z * u.x * (1 - cos(theta)) - u.y * sin(theta);
+	MR[2][1] = u.z * u.y * (1 - cos(theta)) + u.x * sin(theta);
+	MR[2][2] = u.z * u.z * (1 - cos(theta)) + cos(theta);
+
+	return MR;
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	Vec3 u = { 1, 1.5, 0.7 };
+	float theta = 30 * PI / 180;
+
+	Matrix m1 = rotateMatrix1(u, theta);
+	Matrix m2 = rotateMatrix2(u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	u = { 0, 0, 1 };
+	m1 = rotateMatrix1(u, theta);
+	m2 = rotateMatrix2(u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	u = { 0, 1, 0 };
+	m1 = rotateMatrix1(u, theta);
+	m2 = rotateMatrix2(u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	u = { 1, 0, 0 };
+	m1 = rotateMatrix1(u, theta);
+	m2 = rotateMatrix2(u, theta);
+	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
+
+	glFlush();
+}
+void code_9_exercise_5()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -1134,6 +1450,18 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_2
 	code_9_exercise_2();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_3
+	code_9_exercise_3();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_4
+	code_9_exercise_4();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_5
+	code_9_exercise_5();
 #endif
 
 	glutMainLoop();
