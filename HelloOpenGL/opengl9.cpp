@@ -138,6 +138,14 @@ Vec3 operator +(const Vec3& v1, const Vec3& v2)
 	ret.z = v1.z + v2.z;
 	return ret;
 }
+Vec3 operator -(const Vec3& v1, const Vec3& v2)
+{
+	Vec3 ret;
+	ret.x = v1.x - v2.x;
+	ret.y = v1.y - v2.y;
+	ret.z = v1.z - v2.z;
+	return ret;
+}
 float length(const Vec3& v)
 {
 	return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -1396,6 +1404,115 @@ void code_9_exercise_5()
 	glutDisplayFunc(displayFcn);
 }
 #endif
+
+#ifdef CHAPTER_9_EXERCISE_6
+float angle = 5 * PI / 180;
+int loopCount = 0;
+std::vector<Point> originalPoints = { { (float)winWidth / 2 + 150, (float)winHeight / 2 },
+{ (float)winWidth / 2 + 200, (float)winHeight / 2 },
+{ (float)winWidth / 2 + 175, (float)winHeight / 2 + 100 } };
+std::vector<Point> curPoints;
+Matrix r(4, 4);
+namespace ApproximateTrigonometry
+{
+	float cos(float angle)
+	{
+		return 1.f;
+		//return std::cos(angle);
+	}
+	float sin(float angle)
+	{
+		return angle;
+		//return std::sin(angle);
+	}
+}
+void drawCoordinate()
+{
+	glBegin(GL_LINES);
+	glVertex3f(0, winHeight / 2, 0);
+	glVertex3f(winWidth, winHeight / 2, 0);
+	glVertex3f(winWidth / 2, 0, 0);
+	glVertex3f(winWidth / 2, winHeight, 0);
+	glEnd();
+}
+Matrix rotateMatrix(Point p1, Point p2, float theta)
+{
+	using ApproximateTrigonometry::cos;
+	using ApproximateTrigonometry::sin;
+
+	Vec3 u = p2 - p1;
+	normal(u);
+
+	float tx = p1.x;
+	float ty = p1.y;
+	float tz = p1.z;
+
+	Matrix T_inverse(4, 4);
+	matrixSetIdentity(T_inverse);
+	T_inverse[0][3] = tx;
+	T_inverse[1][3] = ty;
+	T_inverse[2][3] = tz;
+
+	Matrix MR(4, 4);
+	matrixSetIdentity(MR);
+	MR[0][0] = u.x * u.x * (1 - cos(theta)) + cos(theta);
+	MR[0][1] = u.x * u.y * (1 - cos(theta)) - u.z * sin(theta);
+	MR[0][2] = u.x * u.z * (1 - cos(theta)) + u.y * sin(theta);
+
+	MR[1][0] = u.y * u.x * (1 - cos(theta)) + u.z * sin(theta);
+	MR[1][1] = u.y * u.y * (1 - cos(theta)) + cos(theta);
+	MR[1][2] = u.y * u.z * (1 - cos(theta)) - u.x * sin(theta);
+
+	MR[2][0] = u.z * u.x * (1 - cos(theta)) - u.y * sin(theta);
+	MR[2][1] = u.z * u.y * (1 - cos(theta)) + u.x * sin(theta);
+	MR[2][2] = u.z * u.z * (1 - cos(theta)) + cos(theta);
+
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -tx;
+	T[1][3] = -ty;
+	T[2][3] = -tz;
+
+	return T_inverse * MR * T;
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	drawCoordinate();
+	drawPolygon(curPoints);
+
+	glFlush();
+}
+void CALLBACK onTimer(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+{
+	//printf("onTimer: %d\n", dwTime);
+	loopCount++;
+	if (loopCount >= 2 * PI / angle)
+	{
+		curPoints = originalPoints;
+		loopCount = 0;
+	}
+	else
+	{
+		transformPoints(r, curPoints);
+	}
+
+	glutPostRedisplay();
+	//displayFcn();
+}
+void code_9_exercise_6()
+{
+	SetTimer(NULL, NULL, 100, onTimer);
+
+	r = rotateMatrix({ (float)winWidth / 2, (float)winHeight / 2, 0 }, { (float)winWidth / 2, (float)winHeight / 2, 100 }, angle);
+
+	curPoints = originalPoints;
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -1462,6 +1579,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_5
 	code_9_exercise_5();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_6
+	code_9_exercise_6();
 #endif
 
 	glutMainLoop();

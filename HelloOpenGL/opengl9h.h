@@ -11,7 +11,8 @@
 //#define CHAPTER_9_EXERCISE_2
 //#define CHAPTER_9_EXERCISE_3
 //#define CHAPTER_9_EXERCISE_4
-#define CHAPTER_9_EXERCISE_5
+//#define CHAPTER_9_EXERCISE_5
+#define CHAPTER_9_EXERCISE_6
 
 //////////////////////////////////////////////////////////////////////////
 #define CHAPTER_9_COMMON
