@@ -1513,6 +1513,131 @@ void code_9_exercise_6()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_7
+Matrix scaleMatrix1(Vec3 a, Vec3 b, Vec3 c, float sx, float sy, float sz)
+{
+	normal(a);
+	normal(b);
+	normal(c);
+
+	Matrix r(4, 4);
+	matrixSetIdentity(r);
+
+	r[0][0] = a.x;
+	r[0][1] = a.y;
+	r[0][2] = a.z;
+	r[1][0] = b.x;
+	r[1][1] = b.y;
+	r[1][2] = b.z;
+	r[2][0] = c.x;
+	r[2][1] = c.y;
+	r[2][2] = c.z;
+
+	Matrix s(4, 4);
+	matrixSetIdentity(s);
+
+	s[0][0] = sx;
+	s[1][1] = sy;
+	s[2][2] = sz;
+
+	Matrix r_inverse(4, 4);
+	matrixSetIdentity(r_inverse);
+
+	r_inverse[0][0] = a.x;
+	r_inverse[0][1] = b.x;
+	r_inverse[0][2] = c.x;
+	r_inverse[1][0] = a.y;
+	r_inverse[1][1] = b.y;
+	r_inverse[1][2] = c.y;
+	r_inverse[2][0] = a.z;
+	r_inverse[2][1] = b.z;
+	r_inverse[2][2] = c.z;
+
+	return r_inverse * s * r;
+}
+Matrix scaleMatrix2(Vec3 a, Vec3 b, Vec3 c, float sx, float sy, float sz)
+{
+	normal(a);
+	normal(b);
+	normal(c);
+
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][0] = sx * a.x * a.x + sy * b.x * b.x + sz * c.x * c.x;
+	m[0][1] = sx * a.x * a.y + sy * b.x * b.y + sz * c.x * c.y;
+	m[0][2] = sx * a.x * a.z + sy * b.x * b.z + sz * c.x * c.z;
+	m[1][0] = sx * a.y * a.x + sy * b.y * b.x + sz * c.y * c.x;
+	m[1][1] = sx * a.y * a.y + sy * b.y * b.y + sz * c.y * c.y;
+	m[1][2] = sx * a.y * a.z + sy * b.y * b.z + sz * c.y * c.z;
+	m[2][0] = sx * a.z * a.x + sy * b.z * b.x + sz * c.z * c.x;
+	m[2][1] = sx * a.z * a.y + sy * b.z * b.y + sz * c.z * c.y;
+	m[2][2] = sx * a.z * a.z + sy * b.z * b.z + sz * c.z * c.z;
+
+	return m;
+}
+Matrix translateMatrix(float tx, float ty, float tz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][3] = tx;
+	m[1][3] = ty;
+	m[2][3] = tz;
+
+	return m;
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	Vec3 a = { 1, 0, 0 };
+	Vec3 b = { 0, 1, 0 };
+	Vec3 c = { 0, 0, 1 };
+	float sx = 1, sy = 2, sz = 1;
+
+	Matrix m1 = scaleMatrix1(a, b, c, sx, sy, sz);
+	Matrix m2 = scaleMatrix2(a, b, c, sx, sy, sz);
+	printf("same = %s\n", m1 == m2 ? "true" : "false");
+
+	a = { 1, -1, 0 };
+	b = { 1, 1, 0 };
+	c = { 0, 0, 1 };
+	sx = 1, sy = 2, sz = 1;
+
+	m1 = scaleMatrix1(a, b, c, sx, sy, sz);
+	m2 = scaleMatrix2(a, b, c, sx, sy, sz);
+	printf("same = %s\n", m1 == m2 ? "true" : "false");
+
+	Point pr = { (float)winWidth / 4, (float)winHeight / 2 };
+	std::vector<Point> rect = { { (float)winWidth / 4 - 50, (float)winHeight / 2 - 50, 0 },
+	{ (float)winWidth / 4 + 50, (float)winHeight / 2 - 50, 0 },
+	{ (float)winWidth / 4 + 50, (float)winHeight / 2 + 50, 0 },
+	{ (float)winWidth / 4 - 50, (float)winHeight / 2 + 50, 0 } };
+
+	auto rect1 = rect;
+	glViewport(0, 0, winWidth / 2, winHeight);
+	transformPoints(translateMatrix(pr.x, pr.y, pr.z) * m1 * translateMatrix(-pr.x, -pr.y, -pr.z), rect1);
+	drawPolygon(rect1);
+
+	auto rect2 = rect;
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	transformPoints(translateMatrix(pr.x, pr.y, pr.z) * m2 * translateMatrix(-pr.x, -pr.y, -pr.z), rect2);
+	drawPolygon(rect2);
+
+	glFlush();
+}
+void code_9_exercise_7()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth / 2, 0, winHeight);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -1583,6 +1708,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_6
 	code_9_exercise_6();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_7
+	code_9_exercise_7();
 #endif
 
 	glutMainLoop();
