@@ -1927,6 +1927,69 @@ void code_9_exercise_10()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_11
+void rotate(Point p0, Vec3 u, float theta)
+{
+	normal(u);
+	glTranslatef(p0.x, p0.y, p0.z);
+	glRotatef(theta, u.x, u.y, u.z);
+	glTranslatef(-p0.x, -p0.y, -p0.z);
+}
+void scale(Point p0, float sx, float sy, float sz)
+{
+	glTranslatef(p0.x, p0.y, p0.z);
+	glScalef(sx, sy, sz);
+	glTranslatef(-p0.x, -p0.y, -p0.z);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	std::vector<Point> verts = { { 50, 25, 0 }, { 150, 25, 0 }, {100, 100, 0 }};
+	Point centroidPt;
+	GLint k, xSum = 0, ySum = 0, zSum = 0;
+	for (k = 0; k < 3; k++)
+	{
+		xSum += verts[k].x;
+		ySum += verts[k].y;
+		zSum += verts[k].z;
+	}
+	centroidPt.x = GLfloat(xSum) / GLfloat(3);
+	centroidPt.y = GLfloat(ySum) / GLfloat(3);
+	centroidPt.z = GLfloat(zSum) / GLfloat(3);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+
+	glViewport(0, 0, winWidth / 2, winHeight);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(verts);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate(-50, 320, -50, 520);
+
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	glTranslatef(0, 100, 0);
+	rotate(centroidPt, { 0, 0, 1 }, 90);
+	scale(centroidPt, 0.5, 0.5, 1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(verts);
+
+	glPopMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate(-50, 320, -50, 520);
+
+	glFlush();
+}
+void code_9_exercise_11()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-60, winWidth / 2 - 60, -60, winHeight - 60);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -2009,6 +2072,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_10
 	code_9_exercise_10();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_11
+	code_9_exercise_11();
 #endif
 
 
