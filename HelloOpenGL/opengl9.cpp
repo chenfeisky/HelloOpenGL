@@ -158,6 +158,23 @@ void normal(Vec3& v)
 	v.z = v.z / len;
 }
 
+// º∆À„
+Point centerPoint(const std::vector<Point>& points)
+{
+	Point center;
+	int size = points.size();
+	float xSum = 0, ySum = 0, zSum = 0;
+	for (int k = 0; k < size; k++)
+	{
+		xSum += points[k].x;
+		ySum += points[k].y;
+		zSum += points[k].z;
+	}
+	center.x = xSum / size;
+	center.y = ySum / size;
+	center.z = zSum / size;
+	return center;
+}
 // ªÊ÷∆
 void drawPolygon(const std::vector<Point>& points)
 {
@@ -180,10 +197,6 @@ void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStar
 #endif
 
 #ifdef CHAPTER_9_1
-struct Point
-{
-	GLfloat x, y, z;
-};
 typedef GLfloat Matrix4x4[4][4];
 void matrix4x4SetIdentity(Matrix4x4& matIdent4x4)
 {
@@ -1757,6 +1770,523 @@ void code_9_exercise_8()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_9
+Matrix shareZXMatrix(float shzx)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][2] = shzx;
+	
+	return m;
+}
+Matrix shareZYMatrix(float shzy)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[1][2] = shzy;
+
+	return m;
+}
+Matrix shareXYMatrix(float shxy)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[1][0] = shxy;
+
+	return m;
+}
+Matrix shareXZMatrix(float shxz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[2][0] = shxz;
+
+	return m;
+}
+Matrix shareYXMatrix(float shyx)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][1] = shyx;
+
+	return m;
+}
+Matrix shareYZMatrix(float shyz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[2][1] = shyz;
+
+	return m;
+}
+Matrix translateMatrix(float tx, float ty, float tz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][3] = tx;
+	m[1][3] = ty;
+	m[2][3] = tz;
+
+	return m;
+}
+Matrix shareLineYMatrix(float tx, float ty, float tz, Vec3 u, float shyz)
+{
+	normal(u);
+
+	Vec3 ux = { 1, 0, 0 };
+	Vec3 uy = { 0, 1, 0 };
+	Vec3 uz = { 0, 0, 1 };
+	Vec3 uz_ = u;
+	Vec3 uy_ = cross(u, ux);
+	normal(uy_);
+	Vec3 ux_ = cross(uy_, uz_);
+
+	Matrix Rz(4, 4);
+	matrixSetIdentity(Rz);
+	Rz[0][0] = ux_.x;
+	Rz[0][1] = ux_.y;
+	Rz[0][2] = ux_.z;
+	Rz[1][0] = uy_.x;
+	Rz[1][1] = uy_.y;
+	Rz[1][2] = uy_.z;
+	Rz[2][0] = uz_.x;
+	Rz[2][1] = uz_.y;
+	Rz[2][2] = uz_.z;
+
+	Matrix Rz_inverse(4, 4);
+	matrixSetIdentity(Rz_inverse);
+	Rz_inverse[0][0] = ux_.x;
+	Rz_inverse[0][1] = uy_.x;
+	Rz_inverse[0][2] = uz_.x;
+	Rz_inverse[1][0] = ux_.y;
+	Rz_inverse[1][1] = uy_.y;
+	Rz_inverse[1][2] = uz_.y;
+	Rz_inverse[2][0] = ux_.z;
+	Rz_inverse[2][1] = uy_.z;
+	Rz_inverse[2][2] = uz_.z;
+
+	return translateMatrix(tx, ty, tz) * Rz_inverse * shareYZMatrix(shyz) * Rz * translateMatrix(-tx, -ty, -tz);
+}
+Matrix shareLineXMatrix(float tx, float ty, float tz, Vec3 u, float shxz)
+{
+	normal(u);
+
+	Vec3 ux = { 1, 0, 0 };
+	Vec3 uy = { 0, 1, 0 };
+	Vec3 uz = { 0, 0, 1 };
+	Vec3 uz_ = u;
+	Vec3 uy_ = cross(u, ux);
+	normal(uy_);
+	Vec3 ux_ = cross(uy_, uz_);
+
+	Matrix Rz(4, 4);
+	matrixSetIdentity(Rz);
+	Rz[0][0] = ux_.x;
+	Rz[0][1] = ux_.y;
+	Rz[0][2] = ux_.z;
+	Rz[1][0] = uy_.x;
+	Rz[1][1] = uy_.y;
+	Rz[1][2] = uy_.z;
+	Rz[2][0] = uz_.x;
+	Rz[2][1] = uz_.y;
+	Rz[2][2] = uz_.z;
+
+	Matrix Rz_inverse(4, 4);
+	matrixSetIdentity(Rz_inverse);
+	Rz_inverse[0][0] = ux_.x;
+	Rz_inverse[0][1] = uy_.x;
+	Rz_inverse[0][2] = uz_.x;
+	Rz_inverse[1][0] = ux_.y;
+	Rz_inverse[1][1] = uy_.y;
+	Rz_inverse[1][2] = uz_.y;
+	Rz_inverse[2][0] = ux_.z;
+	Rz_inverse[2][1] = uy_.z;
+	Rz_inverse[2][2] = uz_.z;
+
+	return translateMatrix(tx, ty, tz) * Rz_inverse * shareXZMatrix(shxz) * Rz * translateMatrix(-tx, -ty, -tz);
+}
+
+
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> rect = { {0, 0, 0}, {50, 0, 0},{ 50, 50, 0 },{ 0, 50, 0 } };
+
+	auto rect1 = rect;
+	glViewport(0, winHeight / 2, winWidth / 3, winHeight / 2);
+	drawCoordinate(-50, 200, -50, 230);
+	transformPoints(shareZXMatrix(1), rect1);
+	drawPolygon(rect1);
+	
+	auto rect2 = rect;
+	glViewport(0, 0, winWidth / 3, winHeight / 2);
+	drawCoordinate(-50, 200, -50, 230);
+	transformPoints(shareYXMatrix(1), rect2);
+	drawPolygon(rect2);
+
+	auto rect3 = rect;
+	glViewport(winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	drawCoordinate(-50, 200, -50, 230);
+	transformPoints(shareZYMatrix(1), rect3);
+	drawPolygon(rect3);
+
+	auto rect4 = rect;
+	glViewport(winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	drawCoordinate(-50, 200, -50, 230);
+	transformPoints(shareXYMatrix(1), rect4);
+	drawPolygon(rect4);
+
+	rect = { { 50, 50, 0 },{ 100, 50, 0 },{ 100, 100, 0 },{ 50, 100, 0 } };
+	auto rect5 = rect;
+	glViewport(2 * winWidth / 3, winHeight / 2, winWidth / 3, winHeight / 2);
+	drawCoordinate(-50, 200, -50, 230);
+	transformPoints(shareLineYMatrix(50, 50, 0, {1, 1, 0}, 1), rect5);
+	drawPolygon(rect5);
+
+	auto rect6 = rect;
+	glViewport(2 * winWidth / 3, 0, winWidth / 3, winHeight / 2);
+	drawCoordinate(-50, 200, -50, 230);
+	transformPoints(shareLineXMatrix(50, 50, 0, { 1, 1, 0 }, 1), rect6);
+	drawPolygon(rect6);
+
+	glFlush();
+}
+void code_9_exercise_9()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-50, winWidth / 3 - 50, -50, winHeight / 2 - 50);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_10
+Matrix translateMatrix(float tx, float ty, float tz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][3] = tx;
+	m[1][3] = ty;
+	m[2][3] = tz;
+
+	return m;
+}
+Matrix transferMatrix(Point o, Vec3 ux, Vec3 uy, Vec3 uz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	normal(ux);
+	normal(uy);
+	normal(uz);
+
+	m[0][0] = ux.x;
+	m[0][1] = ux.y;
+	m[0][2] = ux.z;
+	m[1][0] = uy.x;
+	m[1][1] = uy.y;
+	m[1][2] = uy.z;
+	m[2][0] = uz.x;
+	m[2][1] = uz.y;
+	m[2][2] = uz.z;
+
+	return m * translateMatrix(-o.x, -o.y, -o.z);
+}
+void _drawCoordinate(Point xStart, Point xEnd, Point yStart, Point yEnd)
+{
+	glBegin(GL_LINES);
+	glVertex3f(xStart.x, xStart.y, 0);
+	glVertex3f(xEnd.x, xEnd.y, 0);
+	glVertex3f(yStart.x, yStart.y, 0);
+	glVertex3f(yEnd.x, yEnd.y, 0);
+	glEnd();
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> rect = { { 120, 100, 0 },
+	{ float(120 + 50), float(100 - 50), 0 },
+	{ float(120 + 100), 100, 0 },
+	{ float(120 + 50), float(100 + 50), 0 } };
+
+	Point o = { 100, 100, 0 };
+	Vec3 ux = { 100, -100, 0 };
+	Vec3 uy = { 100, 100, 0 };
+	Vec3 uz = { 0, 0, 100 };
+
+	glViewport(0, 0, winWidth / 2, winHeight);
+	_drawCoordinate({-50, 0, 0}, {320, 0, 0}, {0, -50, 0 }, { 0, 520, 0 });
+	_drawCoordinate(o, o + ux, o, o + uy);
+	drawPolygon(rect);
+
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	_drawCoordinate({ -50, 0, 0 }, { 320, 0, 0 }, { 0, -50, 0 }, { 0, 520, 0 });
+	transformPoints(transferMatrix(o, ux, uy, uz), rect);
+	drawPolygon(rect);
+
+	glFlush();
+}
+void code_9_exercise_10()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-60, winWidth / 2 - 60, -60, winHeight - 60);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_11
+void rotate(Point p0, Vec3 u, float theta)
+{
+	normal(u);
+	glTranslatef(p0.x, p0.y, p0.z);
+	glRotatef(theta, u.x, u.y, u.z);
+	glTranslatef(-p0.x, -p0.y, -p0.z);
+}
+void scale(Point p0, float sx, float sy, float sz)
+{
+	glTranslatef(p0.x, p0.y, p0.z);
+	glScalef(sx, sy, sz);
+	glTranslatef(-p0.x, -p0.y, -p0.z);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	std::vector<Point> verts = { { 50, 25, 0 }, { 150, 25, 0 }, {100, 100, 0 }};
+	Point centroidPt = centerPoint(verts);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+
+	glViewport(0, 0, winWidth / 2, winHeight);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(verts);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate(-50, 320, -50, 520);
+
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	glTranslatef(0, 100, 0);
+	rotate(centroidPt, { 0, 0, 1 }, 90);
+	scale(centroidPt, 0.5, 0.5, 1);
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(verts);
+
+	glPopMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate(-50, 320, -50, 520);
+
+	glFlush();
+}
+void code_9_exercise_11()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-60, winWidth / 2 - 60, -60, winHeight - 60);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_12
+std::vector<Point> inputPoints()
+{
+	std::vector<Point> points;
+	std::string inputStr;
+	while (1)
+	{
+		printf("input points x, y, z. \"exit\" to end:");
+		std::cin >> inputStr;
+		if (inputStr == "exit")
+			break;
+		else
+		{
+			points.push_back({});
+			sscanf_s(inputStr.c_str(), "%f, %f, %f", &points.back().x, &points.back().y, &points.back().z);
+		}
+	}
+	return points;
+}
+struct Transform
+{
+	std::string type;
+};
+struct Translate : public Transform
+{
+	float tx, ty, tz;
+};
+struct Rotate : public Transform
+{
+	Point p0;
+	Vec3 u;
+	float theta;
+};
+struct Scale : public Transform
+{
+	Point p0;
+	float sx, sy, sz;
+};
+std::vector<Transform*> inputTransform()
+{
+	std::vector<Transform*> transforms;
+	std::string inputStr;
+	while (1)
+	{
+		printf("input transform [(T)ranslate, (R)otate, (S)cale]. \"exit\" to end:");
+		std::cin >> inputStr;
+		if (inputStr == "exit")
+			break;
+		else
+		{
+			Transform * transform = nullptr;
+			if (inputStr == "T")
+			{
+				transform = new Translate();
+			}
+			else if (inputStr == "R")
+			{
+				transform = new Rotate();
+			}
+			else if (inputStr == "S")
+			{
+				transform = new Scale();
+			}
+			else
+			{
+				assert(0 && "error type!");
+			}
+			transform->type = inputStr;
+
+			if (inputStr == "T")
+			{
+				printf("input translate parameters: tx, ty, tz. \"exit\" to end:");
+				std::cin >> inputStr;
+				if (inputStr == "exit")
+					break;
+				sscanf_s(inputStr.c_str(), "%f, %f, %f", 
+					&((Translate*)transform)->tx, 
+					&((Translate*)transform)->ty,
+					&((Translate*)transform)->tz);
+			}
+			else if (inputStr == "R")
+			{
+				printf("input rotate parameters: reference point: x, y, z; rotate axis: u.x, u.y, u.z; angle: theta. \"exit\" to end:");
+				std::cin >> inputStr;
+				if (inputStr == "exit")
+					break;
+				sscanf_s(inputStr.c_str(), "%f, %f, %f, %f, %f, %f, %f",
+					&((Rotate*)transform)->p0.x,
+					&((Rotate*)transform)->p0.y,
+					&((Rotate*)transform)->p0.z,
+					&((Rotate*)transform)->u.x,
+					&((Rotate*)transform)->u.y, 
+					&((Rotate*)transform)->u.z,
+					&((Rotate*)transform)->theta);
+			}
+			else if (inputStr == "S")
+			{
+				printf("input scale parameters: reference point: x, y, z; sx, sy, sz. \"exit\" to end:");
+				std::cin >> inputStr;
+				if (inputStr == "exit")
+					break;
+				sscanf_s(inputStr.c_str(), "%f, %f, %f, %f, %f, %f",
+					&((Scale*)transform)->p0.x,
+					&((Scale*)transform)->p0.y,
+					&((Scale*)transform)->p0.z,
+					&((Scale*)transform)->sx,
+					&((Scale*)transform)->sy,
+					&((Scale*)transform)->sz);
+			}
+			transforms.push_back(transform);
+		}
+	}
+	return transforms;
+}
+void rotate(Point p0, Vec3 u, float theta)
+{
+	normal(u);
+	glTranslatef(p0.x, p0.y, p0.z);
+	glRotatef(theta, u.x, u.y, u.z);
+	glTranslatef(-p0.x, -p0.y, -p0.z);
+}
+void scale(Point p0, float sx, float sy, float sz)
+{
+	glTranslatef(p0.x, p0.y, p0.z);
+	glScalef(sx, sy, sz);
+	glTranslatef(-p0.x, -p0.y, -p0.z);
+}
+std::vector<Point> points;
+std::vector<Transform*> transforms;
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+
+	glViewport(0, 0, winWidth / 2, winHeight);
+	glColor3f(0.0, 0.0, 1.0);
+	drawPolygon(points);
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate(-50, 320, -50, 520);
+
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight);
+	
+	for (auto it = transforms.rbegin(); it != transforms.rend(); it++)
+	{
+		auto& transform = *it;
+		if (transform->type == "T")
+		{
+			Translate* tran = (Translate*)transform;
+			glTranslatef(tran->tx, tran->ty, tran->tz);
+		}
+		else if(transform->type == "R")
+		{
+			Rotate* tran = (Rotate*)transform;
+			rotate(tran->p0, tran->u, tran->theta);
+		}
+		else if (transform->type == "S")
+		{
+			Scale* tran = (Scale*)transform;
+			scale(tran->p0, tran->sx, tran->sy, tran->sz);
+		}
+	}
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolygon(points);
+
+	glPopMatrix();
+	glColor3f(1.0, 1.0, 1.0);
+	drawCoordinate(-50, 320, -50, 520);
+
+	glFlush();
+}
+void code_9_exercise_12()
+{
+	points = inputPoints();
+	transforms = inputTransform();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-60, winWidth / 2 - 60, -60, winHeight - 60);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -1837,6 +2367,21 @@ void main(int argc, char** argv)
 	code_9_exercise_8();
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_9
+	code_9_exercise_9();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_10
+	code_9_exercise_10();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_11
+	code_9_exercise_11();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_12
+	code_9_exercise_12();
+#endif
 	glutMainLoop();
 }
 #endif
