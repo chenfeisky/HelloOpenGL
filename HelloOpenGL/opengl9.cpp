@@ -166,6 +166,16 @@ void drawPolygon(const std::vector<Point>& points)
 		glVertex3f(p.x, p.y, p.z);
 	glEnd();
 }
+// ×ø±êÖá
+void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStart = -winHeight, float yEnd = winHeight)
+{
+	glBegin(GL_LINES);
+	glVertex3f(xStart, 0, 0);
+	glVertex3f(xEnd, 0, 0);
+	glVertex3f(0, yStart, 0);
+	glVertex3f(0, yEnd, 0);
+	glEnd();
+}
 
 #endif
 
@@ -1149,15 +1159,6 @@ Matrix RotateZMatrix2(float theta)
 
 	return m;
 }
-void drawCoordinate()
-{
-	glBegin(GL_LINES);
-		glVertex3f(-winWidth, 0, 0);
-		glVertex3f(winWidth, 0, 0);
-		glVertex3f(0, -winHeight, 0);
-		glVertex3f(0, winHeight, 0);
-	glEnd();
-}
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1426,7 +1427,7 @@ namespace ApproximateTrigonometry
 		//return std::sin(angle);
 	}
 }
-void drawCoordinate()
+void _drawCoordinate()
 {
 	glBegin(GL_LINES);
 	glVertex3f(0, winHeight / 2, 0);
@@ -1479,7 +1480,7 @@ void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	drawCoordinate();
+	_drawCoordinate();
 	drawPolygon(curPoints);
 
 	glFlush();
@@ -1638,6 +1639,124 @@ void code_9_exercise_7()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_8
+Matrix rotateMatrix(Vec3 u, float theta)
+{
+	normal(u);
+
+	Matrix MR(4, 4);
+	matrixSetIdentity(MR);
+	MR[0][0] = u.x * u.x * (1 - cos(theta)) + cos(theta);
+	MR[0][1] = u.x * u.y * (1 - cos(theta)) - u.z * sin(theta);
+	MR[0][2] = u.x * u.z * (1 - cos(theta)) + u.y * sin(theta);
+
+	MR[1][0] = u.y * u.x * (1 - cos(theta)) + u.z * sin(theta);
+	MR[1][1] = u.y * u.y * (1 - cos(theta)) + cos(theta);
+	MR[1][2] = u.y * u.z * (1 - cos(theta)) - u.x * sin(theta);
+
+	MR[2][0] = u.z * u.x * (1 - cos(theta)) - u.y * sin(theta);
+	MR[2][1] = u.z * u.y * (1 - cos(theta)) + u.x * sin(theta);
+	MR[2][2] = u.z * u.z * (1 - cos(theta)) + cos(theta);
+
+	return MR;
+}
+Matrix translateMatrix(float tx, float ty, float tz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][3] = tx;
+	m[1][3] = ty;
+	m[2][3] = tz;
+
+	return m;
+}
+Matrix reflectionYMatrix()
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[1][1] = -1;
+
+	return m;
+}
+Matrix reflectionMatrix(float A, float B, float C, float D)
+{
+	Matrix ret(4, 4);
+	matrixSetIdentity(ret);
+	
+	float cos = (A * 0 + B * 1 + C * 0) / (sqrt(A * A + B * B + C * C) * sqrt(0 * 0 + 1 * 1 + 0 * 0));
+	float theta = acos(cos);
+	if (theta != 0)
+	{
+		float tx = 0, tz = 0;
+		if (A != 0)
+		{
+			tz = 0;
+			tx = -D / A;
+		}
+		else
+		{
+			tx = 0;
+			tz = D / C;
+		}
+		Vec3 u = cross({ A, B, C }, { 0, 1, 0 });
+		ret = translateMatrix(tx, 0, tz) * rotateMatrix(u, -theta) * reflectionYMatrix() * rotateMatrix(u, theta) * translateMatrix(-tx, 0, -tz);
+	}
+	else
+	{
+		ret = translateMatrix(0, -D / B, 0) * reflectionYMatrix() * translateMatrix(0, D / B, 0);
+	}
+	return ret;
+}
+
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> rect = { { 50, 50, 0 }, { 150, 50, 0 }, {150, 100, 0 }, {50, 100, 0 } };
+
+	glViewport(0, winHeight / 2, winWidth / 2, winHeight / 2);
+	drawCoordinate(-180, 180, -140, 140);
+	auto rect1 = rect;
+	Matrix m1 = reflectionMatrix(0, 1, 0, 0);
+	transformPoints(m1, rect1);
+	drawPolygon(rect1);
+
+	glViewport(winWidth / 2, winHeight / 2, winWidth / 2, winHeight / 2);
+	drawCoordinate(-180, 180, -140, 140);
+	auto rect2 = rect;
+	Matrix m2 = reflectionMatrix(1, 0, 0, -50);
+	transformPoints(m2, rect2);
+	drawPolygon(rect2);
+
+	glViewport(0, 0, winWidth / 2, winHeight / 2);
+	drawCoordinate(-180, 180, -140, 140);
+	auto rect3 = rect;
+	Matrix m3 = reflectionMatrix(1, 1, 0, -50);
+	transformPoints(m3, rect3);
+	drawPolygon(rect3);
+
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight / 2);
+	drawCoordinate(-180, 180, -140, 140);
+	auto rect4 = rect;
+	Matrix m4 = reflectionMatrix(-1, -1, 0, 50);
+	transformPoints(m4, rect4);
+	drawPolygon(rect4);
+
+	glFlush();
+}
+void code_9_exercise_8()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-winWidth / 4, winWidth / 4, -winHeight / 4, winHeight / 4);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -1712,6 +1831,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_7
 	code_9_exercise_7();
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_8
+	code_9_exercise_8();
 #endif
 
 	glutMainLoop();
