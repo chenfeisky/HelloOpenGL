@@ -20,7 +20,8 @@
 //#define CHAPTER_9_EXERCISE_11
 //#define CHAPTER_9_EXERCISE_12
 //#define CHAPTER_9_EXERCISE_13
-#define CHAPTER_9_EXERCISE_14
+//#define CHAPTER_9_EXERCISE_14
+#define CHAPTER_9_EXERCISE_15
 
 //////////////////////////////////////////////////////////////////////////
 #ifdef CHAPTER_9_1
@@ -100,5 +101,9 @@
 #endif
 
 #ifdef CHAPTER_9_EXERCISE_12
+#define CHAPTER_9_COMMON
+#endif
+
+#ifdef CHAPTER_9_EXERCISE_15
 #define CHAPTER_9_COMMON
 #endif

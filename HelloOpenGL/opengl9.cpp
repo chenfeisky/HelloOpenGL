@@ -2215,6 +2215,57 @@ void code_9_exercise_12()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_15
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> points = { {100, 100, 0}, {150, 100, 0},{150, 150, 0},{100, 150, 0} };
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+
+	glViewport(0, winHeight / 2, winWidth / 2, winHeight / 2);
+	drawCoordinate(-50, 320, -50, 220);
+	drawPolygon(points);
+
+	glViewport(winWidth / 2, winHeight / 2, winWidth / 2, winHeight / 2);
+	drawCoordinate(-50, 320, -50, 220);
+	glTranslatef(125, 125, 0);
+	glScalef(2.0, 1.0, 1.0);
+	glTranslatef(-125, -125, 0);
+	drawPolygon(points);
+
+	glPopMatrix();
+	glPushMatrix();
+	glViewport(0, 0, winWidth / 2, winHeight / 2);
+	drawCoordinate(-50, 320, -50, 220);
+	glTranslatef(125, 125, 0);
+	glScalef(1.0, 2.0, 1.0);
+	glTranslatef(-125, -125, 0);
+	drawPolygon(points);
+
+	glPopMatrix();
+	glViewport(winWidth / 2, 0, winWidth / 2, winHeight / 2);
+	drawCoordinate(-50, 320, -50, 220);
+	glTranslatef(125, 125, 0);
+	glScalef(1.0, 1.0, 2.0);
+	glTranslatef(-125, -125, 0);
+	drawPolygon(points);
+
+	glFlush();
+}
+void code_9_exercise_15()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-60, winWidth / 2 - 60, -60, winHeight / 2 - 60);
+
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -2310,6 +2361,12 @@ void main(int argc, char** argv)
 #ifdef CHAPTER_9_EXERCISE_12
 	code_9_exercise_12();
 #endif
+
+#ifdef CHAPTER_9_EXERCISE_15
+	code_9_exercise_15();
+#endif
+
+
 	glutMainLoop();
 }
 #endif
