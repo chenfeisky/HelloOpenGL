@@ -38,8 +38,8 @@
 //#define CHAPTER_8_EXERCISE_ADD_1_2 // Liang-Barsky凸多边形裁剪算法
 //#define CHAPTER_8_EXERCISE_ADD_1_3 // NLN凸多边形裁剪算法
 //#define CHAPTER_8_EXERCISE_ADD_1_4 // 凸多边形裁剪算法（直接计算各交点，然后根据进出关系组合）
-//#define CHAPTER_8_EXERCISE_ADD_2 // Sutherlan-Hodgman算法和Weiler-Atherton算法两者实现
-#define CHAPTER_8_EXERCISE_ADD_2_1 // Weiler-Atherton裁剪
+#define CHAPTER_8_EXERCISE_ADD_2 // Sutherlan-Hodgman算法和Weiler-Atherton算法两者实现
+//#define CHAPTER_8_EXERCISE_ADD_2_1 // Weiler-Atherton裁剪
 
 
 #ifdef CHAPTER_8_EXERCISE_5
