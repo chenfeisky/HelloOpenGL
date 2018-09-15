@@ -5738,6 +5738,1345 @@ void code_9_exercise_add_1()
 }
 #endif
 
+#ifdef CHAPTER_9_EXERCISE_ADD_2
+struct Path
+{
+	struct PathLine
+	{
+		Point begin;
+		Point end;
+		float sin;
+		float cos;
+		float length;
+	};
+	std::vector<PathLine> _pathLines;
+	float curLength;
+	int curPathIdx;
+	Path(const std::vector<Point>& points)
+	{
+		curLength = 0.f;
+		curPathIdx = 0;
+		for (int i = 0; i < points.size() - 1; i++)
+		{
+			float dx = points[i + 1].x - points[i].x;
+			float dy = points[i + 1].y - points[i].y;
+			float length = std::sqrt(dx * dx + dy * dy);
+			_pathLines.push_back({ points[i], points[i + 1], dy / length, dx / length, length });
+		}
+	}
+	Point move(float distance)
+	{
+		curLength += distance;
+		float dMaxLength = curLength - _pathLines[curPathIdx].length;
+		float dMinLength = curLength - 0;
+		if (dMaxLength > 0)
+		{
+			curPathIdx = (curPathIdx + 1) % _pathLines.size();
+			curLength = 0;
+			return move(dMaxLength);
+		}
+		else if (dMinLength < 0)
+		{
+			curPathIdx = (curPathIdx - 1 + _pathLines.size()) % _pathLines.size();
+			curLength = _pathLines[curPathIdx].length;
+			return move(dMinLength);
+		}
+		return{ _pathLines[curPathIdx].begin.x + curLength * _pathLines[curPathIdx].cos, _pathLines[curPathIdx].begin.y + curLength * _pathLines[curPathIdx].sin, 0 };
+	}
+};
+Matrix scaleMatrix4(float sx, float sy)
+{
+	// 基于原点缩放
+	Matrix ret(4, 4);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[1][1] = sy;
+	return ret;
+}
+Matrix shearXMatrix4(float shx)
+{
+	// 基于原点的x方向错切
+	Matrix ret(4, 4);
+	matrixSetIdentity(ret);
+	ret[0][1] = shx;
+	return ret;
+}
+std::vector<Point> road = { { -400, 0, 0 },{ 0, 0, 0 },{ 1000, 0, 0 },{ 1200, 150, 0 },{ 1600, 150, 0 },{ 2000, 0, 0 },{ 2600, 0, 0 },{ 2600, 200, 0 },{ 2800, 200, 0 } ,{ 2800, 0, 0 } ,{ 3200, 0, 0 },{ 3600, 0, 0 } };
+std::vector<Point> car = { { 0, 0, 0 },{ -70, 0, 0 },{ -70, -12, 0 },{ 30, -12, 0 },{ 30, -2, 0 },{ 15, 26, 0 },{ 0, 26, 0 } };
+std::vector<Point> goods = { { -30, -20, 0 },{ 30, -20, 0 },{ 30, 20, 0 },{ -30, 20, 0 } };
+std::vector<Point> wheelHolder;
+
+float FPS = 60;
+int deltaFPS = 5;
+float speed = 100;
+float deltaSpeed = 10;
+float scaleX = 1;
+float deltaScaleX = 2;
+float scaleY = 1;
+float deltaScaleY = 2;
+float shx = 0;
+float tansShx = 0;
+float deltaShear = 1;
+
+int lastTick = 0;
+float delta = 0.0;
+Point curPosition;
+Point deltaPosition;
+float curDirection;
+float wheelRadius = 0;
+Path* path = nullptr;
+float wheelRadian = 0.f;
+Matrix curTransform(4, 4);
+
+// 裁剪窗口
+float clipwinRotate = 0;
+float deltaClipwinRotate = 5 * PI / 180;
+Point clipwinPos = { 0, 0, 0 }; // 中心点
+float deltaClipwinPos = 5;
+float clipwinWidth = 200;
+float clipwinHeight = 150;
+float deltaClipwinSize = 10;
+bool clipwinFollow = true;
+bool clipwinMode = false;
+
+// 视口
+float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
+
+void initPath()
+{
+	auto temp = road;
+	temp.erase(temp.begin());
+	temp.erase(temp.end() - 1);
+	path = new Path(temp);
+}
+void drawPoint(Point p)
+{
+	glBegin(GL_POINTS);
+	glVertex3f(p.x, p.y, p.z);
+	glEnd();
+}
+void drawPoints(const std::vector<Point>& points)
+{
+	glBegin(GL_POINTS);
+	for (auto & p : points)
+		glVertex3f(p.x, p.y, p.z);
+	glEnd();
+}
+void drawStrip(const std::vector<Point>& points)
+{
+	glBegin(GL_LINE_STRIP);
+	for (auto & p : points)
+		glVertex3f(p.x, p.y, p.z);
+	glEnd();
+}
+void drawLoop(const std::vector<Point>& points)
+{
+	glBegin(GL_LINE_LOOP);
+	for (auto & p : points)
+		glVertex3f(p.x, p.y, p.z);
+	glEnd();
+}
+inline int64_t Round(const double a)
+{
+	if (a >= 0)
+		return int64_t(a + 0.5);
+	else
+		return int64_t(a - 0.5);
+}
+void ellipsePlot(Point p0, int x, int y)
+{
+	drawPoint({ p0.x + x, p0.y + y, 0 });
+	drawPoint({ p0.x - x, p0.y + y, 0 });
+	drawPoint({ p0.x + x, p0.y - y, 0 });
+	drawPoint({ p0.x - x, p0.y - y, 0 });
+}
+void ellipse(Point p0, int Rx, int Ry)
+{
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	ellipsePlot(p0, x, y);
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		ellipsePlot(p0, x, y);
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		ellipsePlot(p0, x, y);
+	}
+}
+void ellipsePlot(Point p0, int x, int y, std::vector<Point>& points)
+{
+	points.push_back({ p0.x + x, p0.y + y, 0 });
+	points.push_back({ p0.x - x, p0.y + y, 0 });
+	points.push_back({ p0.x + x, p0.y - y, 0 });
+	points.push_back({ p0.x - x, p0.y - y, 0 });
+}
+void ellipse(Point p0, int Rx, int Ry, std::vector<Point>& points)
+{
+	points.clear();
+	int Rx2 = Rx*Rx;
+	int Ry2 = Ry*Ry;
+	int twoRx2 = 2 * Rx2;
+	int twoRy2 = 2 * Ry2;
+	int64_t p;
+	int x = 0;
+	int y = Ry;
+	int64_t px = 0;
+	int64_t py = twoRx2*y;
+	ellipsePlot(p0, x, y, points);
+	/*Region 1*/
+	//p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
+	p = Round(Ry2 - (int64_t)(Rx2*Ry) + (0.25*Rx2));
+	while (px < py)
+	{
+		x++;
+		px += twoRy2;
+		if (p < 0)
+			p += Ry2 + px;
+		else
+		{
+			y--;
+			py -= twoRx2;
+			p += Ry2 + px - py;
+		}
+		ellipsePlot(p0, x, y, points);
+	}
+	/*Region 2*/
+	//p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
+	p = Round((int64_t)Ry2*(x + 0.5)*(x + 0.5) + (int64_t)Rx2*(y - 1)*(y - 1) - (int64_t)Rx2*Ry2);
+	while (y > 0)
+	{
+		y--;
+		py -= twoRx2;
+		if (p > 0)
+			p += Rx2 - py;
+		else
+		{
+			x++;
+			px += twoRy2;
+			p += Rx2 - py + px;
+		}
+		ellipsePlot(p0, x, y, points);
+	}
+}
+void drawRoad()
+{
+	drawStrip(road);
+}
+void drawCar()
+{
+	drawLoop(car);
+}
+void drawGoods()
+{
+	drawLoop(goods);
+}
+void drawWheel()
+{
+	ellipse({ 0, 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius);
+}
+void drawWheelHolder()
+{
+	for (auto & p : wheelHolder)
+	{
+		drawStrip({ { 0, 0, 0 }, p });
+	}
+}
+void drawWindow()
+{
+	drawLoop({
+		{ -clipwinWidth / 2, -clipwinHeight / 2, 0 },
+		{ clipwinWidth / 2, -clipwinHeight / 2, 0 },
+		{ clipwinWidth / 2, clipwinHeight / 2, 0 },
+		{ -clipwinWidth / 2, clipwinHeight / 2, 0 }, });
+}
+void drawViewport()
+{
+	drawLoop({
+		{ xvmin, yvmin, 0 },
+		{ xvmax, yvmin, 0 },
+		{ xvmax, yvmax, 0 },
+		{ xvmin, yvmax, 0 } });
+}
+void scale(float sx, float sy)
+{
+	scaleX *= sx;
+	scaleY *= sy;
+
+	// 先斜切再缩放，斜切参数将变为原始的sx/sy倍，可以对比先斜切再缩放和先缩放再斜切的矩阵得出此结论
+	tansShx *= (sx / sy);
+	curTransform = scaleMatrix4(sx, sy) * curTransform;
+}
+void shear(float sh)
+{
+	shx += sh;
+	tansShx += sh;
+	curTransform = shearXMatrix4(sh) * curTransform;
+}
+void reset()
+{
+	FPS = 60;
+	deltaFPS = 5;
+	speed = 100;
+	deltaSpeed = 10;
+	scaleX = 1;
+	scaleY = 1;
+	deltaScaleX = 2;
+	deltaScaleY = 2;
+	shx = 0;
+	tansShx = 0;
+	deltaShear = 1;
+	matrixSetIdentity(curTransform);
+}
+void clipwinReset()
+{
+	clipwinRotate = 0;
+	deltaClipwinRotate = 5 * PI / 180;
+	clipwinPos = curPosition;
+	deltaClipwinPos = 5;
+	clipwinWidth = 200;
+	clipwinHeight = 150;
+	deltaClipwinSize = 10;
+	clipwinFollow = true;
+}
+void initWheel()
+{
+	for (int i = 0; i <= 4; i++)
+	{
+		float angle = (90 + i * 360 / 5) * PI / 180;
+		wheelHolder.push_back({ std::cos(angle) * wheelRadius, std::sin(angle) * wheelRadius, 0 });
+	}
+}
+void initCarData()
+{
+	initPath();
+	lastTick = GetTickCount();
+	curPosition = { 0.f, 0.f, 0.f };
+	deltaPosition = { 0.f, 0.f, 0.f };
+	curDirection = 0.f;
+	wheelRadius = 10;
+	wheelRadian = 0.f;
+	initWheel();
+	matrixSetIdentity(curTransform);
+}
+void updateWindowPosition()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(curPosition.x - winWidth / 2, curPosition.x + winWidth / 2, -150, -150 + winHeight);
+}
+void updateClipwinPos()
+{
+	if (clipwinFollow)
+	{
+		clipwinPos.x += deltaPosition.x;
+		clipwinPos.y += deltaPosition.y;
+	}
+}
+void updateViewport()
+{
+	// 绘制视口1
+	// 这里直接采用opengl投影变换到视口
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
+	glViewport(xvmin, yvmin, xvmax - xvmin, yvmax - yvmin);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	drawRoad();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(20, 22, 0);
+	drawCar();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-15, 47, 0);
+	drawGoods();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix4(tansShx));
+	glTranslated(32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0);
+	glRotatef(-clipwinRotate * 180 / PI, 0.f, 0.f, 1.f);
+	glTranslatef(-clipwinPos.x, -clipwinPos.y, 0);
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix4(tansShx));
+	glTranslated(-32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+}
+void showState();
+void update()
+{
+	//printf("update: %f\n", delta);
+
+	Point nextP = path->move(delta * speed);
+	auto dx = nextP.x - curPosition.x;
+	auto dy = nextP.y - curPosition.y;
+	float dir = 0;
+	if (dx)
+	{
+		dir = std::atan(dy / dx);
+	}
+	else
+	{
+		if (dy)
+		{
+			auto signDy = dy > 0 ? 1 : -1;
+			auto signSpeed = speed > 0 ? 1 : -1;
+			dir = signDy * signSpeed * PI / 2;
+		}
+		else
+		{
+			dir = curDirection;
+		}
+	}
+
+	deltaPosition = { nextP.x - curPosition.x, nextP.y - curPosition.y, 0 };
+	curPosition = nextP;
+	curDirection = dir;
+
+	// gluOrtho2D之后的绘制才会使用新的视口，否则若在gluOrtho2D之前绘制，绘制使用之前的视口，下次新视口才生效
+	// 因此第一次绘制的效果是绘制图形移动，但视口不动，即绘制图形超前视口一个delta*speed距离
+	// 下次绘制时，会首先生效上次的视口设置，即视口中心为绘制图形中心，但是图形此时又会移动，即绘制图形又会超前视口一个delta*speed距离
+	// 这样每帧绘制都会超前视口一个delta*speed距离，因为delta是变量，所以每帧位置都有小偏差，造成视觉残影，绘制抖动
+	updateWindowPosition();
+	updateClipwinPos();
+
+	glViewport(0, 0, winWidth, winHeight);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	drawRoad();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(20, 22, 0);
+	drawCar();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-15, 47, 0);
+	drawGoods();
+
+	auto l = std::sqrt(tansShx * tansShx + 1) * wheelRadius * std::abs(scaleY);
+	wheelRadian -= delta * speed / l * 180 / PI;
+	wheelRadian = fmod(wheelRadian, 360);
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(curTransform);
+	glTranslated(-32, 10, 0);
+	glRotatef(wheelRadian, 0.0, 0.0, 1.0);
+	drawWheelHolder();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix4(tansShx));
+	glTranslated(32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+
+	glLoadIdentity();
+	glTranslatef(curPosition.x, curPosition.y, 0.f);
+	glRotatef(curDirection * 180 / PI, 0.0, 0.0, 1.0);
+	glMultMatrixf(shearXMatrix4(tansShx));
+	glTranslated(-32 * scaleX, 10 * scaleY, 0);
+	drawWheel();
+
+	// 裁剪窗口
+	glLoadIdentity();
+	glTranslatef(clipwinPos.x, clipwinPos.y, 0.f);
+	glRotatef(clipwinRotate * 180 / PI, 0.0, 0.0, 1.0);
+	drawWindow();
+
+	// 绘制状态文字，视口
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glViewport(0, 0, winWidth, winHeight);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	showState();
+	drawViewport();
+
+	updateViewport();
+}
+bool isNumber(string s)
+{
+	std::stringstream sin(s);
+	double d;
+	char c;
+	if (!(sin >> d))
+		return false;
+	if (sin >> c)
+		return false;
+	return true;
+}
+bool setFPS(int value)
+{
+	if (value <= 0)
+	{
+		return false;
+	}
+	else
+	{
+		FPS = value;
+		return true;
+	}
+}
+void dealFPSCommand()
+{
+	printf("input fps value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("fps must be a number!!!\n");
+		dealFPSCommand();
+		return;
+	}
+	int value = std::stoi(str);
+	if (!setFPS(value))
+	{
+		printf("fps must be a positive number!!!\n");
+		dealFPSCommand();
+	}
+}
+void dealDeltaFPSCommand()
+{
+	printf("input fps delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("fps delta must be a number!!!\n");
+		dealDeltaFPSCommand();
+		return;
+	}
+	int value = std::stoi(str);
+	deltaFPS = value;
+}
+void dealSpeedCommand()
+{
+	printf("input speed value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("speed must be a number!!!\n");
+		dealSpeedCommand();
+		return;
+	}
+	float value = std::stof(str);
+	speed = value;
+}
+void dealDeltaSpeedCommand()
+{
+	printf("input speed delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("speed delta must be a number!!!\n");
+		dealDeltaSpeedCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaSpeed = value;
+}
+void dealScaleXCommand()
+{
+	printf("input scale x value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale x must be a number!!!\n");
+		dealScaleXCommand();
+		return;
+	}
+	float value = std::stof(str);
+	scale(value / scaleX, 1);
+}
+void dealDeltaScaleXCommand()
+{
+	printf("input scale x delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale x delta must be a number!!!\n");
+		dealDeltaScaleXCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaScaleX = value;
+}
+void dealScaleYCommand()
+{
+	printf("input scale y value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale y must be a number!!!\n");
+		dealScaleYCommand();
+		return;
+	}
+	float value = std::stof(str);
+	scale(1, value / scaleY);
+}
+void dealDeltaScaleYCommand()
+{
+	printf("input scale y delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("scale y delta must be a number!!!\n");
+		dealDeltaScaleYCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaScaleY = value;
+}
+void dealShearCommand()
+{
+	printf("input shear value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("shear must be a number!!!\n");
+		dealShearCommand();
+		return;
+	}
+	float value = std::stof(str);
+	shear(value - tansShx);
+}
+void dealDeltaShearCommand()
+{
+	printf("input shear delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("shear delta must be a number!!!\n");
+		dealDeltaShearCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaShear = value;
+}
+void dealClipWindowPositionCommand()
+{
+	printf("input clip window position value: ");
+	float x, y;
+	if (scanf_s("%f,%f", &x, &y) != 2)
+	{
+		printf("clip window position must be two numbers!!!\n");
+		dealClipWindowPositionCommand();
+		return;
+	}
+	clipwinPos = { x, y };
+}
+void dealDeltaClipWindowPositionCommand()
+{
+	printf("input clip window position delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window position delta must be a number!!!\n");
+		dealDeltaClipWindowPositionCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaClipwinPos = value;
+}
+void dealClipWindowRotateCommand()
+{
+	printf("input clip window rotate value(angle): ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window rotate must be a number!!!\n");
+		dealClipWindowRotateCommand();
+		return;
+	}
+	float value = std::stof(str);
+	clipwinRotate = value * PI / 180;
+}
+void dealDeltaClipWindowRotateCommand()
+{
+	printf("input clip window rotate delta value(angle): ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window rotate delta must be a number!!!\n");
+		dealDeltaClipWindowRotateCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaClipwinRotate = value * PI / 180;
+}
+void dealClipWindowWidthCommand()
+{
+	printf("input clip window width value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window width must be a number!!!\n");
+		dealClipWindowWidthCommand();
+		return;
+	}
+	float value = std::stof(str);
+	clipwinWidth = value;
+}
+void dealClipWindowHeightCommand()
+{
+	printf("input clip window height value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window width must be a number!!!\n");
+		dealClipWindowHeightCommand();
+		return;
+	}
+	float value = std::stof(str);
+	clipwinHeight = value;
+}
+void dealDeltaClipWindowSizeCommand()
+{
+	printf("input clip window size delta value: ");
+	std::string str;
+	std::cin >> str;
+	if (!isNumber(str))
+	{
+		printf("clip window size delta must be a number!!!\n");
+		dealDeltaClipWindowSizeCommand();
+		return;
+	}
+	float value = std::stof(str);
+	deltaClipwinSize = value;
+}
+void dealClipWindowFollowCommand()
+{
+	printf("input clip window follow value: ");
+	std::string str;
+	std::cin >> str;
+	if (str == "true" || str == "TRUE")
+	{
+		clipwinFollow = true;
+		clipwinPos = curPosition;
+	}
+	else if (str == "false" || str == "FALSE")
+	{
+		clipwinFollow = false;
+	}
+	else
+	{
+		printf("clip window follow must be bool value!!!\n");
+		dealClipWindowFollowCommand();
+		return;
+	}
+}
+
+void showOperatorNotice();
+bool _dealCommand(string commandString)
+{
+	if (commandString == "fps" || commandString == "FPS")
+	{
+		dealFPSCommand();
+		return true;
+	}
+	else if (commandString == "dfps" || commandString == "DFPS")
+	{
+		dealDeltaFPSCommand();
+		return true;
+	}
+	else if (commandString == "speed" || commandString == "SPEED")
+	{
+		dealSpeedCommand();
+		return true;
+	}
+	else if (commandString == "dspeed" || commandString == "DSPEED")
+	{
+		dealDeltaSpeedCommand();
+		return true;
+	}
+	else if (commandString == "scalex" || commandString == "SCALEX")
+	{
+		dealScaleXCommand();
+		return true;
+	}
+	else if (commandString == "dscalex" || commandString == "DSCALEX")
+	{
+		dealDeltaScaleXCommand();
+		return true;
+	}
+	else if (commandString == "scaley" || commandString == "SCALEY")
+	{
+		dealScaleYCommand();
+		return true;
+	}
+	else if (commandString == "dscaley" || commandString == "DSCALEY")
+	{
+		dealDeltaScaleYCommand();
+		return true;
+	}
+	else if (commandString == "shear" || commandString == "SHEAR")
+	{
+		dealShearCommand();
+		return true;
+	}
+	else if (commandString == "dshear" || commandString == "DSHEAR")
+	{
+		dealDeltaShearCommand();
+		return true;
+	}
+	else if (commandString == "cwp" || commandString == "CWP")
+	{
+		dealClipWindowPositionCommand();
+		return true;
+	}
+	else if (commandString == "dcwp" || commandString == "DCWP")
+	{
+		dealDeltaClipWindowPositionCommand();
+		return true;
+	}
+	else if (commandString == "cwr" || commandString == "CWR")
+	{
+		dealClipWindowRotateCommand();
+		return true;
+	}
+	else if (commandString == "dcwr" || commandString == "DCWR")
+	{
+		dealDeltaClipWindowRotateCommand();
+		return true;
+	}
+	else if (commandString == "cww" || commandString == "CWW")
+	{
+		dealClipWindowWidthCommand();
+		return true;
+	}
+	else if (commandString == "cwh" || commandString == "CWH")
+	{
+		dealClipWindowHeightCommand();
+		return true;
+	}
+	else if (commandString == "dcws" || commandString == "DCWS")
+	{
+		dealDeltaClipWindowSizeCommand();
+		return true;
+	}
+	else if (commandString == "cwf" || commandString == "CWF")
+	{
+		dealClipWindowFollowCommand();
+		return true;
+	}
+	else if (commandString == "cwreset" || commandString == "CWRESET")
+	{
+		clipwinReset();
+		return true;
+	}
+	else if (commandString == "reset" || commandString == "RESET")
+	{
+		reset();
+		return true;
+	}
+	else if (commandString == "exit" || commandString == "EXIT")
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+void dealCommand()
+{
+	printf("Input Command: ");
+	std::string commandString;
+	std::cin >> commandString;
+	if (!_dealCommand(commandString))
+	{
+		printf("error command!!!\n");
+		dealCommand();
+		return;
+	}
+	showOperatorNotice();
+	lastTick = GetTickCount();
+}
+void drawString(Point point, string word)
+{
+	glRasterPos2i(point.x, point.y);
+	for (char c : word)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+	}
+}
+void showState()
+{
+	float leftX = 10;
+	float topY = winHeight;
+	int space = 20;
+	char s[128] = {};
+
+	int realFPS = 0;
+	if (delta)
+		realFPS = 1 / delta;
+	sprintf_s(s, "FPS: %d", realFPS);
+	drawString({ leftX, topY - space * 1, 0 }, s);
+
+	sprintf_s(s, "position: %.02f, %.02f", curPosition.x, curPosition.y);
+	drawString({ leftX, topY - space * 2, 0 }, s);
+
+	sprintf_s(s, "speed: %.02f pixel/s", speed);
+	drawString({ leftX, topY - space * 3, 0 }, s);
+
+	float angle = curDirection * 180 / PI;
+	sprintf_s(s, "angle: %.02f", angle);
+	drawString({ leftX, topY - space * 4, 0 }, s);
+
+	sprintf_s(s, "scale x: %.02f", scaleX);
+	drawString({ leftX, topY - space * 5, 0 }, s);
+
+	sprintf_s(s, "scale y: %.02f", scaleY);
+	drawString({ leftX, topY - space * 6, 0 }, s);
+
+	sprintf_s(s, "shear: %.02f", tansShx);
+	drawString({ leftX, topY - space * 7, 0 }, s);
+
+	sprintf_s(s, "clip window postion: %.02f, %.02f", clipwinPos.x, clipwinPos.y);
+	drawString({ leftX, topY - space * 8, 0 }, s);
+
+	sprintf_s(s, "clip window width: %.02f", clipwinWidth);
+	drawString({ leftX, topY - space * 9, 0 }, s);
+
+	sprintf_s(s, "clip window height: %.02f", clipwinHeight);
+	drawString({ leftX, topY - space * 10, 0 }, s);
+
+	sprintf_s(s, "clip window rotate: %.02f", clipwinRotate * 180 / PI);
+	drawString({ leftX, topY - space * 11, 0 }, s);
+
+	sprintf_s(s, "clip window follow: %s", clipwinFollow ? "true" : "false");
+	drawString({ leftX, topY - space * 12, 0 }, s);
+}
+void showOperatorNotice()
+{
+	system("cls");
+	printf("Operator: \n");
+	printf("W: add FPS.\n");
+	printf("S: decrease FPS.\n");
+	printf("D: add speed.\n");
+	printf("A: decrease speed.\n");
+	printf("→: add scale x.\n");
+	printf("←: decrease scale x.\n");
+	printf("↑: add scale y.\n");
+	printf("↓: decrease scale y.\n");
+	printf("CTRL →: reflect to +x.\n");
+	printf("CTRL ←: reflect to -x.\n");
+	printf("CTRL ↑: reflect to +y.\n");
+	printf("CTRL ↓: reflect to -y.\n");
+	printf("SHIFT →: add shear.\n");
+	printf("SHIFT ←: decrease shear.\n");
+	printf("R: reset state. \n");
+	printf("V: clip window mode. \n");
+	printf("ESC: command mode.\n");
+}
+void showCommandNotice()
+{
+	system("cls");
+	printf("Command Mode: \n");
+	printf("fps: set FPS.\n");
+	printf("dfps: set FPS delta.\n");
+	printf("speed: set speed.\n");
+	printf("dspeed: set speed delta.\n");
+	printf("scalex: set scale x.\n");
+	printf("dscalex: set scale x delta.\n");
+	printf("scaley: set scale y.\n");
+	printf("dscaley: set scale y delta.\n");
+	printf("shear: set shear.\n");
+	printf("dshear: set shear delta.\n");
+	printf("cwp: set clip window position.\n");
+	printf("dcwp: set clip window position delta.\n");
+	printf("cwr: set clip window rotate.\n");
+	printf("dcwr: set clip window rotate delta.\n");
+	printf("cww: set clip window width.\n");
+	printf("cwh: set clip window height.\n");
+	printf("dcws: set clip window size delta.\n");
+	printf("cwf: set clip window follow.\n");
+	printf("cwreset: set clip window reset.\n");
+	printf("reset: reset state.\n");
+	printf("exit: exit command mode.\n");
+	dealCommand();
+}
+void showViewOperatorNotice()
+{
+	system("cls");
+	printf("Clip Window Operator: \n");
+	printf("F: fllow the car.\n");
+	printf("→: move right.\n");
+	printf("←: move left.\n");
+	printf("↑: move up.\n");
+	printf("↓: move down.\n");
+	printf("CTRL →: add width.\n");
+	printf("CTRL ←: decrease width.\n");
+	printf("CTRL ↑: add height. \n");
+	printf("CTRL ↓: decrease height. \n");
+	printf("SHIFT ↑: add angle.\n");
+	printf("SHIFT ↓: decrease angle.\n");
+	printf("R: reset state\n");
+	printf("ESC: back.\n");
+}
+void normalKeyFcn(unsigned char key, int x, int y)
+{
+	//printf("normalKeyFcn %d, %d, %d\n", key, x, y);
+	switch (key)
+	{
+	case 27:
+		if (!clipwinMode)
+		{
+			showCommandNotice();
+		}
+		else
+		{
+			clipwinMode = false;
+			showOperatorNotice();
+		}
+		break;
+	case 'r':
+	case 'R':
+		if (!clipwinMode)
+		{
+			reset();
+		}
+		else
+		{
+			clipwinReset();
+		}
+		break;
+	case 'w':
+	case 'W':
+		if (!clipwinMode)
+		{
+			setFPS(FPS + deltaFPS);
+		}
+		break;
+	case 's':
+	case 'S':
+		if (!clipwinMode)
+		{
+			setFPS(FPS - deltaFPS);
+		}
+		break;
+	case 'a':
+	case 'A':
+		if (!clipwinMode)
+		{
+			speed -= deltaSpeed;
+		}
+		break;
+	case 'd':
+	case 'D':
+		if (!clipwinMode)
+		{
+			speed += deltaSpeed;
+		}
+		break;
+	case 'v':
+	case 'V':
+		if (!clipwinMode)
+		{
+			showViewOperatorNotice();
+			clipwinMode = true;
+		}
+		break;
+	case 'f':
+	case 'F':
+		if (clipwinMode)
+		{
+			clipwinFollow = !clipwinFollow;
+
+			if (clipwinFollow)
+				clipwinPos = curPosition;
+		}
+		break;
+	default:
+		break;
+	}
+
+}
+void specialKeyFcn(int key, int x, int y)
+{
+	//printf("specialKeyFcn %d, %d, %d\n", key, x, y);
+	int mod = glutGetModifiers();
+	switch (key)
+	{
+	case GLUT_KEY_RIGHT:
+		if (mod == 0)
+		{
+			if (!clipwinMode)
+			{
+				scale(deltaScaleX, 1);
+			}
+			else
+			{
+				clipwinPos.x += deltaClipwinPos;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (!clipwinMode)
+			{
+				if (scaleX < 0)
+					scale(-1, 1);
+			}
+			else
+			{
+				clipwinWidth += deltaClipwinSize;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			if (!clipwinMode)
+			{
+				shear(deltaShear);
+			}
+		}
+		break;
+	case GLUT_KEY_LEFT:
+		if (mod == 0)
+		{
+			if (!clipwinMode)
+			{
+				scale(1 / deltaScaleX, 1);
+			}
+			else
+			{
+				clipwinPos.x -= deltaClipwinPos;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (!clipwinMode)
+			{
+				if (scaleX > 0)
+					scale(-1, 1);
+			}
+			else
+			{
+				clipwinWidth -= deltaClipwinSize;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			if (!clipwinMode)
+			{
+				shear(-deltaShear);
+			}
+		}
+		break;
+	case GLUT_KEY_UP:
+		if (mod == 0)
+		{
+			if (!clipwinMode)
+			{
+				scale(1, deltaScaleY);
+			}
+			else
+			{
+				clipwinPos.y += deltaClipwinPos;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (!clipwinMode)
+			{
+				if (scaleY < 0)
+					scale(1, -1);
+			}
+			else
+			{
+				clipwinHeight += deltaClipwinSize;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			if (clipwinMode)
+			{
+				clipwinRotate += deltaClipwinRotate;
+				clipwinRotate = fmod(clipwinRotate, 2 * PI);
+			}
+		}
+		break;
+	case GLUT_KEY_DOWN:
+		if (mod == 0)
+		{
+			if (!clipwinMode)
+			{
+				scale(1, 1 / deltaScaleY);
+			}
+			else
+			{
+				clipwinPos.y -= deltaClipwinPos;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_CTRL)
+		{
+			if (!clipwinMode)
+			{
+				if (scaleY > 0)
+					scale(1, -1);
+			}
+			else
+			{
+				clipwinHeight -= deltaClipwinSize;
+			}
+		}
+		else if (mod == GLUT_ACTIVE_SHIFT)
+		{
+			if (clipwinMode)
+			{
+				clipwinRotate -= deltaClipwinRotate;
+				clipwinRotate = fmod(clipwinRotate, 2 * PI);
+			}
+		}
+		break;
+	default:
+		break;
+	}
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	update();
+
+	glFlush();
+}
+void onTimer(int id)
+{
+	int curTick = GetTickCount();
+	delta = (curTick - lastTick) / (float)1000;
+	lastTick = curTick;
+	glutPostRedisplay();
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+void code_9_exercise_add_2()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glColor3f(0.0, 0.0, 0.0);
+
+	initCarData();
+	showOperatorNotice();
+
+	glutDisplayFunc(displayFcn);
+	glutKeyboardFunc(normalKeyFcn);
+	glutSpecialFunc(specialKeyFcn);
+
+	glutTimerFunc((unsigned)(1000 / FPS), onTimer, 0);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_9_COMMON
 
@@ -5852,6 +7191,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_9_EXERCISE_ADD_1
 	code_9_exercise_add_1();
+#endif
+	
+#ifdef CHAPTER_9_EXERCISE_ADD_2
+	code_9_exercise_add_2();
 #endif
 
 	glutMainLoop();

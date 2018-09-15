@@ -27,8 +27,8 @@
 //#define CHAPTER_9_EXERCISE_17
 //#define CHAPTER_9_EXERCISE_18
 //#define CHAPTER_9_EXERCISE_19
-#define CHAPTER_9_EXERCISE_ADD_1
-//#define CHAPTER_9_EXERCISE_ADD_2
+//#define CHAPTER_9_EXERCISE_ADD_1
+#define CHAPTER_9_EXERCISE_ADD_2
 
 //////////////////////////////////////////////////////////////////////////
 #ifdef CHAPTER_9_1
