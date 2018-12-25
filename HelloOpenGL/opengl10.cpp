@@ -298,6 +298,99 @@ void main(int argc, char** argv)
 }
 #endif
 
+#ifdef CHAPTER_10_EXERCISE_1
+Matrix worldToView1(Point p0, Vec3 N, Vec3 V)
+{
+	Vec3 n = N;
+	normal(n);
+	Vec3 u = cross(V, n);
+	normal(u);
+	Vec3 v = cross(n, u);
+
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -p0.x;
+	T[1][3] = -p0.y;
+	T[2][3] = -p0.z;
+
+	Matrix R(4, 4);
+	matrixSetIdentity(R);
+	R[0][0] = u.x;
+	R[0][1] = u.y;
+	R[0][2] = u.z;
+	R[1][0] = v.x;
+	R[1][1] = v.y;
+	R[1][2] = v.z;
+	R[2][0] = n.x;
+	R[2][1] = n.y;
+	R[2][2] = n.z;
+
+	return R * T;
+}
+Matrix worldToView2(Point p0, Vec3 N, Vec3 V)
+{
+	Vec3 n = N;
+	normal(n);
+	Vec3 u = cross(V, n);
+	normal(u);
+	Vec3 v = cross(n, u);
+
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+
+	m[0][0] = u.x;
+	m[0][1] = u.y;
+	m[0][2] = u.z;
+	m[1][0] = v.x;
+	m[1][1] = v.y;
+	m[1][2] = v.z;
+	m[2][0] = n.x;
+	m[2][1] = n.y;
+	m[2][2] = n.z;
+
+	m[0][3] = -dot(u, p0);
+	m[1][3] = -dot(v, p0);
+	m[2][3] = -dot(n, p0);
+
+	return m;
+}
+void printMatrix(Matrix& m)
+{
+	for (int r = 0; r < m._row; r++)
+	{
+		for (int c = 0; c < m._col; c++)
+		{
+			printf("%.4f	", m[r][c]);
+		}
+		printf("\n");
+	}
+}
+void code_10_exercise_1()
+{
+	Point p0 = { 1, 1, 1 };
+	Vec3 N = { 0, 0, 1 };
+	Vec3 V = { 1, 1, 0 };
+	Matrix m1 = worldToView1(p0, N, V);
+	Matrix m2 = worldToView2(p0, N, V);
+	printf("P0=(%f,%f,%f),N=(%f,%f,%f),V=(%f,%f,%f)\n", p0.x, p0.y, p0.z, N.x, N.y, N.z, V.x, V.y, V.z);
+	printf(m1 == m2 ? "true" : "false");
+	printf("\n");
+	printMatrix(m1);
+
+	printf("\n");
+	V = { 1, 1, 1 };
+	Matrix m3 = worldToView1(p0, N, V);
+	Matrix m4 = worldToView2(p0, N, V);
+	printf("P0=(%f,%f,%f),N=(%f,%f,%f),V=(%f,%f,%f)\n", p0.x, p0.y, p0.z, N.x, N.y, N.z, V.x, V.y, V.z);
+	printf(m3 == m4 ? "true" : "false");
+	printf("\n");
+	printMatrix(m3);
+
+	cin.get();
+	cin.get();
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_10_COMMON
@@ -322,6 +415,10 @@ void main(int argc, char** argv)
 	glutCreateWindow("An Example OpenGL Program");
 
 	init();
+
+#ifdef CHAPTER_10_EXERCISE_1
+	code_10_exercise_1();
+#endif
 
 	glutMainLoop();
 }
