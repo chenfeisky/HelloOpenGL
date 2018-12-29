@@ -4,8 +4,9 @@
 #include "opengl10h.h"
 
 #ifdef CHAPTER_10_COMMON
-GLsizei winWidth = 800, winHeight = 600;
+float winWidth = 800, winHeight = 600;
 
+//////////////////////////////////////////////////////////////////////////
 // 判断浮点数相等
 inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
@@ -13,6 +14,7 @@ inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2);
 inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
 inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 
+//////////////////////////////////////////////////////////////////////////
 // 点，向量
 class Point
 {
@@ -28,6 +30,7 @@ bool operator!=(const Point& p1, const Point& p2)
 	return !(p1 == p2);
 }
 
+//////////////////////////////////////////////////////////////////////////
 // 矩阵
 struct Matrix
 {
@@ -129,6 +132,7 @@ void transformPoint(Matrix& m, Point& point)
 	point.z = temp[2][0];
 }
 
+//////////////////////////////////////////////////////////////////////////
 // 向量
 typedef Point Vec3;
 Vec3 cross(const Vec3& v1, const Vec3& v2)
@@ -175,6 +179,7 @@ void normal(Vec3& v)
 	v.z = v.z / len;
 }
 
+//////////////////////////////////////////////////////////////////////////
 // 计算
 Point centerPoint(const std::vector<Point>& points)
 {
@@ -192,7 +197,10 @@ Point centerPoint(const std::vector<Point>& points)
 	center.z = zSum / size;
 	return center;
 }
+
+//////////////////////////////////////////////////////////////////////////
 // 绘制
+// 二维多边形
 void drawPolygon(const std::vector<Point>& points)
 {
 	glBegin(GL_POLYGON);
@@ -200,7 +208,7 @@ void drawPolygon(const std::vector<Point>& points)
 		glVertex3f(p.x, p.y, p.z);
 	glEnd();
 }
-// 坐标轴
+// 二维坐标轴
 void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStart = -winHeight, float yEnd = winHeight)
 {
 	glBegin(GL_LINES);
@@ -210,6 +218,142 @@ void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStar
 	glVertex3f(0, yEnd, 0);
 	glEnd();
 }
+// 三维多面体
+void drawPolyhedron(const std::vector<Point>& points, const std::vector<std::vector<int>>& indexs)
+{
+	for (auto& index : indexs)
+	{
+		glBegin(GL_LINE_LOOP);
+		for (auto& i : index)
+		{
+			glVertex2f(points[i].x, points[i].y);
+		}
+		glEnd();
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 三维几何变换
+// 错切（参考z轴）
+Matrix shearZrefMatrix(float shzx, float shzy, float zref)
+{
+	Matrix Mzshear(4, 4);
+	matrixSetIdentity(Mzshear);
+	Mzshear[0][2] = shzx;
+	Mzshear[0][3] = -shzx * zref;
+	Mzshear[1][2] = shzy;
+	Mzshear[1][3] = -shzy * zref;
+	return Mzshear;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 三维观察矩阵
+// 建模变换
+Matrix modelMatrix(Point o, Vec3 X, Vec3 Y)
+{
+	Vec3 x = X;
+	normal(x);
+	Vec3 z = cross(x, Y);
+	normal(z);
+	Vec3 y = cross(z, x);
+
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -o.x;
+	T[1][3] = -o.y;
+	T[2][3] = -o.z;
+
+	Matrix R(4, 4);
+	matrixSetIdentity(R);
+	R[0][0] = x.x;
+	R[0][1] = x.y;
+	R[0][2] = x.z;
+	R[1][0] = y.x;
+	R[1][1] = y.y;
+	R[1][2] = y.z;
+	R[2][0] = z.x;
+	R[2][1] = z.y;
+	R[2][2] = z.z;
+
+	return R * T;
+}
+// 观察变换
+Matrix viewMatrix(Point p0, Vec3 N, Vec3 V)
+{
+	Vec3 n = N;
+	normal(n);
+	Vec3 u = cross(V, n);
+	normal(u);
+	Vec3 v = cross(n, u);
+
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -p0.x;
+	T[1][3] = -p0.y;
+	T[2][3] = -p0.z;
+
+	Matrix R(4, 4);
+	matrixSetIdentity(R);
+	R[0][0] = u.x;
+	R[0][1] = u.y;
+	R[0][2] = u.z;
+	R[1][0] = v.x;
+	R[1][1] = v.y;
+	R[1][2] = v.z;
+	R[2][0] = n.x;
+	R[2][1] = n.y;
+	R[2][2] = n.z;
+
+	return R * T;
+}
+// 正投影变换
+Matrix orthogonalProjectionMatrix()
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	return m;
+}
+// 平行投影变换
+Matrix parallelProjectionMatrix(Vec3 Vp, float zvp)
+{
+	Matrix M_oblique(4, 4);
+	matrixSetIdentity(M_oblique);
+	M_oblique[0][2] = -Vp.x / Vp.z;
+	M_oblique[0][3] = zvp * Vp.x / Vp.z;
+	M_oblique[1][2] = -Vp.y / Vp.z;
+	M_oblique[1][3] = zvp * Vp.y / Vp.z;
+
+	return M_oblique;
+}
+// 规范化变换
+Matrix normalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
+{
+	Matrix M_ortho_norm(4, 4);
+	matrixSetIdentity(M_ortho_norm);
+	M_ortho_norm[0][0] = 2 / (xwmax - xwmin);
+	M_ortho_norm[0][3] = -(xwmax + xwmin) / (xwmax - xwmin);
+	M_ortho_norm[1][1] = 2 / (ywmax - ywmin);
+	M_ortho_norm[1][3] = -(ywmax + ywmin) / (ywmax - ywmin);
+	M_ortho_norm[2][2] = -2 / (znear - zfar);
+	M_ortho_norm[2][3] = (znear + zfar) / (znear - zfar);
+
+	return M_ortho_norm;
+}
+// 视口变换
+Matrix viewportMatrix(float xvmin, float xvmax, float yvmin, float yvmax)
+{
+	Matrix M_normviewvol_3Dscreen(4, 4);
+	matrixSetIdentity(M_normviewvol_3Dscreen);
+	M_normviewvol_3Dscreen[0][0] = (xvmax - xvmin) / 2;
+	M_normviewvol_3Dscreen[0][3] = (xvmax + xvmin) / 2;
+	M_normviewvol_3Dscreen[1][1] = (yvmax - yvmin) / 2;
+	M_normviewvol_3Dscreen[1][3] = (yvmax + yvmin) / 2;
+	M_normviewvol_3Dscreen[2][2] = 0.5;
+	M_normviewvol_3Dscreen[2][3] = 0.5;
+
+	return M_normviewvol_3Dscreen;
+}
+
 
 #endif
 
@@ -391,6 +535,149 @@ void code_10_exercise_1()
 }
 #endif
 
+#ifdef CHAPTER_10_EXERCISE_2
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> cube = { { -50.f, -50.f, 50.f }, { 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f}, {-50.f, 50.f, 50.f},
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
+	std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+
+	// 正投影
+	auto temp = cube;
+	transformPoints(viewportMatrix(0, winWidth / 3, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	// 正投影(平行投影)
+	temp = cube;
+	transformPoints(viewportMatrix(winWidth / 3, 2 * winWidth / 3, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		parallelProjectionMatrix({0, 0, 1}, -50.f) *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	// 斜平行投影
+	temp = cube;
+	transformPoints(viewportMatrix(2 * winWidth / 3, winWidth, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		parallelProjectionMatrix({ 1.f, 1.f, 2 * 1.414f }, -50.f) *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	glFlush();
+}
+
+void code_10_exercise_2()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_3
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> cube = { { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
+	std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+
+	// 正投影
+	auto temp = cube;
+	transformPoints(viewportMatrix(0, winWidth / 3, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	// 正投影(平行投影)
+	temp = cube;
+	transformPoints(viewportMatrix(winWidth / 3, 2 * winWidth / 3, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		shearZrefMatrix(0, 0, -50.f) *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	// 斜平行投影
+	temp = cube;
+	Vec3 Vp = { 1.f, 1.f, 2 * 1.414f };
+	transformPoints(viewportMatrix(2 * winWidth / 3, winWidth, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		shearZrefMatrix(-Vp.x / Vp.z, -Vp.y / Vp.z, -50.f) *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	glFlush();
+}
+
+void code_10_exercise_3()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_4
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	std::vector<Point> cube = { { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
+	std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+
+	// 正投影
+	auto temp = cube;
+	transformPoints(viewportMatrix(0, winWidth / 3, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	// 正投影(平行投影)
+	temp = cube;
+	transformPoints(viewportMatrix(winWidth / 3, 2 * winWidth / 3, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		shearZrefMatrix(0, 0, -50.f) *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	// 斜平行投影
+	temp = cube;
+	Vec3 Vp = { 1.f, 1.f, 2 * 1.414f };
+	transformPoints(viewportMatrix(2 * winWidth / 3, winWidth, 0, winHeight) *
+		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
+		orthogonalProjectionMatrix() *
+		shearZrefMatrix(-Vp.x / Vp.z, -Vp.y / Vp.z, -50.f) *
+		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
+	drawPolyhedron(temp, indexs);
+
+	glFlush();
+}
+
+void code_10_exercise_4()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_10_COMMON
@@ -398,8 +685,8 @@ void code_10_exercise_1()
 #ifdef CHAPTER_10_COMMON
 void init(void)
 {
-	// 黑色背景色
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearColor(0.0, 0.0, 0.0, 0.0); // 黑色背景色
+	//glColor3f(1.0, 1.0, 1.0); // 白色绘制
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth , 0, winHeight);
@@ -418,6 +705,18 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_10_EXERCISE_1
 	code_10_exercise_1();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_2
+	code_10_exercise_2();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_3
+	code_10_exercise_3();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_4
+	code_10_exercise_4();
 #endif
 
 	glutMainLoop();
