@@ -325,6 +325,50 @@ Matrix parallelProjectionMatrix(Vec3 Vp, float zvp)
 
 	return M_oblique;
 }
+// 透视投影和规范化矩阵
+Matrix perspectiveProjectionAndNormalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
+{
+	Matrix M_normpers(4, 4);
+	matrixSetIdentity(M_normpers);
+	M_normpers[0][0] = -2 * znear / (xwmax - xwmin);
+	M_normpers[0][2] = (xwmax + xwmin) / (xwmax - xwmin);
+	M_normpers[1][1] = -2 * znear / (ywmax - ywmin);
+	M_normpers[1][2] = (ywmax + ywmin) / (ywmax - ywmin);
+	M_normpers[2][2] = (znear + zfar) / (znear - zfar);
+	M_normpers[2][3] = -2 * znear * zfar / (znear - zfar);
+	M_normpers[3][2] = -1;
+	M_normpers[3][3] = 0;
+
+	return M_normpers;
+}
+// 透视投影
+Matrix perspectiveProjectionMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
+{
+	Matrix M_obliquepers(4, 4);
+	matrixSetIdentity(M_obliquepers);
+	M_obliquepers[0][0] = -znear;
+	M_obliquepers[0][2] = (xwmax + xwmin) / 2;
+	M_obliquepers[1][1] = -znear;
+	M_obliquepers[1][2] = (ywmax + ywmin) / 2;
+	M_obliquepers[2][2] = -(znear + zfar);
+	M_obliquepers[2][3] = znear * zfar;
+	M_obliquepers[3][2] = -1;
+	M_obliquepers[3][3] = 0;
+
+	return M_obliquepers;
+}
+// 规范化变换（透视投影）
+Matrix normalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
+{
+	Matrix M_ortho_norm(4, 4);
+	matrixSetIdentity(M_ortho_norm);
+	M_ortho_norm[0][0] = 2 / (xwmax - xwmin);
+	M_ortho_norm[1][1] = 2 / (ywmax - ywmin);
+	M_ortho_norm[2][2] = -2 / (znear - zfar);
+	M_ortho_norm[2][3] = (znear + zfar) / (znear - zfar);
+
+	return M_ortho_norm;
+}
 // 规范化变换
 Matrix normalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
 {
