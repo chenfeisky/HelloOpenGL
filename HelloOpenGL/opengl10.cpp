@@ -5,31 +5,74 @@
 
 #ifdef CHAPTER_10_COMMON
 float winWidth = 800, winHeight = 600;
-
+float floatEqualValue = 0.0001f;
 //////////////////////////////////////////////////////////////////////////
 // 判断浮点数相等
-inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
+inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < floatEqualValue; }
 inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
 inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
 inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 
 //////////////////////////////////////////////////////////////////////////
-// 点，向量
+// 点
 class Point
 {
 public:
-	GLfloat x, y, z;
+	GLfloat x, y, z, h;
+	Point(float x = 0.f, float y = 0.f, float z = 0.f, float h = 1.f) :x(x), y(y), z(z), h(h) {}
 };
 bool operator ==(const Point& p1, const Point& p2)
 {
-	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y) && Equal(p1.z, p2.z);
+	return Equal(p1.x, p2.x) && Equal(p1.y, p2.y) && Equal(p1.z, p2.z) && Equal(p1.h, p2.h);
 }
 bool operator!=(const Point& p1, const Point& p2)
 {
 	return !(p1 == p2);
 }
-
+bool operator < (const Point& p1, const Point& p2)
+{
+	if (Less(p1.x, p2.x))
+	{
+		return true;
+	}
+	else if (Less(p2.x, p1.x))
+	{
+		return false;
+	}
+	else if (Less(p1.y, p2.y))
+	{
+		return true;
+	}
+	else if (Less(p2.y, p1.y))
+	{
+		return false;
+	}
+	else if (Less(p1.z, p2.z))
+	{
+		return true;
+	}
+	else if (Less(p2.z, p1.z))
+	{
+		return false;
+	}
+	else
+		return false;
+}
+void descartes(Point& p)
+{
+	p.x = p.x / p.h;
+	p.y = p.y / p.h;
+	p.z = p.z / p.h;
+	p.h = 1.f;
+}
+void homogeneous(Point& p, float h)
+{
+	p.x = p.x * h;
+	p.y = p.y * h;
+	p.z = p.z * h;
+	p.h = h;
+}
 //////////////////////////////////////////////////////////////////////////
 // 矩阵
 struct Matrix
@@ -111,11 +154,12 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 		point[0][0] = p.x;
 		point[1][0] = p.y;
 		point[2][0] = p.z;
-		point[3][0] = 1;
+		point[3][0] = p.h;
 		auto temp = m * point;
 		p.x = temp[0][0];
 		p.y = temp[1][0];
 		p.z = temp[2][0];
+		p.h = temp[3][0];
 	}
 }
 void transformPoint(Matrix& m, Point& point)
@@ -125,16 +169,21 @@ void transformPoint(Matrix& m, Point& point)
 	_point[0][0] = point.x;
 	_point[1][0] = point.y;
 	_point[2][0] = point.z;
-	_point[3][0] = 1;
+	_point[3][0] = point.h;
 	temp = m * _point;
 	point.x = temp[0][0];
 	point.y = temp[1][0];
 	point.z = temp[2][0];
+	point.h = temp[3][0];
 }
 
 //////////////////////////////////////////////////////////////////////////
 // 向量
-typedef Point Vec3;
+class Vec3
+{
+public:
+	GLfloat x, y, z;
+};
 Vec3 cross(const Vec3& v1, const Vec3& v2)
 {
 	return{ v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x };
@@ -199,11 +248,28 @@ Point centerPoint(const std::vector<Point>& points)
 }
 
 //////////////////////////////////////////////////////////////////////////
+// 多面体
+class Polyhedron
+{
+public:
+	std::vector<Point> points;
+	std::vector<std::vector<int>> indexs;
+};
+
+//////////////////////////////////////////////////////////////////////////
 // 绘制
+// 直线
+void drawLine(Point p1, Point p2)
+{
+	glBegin(GL_LINES);
+	glVertex2f(p1.x, p1.y);
+	glVertex2f(p2.x, p2.y);
+	glEnd();
+}
 // 二维多边形
 void drawPolygon(const std::vector<Point>& points)
 {
-	glBegin(GL_POLYGON);
+	glBegin(GL_LINE_LOOP);
 	for (auto & p : points)
 		glVertex3f(p.x, p.y, p.z);
 	glEnd();
@@ -219,21 +285,92 @@ void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStar
 	glEnd();
 }
 // 三维多面体
-void drawPolyhedron(const std::vector<Point>& points, const std::vector<std::vector<int>>& indexs)
+void drawPolyhedron(const Polyhedron& polyhedron)
 {
-	for (auto& index : indexs)
+	for (auto& index : polyhedron.indexs)
 	{
 		glBegin(GL_LINE_LOOP);
 		for (auto& i : index)
 		{
-			glVertex2f(points[i].x, points[i].y);
+			glVertex2f(polyhedron.points[i].x, polyhedron.points[i].y);
+		}
+		glEnd();
+	}
+}
+void drawPolyhedron3D(const Polyhedron& polyhedron)
+{
+	for (auto& index : polyhedron.indexs)
+	{
+		glBegin(GL_LINE_LOOP);
+		for (auto& i : index)
+		{
+			glVertex3f(polyhedron.points[i].x, polyhedron.points[i].y, polyhedron.points[i].z);
 		}
 		glEnd();
 	}
 }
 
+
 //////////////////////////////////////////////////////////////////////////
 // 三维几何变换
+// 平移
+Matrix translateMatrix(float tx, float ty, float tz)
+{
+	Matrix m(4, 4);
+	matrixSetIdentity(m);
+	m[0][3] = tx;
+	m[1][3] = ty;
+	m[2][3] = tz;
+
+	return m;
+}
+// 任意轴旋转
+Matrix rotateMatrix(Point p0, Vec3 u, float theta)
+{
+	normal(u);
+
+	Matrix T_(4, 4);
+	matrixSetIdentity(T_);
+	T_[0][3] = p0.x;
+	T_[1][3] = p0.y;
+	T_[2][3] = p0.z;
+
+	Matrix MR(4, 4);
+	matrixSetIdentity(MR);
+	float cos = std::cos(theta);
+	float sin = std::sin(theta);
+	MR[0][0] = u.x * u.x * (1 - cos) + cos;
+	MR[0][1] = u.x * u.y * (1 - cos) - u.z * sin;
+	MR[0][2] = u.x * u.z * (1 - cos) + u.y * sin;
+	MR[1][0] = u.y * u.x * (1 - cos) + u.z * sin;
+	MR[1][1] = u.y * u.y * (1 - cos) + cos;
+	MR[1][2] = u.y * u.z * (1 - cos) - u.x * sin;
+	MR[2][0] = u.z * u.x * (1 - cos) - u.y * sin;
+	MR[2][1] = u.z * u.y * (1 - cos) + u.x * sin;
+	MR[2][2] = u.z * u.z * (1 - cos) + cos;
+
+	Matrix T(4, 4);
+	matrixSetIdentity(T);
+	T[0][3] = -p0.x;
+	T[1][3] = -p0.y;
+	T[2][3] = -p0.z;
+
+	return T_ * MR * T;
+}
+// 任意点缩放
+Matrix scaleMatrix(Point p0, float sx, float sy, float sz)
+{
+	// 基于指定点缩放
+	Matrix ret(4, 4);
+	matrixSetIdentity(ret);
+	ret[0][0] = sx;
+	ret[0][3] = p0.x * (1 - sx);
+	ret[1][1] = sy;
+	ret[1][3] = p0.y * (1 - sy);
+	ret[2][2] = sz;
+	ret[2][3] = p0.z * (1 - sz);
+	return ret;
+}
 // 错切（参考z轴）
 Matrix shearZrefMatrix(float shzx, float shzy, float zref)
 {
@@ -358,7 +495,7 @@ Matrix perspectiveProjectionMatrix(float xwmin, float xwmax, float ywmin, float 
 	return M_obliquepers;
 }
 // 规范化变换（透视投影）
-Matrix normalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
+Matrix normalMatrix_perspective(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
 {
 	Matrix M_ortho_norm(4, 4);
 	matrixSetIdentity(M_ortho_norm);
@@ -398,6 +535,172 @@ Matrix viewportMatrix(float xvmin, float xvmax, float yvmin, float yvmax)
 	return M_normviewvol_3Dscreen;
 }
 
+class Camera
+{
+public:
+#define GLUT_WHEEL_UP 0x0003
+#define GLUT_WHEEL_DOWN 0x0004
+
+	static Camera* _this;
+	Point _viewP0;
+	Vec3 _u, _v, _n;
+
+	Camera(Point viewP0, Vec3 N, Vec3 V, float zViewDistance)
+	{
+		_this = this;
+		_viewP0 = viewP0;
+		init(N, V);
+		_zViewDistance = zViewDistance;
+		glutMouseFunc(&mouseFunc);
+		glutMotionFunc(&mouseMoveFunc);
+	}
+	void static mouseFunc(int button, int state, int x, int y)
+	{
+		//printf("mouseFunc %d, %d, %d %d\n", button, state, x, y);
+		y = _this->realY(y);
+		_this->_mouseFunc(button, state, x, y);
+	}
+	void static mouseMoveFunc(int x, int y)
+	{
+		//printf("mouseMoveFunc %d, %d\n", x, y);
+		y = _this->realY(y);
+		_this->_mouseMoveFunc(x, y);
+	}
+private:
+	float _zViewDistance;
+	int _pressButton = 0;
+	int _lastX, _lastY;
+	void init(Vec3 N, Vec3 V)
+	{
+		_n = N;
+		normal(_n);
+		_u = cross(V, _n);
+		normal(_u);
+		_v = cross(_n, _u);
+	}
+	void _mouseFunc(int button, int state, int x, int y)
+	{
+		switch (button)
+		{
+		case GLUT_MIDDLE_BUTTON:
+			if (state == GLUT_DOWN)
+			{
+				_lastX = x;
+				_lastY = y;
+				_pressButton = GLUT_MIDDLE_BUTTON;
+			}
+			else if (state == GLUT_UP)
+			{
+				_pressButton = 0;
+			}
+			break;
+		case GLUT_RIGHT_BUTTON:
+			if (state == GLUT_DOWN)
+			{
+				_lastX = x;
+				_lastY = y;
+				_pressButton = GLUT_RIGHT_BUTTON;
+			}
+			else if (state == GLUT_UP)
+			{
+				_pressButton = 0;
+			}
+			break;
+		case GLUT_WHEEL_UP:
+			if (state == GLUT_UP)
+			{
+				moveAxis("z", -5);
+			}
+			break;
+		case GLUT_WHEEL_DOWN:
+			if (state == GLUT_UP)
+			{
+				moveAxis("z", 5);
+			}
+			break;
+		default:
+			break;
+		}
+
+	}
+	void _mouseMoveFunc(int x, int y)
+	{
+		if (_pressButton == GLUT_MIDDLE_BUTTON)
+		{
+			float dx = x - _lastX;
+			float dy = y - _lastY;
+			_lastX = x;
+			_lastY = y;
+			moveAxis("x", -dx);
+			moveAxis("y", -dy);
+		}
+		else if (_pressButton == GLUT_RIGHT_BUTTON)
+		{
+			float dx = x - _lastX;
+			float dy = y - _lastY;
+			_lastX = x;
+			_lastY = y;
+
+			float ry = -dx / _zViewDistance;
+			auto Ry = rotateMatrix({ 0, 0, 0 }, { 0, 1, 0 }, ry);
+			float rx = dy / _zViewDistance;
+			auto Rx = rotateMatrix({ 0, 0, 0 }, _u, rx);
+
+			auto m = Rx * Ry;
+			Point pu = { _u.x, _u.y, _u.z };
+			Point pv = { _v.x, _v.y, _v.z };
+			Point pn = { _n.x, _n.y, _n.z };
+			transformPoint(m, pu);
+			transformPoint(m, pv);
+			transformPoint(m, pn);
+			_u.x = pu.x;
+			_u.y = pu.y;
+			_u.z = pu.z;
+			_v.x = pv.x;
+			_v.y = pv.y;
+			_v.z = pv.z;
+			_n.x = pn.x;
+			_n.y = pn.y;
+			_n.z = pn.z;
+			normal(_u);
+			normal(_n);
+			normal(_v);
+
+			glutPostRedisplay();
+		}
+	}
+	void moveAxis(std::string axis, float d)
+	{
+		if (axis == "x")
+		{
+			float r = length(_u);
+			_viewP0.x += _u.x / r * d;
+			_viewP0.y += _u.y / r * d;
+			_viewP0.z += _u.z / r * d;
+		}
+		if (axis == "y")
+		{
+			float r = length(_v);
+			_viewP0.x += _v.x / r * d;
+			_viewP0.y += _v.y / r * d;
+			_viewP0.z += _v.z / r * d;
+		}
+		if (axis == "z")
+		{
+			float r = length(_n);
+			_viewP0.x += _n.x / r * d;
+			_viewP0.y += _n.y / r * d;
+			_viewP0.z += _n.z / r * d;
+		}
+		glutPostRedisplay();
+	}
+	float realY(float y)
+	{
+		return winHeight - y;
+	}
+};
+Camera* Camera::_this = nullptr;
+
 
 #endif
 
@@ -416,6 +719,7 @@ void init(void)
 	GLfloat test[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, test);
 
+	// 测试opengl观察矩阵
 	/*glLoadIdentity();
 	Vec3 n = { x0 - xref, y_0 - yref, z0 - zref };
 	normal(n);
@@ -484,6 +788,140 @@ void main(int argc, char** argv)
 	glutReshapeFunc(reshapeFcn);
 	glutMainLoop();
 }
+
+// 测试摄像机
+//Point viewP0 = { 0, 0, 100 };
+//GLfloat dnear = 1, dfar = 2000;
+//std::vector<Point> cube = { { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+//{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
+//std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+//Camera *camera = nullptr;
+//void viewLine1()
+//{
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	gluOrtho2D(0, winWidth, 0, winHeight);
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
+//	glViewport(0, 0, winWidth, winHeight);
+//
+//	auto temp = cube;
+//
+//	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+//	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+//	transformPoints(perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -dnear, -dfar) *
+//		viewMatrix(camera->_viewP0, camera->_n, camera->_v), temp);
+//
+//	for (auto& p : temp)
+//		descartes(p);
+//	
+//	transformPoints(viewportMatrix(winWidth / 2, winWidth, 0, winHeight), temp);
+//
+//	drawPolyhedron(temp, indexs);
+//}
+//void displayFcn(void)
+//{
+//	glClear(GL_COLOR_BUFFER_BIT);
+//	glColor3f(1.0, 1.0, 1.0);
+//	
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
+//	Point pu = { camera->_viewP0.x - camera->_n.x,
+//		camera->_viewP0.y - camera->_n.y,
+//		camera->_viewP0.z - camera->_n.z, };
+//	gluLookAt(camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z, pu.x, pu.y, pu.z, camera->_v.x, camera->_v.y, camera->_v.z);
+//	
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+//	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+//
+//	glFrustum(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, dnear, dfar);
+//	//glFrustum(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2, 724.264, dfar);
+//	//gluPerspective(45.f, (GLfloat)winWidth / (GLfloat)winHeight, dnear, dfar);
+//	glViewport(0, 0, winWidth / 2, winHeight);
+//	drawPolyhedron3D(cube, indexs);
+//
+//	viewLine1();
+//	
+//	glFlush();
+//}
+//void ch_init(void)
+//{
+//	glutDisplayFunc(displayFcn);
+//	camera = new Camera({ 200, 200, 1000 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+//}
+#endif
+
+#ifdef CHAPTER_10_CAMERA
+Point viewP0 = { 0, 0, 100 };
+GLfloat dnear = 1, dfar = 2000;
+Camera *camera = nullptr;
+Polyhedron cube = {
+	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+
+{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void view()
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, winWidth, 0, winHeight);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glViewport(0, 0, winWidth, winHeight);
+
+	auto temp = cube;
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+	transformPoints(perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -dnear, -dfar) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v), temp.points);
+
+	for (auto& p : temp.points)
+		descartes(p);
+	
+	transformPoints(viewportMatrix(winWidth / 2, winWidth, 0, winHeight), temp.points);
+
+	drawPolyhedron(temp);
+}
+void viewOpenGL()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	Point pu = { camera->_viewP0.x - camera->_n.x,
+		camera->_viewP0.y - camera->_n.y,
+		camera->_viewP0.z - camera->_n.z, };
+	gluLookAt(camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z, pu.x, pu.y, pu.z, camera->_v.x, camera->_v.y, camera->_v.z);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+
+	glFrustum(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, dnear, dfar);
+	//glFrustum(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, winHeight / 2 / tan(45.f / 2 * PI / 180), dfar);
+	//gluPerspective(45.f, (GLfloat)winWidth / 2 / (GLfloat)winHeight, dnear, dfar);
+	glViewport(0, 0, winWidth / 2, winHeight);
+	drawPolyhedron3D(cube);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+	
+	viewOpenGL();
+
+	view();
+	
+	glFlush();
+}
+void code_10_camera(void)
+{
+	glutDisplayFunc(displayFcn);
+	camera = new Camera({ 200, 200, 1000 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+}
 #endif
 
 #ifdef CHAPTER_10_EXERCISE_1
@@ -536,9 +974,9 @@ Matrix worldToView2(Point p0, Vec3 N, Vec3 V)
 	m[2][1] = n.y;
 	m[2][2] = n.z;
 
-	m[0][3] = -dot(u, p0);
-	m[1][3] = -dot(v, p0);
-	m[2][3] = -dot(n, p0);
+	m[0][3] = -dot(u, { p0.x, p0.y, p0.z });
+	m[1][3] = -dot(v, { p0.x, p0.y, p0.z });
+	m[2][3] = -dot(n, { p0.x, p0.y, p0.z });
 
 	return m;
 }
@@ -585,9 +1023,12 @@ void displayFcn()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> cube = { { -50.f, -50.f, 50.f }, { 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f}, {-50.f, 50.f, 50.f},
-	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
-	std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+	Polyhedron cube = {
+		{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+		{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+
+		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+	};
 
 	// 正投影
 	auto temp = cube;
@@ -595,8 +1036,8 @@ void displayFcn()
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
 		orthogonalProjectionMatrix() *
 		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	drawPolyhedron(temp);
 
 	// 正投影(平行投影)
 	temp = cube;
@@ -604,8 +1045,8 @@ void displayFcn()
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
 		parallelProjectionMatrix({0, 0, 1}, -50.f) *
 		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	drawPolyhedron(temp);
 
 	// 斜平行投影
 	temp = cube;
@@ -613,8 +1054,8 @@ void displayFcn()
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
 		parallelProjectionMatrix({ 1.f, 1.f, 2 * 1.414f }, -50.f) *
 		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	drawPolyhedron(temp);
 
 	glFlush();
 }
@@ -631,9 +1072,12 @@ void displayFcn()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> cube = { { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
-	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
-	std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+	Polyhedron cube = {
+		{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+		{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+
+		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+	};
 
 	// 正投影
 	auto temp = cube;
@@ -641,8 +1085,8 @@ void displayFcn()
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
 		orthogonalProjectionMatrix() *
 		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	drawPolyhedron(temp);
 
 	// 正投影(平行投影)
 	temp = cube;
@@ -651,8 +1095,8 @@ void displayFcn()
 		orthogonalProjectionMatrix() *
 		shearZrefMatrix(0, 0, -50.f) *
 		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	drawPolyhedron(temp);
 
 	// 斜平行投影
 	temp = cube;
@@ -662,8 +1106,8 @@ void displayFcn()
 		orthogonalProjectionMatrix() *
 		shearZrefMatrix(-Vp.x / Vp.z, -Vp.y / Vp.z, -50.f) *
 		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	drawPolyhedron(temp);
 
 	glFlush();
 }
@@ -675,44 +1119,39 @@ void code_10_exercise_3()
 #endif
 
 #ifdef CHAPTER_10_EXERCISE_4
+Point viewP0 = { 160.f, 170.f, 200.f };
 void displayFcn()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	std::vector<Point> cube = { { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
-	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } };
-	std::vector<std::vector<int>> indexs = { { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } };
+	Polyhedron cube = {
+		{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+		{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
 
-	// 正投影
+		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+	};
+	
+	// 直接使用复合投影+规范化矩阵
 	auto temp = cube;
-	transformPoints(viewportMatrix(0, winWidth / 3, 0, winHeight) *
-		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
-		orthogonalProjectionMatrix() *
-		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionAndNormalMatrix(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -40.f, -200.f), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
 
-	// 正投影(平行投影)
+	// 单独的投影，规范化矩阵
 	temp = cube;
-	transformPoints(viewportMatrix(winWidth / 3, 2 * winWidth / 3, 0, winHeight) *
-		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
-		orthogonalProjectionMatrix() *
-		shearZrefMatrix(0, 0, -50.f) *
-		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
-
-	// 斜平行投影
-	temp = cube;
-	Vec3 Vp = { 1.f, 1.f, 2 * 1.414f };
-	transformPoints(viewportMatrix(2 * winWidth / 3, winWidth, 0, winHeight) *
-		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
-		orthogonalProjectionMatrix() *
-		shearZrefMatrix(-Vp.x / Vp.z, -Vp.y / Vp.z, -50.f) *
-		viewMatrix({ winWidth / 6, winHeight / 2, 220.f }, { 0, 0, 1 }, { 0, 1, 0 }) *
-		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp);
-	drawPolyhedron(temp, indexs);
+	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionMatrix(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -40.f, -200.f), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(normalMatrix_perspective(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -40.f, -200.f), temp.points);
+	transformPoints(viewportMatrix(winWidth / 2, winWidth, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
 
 	glFlush();
 }
@@ -723,6 +1162,2016 @@ void code_10_exercise_4()
 }
 #endif
 
+#ifdef CHAPTER_10_EXERCISE_5
+Point viewP0 = { 200.f, 100.f, 200.f };
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	Polyhedron cube = {
+		{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+		{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+
+		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+	};
+
+	// 直接使用复合投影+规范化矩阵
+	auto temp = cube;
+	transformPoints(viewMatrix(viewP0, { 1, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionAndNormalMatrix(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -60.f, -300.f), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	// 单独的投影，规范化矩阵
+	temp = cube;
+	transformPoints(viewMatrix(viewP0, { 1, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionMatrix(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -60.f, -300.f), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(normalMatrix_perspective(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -60.f, -300.f), temp.points);
+	transformPoints(viewportMatrix(winWidth / 2, winWidth, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	glFlush();
+}
+
+void code_10_exercise_5()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_6
+Point viewP0 = { 200.f, 200.f, 200.f};
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	Polyhedron cube = {
+		{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+		{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+
+		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+	};
+	
+	// 直接使用复合投影+规范化矩阵
+	auto temp = cube;
+	transformPoints(viewMatrix(viewP0, { 1, 1, 1 }, { -100, 200, -100 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionAndNormalMatrix(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -75.f, -400.f), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	// 单独的投影，规范化矩阵
+	temp = cube;
+	transformPoints(viewMatrix(viewP0, { 1, 1, 1 }, { -100, 200, -100 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionMatrix(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -75.f, -400.f), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(normalMatrix_perspective(-winWidth / 4, winWidth / 4, -winHeight / 2, winHeight / 2, -75.f, -400.f), temp.points);
+	transformPoints(viewportMatrix(winWidth / 2, winWidth, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	glFlush();
+}
+
+void code_10_exercise_6()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_7
+Point viewP0 = { 160.f, 170.f, 200.f };
+Vec3 view_u = { 0, 0, 1 };
+Vec3 view_v = { 0, 1, 0 };
+float znear = -40.f;
+float zfar = -200.f;
+
+Polyhedron cube = {
+{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+{{ 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+
+auto _curCube = cube;
+void normalKeyFcn(unsigned char key, int x, int y)
+{
+	//printf("normalKeyFcn %d, %d, %d\n", key, x, y);
+	switch (key)
+	{
+	case 'a':
+	case 'A':
+		viewP0 = { 160.f, 170.f, 200.f };
+		view_u = { 0, 0, 1 };
+		view_v = { 0, 1, 0 };
+		znear = -40.f;
+		zfar = -200.f;
+		break;
+	case 's':
+	case 'S':
+		viewP0 = { 200.f, 100.f, 200.f };
+		view_u = { 1, 0, 1 };
+		view_v = { 0, 1, 0 };
+		znear = -60.f;
+		zfar = -300.f;
+		break;
+	case 'd':
+	case 'D':
+		viewP0 = { 200.f, 200.f, 200.f };
+		view_u = { 1, 1, 1 };
+		view_v = { -100, 200, -100 };
+		znear = -75.f;
+		zfar = -400.f;
+		break;
+	default:
+		break;
+	}
+	glutPostRedisplay();
+}
+void specialKeyFcn(int key, int x, int y)
+{
+	//printf("specialKeyFcn %d, %d, %d\n", key, x, y);
+	switch (key)
+	{
+	case GLUT_KEY_LEFT:
+		transformPoints(rotateMatrix({ 0, 0, 0 }, {0, 1, 0}, 5 * PI / 180), _curCube.points);
+		break;
+	case GLUT_KEY_RIGHT:
+		transformPoints(rotateMatrix({ 0, 0, 0 }, { 0, 1, 0 }, -5 * PI / 180), _curCube.points);
+		break;
+	default:
+		break;
+	}
+	glutPostRedisplay();
+}
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	auto temp = _curCube;
+	transformPoints(viewMatrix(viewP0, view_u, view_v) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionAndNormalMatrix(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2, znear, zfar), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(viewportMatrix(0, winWidth, 0, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	glFlush();
+}
+
+void code_10_exercise_7()
+{
+	glutDisplayFunc(displayFcn);
+	glutKeyboardFunc(normalKeyFcn);
+	glutSpecialFunc(specialKeyFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_8
+Polyhedron cube = {
+{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+Point viewP0 = { 160.f, 170.f, 200.f };
+void displayFcn()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	float xwmin = -300, xwmax = 100, ywmin = -winHeight / 4, ywmax = winHeight / 4;
+	float znear = -40.f, zfar = -200.f;
+	// 直接使用复合投影+规范化矩阵
+	auto temp = cube;
+	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionAndNormalMatrix(xwmin, xwmax, ywmin, ywmax, znear, zfar), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(viewportMatrix(0, winWidth / 2, winHeight / 2, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	// 单独的投影，规范化矩阵
+	temp = cube;
+	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(perspectiveProjectionMatrix(xwmin, xwmax, ywmin, ywmax, znear, zfar), temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(normalMatrix_perspective(xwmin, xwmax, ywmin, ywmax, znear, zfar), temp.points);
+	transformPoints(viewportMatrix(winWidth / 2, winWidth, winHeight / 2, winHeight), temp.points);
+	drawPolyhedron(temp);
+
+	// 用对称透视投影(P294(10.33))+平移来代替斜透视投影(P294(10.34))，后续按书上的方法计算
+	temp = cube;
+	// P294(10.33)
+	Matrix M_pers(4, 4);
+	matrixSetIdentity(M_pers);
+	M_pers[0][0] = -znear;
+	M_pers[1][1] = -znear;
+	M_pers[1][2] = (ywmax + ywmin) / 2;
+	M_pers[2][2] = (znear + zfar) / (znear - zfar);
+	M_pers[2][3] = -2 * znear * zfar / (znear - zfar);
+	M_pers[3][2] = -1;
+	M_pers[3][3] = 0;
+
+	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(scaleMatrix({0, 0, 0}, 2 / (xwmax - xwmin), 2 / (ywmax - ywmin), 1) * 
+		translateMatrix(-(xwmin + xwmax) / 2, -(ywmin + ywmax) / 2, 0) * 
+		M_pers, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight / 2), temp.points);
+	drawPolyhedron(temp);
+
+	// 用单独的对称透视投影+平移来代替单独的斜透视投影，然后再规范化矩阵
+	temp = cube;
+	// 单独的对称透视投影
+	Matrix M_perspective(4, 4);
+	matrixSetIdentity(M_perspective);
+	M_perspective[0][0] = -znear;
+	M_perspective[0][2] = 0;
+	M_perspective[1][1] = -znear;
+	M_perspective[1][2] = 0;
+	M_perspective[2][2] = -(znear + zfar);
+	M_perspective[2][3] = znear * zfar;
+	M_perspective[3][2] = -1;
+	M_perspective[3][3] = 0;
+
+	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
+	transformPoints(translateMatrix(-(xwmin + xwmax) / 2, -(ywmin + ywmax) / 2, 0) *
+		M_perspective, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	transformPoints(normalMatrix_perspective(xwmin, xwmax, ywmin, ywmax, znear, zfar), temp.points);
+	transformPoints(viewportMatrix(winWidth / 2, winWidth, 0, winHeight / 2), temp.points);
+	drawPolyhedron(temp);
+
+	glFlush();
+}
+
+void code_10_exercise_8()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_9
+
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+const GLint winNearBitCode = 0x10;
+const GLint winFarBitCode = 0x20;
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(Point pt)
+{
+	GLubyte code = 0x00;
+	if (pt.h > 0)
+	{
+		if (pt.h + pt.x < 0)
+			code = code | winLeftBitCode;
+		if (pt.h - pt.x < 0)
+			code = code | winRightBitCode;
+		if (pt.h + pt.y < 0)
+			code = code | winBottomBitCode;
+		if (pt.h - pt.y < 0)
+			code = code | winTopBitCode;
+		if (pt.h + pt.z < 0)
+			code = code | winNearBitCode;
+		if (pt.h - pt.z < 0)
+			code = code | winFarBitCode;
+	}
+	else
+	{
+		if (pt.h + pt.x > 0)
+			code = code | winLeftBitCode;
+		if (pt.h - pt.x > 0)
+			code = code | winRightBitCode;
+		if (pt.h + pt.y > 0)
+			code = code | winBottomBitCode;
+		if (pt.h - pt.y > 0)
+			code = code | winTopBitCode;
+		if (pt.h + pt.z > 0)
+			code = code | winNearBitCode;
+		if (pt.h - pt.z > 0)
+			code = code | winFarBitCode;
+	}
+	return (code);
+}
+void swapPts(Point* p1, Point* p2)
+{
+	Point tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+void clacCrossPoint(Point& p1, const Point& p2, GLubyte planeCode)
+{
+	float u = 0.f;
+	switch (planeCode)
+	{
+	case winLeftBitCode:
+		u = (p1.x + p1.h) / ((p1.x + p1.h) - (p2.x + p2.h));
+		break;
+	case winRightBitCode:
+		u = (p1.x - p1.h) / ((p1.x - p1.h) - (p2.x - p2.h));
+		break;
+	case winBottomBitCode:
+		u = (p1.y + p1.h) / ((p1.y + p1.h) - (p2.y + p2.h));
+		break;
+	case winTopBitCode:
+		u = (p1.y - p1.h) / ((p1.y - p1.h) - (p2.y - p2.h));
+		break;
+	case winNearBitCode:
+		u = (p1.z + p1.h) / ((p1.z + p1.h) - (p2.z + p2.h));
+		break;
+	case winFarBitCode:
+		u = (p1.z - p1.h) / ((p1.z - p1.h) - (p2.z - p2.h));
+		break;
+	default:
+		break;
+	}
+
+	p1.x += (p2.x - p1.x) * u;
+	p1.y += (p2.y - p1.y) * u;
+	p1.z += (p2.z - p1.z) * u;
+	p1.h += (p2.h - p1.h) * u;
+}
+bool lineClipCohSuth1(Point& p1, Point& p2)
+{
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	while (!done)
+	{
+		code1 = encode(p1);
+		code2 = encode(p2);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			if (code1 & winLeftBitCode)
+			{
+				clacCrossPoint(p1, p2, winLeftBitCode);
+			}
+			else if (code1 & winRightBitCode)
+			{
+				clacCrossPoint(p1, p2, winRightBitCode);
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				clacCrossPoint(p1, p2, winBottomBitCode);
+			}
+			else if (code1 & winTopBitCode)
+			{
+				clacCrossPoint(p1, p2, winTopBitCode);
+			}
+			else if (code1 & winNearBitCode)
+			{
+				clacCrossPoint(p1, p2, winNearBitCode);
+			}
+			else if (code1 & winFarBitCode)
+			{
+				clacCrossPoint(p1, p2, winFarBitCode);
+			}
+		}
+	}
+
+	return plotLine;
+}
+
+
+GLubyte encode2(Point pt)
+{
+	GLubyte code = 0x00;
+	if (pt.x < -1)
+		code = code | winLeftBitCode;
+	if (pt.x > 1)
+		code = code | winRightBitCode;
+	if (pt.y < -1)
+		code = code | winBottomBitCode;
+	if (pt.y > 1)
+		code = code | winTopBitCode;
+	if (pt.z < -1)
+		code = code | winNearBitCode;
+	if (pt.z > 1)
+		code = code | winFarBitCode;
+	return (code);
+}
+void clacCrossPoint2(Point& p1, const Point& p2, GLubyte planeCode)
+{
+	float u = 0.f;
+	switch (planeCode)
+	{
+	case winLeftBitCode:
+		u = (p1.x + 1) / (p1.x - p2.x);
+		break;
+	case winRightBitCode:
+		u = (p1.x - 1) / (p1.x - p2.x);
+		break;
+	case winBottomBitCode:
+		u = (p1.y + 1) / (p1.y - p2.y);
+		break;
+	case winTopBitCode:
+		u = (p1.y - 1) / (p1.y - p2.y);
+		break;
+	case winNearBitCode:
+		u = (p1.z + 1) / (p1.z - p2.z);
+		break;
+	case winFarBitCode:
+		u = (p1.z - 1) / (p1.z - p2.z);
+		break;
+	default:
+		break;
+	}
+
+	p1.x += (p2.x - p1.x) * u;
+	p1.y += (p2.y - p1.y) * u;
+	p1.z += (p2.z - p1.z) * u;
+}
+bool lineClipCohSuth2(Point& p1, Point& p2)
+{
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+
+	while (!done)
+	{
+		code1 = encode2(p1);
+		code2 = encode2(p2);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			if (code1 & winLeftBitCode)
+			{
+				clacCrossPoint2(p1, p2, winLeftBitCode);
+			}
+			else if (code1 & winRightBitCode)
+			{
+				clacCrossPoint2(p1, p2, winRightBitCode);
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				clacCrossPoint2(p1, p2, winBottomBitCode);
+			}
+			else if (code1 & winTopBitCode)
+			{
+				clacCrossPoint2(p1, p2, winTopBitCode);
+			}
+			else if (code1 & winNearBitCode)
+			{
+				clacCrossPoint2(p1, p2, winNearBitCode);
+			}
+			else if (code1 & winFarBitCode)
+			{
+				clacCrossPoint2(p1, p2, winFarBitCode);
+			}
+		}
+	}
+
+	return plotLine;
+}
+Camera *camera = nullptr;
+Point p1 = { 80, -60, -60 }, p2 = { -35, 70, 40 };
+void viewLine1()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 150, winHeight = 100;
+
+	auto p1_temp = p1;
+	auto p2_temp = p2;
+
+	Point viewPortPoint = { 100.f, 100.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -2000.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 });
+			
+	transformPoint(m, p1_temp);
+	transformPoint(m, p2_temp);
+
+	auto p1_temp_clip = p1_temp;
+	auto p2_temp_clip = p2_temp;
+	auto clip = lineClipCohSuth1(p1_temp_clip, p2_temp_clip);
+	
+	descartes(p1_temp);
+	descartes(p2_temp);
+	if (clip)
+	{
+		descartes(p1_temp_clip);
+		descartes(p2_temp_clip);
+	}
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+	transformPoint(m1, p1_temp);
+	transformPoint(m1, p2_temp);
+	if (clip)
+	{
+		transformPoint(m1, p1_temp_clip);
+		transformPoint(m1, p2_temp_clip);
+	}
+	drawLine(p1_temp, p2_temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (clip)
+		drawLine(p1_temp_clip, p2_temp_clip);
+}
+void viewLine2()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 150, winHeight = 100;
+
+	auto p1_temp = p1;
+	auto p2_temp = p2;
+
+	Point viewPortPoint = { 500, 100.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+	
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -2000.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 });
+
+	transformPoint(m, p1_temp);
+	transformPoint(m, p2_temp);
+
+	descartes(p1_temp);
+	descartes(p2_temp);
+
+	auto p1_temp_clip = p1_temp;
+	auto p2_temp_clip = p2_temp;
+	auto clip = lineClipCohSuth2(p1_temp_clip, p2_temp_clip);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+	transformPoint(m1, p1_temp);
+	transformPoint(m1, p2_temp);
+	if (clip)
+	{
+		transformPoint(m1, p1_temp_clip);
+		transformPoint(m1, p2_temp_clip);
+	}
+
+	drawLine(p1_temp, p2_temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (clip)
+		drawLine(p1_temp_clip, p2_temp_clip);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	viewLine1();
+	viewLine2();
+	
+	glFlush();
+}
+void code_10_exercise_9()
+{
+	glutDisplayFunc(drawFunc);
+	camera = new Camera({ 100.f, 100.f, 200.f }, { 0, 0, 1 }, { 0, 1, 0 }, 200);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_10
+
+const GLint winLeftBitCode = 0x01;
+const GLint winRightBitCode = 0x02;
+const GLint winBottomBitCode = 0x04;
+const GLint winTopBitCode = 0x08;
+const GLint winNearBitCode = 0x10;
+const GLint winFarBitCode = 0x20;
+inline GLint inside(GLint code)
+{
+	return GLint(!code);
+}
+inline GLint reject(GLint code1, GLint code2)
+{
+	return GLint(code1 & code2);
+}
+inline GLint accept(GLint code1, GLint code2)
+{
+	return GLint(!(code1 | code2));
+}
+GLubyte encode(Point pt)
+{
+	GLubyte code = 0x00;
+	if (pt.h > 0)
+	{
+		if (pt.h + pt.x < 0)
+			code = code | winLeftBitCode;
+		if (pt.h - pt.x < 0)
+			code = code | winRightBitCode;
+		if (pt.h + pt.y < 0)
+			code = code | winBottomBitCode;
+		if (pt.h - pt.y < 0)
+			code = code | winTopBitCode;
+		if (pt.h + pt.z < 0)
+			code = code | winNearBitCode;
+		if (pt.h - pt.z < 0)
+			code = code | winFarBitCode;
+	}
+	else
+	{
+		if (pt.h + pt.x > 0)
+			code = code | winLeftBitCode;
+		if (pt.h - pt.x > 0)
+			code = code | winRightBitCode;
+		if (pt.h + pt.y > 0)
+			code = code | winBottomBitCode;
+		if (pt.h - pt.y > 0)
+			code = code | winTopBitCode;
+		if (pt.h + pt.z > 0)
+			code = code | winNearBitCode;
+		if (pt.h - pt.z > 0)
+			code = code | winFarBitCode;
+	}
+	return (code);
+}
+void swapPts(Point* p1, Point* p2)
+{
+	Point tmp;
+	tmp = *p1;
+	*p1 = *p2;
+	*p2 = tmp;
+}
+void swapCodes(GLubyte* c1, GLubyte* c2)
+{
+	GLubyte tmp;
+	tmp = *c1;
+	*c1 = *c2;
+	*c2 = tmp;
+}
+void clacCrossPoint(Point& p1, const Point& p2, GLubyte planeCode)
+{
+	float u = 0.f;
+	switch (planeCode)
+	{
+	case winLeftBitCode:
+		u = (p1.x + p1.h) / ((p1.x + p1.h) - (p2.x + p2.h));
+		break;
+	case winRightBitCode:
+		u = (p1.x - p1.h) / ((p1.x - p1.h) - (p2.x - p2.h));
+		break;
+	case winBottomBitCode:
+		u = (p1.y + p1.h) / ((p1.y + p1.h) - (p2.y + p2.h));
+		break;
+	case winTopBitCode:
+		u = (p1.y - p1.h) / ((p1.y - p1.h) - (p2.y - p2.h));
+		break;
+	case winNearBitCode:
+		u = (p1.z + p1.h) / ((p1.z + p1.h) - (p2.z + p2.h));
+		break;
+	case winFarBitCode:
+		u = (p1.z - p1.h) / ((p1.z - p1.h) - (p2.z - p2.h));
+		break;
+	default:
+		break;
+	}
+
+	p1.x += (p2.x - p1.x) * u;
+	p1.y += (p2.y - p1.y) * u;
+	p1.z += (p2.z - p1.z) * u;
+	p1.h += (p2.h - p1.h) * u;
+}
+bool lineClipCohSuth1(Point& p1, Point& p2)
+{
+	GLubyte code1, code2;
+	GLint done = false, plotLine = false;
+	while (!done)
+	{
+		code1 = encode(p1);
+		code2 = encode(p2);
+		if (accept(code1, code2))
+		{
+			done = true;
+			plotLine = true;
+		}
+		else if (reject(code1, code2))
+			done = true;
+		else
+		{
+			if (inside(code1))
+			{
+				swapPts(&p1, &p2);
+				swapCodes(&code1, &code2);
+			}
+			if (code1 & winLeftBitCode)
+			{
+				clacCrossPoint(p1, p2, winLeftBitCode);
+			}
+			else if (code1 & winRightBitCode)
+			{
+				clacCrossPoint(p1, p2, winRightBitCode);
+			}
+			else if (code1 & winBottomBitCode)
+			{
+				clacCrossPoint(p1, p2, winBottomBitCode);
+			}
+			else if (code1 & winTopBitCode)
+			{
+				clacCrossPoint(p1, p2, winTopBitCode);
+			}
+			else if (code1 & winNearBitCode)
+			{
+				clacCrossPoint(p1, p2, winNearBitCode);
+			}
+			else if (code1 & winFarBitCode)
+			{
+				clacCrossPoint(p1, p2, winFarBitCode);
+			}
+		}
+	}
+
+	return plotLine;
+}
+Camera *camera = nullptr;
+struct Line
+{
+	Point p1, p2;
+};
+Point p1 = { 80, -60, -60 }, p2 = { -35, 70, 40 };
+std::vector<Line> lines;
+float random(int a, int b)
+{
+	if (a > b)
+	{
+		int temp = a;
+		a = b;
+		b = temp;
+	}
+	return (rand() % (b - a + 1)) + a;
+}
+void genLines()
+{
+	Point p0 = { -250, -250, -600 };
+	float xlen0 = 500, ylen0 = 500, zlen0 = 500;
+
+	Point p1 = { -500, -500, -600 };
+	float xlen1 = 1000, ylen1 = 1000, zlen1 = 1000;
+
+	for (int i = 0; i < 10; i++)
+	{
+		lines.push_back({ { random(p0.x, p0.x + xlen0),
+			random(p0.y, p0.y + ylen0),
+			random(p0.z, p0.z - zlen0) },
+			{ random(p1.x, p1.x + xlen1),
+			random(p1.y, p1.y + ylen1),
+			random(p1.z, p1.z - zlen1) } });
+	}
+}
+void viewLine()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 400, winHeight = 400;
+
+	auto tempLines = lines;
+
+	Point viewPortPoint = { 200.f, 100.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+	for (auto& line : tempLines)
+	{
+		transformPoint(m, line.p1);		
+		transformPoint(m, line.p2);
+
+		auto p1_clip = line.p1;
+		auto p2_clip = line.p2;
+
+		auto clip = lineClipCohSuth1(p1_clip, p2_clip);
+
+		descartes(line.p1);
+		descartes(line.p2);
+		if (clip)
+		{
+			descartes(p1_clip);
+			descartes(p2_clip);
+		}
+
+		transformPoint(m1, line.p1);
+		transformPoint(m1, line.p2);
+		if (clip)
+		{
+			transformPoint(m1, p1_clip);
+			transformPoint(m1, p2_clip);
+		}
+		glColor3f(1.0, 1.0, 1.0);
+		drawLine(line.p1, line.p2);
+		glColor3f(1.0, 0.0, 0.0);
+		if (clip)
+			drawLine(p1_clip, p2_clip);
+	}	
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	viewLine();
+
+	glFlush();
+}
+void code_10_exercise_10()
+{
+	genLines();
+	glutDisplayFunc(drawFunc);
+	camera = new Camera({ 0, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, 500);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_11
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+bool lineClipLiangBarsk(Point& p1, Point& p2)
+{
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy, dz;
+	if (clipTest(-dx, p1.x - (-1), &u1, &u2))
+		if (clipTest(dx, 1 - p1.x, &u1, &u2))
+		{
+			dy = p2.y - p1.y;
+			if (clipTest(-dy, p1.y - (-1), &u1, &u2))
+				if (clipTest(dy, 1 - p1.y, &u1, &u2))
+				{
+					dz = p2.z - p1.z;
+					if (clipTest(-dz, p1.z - (-1), &u1, &u2))
+						if (clipTest(dz, 1 - p1.z, &u1, &u2))
+						{
+							if (u2 < 1.0)
+							{
+								p2.x = p1.x + u2 * dx;
+								p2.y = p1.y + u2 * dy;
+								p2.z = p1.z + u2 * dz;
+							}
+							if (u1 > 0.0)
+							{
+								p1.x = p1.x + u1 * dx;
+								p1.y = p1.y + u1 * dy;
+								p1.z = p1.z + u1 * dz;
+							}
+							//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+							//drawLine(p1, p2);
+							return true;
+						}
+				}
+		}
+	return false;
+}
+Camera *camera = nullptr;
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	Point p1 = { 80, -60, -60 }, p2 = { -35, 70, 40 };
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	winWidth = 150, winHeight = 100;
+
+	Point viewPortPoint = { 500.f, 100.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+
+	auto p1_temp = p1;
+	auto p2_temp = p2;
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / 2 / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -2000.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v) *
+		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 });
+
+	transformPoint(m, p1_temp);
+	transformPoint(m, p2_temp);
+
+	descartes(p1_temp);
+	descartes(p2_temp);
+
+	auto p1_temp_clip = p1_temp;
+	auto p2_temp_clip = p2_temp;
+	auto clip = lineClipLiangBarsk(p1_temp_clip, p2_temp_clip);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+	transformPoint(m1, p1_temp);
+	transformPoint(m1, p2_temp);
+	if (clip)
+	{
+		transformPoint(m1, p1_temp_clip);
+		transformPoint(m1, p2_temp_clip);
+	}
+
+	drawLine(p1_temp, p2_temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (clip)
+		drawLine(p1_temp_clip, p2_temp_clip);
+
+	glFlush();
+}
+void code_10_exercise_11()
+{
+	glutDisplayFunc(drawFunc);
+
+	camera = new Camera({ 100, 100, 200 }, { 0, 0, 1 }, { 0, 1, 0 }, 200);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_12
+GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
+{
+	GLfloat r;
+	GLint returnValue = true;
+
+	if (p < 0.0)
+	{
+		r = q / p;
+		if (r > *u2)
+			returnValue = false;
+		else if (r > *u1)
+			*u1 = r;
+	}
+	else if (p > 0.0)
+	{
+		r = q / p;
+		if (r < *u1)
+			returnValue = false;
+		else if (r < *u2)
+			*u2 = r;
+	}
+	else if (q < 0.0)
+		returnValue = false;
+
+	return (returnValue);
+}
+bool lineClipLiangBarsk(Point& p1, Point& p2)
+{
+	GLfloat u1 = 0.0, u2 = 1.0, dx = p2.x - p1.x, dy, dz;
+	if (clipTest(-dx, p1.x - (-1), &u1, &u2))
+		if (clipTest(dx, 1 - p1.x, &u1, &u2))
+		{
+			dy = p2.y - p1.y;
+			if (clipTest(-dy, p1.y - (-1), &u1, &u2))
+				if (clipTest(dy, 1 - p1.y, &u1, &u2))
+				{
+					dz = p2.z - p1.z;
+					if (clipTest(-dz, p1.z - (-1), &u1, &u2))
+						if (clipTest(dz, 1 - p1.z, &u1, &u2))
+						{
+							if (u2 < 1.0)
+							{
+								p2.x = p1.x + u2 * dx;
+								p2.y = p1.y + u2 * dy;
+								p2.z = p1.z + u2 * dz;
+							}
+							if (u1 > 0.0)
+							{
+								p1.x = p1.x + u1 * dx;
+								p1.y = p1.y + u1 * dy;
+								p1.z = p1.z + u1 * dz;
+							}
+							//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // 精确到浮点数绘图
+							//drawLine(p1, p2);
+							return true;
+						}
+				}
+		}
+	return false;
+}
+Camera *camera = nullptr;
+struct Line
+{
+	Point p1, p2;
+};
+std::vector<Line> lines;
+float random(int a, int b)
+{
+	if (a > b)
+	{
+		int temp = a;
+		a = b;
+		b = temp;
+	}
+	return (rand() % (b - a + 1)) + a;
+}
+void genLines()
+{
+	Point p0 = { -250, -250, -600 };
+	float xlen0 = 500, ylen0 = 500, zlen0 = 500;
+
+	Point p1 = { -500, -500, -600 };
+	float xlen1 = 1000, ylen1 = 1000, zlen1 = 1000;
+
+	for (int i = 0; i < 10; i++)
+	{
+		lines.push_back({ { random(p0.x, p0.x + xlen0),
+			random(p0.y, p0.y + ylen0),
+			random(p0.z, p0.z - zlen0) },
+			{ random(p1.x, p1.x + xlen1),
+			random(p1.y, p1.y + ylen1),
+			random(p1.z, p1.z - zlen1) } });
+	}
+}
+void viewLine()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 400, winHeight = 400;
+
+	auto tempLines = lines;
+
+	Point viewPortPoint = { 200.f, 100.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+	for (auto& line : tempLines)
+	{
+		transformPoint(m, line.p1);
+		transformPoint(m, line.p2);
+
+		descartes(line.p1);
+		descartes(line.p2);
+
+		auto p1_clip = line.p1;
+		auto p2_clip = line.p2;
+		auto clip = lineClipLiangBarsk(p1_clip, p2_clip);
+
+		transformPoint(m1, line.p1);
+		transformPoint(m1, line.p2);
+		if (clip)
+		{
+			transformPoint(m1, p1_clip);
+			transformPoint(m1, p2_clip);
+		}
+		glColor3f(1.0, 1.0, 1.0);
+		drawLine(line.p1, line.p2);
+		glColor3f(1.0, 0.0, 0.0);
+		if (clip)
+			drawLine(p1_clip, p2_clip);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	viewLine();
+
+	glFlush();
+}
+void code_10_exercise_12()
+{
+	genLines();
+	glutDisplayFunc(drawFunc);
+	camera = new Camera({ 0, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, 500);
+}
+#endif
+
+
+#ifdef CHAPTER_10_EXERCISE_13
+Camera *camera = nullptr;
+const int LeftClipPlane = 1;
+const int RightClipPlane = 2;
+const int BottomClipPlane = 3;
+const int TopClipPlane = 4;
+const int NearClipPlane = 5;
+const int FarClipPlane = 6;
+const std::vector<int> clipPlanes = { LeftClipPlane, RightClipPlane, BottomClipPlane, TopClipPlane, NearClipPlane, FarClipPlane };
+void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
+{
+	//auto it1 = crossInfo.find(p1);
+	//if (it1 != crossInfo.end())
+	//{
+	//	it1->second[p2] = 1;
+	//}
+	//else
+	//{
+	//	crossInfo[p1][p2] = 1;
+	//}
+	crossInfo[p1][p2] = 1;
+}
+void addSurface(Polyhedron& polyhedron, const vector<Point>& points, map<Point, int>& pointInfo)
+{
+	polyhedron.indexs.push_back({});
+	for (int i = 0; i < points.size(); i++)
+	{
+		auto it = pointInfo.find(points[i]);
+		if (it != pointInfo.end())
+		{
+			polyhedron.indexs.back().push_back(it->second);
+		}
+		else
+		{
+			polyhedron.points.push_back(points[i]);
+			int idx = polyhedron.points.size() - 1;
+			polyhedron.indexs.back().push_back(idx);
+
+			pointInfo[points[i]] = idx;
+		}
+	}
+}
+vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+{
+	auto _temp = crossInfo;
+	vector<Point> ret;
+
+	auto beginPoint = crossInfo.begin()->first;
+	ret.push_back(beginPoint);
+
+	auto curPoint = beginPoint;
+	while (true)
+	{
+		assert(crossInfo.find(curPoint) != crossInfo.end());
+		auto nextPoint = crossInfo[curPoint].begin()->first;
+		assert(crossInfo[curPoint][nextPoint] == 1);
+
+		assert(crossInfo.find(nextPoint) != crossInfo.end());
+		assert(crossInfo[nextPoint][curPoint] == 1);
+
+		crossInfo[curPoint].erase(nextPoint);
+		if (crossInfo[curPoint].size() == 0)
+		{
+			crossInfo.erase(curPoint);
+		}
+
+		crossInfo[nextPoint].erase(curPoint);
+		if (crossInfo[nextPoint].size() == 0)
+		{
+			crossInfo.erase(nextPoint);
+		}
+
+		if (nextPoint != beginPoint)
+			ret.push_back(nextPoint);
+		else
+			break;
+		curPoint = nextPoint;
+	}
+
+	return ret;
+}
+
+void antiClockPoints(vector<Point>& points, Vec3 normalVec)
+{
+	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // z取负值是因为在左手坐标系和右手坐标系z反号
+	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, -(points[2].z - points[1].z) };
+	Vec3 crossVec = cross(a, b);
+	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
+	if (!antiClocked)
+	{
+		std::reverse(points.begin(), points.end());
+	}
+}
+Vec3 getClipPlaneNormalVec(int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return{ -1, 0, 0 };
+	case RightClipPlane:
+		return{ 1, 0, 0 };
+	case BottomClipPlane:
+		return{ 0, -1, 0 };
+	case TopClipPlane:
+		return{ 0, 1, 0 };
+	case NearClipPlane:
+		return{ 0, 0, -1 };
+	case FarClipPlane:
+		return{ 0, 0, 1 };
+	}
+}
+
+bool inside(Point p, int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return p.x > -1;
+	case RightClipPlane:
+		return p.x < 1;
+	case BottomClipPlane:
+		return p.y > -1;
+	case TopClipPlane:
+		return p.y < 1;
+	case NearClipPlane:
+		return p.z > -1;
+	case FarClipPlane:
+		return p.z < 1;
+	}
+}
+Point clacCrossPoint(Point p1, Point p2, int clipPlane)
+{
+	float u = 0.f;
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		u = (p1.x + 1) / (p1.x - p2.x);
+		break;
+	case RightClipPlane:
+		u = (p1.x - 1) / (p1.x - p2.x);
+		break;
+	case BottomClipPlane:
+		u = (p1.y + 1) / (p1.y - p2.y);
+		break;
+	case TopClipPlane:
+		u = (p1.y - 1) / (p1.y - p2.y);
+		break;
+	case NearClipPlane:
+		u = (p1.z + 1) / (p1.z - p2.z);
+		break;
+	case FarClipPlane:
+		u = (p1.z - 1) / (p1.z - p2.z);
+		break;
+	default:
+		break;
+	}
+
+	return{ p1.x + (p2.x - p1.x) * u,
+		p1.y += (p2.y - p1.y) * u ,
+		p1.z += (p2.z - p1.z) * u };
+}
+vector<Point> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
+{
+	vector<Point> ret;
+	vector<Point> cross;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+
+		if (!inside(points[i], clipPlane))
+		{
+			if (inside(points[next], clipPlane))
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				ret.push_back(points[next]);
+
+				cross.push_back(cp);
+			}
+		}
+		else
+		{
+			if (inside(points[next], clipPlane))
+			{
+				ret.push_back(points[next]);
+			}
+			else
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				cross.push_back(cp);
+			}
+		}
+	}
+	if (cross.size() > 1 && cross[0] != cross[1])
+	{
+		addCrossInfo(cross[0], cross[1], crossInfo);
+		addCrossInfo(cross[1], cross[0], crossInfo);
+	}
+
+	return ret;
+}
+void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
+{
+	map<Point, int> pointInfo;
+	map<Point, map<Point, int>> crossInfo;
+	Polyhedron newPolyhedron;
+
+	vector<Point> surface;
+	for (auto& index : polyhedron.indexs)
+	{
+		surface.clear();
+		for (auto& idx : index)
+			surface.push_back(polyhedron.points[idx]);
+
+		auto points = clipSurface(surface, clipPlane, crossInfo);
+		if (points.size() > 0)
+			addSurface(newPolyhedron, points, pointInfo);
+	}
+
+	// 裁剪面上的面
+	if (crossInfo.size() > 2)
+	{
+		auto clipSurfacePoints = createClipSuface(crossInfo);
+		antiClockPoints(clipSurfacePoints, getClipPlaneNormalVec(clipPlane));
+		addSurface(newPolyhedron, clipSurfacePoints, pointInfo);
+	}
+
+	polyhedron = newPolyhedron;
+}
+bool checkEntire(Polyhedron& polyhedron)
+{
+	bool allInside = true;
+	bool allOutside = true;
+	for (auto& p : polyhedron.points)
+	{
+		for (auto& clipPlane : clipPlanes)
+		{
+			if (!inside(p, clipPlane))
+				allInside = false;
+			else
+				allOutside = false;
+		}
+	}
+
+	if (allInside)
+	{
+		return true;
+	}
+
+	if (allOutside)
+	{
+		polyhedron.points = {};
+		polyhedron.indexs = {};
+		return true;
+	}
+
+	return false;
+}
+void clip(Polyhedron& polyhedron)
+{
+	if (!checkEntire(polyhedron))
+	{
+		for (auto& clipPlane : clipPlanes)
+		{
+			clipClipPlane(polyhedron, clipPlane);
+		}
+	}
+}
+Polyhedron cube = {
+	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void view()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 400, winHeight = 300;
+
+	auto temp = cube;
+
+	Point viewPortPoint = { 200.f, 150.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+
+	transformPoints(m, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+
+	auto temp_clip = temp;
+	clip(temp_clip);
+
+	transformPoints(m1, temp.points);
+	if (temp_clip.points.size() > 0)
+		transformPoints(m1, temp_clip.points);
+
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolyhedron(temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (temp_clip.points.size() > 0)
+		drawPolyhedron(temp_clip);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	view();
+
+	glFlush();
+}
+void code_10_exercise_13()
+{
+	camera = new Camera({ 100, 200, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_13_TEST
+Camera *camera = nullptr;
+const int LeftClipPlane = 1;
+const int RightClipPlane = 2;
+const int BottomClipPlane = 3;
+const int TopClipPlane = 4;
+const int NearClipPlane = 5;
+const int FarClipPlane = 6;
+const std::vector<int> clipPlanes = { LeftClipPlane, RightClipPlane, BottomClipPlane, TopClipPlane, NearClipPlane, FarClipPlane };
+
+bool linesPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2End, float& u1, float&u2)
+{
+	Vec3 line1Vec = { line1End.x - line1Begin.x, line1End.y - line1Begin.y, line1End.z - line1Begin.z };
+	Vec3 line2Vec = { line2End.x - line2Begin.x, line2End.y - line2Begin.y, line2End.z - line2Begin.z };
+	do {
+		bool recorded = false;
+		float record = 0.f;
+		if (!Equal(line1Vec.x, 0) && !Equal(line2Vec.x, 0))
+		{
+			record = line1Vec.x / line2Vec.x;
+			recorded = true;
+		}
+		else if(Equal(line1Vec.x, 0) && Equal(line2Vec.x, 0))
+		{
+
+		}
+		else
+		{
+			break;
+		}
+
+		if (!Equal(line1Vec.y, 0) && !Equal(line2Vec.y, 0))
+		{
+			float r = line1Vec.y / line2Vec.y;
+			if (recorded)
+			{
+				if (record != r)
+					break;
+			}
+			else
+			{
+				record = r;
+				recorded = true;
+			}
+		}
+		else if (Equal(line1Vec.y, 0) && Equal(line2Vec.y, 0))
+		{
+
+		}
+		else
+		{
+			break;
+		}
+
+		if (!Equal(line1Vec.z, 0) && !Equal(line2Vec.z, 0))
+		{
+			float r = line1Vec.z / line2Vec.z;
+			if (recorded)
+			{
+				if (record != r)
+					break;
+			}
+			else
+			{
+				record = r;
+				recorded = true;
+			}
+		}
+		else if (Equal(line1Vec.z, 0) && Equal(line2Vec.z, 0))
+		{
+
+		}
+		else
+		{
+			break;
+		}
+
+		return false;
+	}while (0)
+
+	if (equal(A1 * B2, A2 * B1))
+		return false;
+
+	point.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
+	point.y = (A2 * C1 - A1 * C2) / (A1 * B2 - A2 * B1);
+	point.z = 0;
+	return true;
+}
+vector<vector<Point>> cutPolygon(const vector<Point>& points, Vec3 normalVec)
+{
+	vector<vector<Point>> ret;
+
+	vector<Vec3> edges;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+		edges.push_back({ points[next].x - points[i].x,
+			points[next].y - points[i].y,
+			points[next].z - points[i].z,});
+	}
+
+	int cutIndex = -1;
+	for (int i = 0; i < edges.size(); ++i)
+	{
+		int next = i + 1 < edges.size() ? i + 1 : 0;
+		Vec3 curVec = cross(edges[i], edges[next]);
+		if (i > 0)
+		{
+			if (curVec.x * normalVec.x < 0 || curVec.y * normalVec.y < 0 || curVec.z * normalVec.z < 0)
+			{
+				cutIndex = i;
+				break;
+			}
+		}
+	}
+	if (cutIndex == -1)
+	{
+		ret.push_back(points);
+		return;
+	}
+
+	Point cutStartP = points[cutIndex];
+	Point cutEndP = points[cutIndex + 1 < points.size() ? cutIndex + 1 : 0];
+	float A1 = cutEndP.y - cutStartP.y;
+	float B1 = cutStartP.x - cutEndP.x;
+	float C1 = cutEndP.x * cutStartP.y - cutStartP.x * cutEndP.y;
+
+	Point cutPoint;
+	float minDis = 0;
+	int curIndex = 0;
+	for (int i = 0; i < ploygon.size(); i++)
+	{
+		int j = i + 1 < ploygon.size() ? i + 1 : 0;
+		float A2 = ploygon[j].y - ploygon[i].y;
+		float B2 = ploygon[i].x - ploygon[j].x;
+		float C2 = ploygon[j].x * ploygon[i].y - ploygon[i].x * ploygon[j].y;
+		Point point;
+		if (linesPoint(A1, B1, C1, A2, B2, C2, point))
+		{
+			float Xmax = ploygon[i].x > ploygon[j].x ? ploygon[i].x : ploygon[j].x;
+			float Xmin = ploygon[i].x > ploygon[j].x ? ploygon[j].x : ploygon[i].x;
+			float Ymax = ploygon[i].y > ploygon[j].y ? ploygon[i].y : ploygon[j].y;
+			float Ymin = ploygon[i].y > ploygon[j].y ? ploygon[j].y : ploygon[i].y;
+
+			if (point.x > Xmin && point.x < Xmax && point.y > Ymin && point.y < Ymax)
+			{
+				if (crossProduct({ cutEndP.x - cutStartP.x, cutEndP.x - cutStartP.x }, { ploygon[j].x - ploygon[i].x, ploygon[j].y - ploygon[i].y }) > 0)
+				{
+					float dis = (cutEndP.y - point.y) * (cutEndP.y - point.y) + (cutEndP.x - point.x) * (cutEndP.x - point.x);
+					if (dis < minDis || minDis == 0)
+					{
+						cutPoint = point;
+						curIndex = i;
+					}
+				}
+			}
+		}
+	}
+	vector<Point> newPloygon = ploygon;
+	newPloygon.insert(newPloygon.begin() + curIndex + 1, cutPoint);
+
+	vector<Point> newPloygon1;
+	vector<Point> newPloygon2;
+
+	bool f = false;
+	for (int i = 0; i < newPloygon.size(); i++)
+	{
+		if (newPloygon[i] == cutPoint || newPloygon[i] == cutEndP)
+		{
+			if (!f)
+			{
+				newPloygon1.push_back(newPloygon[i]);
+			}
+			else
+			{
+				newPloygon2.push_back(newPloygon[i]);
+			}
+			f = !f;
+		}
+
+		if (!f)
+		{
+			newPloygon1.push_back(newPloygon[i]);
+		}
+		else
+		{
+			newPloygon2.push_back(newPloygon[i]);
+		}
+	}
+	cutPolygon(newPloygon1);
+	cutPolygon(newPloygon2);
+}
+
+void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
+{
+	//auto it1 = crossInfo.find(p1);
+	//if (it1 != crossInfo.end())
+	//{
+	//	it1->second[p2] = 1;
+	//}
+	//else
+	//{
+	//	crossInfo[p1][p2] = 1;
+	//}
+	crossInfo[p1][p2] = 1;
+}
+void addSurface(Polyhedron& polyhedron, const vector<Point>& points, map<Point, int>& pointInfo)
+{
+	polyhedron.indexs.push_back({});
+	for (int i = 0; i < points.size(); i++)
+	{
+		auto it = pointInfo.find(points[i]);
+		if (it != pointInfo.end())
+		{
+			polyhedron.indexs.back().push_back(it->second);
+		}
+		else
+		{
+			polyhedron.points.push_back(points[i]);
+			int idx = polyhedron.points.size() - 1;
+			polyhedron.indexs.back().push_back(idx);
+
+			pointInfo[points[i]] = idx;
+		}
+	}
+}
+vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+{
+	auto _temp = crossInfo;
+	vector<Point> ret;
+
+	auto beginPoint = crossInfo.begin()->first;
+	ret.push_back(beginPoint);
+
+	auto curPoint = beginPoint;
+	while (true)
+	{
+		assert(crossInfo.find(curPoint) != crossInfo.end());
+		auto nextPoint = crossInfo[curPoint].begin()->first;
+		assert(crossInfo[curPoint][nextPoint] == 1);
+
+		assert(crossInfo.find(nextPoint) != crossInfo.end());
+		assert(crossInfo[nextPoint][curPoint] == 1);
+
+		crossInfo[curPoint].erase(nextPoint);
+		if (crossInfo[curPoint].size() == 0)
+		{
+			crossInfo.erase(curPoint);
+		}
+
+		crossInfo[nextPoint].erase(curPoint);
+		if (crossInfo[nextPoint].size() == 0)
+		{
+			crossInfo.erase(nextPoint);
+		}
+
+		if (nextPoint != beginPoint)
+			ret.push_back(nextPoint);
+		else
+			break;
+		curPoint = nextPoint;
+	}
+
+	return ret;
+}
+
+void antiClockPoints(vector<Point>& points, Vec3 normalVec)
+{
+	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // z取负值是因为在左手坐标系和右手坐标系z反号
+	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, -(points[2].z - points[1].z) };
+	Vec3 crossVec = cross(a, b);
+	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
+	if (!antiClocked)
+	{
+		std::reverse(points.begin(), points.end());
+	}
+}
+Vec3 getClipPlaneNormalVec(int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return{ -1, 0, 0 };
+	case RightClipPlane:
+		return{ 1, 0, 0 };
+	case BottomClipPlane:
+		return{ 0, -1, 0 };
+	case TopClipPlane:
+		return{ 0, 1, 0 };
+	case NearClipPlane:
+		return{ 0, 0, -1 };
+	case FarClipPlane:
+		return{ 0, 0, 1 };
+	}
+}
+
+bool inside(Point p, int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return p.x > -1;
+	case RightClipPlane:
+		return p.x < 1;
+	case BottomClipPlane:
+		return p.y > -1;
+	case TopClipPlane:
+		return p.y < 1;
+	case NearClipPlane:
+		return p.z > -1;
+	case FarClipPlane:
+		return p.z < 1;
+	}
+}
+Point clacCrossPoint(Point p1, Point p2, int clipPlane)
+{
+	float u = 0.f;
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		u = (p1.x + 1) / (p1.x - p2.x);
+		break;
+	case RightClipPlane:
+		u = (p1.x - 1) / (p1.x - p2.x);
+		break;
+	case BottomClipPlane:
+		u = (p1.y + 1) / (p1.y - p2.y);
+		break;
+	case TopClipPlane:
+		u = (p1.y - 1) / (p1.y - p2.y);
+		break;
+	case NearClipPlane:
+		u = (p1.z + 1) / (p1.z - p2.z);
+		break;
+	case FarClipPlane:
+		u = (p1.z - 1) / (p1.z - p2.z);
+		break;
+	default:
+		break;
+	}
+
+	return{ p1.x + (p2.x - p1.x) * u,
+		p1.y += (p2.y - p1.y) * u ,
+		p1.z += (p2.z - p1.z) * u };
+}
+vector<vector<Point>> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
+{
+	vector<vector<Point>> ret;
+
+	assert(points.size() >= 3);
+	Vec3 normalVec = cross({ points[1].x - points[0].x, points[1].y - points[0].y, points[1].z - points[0].z },
+	{ points[2].x - points[1].x, points[2].y - points[1].y, points[2].z - points[1].z });
+	vector<vector<Point>> convexPolygons = cutPolygon(points, normalVec);
+	
+	vector<Point> cross;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+
+		if (!inside(points[i], clipPlane))
+		{
+			if (inside(points[next], clipPlane))
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				ret.push_back(points[next]);
+
+				cross.push_back(cp);
+			}
+		}
+		else
+		{
+			if (inside(points[next], clipPlane))
+			{
+				ret.push_back(points[next]);
+			}
+			else
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				cross.push_back(cp);
+			}
+		}
+	}
+	if (cross.size() > 1 && cross[0] != cross[1])
+	{
+		addCrossInfo(cross[0], cross[1], crossInfo);
+		addCrossInfo(cross[1], cross[0], crossInfo);
+	}
+
+	return ret;
+}
+void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
+{
+	map<Point, int> pointInfo;
+	map<Point, map<Point, int>> crossInfo;
+	Polyhedron newPolyhedron;
+
+	vector<Point> surface;
+	for (auto& index : polyhedron.indexs)
+	{
+		surface.clear();
+		for (auto& idx : index)
+			surface.push_back(polyhedron.points[idx]);
+
+		auto points = clipSurface(surface, clipPlane, crossInfo);
+		if (points.size() > 0)
+			addSurface(newPolyhedron, points, pointInfo);
+	}
+
+	// 裁剪面上的面
+	if (crossInfo.size() > 2)
+	{
+		auto clipSurfacePoints = createClipSuface(crossInfo);
+		antiClockPoints(clipSurfacePoints, getClipPlaneNormalVec(clipPlane));
+		addSurface(newPolyhedron, clipSurfacePoints, pointInfo);
+	}
+
+	polyhedron = newPolyhedron;
+}
+bool checkEntire(Polyhedron& polyhedron)
+{
+	bool allInside = true;
+	bool allOutside = true;
+	for (auto& p : polyhedron.points)
+	{
+		for (auto& clipPlane : clipPlanes)
+		{
+			if (!inside(p, clipPlane))
+				allInside = false;
+			else
+				allOutside = false;
+		}
+	}
+
+	if (allInside)
+	{
+		return true;
+	}
+
+	if (allOutside)
+	{
+		polyhedron.points = {};
+		polyhedron.indexs = {};
+		return true;
+	}
+
+	return false;
+}
+void commonClip(Polyhedron& polyhedron)
+{
+	if (!checkEntire(polyhedron))
+	{
+		for (auto& clipPlane : clipPlanes)
+		{
+			clipClipPlane(polyhedron, clipPlane);
+		}
+	}
+}
+Polyhedron cube = {
+	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void view()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 400, winHeight = 300;
+
+	auto temp = cube;
+
+	Point viewPortPoint = { 200.f, 150.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+
+	transformPoints(m, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+
+	auto temp_clip = temp;
+	commonClip(temp_clip);
+
+	transformPoints(m1, temp.points);
+	if (temp_clip.points.size() > 0)
+		transformPoints(m1, temp_clip.points);
+
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolyhedron(temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (temp_clip.points.size() > 0)
+		drawPolyhedron(temp_clip);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	view();
+
+	glFlush();
+}
+void code_10_exercise_13_test()
+{
+	camera = new Camera({ 100, 200, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_10_COMMON
 
@@ -730,7 +3179,7 @@ void code_10_exercise_4()
 void init(void)
 {
 	glClearColor(0.0, 0.0, 0.0, 0.0); // 黑色背景色
-	//glColor3f(1.0, 1.0, 1.0); // 白色绘制
+	glColor3f(1.0, 1.0, 1.0); // 白色绘制
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth , 0, winHeight);
@@ -738,7 +3187,8 @@ void init(void)
 
 void main(int argc, char** argv)
 {
-	srand(time(0));
+	//srand(time(0));
+	srand(100);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowPosition(100, 100);
@@ -746,6 +3196,10 @@ void main(int argc, char** argv)
 	glutCreateWindow("An Example OpenGL Program");
 
 	init();
+
+#ifdef CHAPTER_10_CAMERA
+	code_10_camera();
+#endif
 
 #ifdef CHAPTER_10_EXERCISE_1
 	code_10_exercise_1();
@@ -761,6 +3215,46 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_10_EXERCISE_4
 	code_10_exercise_4();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_5
+	code_10_exercise_5();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_6
+	code_10_exercise_6();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_7
+	code_10_exercise_7();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_8
+	code_10_exercise_8();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_9
+	code_10_exercise_9();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_10
+	code_10_exercise_10();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_11
+	code_10_exercise_11();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_12
+	code_10_exercise_12();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_13
+	code_10_exercise_13();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_13_TEST
+	code_10_exercise_13_test();
 #endif
 
 	glutMainLoop();

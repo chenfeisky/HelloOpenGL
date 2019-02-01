@@ -42,6 +42,15 @@
     <ClInclude Include="opengl10h.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="testvector.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="testcamera.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="testbmp.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl4.cpp">
@@ -69,6 +78,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="opengl10.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="testmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="testvector.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="testcamera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="testbmp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -92,6 +92,9 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClInclude Include="opengl7h.h" />
     <ClInclude Include="opengl8h.h" />
     <ClInclude Include="opengl9h.h" />
+    <ClInclude Include="testbmp.h" />
+    <ClInclude Include="testcamera.h" />
+    <ClInclude Include="testvector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl10.cpp" />
@@ -103,6 +106,10 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="opengl8.cpp" />
     <ClCompile Include="opengl9.cpp" />
     <ClCompile Include="openglTools.cpp" />
+    <ClCompile Include="testbmp.cpp" />
+    <ClCompile Include="testcamera.cpp" />
+    <ClCompile Include="testmain.cpp" />
+    <ClCompile Include="testvector.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
