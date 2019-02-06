@@ -2732,20 +2732,56 @@ bool linesPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2E
 		}
 
 		return false;
-	}while (0)
+	} while (0);
 
-	if (equal(A1 * B2, A2 * B1))
-		return false;
+	float f = line1Vec.x * line2Vec.y - line1Vec.y * line2Vec.x;
+	if (!Equal(f, 0))
+	{
+		u2 = (line1Vec.y * (line2Begin.x - line1Begin.x) - line1Vec.x * (line2Begin.y - line1Begin.y)) / f;
+	}
+	else
+	{
+		float f = line1Vec.x * line2Vec.z - line1Vec.z * line2Vec.x;
+		if (!Equal(f, 0))
+		{
+			u2 = (line1Vec.z * (line2Begin.x - line1Begin.x) - line1Vec.x * (line2Begin.z - line1Begin.z)) / f;
+		}
+		else
+		{
+			float f = line1Vec.y * line2Vec.z - line1Vec.z * line2Vec.y;
+			if (!Equal(f, 0))
+			{
+				u2 = (line1Vec.z * (line2Begin.y - line1Begin.y) - line1Vec.y * (line2Begin.z - line1Begin.z)) / f;
+			}
+			else
+			{
+				assert(0);
+			}
+		}
+	}
 
-	point.x = (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1);
-	point.y = (A2 * C1 - A1 * C2) / (A1 * B2 - A2 * B1);
-	point.z = 0;
+	if (!Equal(line1Vec.x, 0))
+	{
+		u1 = (line2Vec.x * u2 + line2Begin.x - line1Begin.x) / line1Vec.x;
+	}
+	else if (!Equal(line1Vec.y, 0))
+	{
+		u1 = (line2Vec.y * u2 + line2Begin.y - line1Begin.y) / line1Vec.y;
+	}
+	else if (!Equal(line1Vec.z, 0))
+	{
+		u1 = (line2Vec.z * u2 + line2Begin.z - line1Begin.z) / line1Vec.z;
+	}
+	else
+	{
+		assert(0);
+	}
+
 	return true;
 }
-vector<vector<Point>> cutPolygon(const vector<Point>& points, Vec3 normalVec)
-{
-	vector<vector<Point>> ret;
 
+void _cutPolygon(const vector<Point>& points, Vec3 normalVec, vector<vector<Point>>& ret)
+{
 	vector<Vec3> edges;
 	for (int i = 0; i < points.size(); i++)
 	{
@@ -2782,38 +2818,42 @@ vector<vector<Point>> cutPolygon(const vector<Point>& points, Vec3 normalVec)
 	float C1 = cutEndP.x * cutStartP.y - cutStartP.x * cutEndP.y;
 
 	Point cutPoint;
-	float minDis = 0;
+	float cutU1 = 0.f;
+	float cutU2 = 0.f;
 	int curIndex = 0;
-	for (int i = 0; i < ploygon.size(); i++)
+	for (int i = 0; i < points.size(); i++)
 	{
-		int j = i + 1 < ploygon.size() ? i + 1 : 0;
-		float A2 = ploygon[j].y - ploygon[i].y;
-		float B2 = ploygon[i].x - ploygon[j].x;
-		float C2 = ploygon[j].x * ploygon[i].y - ploygon[i].x * ploygon[j].y;
+		int j = i + 1 < points.size() ? i + 1 : 0;
 		Point point;
-		if (linesPoint(A1, B1, C1, A2, B2, C2, point))
+		float u1 = 0.f, u2 = 0.f;
+		if (linesPoint(cutStartP, cutEndP, points[i], points[j], u1, u2))
 		{
-			float Xmax = ploygon[i].x > ploygon[j].x ? ploygon[i].x : ploygon[j].x;
-			float Xmin = ploygon[i].x > ploygon[j].x ? ploygon[j].x : ploygon[i].x;
-			float Ymax = ploygon[i].y > ploygon[j].y ? ploygon[i].y : ploygon[j].y;
-			float Ymin = ploygon[i].y > ploygon[j].y ? ploygon[j].y : ploygon[i].y;
-
-			if (point.x > Xmin && point.x < Xmax && point.y > Ymin && point.y < Ymax)
+			if (u1 > 1.f && 0.f <= u2 && u2 <= 1.f)
 			{
-				if (crossProduct({ cutEndP.x - cutStartP.x, cutEndP.x - cutStartP.x }, { ploygon[j].x - ploygon[i].x, ploygon[j].y - ploygon[i].y }) > 0)
+				Vec3 v = cross({ cutEndP.x - cutStartP.x, cutEndP.y - cutStartP.y, cutEndP.z - cutStartP.z },
+				{ points[j].x - points[i].x, points[j].y - points[i].y, points[j].z - points[i].z });
+
+				if (v.x * normalVec.x >= 0 && v.y * normalVec.y >= 0 && v.z * normalVec.z >= 0)
 				{
-					float dis = (cutEndP.y - point.y) * (cutEndP.y - point.y) + (cutEndP.x - point.x) * (cutEndP.x - point.x);
-					if (dis < minDis || minDis == 0)
+					if (u1 < cutU1 || cutU1 == 0.f)
 					{
-						cutPoint = point;
+						cutPoint = { cutStartP.x + u1 * (cutEndP.x  - cutStartP.x ),
+							cutStartP.y + u1 * (cutEndP.y - cutStartP.y),
+							cutStartP.z + u1 * (cutEndP.z - cutStartP.z) };
 						curIndex = i;
+
+						cutU1 = u1;
+						cutU2 = u2;
 					}
 				}
 			}
 		}
 	}
-	vector<Point> newPloygon = ploygon;
-	newPloygon.insert(newPloygon.begin() + curIndex + 1, cutPoint);
+	vector<Point> newPloygon = points;
+	if (0.f < cutU2 && cutU2 < 1.f)
+	{
+		newPloygon.insert(newPloygon.begin() + curIndex + 1, cutPoint);
+	}
 
 	vector<Point> newPloygon1;
 	vector<Point> newPloygon2;
@@ -2843,10 +2883,14 @@ vector<vector<Point>> cutPolygon(const vector<Point>& points, Vec3 normalVec)
 			newPloygon2.push_back(newPloygon[i]);
 		}
 	}
-	cutPolygon(newPloygon1);
-	cutPolygon(newPloygon2);
+	_cutPolygon(newPloygon1, normalVec, ret);
+	_cutPolygon(newPloygon2, normalVec, ret);
 }
-
+vector<vector<Point>> cutPolygon(const vector<Point>& points, Vec3 normalVec)
+{
+	vector<vector<Point>> ret;
+	_cutPolygon(points, normalVec, ret);
+}
 void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
 {
 	//auto it1 = crossInfo.find(p1);
