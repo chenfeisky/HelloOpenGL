@@ -246,6 +246,15 @@ Point centerPoint(const std::vector<Point>& points)
 	center.z = zSum / size;
 	return center;
 }
+float sign(float f)
+{
+	if (f < 0)
+		return -1;
+	else if (f > 0)
+		return 1;
+	else
+		return 0;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // 多面体
@@ -701,6 +710,318 @@ private:
 };
 Camera* Camera::_this = nullptr;
 
+#ifdef ClipPolyhedron
+const int LeftClipPlane = 1;
+const int RightClipPlane = 2;
+const int BottomClipPlane = 3;
+const int TopClipPlane = 4;
+const int NearClipPlane = 5;
+const int FarClipPlane = 6;
+const std::vector<int> clipPlanes = { LeftClipPlane, RightClipPlane, BottomClipPlane, TopClipPlane, NearClipPlane, FarClipPlane };
+void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
+{
+	//auto it1 = crossInfo.find(p1);
+	//if (it1 != crossInfo.end())
+	//{
+	//	it1->second[p2] = 1;
+	//}
+	//else
+	//{
+	//	crossInfo[p1][p2] = 1;
+	//}
+	crossInfo[p1][p2] = 1;
+}
+bool checkSamePoint(vector<Point>& points)
+{
+	map<Point, int> testSame;
+	for (auto it = points.begin(); it != points.end();)
+	{
+		if (testSame.find(*it) == testSame.end())
+		{
+			testSame[*it] = 1;
+			it++;
+		}
+		else
+		{
+			it = points.erase(it);
+		}
+	}
+
+	return points.size() >= 3;
+}
+void addSurface(Polyhedron& polyhedron, vector<Point>& points, map<Point, int>& pointInfo)
+{
+	if (checkSamePoint(points))
+	{
+		polyhedron.indexs.push_back({});
+		for (int i = 0; i < points.size(); i++)
+		{
+			auto it = pointInfo.find(points[i]);
+			if (it != pointInfo.end())
+			{
+				polyhedron.indexs.back().push_back(it->second);
+			}
+			else
+			{
+				polyhedron.points.push_back(points[i]);
+				int idx = polyhedron.points.size() - 1;
+				polyhedron.indexs.back().push_back(idx);
+
+				pointInfo[points[i]] = idx;
+			}
+		}
+	}
+}
+vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+{
+	vector<Point> ret;
+
+	if (crossInfo.size() < 3)
+		return ret;
+
+	auto beginPoint = crossInfo.begin()->first;
+	ret.push_back(beginPoint);
+
+	auto curPoint = beginPoint;
+	while (true)
+	{
+		//assert(crossInfo.find(curPoint) != crossInfo.end());
+		if (crossInfo.find(curPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return ret;
+		}
+		auto nextPoint = crossInfo[curPoint].begin()->first;
+		assert(crossInfo[curPoint][nextPoint] == 1);
+
+		//assert(crossInfo.find(nextPoint) != crossInfo.end());
+		if (crossInfo.find(nextPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return ret;
+		}
+		if (crossInfo[nextPoint].find(curPoint) == crossInfo[nextPoint].end())
+		{
+			ret.clear();
+			return ret;
+		}
+		assert(crossInfo[nextPoint][curPoint] == 1);
+
+		crossInfo[curPoint].erase(nextPoint);
+		if (crossInfo[curPoint].size() == 0)
+		{
+			crossInfo.erase(curPoint);
+		}
+
+		crossInfo[nextPoint].erase(curPoint);
+		if (crossInfo[nextPoint].size() == 0)
+		{
+			crossInfo.erase(nextPoint);
+		}
+
+		if (nextPoint != beginPoint)
+			ret.push_back(nextPoint);
+		else
+			break;
+		curPoint = nextPoint;
+	}
+
+	return ret;
+}
+
+void antiClockPoints(vector<Point>& points, Vec3 normalVec)
+{
+	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // z取负值是因为在左手坐标系和右手坐标系z反号
+	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, -(points[2].z - points[1].z) };
+	Vec3 crossVec = cross(a, b);
+	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
+	if (!antiClocked)
+	{
+		std::reverse(points.begin(), points.end());
+	}
+}
+Vec3 getClipPlaneNormalVec(int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return{ -1, 0, 0 };
+	case RightClipPlane:
+		return{ 1, 0, 0 };
+	case BottomClipPlane:
+		return{ 0, -1, 0 };
+	case TopClipPlane:
+		return{ 0, 1, 0 };
+	case NearClipPlane:
+		return{ 0, 0, -1 };
+	case FarClipPlane:
+		return{ 0, 0, 1 };
+	}
+}
+
+bool inside(Point p, int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return p.x > -1;
+	case RightClipPlane:
+		return p.x < 1;
+	case BottomClipPlane:
+		return p.y > -1;
+	case TopClipPlane:
+		return p.y < 1;
+	case NearClipPlane:
+		return p.z > -1;
+	case FarClipPlane:
+		return p.z < 1;
+	}
+}
+Point clacCrossPoint(Point p1, Point p2, int clipPlane)
+{
+	float u = 0.f;
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		u = (p1.x + 1) / (p1.x - p2.x);
+		break;
+	case RightClipPlane:
+		u = (p1.x - 1) / (p1.x - p2.x);
+		break;
+	case BottomClipPlane:
+		u = (p1.y + 1) / (p1.y - p2.y);
+		break;
+	case TopClipPlane:
+		u = (p1.y - 1) / (p1.y - p2.y);
+		break;
+	case NearClipPlane:
+		u = (p1.z + 1) / (p1.z - p2.z);
+		break;
+	case FarClipPlane:
+		u = (p1.z - 1) / (p1.z - p2.z);
+		break;
+	default:
+		break;
+	}
+
+	return{ p1.x + (p2.x - p1.x) * u,
+		p1.y += (p2.y - p1.y) * u ,
+		p1.z += (p2.z - p1.z) * u };
+}
+vector<Point> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
+{
+	if (points.size() < 3)
+	{
+		printf("%d\n", points.size());
+	}
+
+	vector<Point> ret;
+	vector<Point> cross;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+
+		if (!inside(points[i], clipPlane))
+		{
+			if (inside(points[next], clipPlane))
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				ret.push_back(points[next]);
+
+				cross.push_back(cp);
+			}
+		}
+		else
+		{
+			if (inside(points[next], clipPlane))
+			{
+				ret.push_back(points[next]);
+			}
+			else
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				cross.push_back(cp);
+			}
+		}
+	}
+	if (cross.size() > 1 && cross[0] != cross[1])
+	{
+		addCrossInfo(cross[0], cross[1], crossInfo);
+		addCrossInfo(cross[1], cross[0], crossInfo);
+	}
+
+	return ret;
+}
+void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
+{
+	map<Point, int> pointInfo;
+	map<Point, map<Point, int>> crossInfo;
+	Polyhedron newPolyhedron;
+
+	vector<Point> surface;
+	for (auto& index : polyhedron.indexs)
+	{
+		surface.clear();
+		for (auto& idx : index)
+			surface.push_back(polyhedron.points[idx]);
+
+		auto points = clipSurface(surface, clipPlane, crossInfo);
+		if (points.size() > 0)
+			addSurface(newPolyhedron, points, pointInfo);
+	}
+
+	// 裁剪面上的面
+	if (crossInfo.size() > 2)
+	{
+		auto clipSurfacePoints = createClipSuface(crossInfo);
+		antiClockPoints(clipSurfacePoints, getClipPlaneNormalVec(clipPlane));
+		addSurface(newPolyhedron, clipSurfacePoints, pointInfo);
+	}
+
+	polyhedron = newPolyhedron;
+}
+bool checkEntire(Polyhedron& polyhedron)
+{
+	bool allInside = true;
+	for (auto& clipPlane : clipPlanes)
+	{
+		bool allOutside = true;
+		for (auto& p : polyhedron.points)
+		{
+			if (inside(p, clipPlane))
+				allOutside = false;
+			else
+				allInside = false;
+		}
+
+		if (allInside)
+		{
+			continue;
+		}
+
+		if (allOutside)
+		{
+			polyhedron.points = {};
+			polyhedron.indexs = {};
+			return true;
+		}
+	}
+
+	return allInside;
+}
+void clip(Polyhedron& polyhedron)
+{
+	if (!checkEntire(polyhedron))
+	{
+		for (auto& clipPlane : clipPlanes)
+		{
+			clipClipPlane(polyhedron, clipPlane);
+		}
+	}
+}
+#endif
 
 #endif
 
@@ -2326,276 +2647,8 @@ void code_10_exercise_12()
 }
 #endif
 
-
 #ifdef CHAPTER_10_EXERCISE_13
 Camera *camera = nullptr;
-const int LeftClipPlane = 1;
-const int RightClipPlane = 2;
-const int BottomClipPlane = 3;
-const int TopClipPlane = 4;
-const int NearClipPlane = 5;
-const int FarClipPlane = 6;
-const std::vector<int> clipPlanes = { LeftClipPlane, RightClipPlane, BottomClipPlane, TopClipPlane, NearClipPlane, FarClipPlane };
-void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
-{
-	//auto it1 = crossInfo.find(p1);
-	//if (it1 != crossInfo.end())
-	//{
-	//	it1->second[p2] = 1;
-	//}
-	//else
-	//{
-	//	crossInfo[p1][p2] = 1;
-	//}
-	crossInfo[p1][p2] = 1;
-}
-void addSurface(Polyhedron& polyhedron, const vector<Point>& points, map<Point, int>& pointInfo)
-{
-	polyhedron.indexs.push_back({});
-	for (int i = 0; i < points.size(); i++)
-	{
-		auto it = pointInfo.find(points[i]);
-		if (it != pointInfo.end())
-		{
-			polyhedron.indexs.back().push_back(it->second);
-		}
-		else
-		{
-			polyhedron.points.push_back(points[i]);
-			int idx = polyhedron.points.size() - 1;
-			polyhedron.indexs.back().push_back(idx);
-
-			pointInfo[points[i]] = idx;
-		}
-	}
-}
-vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
-{
-	auto _temp = crossInfo;
-	vector<Point> ret;
-
-	auto beginPoint = crossInfo.begin()->first;
-	ret.push_back(beginPoint);
-
-	auto curPoint = beginPoint;
-	while (true)
-	{
-		assert(crossInfo.find(curPoint) != crossInfo.end());
-		auto nextPoint = crossInfo[curPoint].begin()->first;
-		assert(crossInfo[curPoint][nextPoint] == 1);
-
-		assert(crossInfo.find(nextPoint) != crossInfo.end());
-		assert(crossInfo[nextPoint][curPoint] == 1);
-
-		crossInfo[curPoint].erase(nextPoint);
-		if (crossInfo[curPoint].size() == 0)
-		{
-			crossInfo.erase(curPoint);
-		}
-
-		crossInfo[nextPoint].erase(curPoint);
-		if (crossInfo[nextPoint].size() == 0)
-		{
-			crossInfo.erase(nextPoint);
-		}
-
-		if (nextPoint != beginPoint)
-			ret.push_back(nextPoint);
-		else
-			break;
-		curPoint = nextPoint;
-	}
-
-	return ret;
-}
-
-void antiClockPoints(vector<Point>& points, Vec3 normalVec)
-{
-	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // z取负值是因为在左手坐标系和右手坐标系z反号
-	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, -(points[2].z - points[1].z) };
-	Vec3 crossVec = cross(a, b);
-	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
-	if (!antiClocked)
-	{
-		std::reverse(points.begin(), points.end());
-	}
-}
-Vec3 getClipPlaneNormalVec(int clipPlane)
-{
-	switch (clipPlane)
-	{
-	case LeftClipPlane:
-		return{ -1, 0, 0 };
-	case RightClipPlane:
-		return{ 1, 0, 0 };
-	case BottomClipPlane:
-		return{ 0, -1, 0 };
-	case TopClipPlane:
-		return{ 0, 1, 0 };
-	case NearClipPlane:
-		return{ 0, 0, -1 };
-	case FarClipPlane:
-		return{ 0, 0, 1 };
-	}
-}
-
-bool inside(Point p, int clipPlane)
-{
-	switch (clipPlane)
-	{
-	case LeftClipPlane:
-		return p.x > -1;
-	case RightClipPlane:
-		return p.x < 1;
-	case BottomClipPlane:
-		return p.y > -1;
-	case TopClipPlane:
-		return p.y < 1;
-	case NearClipPlane:
-		return p.z > -1;
-	case FarClipPlane:
-		return p.z < 1;
-	}
-}
-Point clacCrossPoint(Point p1, Point p2, int clipPlane)
-{
-	float u = 0.f;
-	switch (clipPlane)
-	{
-	case LeftClipPlane:
-		u = (p1.x + 1) / (p1.x - p2.x);
-		break;
-	case RightClipPlane:
-		u = (p1.x - 1) / (p1.x - p2.x);
-		break;
-	case BottomClipPlane:
-		u = (p1.y + 1) / (p1.y - p2.y);
-		break;
-	case TopClipPlane:
-		u = (p1.y - 1) / (p1.y - p2.y);
-		break;
-	case NearClipPlane:
-		u = (p1.z + 1) / (p1.z - p2.z);
-		break;
-	case FarClipPlane:
-		u = (p1.z - 1) / (p1.z - p2.z);
-		break;
-	default:
-		break;
-	}
-
-	return{ p1.x + (p2.x - p1.x) * u,
-		p1.y += (p2.y - p1.y) * u ,
-		p1.z += (p2.z - p1.z) * u };
-}
-vector<Point> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
-{
-	vector<Point> ret;
-	vector<Point> cross;
-	for (int i = 0; i < points.size(); i++)
-	{
-		int next = i + 1 < points.size() ? i + 1 : 0;
-
-		if (!inside(points[i], clipPlane))
-		{
-			if (inside(points[next], clipPlane))
-			{
-				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
-				ret.push_back(cp);
-				ret.push_back(points[next]);
-
-				cross.push_back(cp);
-			}
-		}
-		else
-		{
-			if (inside(points[next], clipPlane))
-			{
-				ret.push_back(points[next]);
-			}
-			else
-			{
-				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
-				ret.push_back(cp);
-				cross.push_back(cp);
-			}
-		}
-	}
-	if (cross.size() > 1 && cross[0] != cross[1])
-	{
-		addCrossInfo(cross[0], cross[1], crossInfo);
-		addCrossInfo(cross[1], cross[0], crossInfo);
-	}
-
-	return ret;
-}
-void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
-{
-	map<Point, int> pointInfo;
-	map<Point, map<Point, int>> crossInfo;
-	Polyhedron newPolyhedron;
-
-	vector<Point> surface;
-	for (auto& index : polyhedron.indexs)
-	{
-		surface.clear();
-		for (auto& idx : index)
-			surface.push_back(polyhedron.points[idx]);
-
-		auto points = clipSurface(surface, clipPlane, crossInfo);
-		if (points.size() > 0)
-			addSurface(newPolyhedron, points, pointInfo);
-	}
-
-	// 裁剪面上的面
-	if (crossInfo.size() > 2)
-	{
-		auto clipSurfacePoints = createClipSuface(crossInfo);
-		antiClockPoints(clipSurfacePoints, getClipPlaneNormalVec(clipPlane));
-		addSurface(newPolyhedron, clipSurfacePoints, pointInfo);
-	}
-
-	polyhedron = newPolyhedron;
-}
-bool checkEntire(Polyhedron& polyhedron)
-{
-	bool allInside = true;
-	bool allOutside = true;
-	for (auto& p : polyhedron.points)
-	{
-		for (auto& clipPlane : clipPlanes)
-		{
-			if (!inside(p, clipPlane))
-				allInside = false;
-			else
-				allOutside = false;
-		}
-	}
-
-	if (allInside)
-	{
-		return true;
-	}
-
-	if (allOutside)
-	{
-		polyhedron.points = {};
-		polyhedron.indexs = {};
-		return true;
-	}
-
-	return false;
-}
-void clip(Polyhedron& polyhedron)
-{
-	if (!checkEntire(polyhedron))
-	{
-		for (auto& clipPlane : clipPlanes)
-		{
-			clipClipPlane(polyhedron, clipPlane);
-		}
-	}
-}
 Polyhedron cube = {
 	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
 	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
@@ -2655,6 +2708,23 @@ void code_10_exercise_13()
 #endif
 
 #ifdef CHAPTER_10_EXERCISE_13_TEST
+enum PointType
+{
+	None,
+	Normal,
+	CrossEnter,
+	CrossExit,
+};
+struct PointInfo
+{
+	Point point;
+	PointType type;
+};
+struct PolyhedronInfo
+{
+	Polyhedron polyhedron;
+	map<Point, int> pointsInfo;
+};
 Camera *camera = nullptr;
 const int LeftClipPlane = 1;
 const int RightClipPlane = 2;
@@ -2890,6 +2960,66 @@ vector<vector<Point>> cutPolygon(const vector<Point>& points, Vec3 normalVec)
 {
 	vector<vector<Point>> ret;
 	_cutPolygon(points, normalVec, ret);
+	return ret;
+}
+map<Point, Point> orderCorssLine(vector<PointInfo>& crossPoints)
+{
+	map<Point, Point> ret;
+
+	if (crossPoints.size() > 2)
+	{
+		assert(crossPoints.size() % 2 == 0);
+
+		if (!Equal(crossPoints[0].point.x, crossPoints[1].point.x) || !Equal(crossPoints[1].point.x, crossPoints[2].point.x))
+		{
+			std::sort(crossPoints.begin(), crossPoints.end(), [](auto& a, auto& b)
+			{
+				return a.point.x < b.point.x;
+			});
+		}
+		else if (!Equal(crossPoints[0].point.y, crossPoints[1].point.y) || !Equal(crossPoints[1].point.y, crossPoints[2].point.y))
+		{
+			std::sort(crossPoints.begin(), crossPoints.end(), [](auto& a, auto& b)
+			{
+				return a.point.y < b.point.y;
+			});
+		}
+		else if (!Equal(crossPoints[0].point.z, crossPoints[1].point.z) || !Equal(crossPoints[1].point.z, crossPoints[2].point.z))
+		{
+			std::sort(crossPoints.begin(), crossPoints.end(), [](auto& a, auto& b)
+			{
+				return a.point.z < b.point.z;
+			});
+		}
+		else
+		{
+			assert(0);
+		}
+	}
+
+	if (crossPoints.size() >= 2)
+	{
+		for (int i = 0; i < crossPoints.size(); i = i + 2)
+		{
+			int next = i + 1;
+			if (crossPoints[i].type == CrossExit)
+			{
+				assert(ret.find(crossPoints[i].point) == ret.end());
+				ret[crossPoints[i].point] = crossPoints[next].point;
+			}
+			else if (crossPoints[next].type == CrossExit)
+			{
+				assert(ret.find(crossPoints[next].point) == ret.end());
+				ret[crossPoints[next].point] = crossPoints[i].point;
+			}
+			else
+			{
+				assert(0);
+			}
+		}
+	}	
+
+	return ret;
 }
 void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
 {
@@ -2902,44 +3032,141 @@ void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
 	//{
 	//	crossInfo[p1][p2] = 1;
 	//}
+
+	//if (crossInfo.find(p1) != crossInfo.end() && 
+	//	crossInfo[p1].find(p2) != crossInfo[p1].end())
+	//{
+	//	printf("%f, %f, %f\n", p1.x, p1.y, p1.z);
+	//	printf("%f, %f, %f\n", p2.x, p2.y, p2.z);
+	//	printf("\n");
+	//}
 	crossInfo[p1][p2] = 1;
 }
-void addSurface(Polyhedron& polyhedron, const vector<Point>& points, map<Point, int>& pointInfo)
+bool checkSamePoint(vector<Point>& points)
 {
-	polyhedron.indexs.push_back({});
-	for (int i = 0; i < points.size(); i++)
+	map<Point, int> testSame;
+	for (auto it = points.begin(); it != points.end();)
 	{
-		auto it = pointInfo.find(points[i]);
-		if (it != pointInfo.end())
+		if (testSame.find(*it) == testSame.end())
 		{
-			polyhedron.indexs.back().push_back(it->second);
+			testSame[*it] = 1;
+			it++;
 		}
 		else
 		{
-			polyhedron.points.push_back(points[i]);
-			int idx = polyhedron.points.size() - 1;
-			polyhedron.indexs.back().push_back(idx);
+			it = points.erase(it);
+		}
+	}
 
-			pointInfo[points[i]] = idx;
+	return points.size() >= 3;
+}
+void addSurface(PolyhedronInfo& polyhedronInfo, vector<Point>& points)
+{
+	polyhedronInfo.polyhedron.indexs.push_back({});
+	for (int i = 0; i < points.size(); i++)
+	{
+		auto it = polyhedronInfo.pointsInfo.find(points[i]);
+		if (it != polyhedronInfo.pointsInfo.end())
+		{
+			polyhedronInfo.polyhedron.indexs.back().push_back(it->second);
+		}
+		else
+		{
+			polyhedronInfo.polyhedron.points.push_back(points[i]);
+			int idx = polyhedronInfo.polyhedron.points.size() - 1;
+			polyhedronInfo.polyhedron.indexs.back().push_back(idx);
+
+			polyhedronInfo.pointsInfo[points[i]] = idx;
 		}
 	}
 }
-vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+void addPolyhedron(PolyhedronInfo& mainPolyhedronInfo, PolyhedronInfo& otherPolyhedronInfo)
 {
-	auto _temp = crossInfo;
-	vector<Point> ret;
+	for (auto& pointIdxs : otherPolyhedronInfo.polyhedron.indexs)
+	{
+		vector<Point> points;
+		for (auto& pointIdx : pointIdxs)
+		{
+			points.push_back(otherPolyhedronInfo.polyhedron.points[pointIdx]);
+		}
+		addSurface(mainPolyhedronInfo, points);
+	}
+}
+void addSurface(vector<PolyhedronInfo>& polyhedrons, vector<Point>& points)
+{
+	if (checkSamePoint(points))
+	{
+		PolyhedronInfo* mainPolyhedronInfo = nullptr;
+		for (auto it = polyhedrons.begin(); it != polyhedrons.end();)
+		{
+			bool itAdded = false;
+			for (auto& p : points)
+			{
+				if (it->pointsInfo.find(p) != it->pointsInfo.end())
+				{
+					if (!mainPolyhedronInfo)
+					{
+						addSurface(*it, points);
+						mainPolyhedronInfo = &(*it);
+					}
+					else
+					{
+						addPolyhedron(*mainPolyhedronInfo, *it);
+						it = polyhedrons.erase(it);
+						itAdded = true;
+					}
+					break;
+				}
+			}
+			if (!itAdded)
+				it++;
+		}
+		if (!mainPolyhedronInfo)
+		{
+			PolyhedronInfo polyhedronInfo;
+			polyhedronInfo.polyhedron.points = points;
+			polyhedronInfo.polyhedron.indexs.push_back({});
+			for (int i = 0; i < points.size(); i++)
+			{
+				polyhedronInfo.polyhedron.indexs.back().push_back(i);
+				polyhedronInfo.pointsInfo[points[i]] = i;
+			}
+			polyhedrons.push_back(polyhedronInfo);
+		}
+	}
+}
+void _createClipSuface(map<Point, map<Point, int>>& crossInfo, vector<vector<Point>>& ret)
+{
+	if (crossInfo.size() < 3)
+		return;
 
 	auto beginPoint = crossInfo.begin()->first;
-	ret.push_back(beginPoint);
+	ret.push_back({});
+	ret.back().push_back(beginPoint);
 
 	auto curPoint = beginPoint;
 	while (true)
 	{
-		assert(crossInfo.find(curPoint) != crossInfo.end());
+		//assert(crossInfo.find(curPoint) != crossInfo.end());
+		if (crossInfo.find(curPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return;
+		}
 		auto nextPoint = crossInfo[curPoint].begin()->first;
 		assert(crossInfo[curPoint][nextPoint] == 1);
 
-		assert(crossInfo.find(nextPoint) != crossInfo.end());
+		//assert(crossInfo.find(nextPoint) != crossInfo.end());
+		if (crossInfo.find(nextPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return;
+		}
+		if (crossInfo[nextPoint].find(curPoint) == crossInfo[nextPoint].end())
+		{
+			ret.clear();
+			return;
+		}
 		assert(crossInfo[nextPoint][curPoint] == 1);
 
 		crossInfo[curPoint].erase(nextPoint);
@@ -2955,12 +3182,16 @@ vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
 		}
 
 		if (nextPoint != beginPoint)
-			ret.push_back(nextPoint);
+			ret.back().push_back(nextPoint);
 		else
-			break;
+			return _createClipSuface(crossInfo, ret);
 		curPoint = nextPoint;
 	}
-
+}
+vector<vector<Point>> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+{
+	vector<vector<Point>> ret;
+	_createClipSuface(crossInfo, ret);
 	return ret;
 }
 
@@ -3043,15 +3274,963 @@ Point clacCrossPoint(Point p1, Point p2, int clipPlane)
 		p1.y += (p2.y - p1.y) * u ,
 		p1.z += (p2.z - p1.z) * u };
 }
+//vector<vector<Point>> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
+//{
+//	vector<vector<Point>> ret;
+//
+//	assert(points.size() >= 3);
+//	Vec3 normalVec = cross({ points[1].x - points[0].x, points[1].y - points[0].y, points[1].z - points[0].z },
+//	{ points[2].x - points[1].x, points[2].y - points[1].y, points[2].z - points[1].z });
+//	vector<vector<Point>> convexPolygons = cutPolygon(points, normalVec);
+//	
+//	vector<Point> cross;
+//	for (int i = 0; i < points.size(); i++)
+//	{
+//		int next = i + 1 < points.size() ? i + 1 : 0;
+//
+//		if (!inside(points[i], clipPlane))
+//		{
+//			if (inside(points[next], clipPlane))
+//			{
+//				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+//				ret.push_back(cp);
+//				ret.push_back(points[next]);
+//
+//				cross.push_back(cp);
+//			}
+//		}
+//		else
+//		{
+//			if (inside(points[next], clipPlane))
+//			{
+//				ret.push_back(points[next]);
+//			}
+//			else
+//			{
+//				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+//				ret.push_back(cp);
+//				cross.push_back(cp);
+//			}
+//		}
+//	}
+//	if (cross.size() > 1 && cross[0] != cross[1])
+//	{
+//		addCrossInfo(cross[0], cross[1], crossInfo);
+//		addCrossInfo(cross[1], cross[0], crossInfo);
+//	}
+//
+//	return ret;
+//}
+int findPointIdx(vector<PointInfo>& clipPoints, Point p, PointType type)
+{
+	for (int i = 0; i < clipPoints.size(); i++)
+	{
+		if (p == clipPoints[i].point && clipPoints[i].type == type)
+		{
+			return i;
+		}
+	}
+}
+void createClipedSurface(vector<PointInfo>& clipPoints, map<Point, Point>& orderLines, vector<vector<Point>>& out)
+{
+	if (clipPoints.size() < 3)
+	{
+		return;
+	}
+
+	PointInfo begin = clipPoints[0];
+	vector<int> idxs;
+	int i = -1;
+	idxs.push_back(0);
+	if (begin.type == CrossExit)
+	{
+		auto it = orderLines.find(begin.point);
+		assert(it != orderLines.end());
+		auto p = it->second;
+		i = findPointIdx(clipPoints, p, CrossEnter);
+	}
+	else
+	{
+		i = 1;
+	}
+	while (true)
+	{
+		bool findprv = false;
+		for (auto& idx : idxs)
+		{
+			if (idx == i)
+			{
+				findprv = true;
+				break;
+			}
+		}
+		if(findprv)
+		{
+			if (idxs.size() >= 3)
+				out.push_back({});
+
+			int offset = 0;
+			for (auto idx : idxs)
+			{
+				auto it = clipPoints.begin() + (idx + offset);
+				
+				if (idxs.size() >= 3)
+				{
+					out.back().push_back(it->point);
+				}
+
+				clipPoints.erase(it);
+				offset -= 1;
+			}
+
+			createClipedSurface(clipPoints, orderLines, out);
+			return;
+		}
+
+		idxs.push_back(i);
+
+		if (clipPoints[i].type == CrossExit)
+		{
+			auto it = orderLines.find(clipPoints[i].point);
+			assert(it != orderLines.end());
+			auto p = it->second;
+			i = findPointIdx(clipPoints, p, CrossEnter);
+		}
+		else
+		{
+			i = i + 1 < clipPoints.size() ? i + 1 : 0;
+		}
+	}
+}
 vector<vector<Point>> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
 {
 	vector<vector<Point>> ret;
 
-	assert(points.size() >= 3);
-	Vec3 normalVec = cross({ points[1].x - points[0].x, points[1].y - points[0].y, points[1].z - points[0].z },
-	{ points[2].x - points[1].x, points[2].y - points[1].y, points[2].z - points[1].z });
-	vector<vector<Point>> convexPolygons = cutPolygon(points, normalVec);
+	if (points.size() < 3)
+	{
+		printf("%d\n", points.size());
+		return ret;
+	}
+	//assert(points.size() >= 3);
 	
+	vector<PointInfo> clipPoints;
+	vector<PointInfo> crossPoints;
+
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+
+		if (!inside(points[i], clipPlane))
+		{
+			if (inside(points[next], clipPlane))
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				clipPoints.push_back({ cp, CrossEnter });
+				clipPoints.push_back({ points[next], Normal });
+
+				crossPoints.push_back({ cp, CrossEnter });
+			}
+		}
+		else
+		{
+			if (inside(points[next], clipPlane))
+			{
+				clipPoints.push_back({ points[next], Normal });
+			}
+			else
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				clipPoints.push_back({ cp, CrossExit });
+
+				crossPoints.push_back({ cp, CrossExit });
+			}
+		}
+	}	
+
+	auto orderLines = orderCorssLine(crossPoints);
+	for (auto it = orderLines.begin(); it != orderLines.end(); it++)
+	{
+		auto p1 = it->first;
+		auto p2 = it->second;
+		if (p1 != p2)
+		{
+			addCrossInfo(p1, p2, crossInfo);
+			addCrossInfo(p2, p1, crossInfo);
+		}
+	}
+	createClipedSurface(clipPoints, orderLines, ret);
+
+	return ret;
+}
+void clipClipPlane(vector<Polyhedron>& polyhedrons, int clipPlane)
+{
+	map<Point, map<Point, int>> crossInfo;
+	vector<PolyhedronInfo> newPolyhedronInfos;
+
+	vector<Point> surface;
+	for (auto& polyhedron : polyhedrons)
+	{
+		for (auto& index : polyhedron.indexs)
+		{
+			surface.clear();
+			for (auto& idx : index)
+				surface.push_back(polyhedron.points[idx]);
+
+			auto surfaces = clipSurface(surface, clipPlane, crossInfo);
+			for (auto&surface : surfaces)
+			{
+				addSurface(newPolyhedronInfos, surface);
+			}
+		}
+	}
+	
+	// 裁剪面上的面
+	if (crossInfo.size() > 2)
+	{
+		auto clipSurfaces = createClipSuface(crossInfo);
+		for (auto&surface : clipSurfaces)
+		{
+			antiClockPoints(surface, getClipPlaneNormalVec(clipPlane));
+			addSurface(newPolyhedronInfos, surface);
+		}
+	}
+
+	polyhedrons.clear();
+	for (auto& newPolyhedronInfo : newPolyhedronInfos)
+	{
+		polyhedrons.push_back(newPolyhedronInfo.polyhedron);
+	}
+}
+bool checkEntire(Polyhedron& polyhedron)
+{
+	bool allInside = true;
+	for (auto& clipPlane : clipPlanes)
+	{
+		bool allOutside = true;
+		for (auto& p : polyhedron.points)
+		{
+			if (inside(p, clipPlane))
+				allOutside = false;
+			else
+				allInside = false;
+		}
+
+		if (allInside)
+		{
+			continue;
+		}
+
+		if (allOutside)
+		{
+			polyhedron.points = {};
+			polyhedron.indexs = {};
+			return true;
+		}
+	}
+
+	return allInside;
+}
+vector<Polyhedron> commonClip(Polyhedron& polyhedron)
+{
+	vector<Polyhedron> ret;
+
+	if (!checkEntire(polyhedron))
+	{
+		ret = { polyhedron };
+		for (auto& clipPlane : clipPlanes)
+		{
+			clipClipPlane(ret, clipPlane);
+		}
+	}
+	else
+	{
+		ret = { polyhedron };
+	}
+	return ret;
+}
+Polyhedron cube = {
+	{ { -50.f, -50.f, 50.f },{ 0.f, -50.f, 0.f },{ 0.f, 50.f, 0.f },{ -50.f, 50.f, 50.f },
+	{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ 0.f, -50.f, -50.f },{ 0.f, 50.f, -50.f } },
+	{ { 0, 1, 2, 3 },{ 1, 4, 5, 2 },{ 5, 4, 6, 7 },{ 3, 7, 6, 0 },{ 3, 2, 5, 7 },{ 0, 6, 4, 1 } }
+};
+//Polyhedron cube = {
+//	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+//	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+//	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+//};
+void view()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 400, winHeight = 300;
+
+	auto temp = cube;
+
+	Point viewPortPoint = { 200.f, 150.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f) *
+		viewMatrix(camera->_viewP0, camera->_n, camera->_v);
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+
+	transformPoints(m, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+
+	auto temp_clip = temp;
+	auto temp_clips = commonClip(temp_clip);
+
+	transformPoints(m1, temp.points);
+	for (auto& temp_clip : temp_clips)
+	{
+		if (temp_clip.points.size() > 0)
+			transformPoints(m1, temp_clip.points);
+	}
+
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolyhedron(temp);
+	glColor3f(1.0, 0.0, 0.0);
+	for (auto& temp_clip : temp_clips)
+	{
+		if (temp_clip.points.size() > 0)
+			drawPolyhedron(temp_clip);
+	}
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	view();
+
+	glFlush();
+}
+void code_10_exercise_13_test()
+{
+	vector<int> a = { 1 };
+	auto it = a.begin() + 1;
+	camera = new Camera({ 100, 200, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+	//camera = new Camera({ 278, -272, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_16
+class Surface
+{
+public:
+	Surface(const vector<Point>& points_) : A(0), B(0), C(0), D(0)
+	{
+		if (points_.size() >= 3)
+		{
+			points = points_;
+			A = points[0].y * (points[1].z - points[2].z) + points[1].y * (points[2].z - points[0].z) + points[2].y * (points[0].z - points[1].z);
+			B = points[0].z * (points[1].x - points[2].x) + points[1].z * (points[2].x - points[0].x) + points[2].z * (points[0].x - points[1].x);
+			C = points[0].x * (points[1].y - points[2].y) + points[1].x * (points[2].y - points[0].y) + points[2].x * (points[0].y - points[1].y);
+			D = -points[0].x * (points[1].y * points[2].z - points[2].y * points[1].z)
+				- points[1].x * (points[2].y * points[0].z - points[0].y * points[2].z)
+				- points[2].x * (points[0].y * points[1].z - points[1].y * points[0].z);
+		}
+	}
+	vector<Point> points;
+	float A, B, C, D;
+};
+Camera *camera = nullptr;
+const int LeftClipPlane = 1;
+const int RightClipPlane = 2;
+const int BottomClipPlane = 3;
+const int TopClipPlane = 4;
+const int NearClipPlane = 5;
+const int FarClipPlane = 6;
+const std::vector<int> clipPlanes = { LeftClipPlane, RightClipPlane, BottomClipPlane, TopClipPlane, NearClipPlane, FarClipPlane };
+void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
+{
+	//auto it1 = crossInfo.find(p1);
+	//if (it1 != crossInfo.end())
+	//{
+	//	it1->second[p2] = 1;
+	//}
+	//else
+	//{
+	//	crossInfo[p1][p2] = 1;
+	//}
+	crossInfo[p1][p2] = 1;
+}
+bool checkSamePoint(vector<Point>& points)
+{
+	map<Point, int> testSame;
+	for (auto it = points.begin(); it != points.end();)
+	{
+		if (testSame.find(*it) == testSame.end())
+		{
+			testSame[*it] = 1;
+			it++;
+		}
+		else
+		{
+			it = points.erase(it);
+		}
+	}
+
+	return points.size() >= 3;
+}
+void addSurface(Polyhedron& polyhedron, vector<Point>& points, map<Point, int>& pointInfo)
+{
+	if (checkSamePoint(points))
+	{
+		polyhedron.indexs.push_back({});
+		for (int i = 0; i < points.size(); i++)
+		{
+			auto it = pointInfo.find(points[i]);
+			if (it != pointInfo.end())
+			{
+				polyhedron.indexs.back().push_back(it->second);
+			}
+			else
+			{
+				polyhedron.points.push_back(points[i]);
+				int idx = polyhedron.points.size() - 1;
+				polyhedron.indexs.back().push_back(idx);
+
+				pointInfo[points[i]] = idx;
+			}
+		}
+	}
+}
+vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+{
+	vector<Point> ret;
+
+	if (crossInfo.size() < 3)
+		return ret;
+
+	auto beginPoint = crossInfo.begin()->first;
+	ret.push_back(beginPoint);
+
+	auto curPoint = beginPoint;
+	while (true)
+	{
+		//assert(crossInfo.find(curPoint) != crossInfo.end());
+		if (crossInfo.find(curPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return ret;
+		}
+		auto nextPoint = crossInfo[curPoint].begin()->first;
+		assert(crossInfo[curPoint][nextPoint] == 1);
+
+		//assert(crossInfo.find(nextPoint) != crossInfo.end());
+		if (crossInfo.find(nextPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return ret;
+		}
+		if (crossInfo[nextPoint].find(curPoint) == crossInfo[nextPoint].end())
+		{
+			ret.clear();
+			return ret;
+		}
+		assert(crossInfo[nextPoint][curPoint] == 1);
+
+		crossInfo[curPoint].erase(nextPoint);
+		if (crossInfo[curPoint].size() == 0)
+		{
+			crossInfo.erase(curPoint);
+		}
+
+		crossInfo[nextPoint].erase(curPoint);
+		if (crossInfo[nextPoint].size() == 0)
+		{
+			crossInfo.erase(nextPoint);
+		}
+
+		if (nextPoint != beginPoint)
+			ret.push_back(nextPoint);
+		else
+			break;
+		curPoint = nextPoint;
+	}
+	return ret;
+}
+
+void antiClockPoints(vector<Point>& points, Vec3 normalVec)
+{
+	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, points[1].z - points[0].z };
+	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, points[2].z - points[1].z };
+	Vec3 crossVec = cross(a, b);
+	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
+	if (!antiClocked)
+	{
+		std::reverse(points.begin(), points.end());
+	}
+}
+bool inside(Point p, Surface& clipPlane)
+{
+	return clipPlane.A * p.x + clipPlane.B * p.y + clipPlane.C * p.z + clipPlane.D < 0;
+}
+Point clacCrossPoint(Point p1, Point p2, Surface& clipPlane)
+{
+	float u = 0.f;
+	if (clipPlane.A * (p2.x - p1.x) + clipPlane.B * (p2.y - p1.y) + clipPlane.C * (p2.z - p1.z) != 0)
+	{
+		u = (-clipPlane.D - clipPlane.A * p1.x - clipPlane.B * p1.y - clipPlane.C * p1.z) /
+			(clipPlane.A * (p2.x - p1.x) + clipPlane.B * (p2.y - p1.y) + clipPlane.C * (p2.z - p1.z));
+	}
+	return{ p1.x + (p2.x - p1.x) * u,
+		p1.y += (p2.y - p1.y) * u ,
+		p1.z += (p2.z - p1.z) * u };
+}
+vector<Point> clipSurface(const vector<Point>& points, Surface& clipPlane, map<Point, map<Point, int>>& crossInfo)
+{
+	if (points.size() < 3)
+	{
+		printf("%d\n", points.size());
+	}
+
+	vector<Point> ret;
+	vector<Point> cross;
+	for (int i = 0; i < points.size(); i++)
+	{
+		int next = i + 1 < points.size() ? i + 1 : 0;
+
+		if (!inside(points[i], clipPlane))
+		{
+			if (inside(points[next], clipPlane))
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				ret.push_back(points[next]);
+
+				cross.push_back(cp);
+			}
+		}
+		else
+		{
+			if (inside(points[next], clipPlane))
+			{
+				ret.push_back(points[next]);
+			}
+			else
+			{
+				auto cp = clacCrossPoint(points[i], points[next], clipPlane);
+				ret.push_back(cp);
+				cross.push_back(cp);
+			}
+		}
+	}
+	if (cross.size() > 1 && cross[0] != cross[1])
+	{
+		addCrossInfo(cross[0], cross[1], crossInfo);
+		addCrossInfo(cross[1], cross[0], crossInfo);
+	}
+
+	return ret;
+}
+void clipClipPlane(Polyhedron& polyhedron, Surface& clipPlane)
+{
+	map<Point, int> pointInfo;
+	map<Point, map<Point, int>> crossInfo;
+	Polyhedron newPolyhedron;
+
+	vector<Point> surface;
+	for (auto& index : polyhedron.indexs)
+	{
+		surface.clear();
+		for (auto& idx : index)
+			surface.push_back(polyhedron.points[idx]);
+
+		auto points = clipSurface(surface, clipPlane, crossInfo);
+		if (points.size() > 0)
+			addSurface(newPolyhedron, points, pointInfo);
+	}
+
+	// 裁剪面上的面
+	if (crossInfo.size() >= 3)
+	{
+		auto clipSurfacePoints = createClipSuface(crossInfo);
+		if (clipSurfacePoints.size() >= 3)
+		{
+			antiClockPoints(clipSurfacePoints, { clipPlane.A, clipPlane.B, clipPlane.C });
+			addSurface(newPolyhedron, clipSurfacePoints, pointInfo);
+		}
+	}
+
+	polyhedron = newPolyhedron;
+}
+bool checkEntire(const Polyhedron& viewVolume, Polyhedron& polyhedron)
+{
+	vector<Point> temp;
+	bool allInside = true;
+	for (auto& index : viewVolume.indexs)
+	{
+		temp.clear();
+		for (auto& idx : index)
+			temp.push_back(viewVolume.points[idx]);
+		Surface clipPlane(temp);
+				
+		bool allOutside = true;
+		for (auto& p : polyhedron.points)
+		{
+			if (inside(p, clipPlane))
+				allOutside = false;
+			else
+				allInside = false;
+		}
+
+		if (allInside)
+		{
+			continue;
+		}
+
+		if (allOutside)
+		{
+			polyhedron.points = {};
+			polyhedron.indexs = {};
+			return true;
+		}
+	}
+
+	return allInside;
+}
+void clipCommonViewVolume(const Polyhedron& viewVolume, Polyhedron& polyhedron)
+{
+	if (!checkEntire(viewVolume, polyhedron))
+	{
+		vector<Point> temp;
+		for (auto& index : viewVolume.indexs)
+		{
+			temp.clear();
+			for (auto& idx : index)
+				temp.push_back(viewVolume.points[idx]);
+			Surface clipPlane(temp);
+			
+			clipClipPlane(polyhedron, clipPlane);
+		}
+	}
+}
+void clipFrustum(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar, Polyhedron& polyhedron)
+{
+	vector<Point> nearSurface = {
+		{ xwmin , ywmin, znear },
+		{ xwmax , ywmin, znear },
+		{ xwmax , ywmax, znear },
+		{ xwmin , ywmax, znear } };
+	float fnRate = zfar / znear;
+	vector<Point> farSurface = {
+		{ xwmin * fnRate, ywmin * fnRate, zfar },
+		{ xwmax * fnRate, ywmin * fnRate, zfar },
+		{ xwmax * fnRate, ywmax * fnRate, zfar },
+		{ xwmin * fnRate, ywmax * fnRate, zfar } };
+
+	Polyhedron viewVolume;
+	map<Point, int> pointInfo;
+	addSurface(viewVolume, nearSurface, pointInfo);
+
+	vector<Point> temp = { farSurface[0], farSurface[3], farSurface[2], farSurface[1] };
+	addSurface(viewVolume, temp, pointInfo);
+
+	temp = { farSurface[0], nearSurface[0], nearSurface[3], farSurface[3] };
+	addSurface(viewVolume, temp, pointInfo);
+
+	temp = { nearSurface[3], nearSurface[2], farSurface[2], farSurface[3] };
+	addSurface(viewVolume, temp, pointInfo);
+
+	temp = { farSurface[1], farSurface[2], nearSurface[2], nearSurface[1] };
+	addSurface(viewVolume, temp, pointInfo);
+
+	temp = { farSurface[0], farSurface[1], nearSurface[1], nearSurface[0] };
+	addSurface(viewVolume, temp, pointInfo);
+
+	clipCommonViewVolume(viewVolume, polyhedron);
+}
+Polyhedron cube = {
+	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void view()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	winWidth = 400, winHeight = 300;
+
+	auto temp = cube;
+
+	Point viewPortPoint = { 200.f, 150.f };
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+	
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+
+	auto m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f);
+	auto m1= viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+
+	transformPoints(viewMatrix(camera->_viewP0, camera->_n, camera->_v), temp.points);
+
+	auto temp_clip = temp;
+	clipFrustum(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -1.f, -1200.f, temp_clip);
+
+	transformPoints(m, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+	if (temp_clip.points.size() > 0)
+	{
+		transformPoints(m, temp_clip.points);
+		for (auto& p : temp_clip.points)
+			descartes(p);
+	}
+
+	transformPoints(m1, temp.points);
+	if (temp_clip.points.size() > 0)
+		transformPoints(m1, temp_clip.points);
+
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolyhedron(temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (temp_clip.points.size() > 0)
+		drawPolyhedron(temp_clip);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	view();
+
+	glFlush();
+}
+void code_10_exercise_16()
+{
+	camera = new Camera({ 100, 200, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_20
+Camera *camera = nullptr;
+const int LeftClipPlane = 1;
+const int RightClipPlane = 2;
+const int BottomClipPlane = 3;
+const int TopClipPlane = 4;
+const int NearClipPlane = 5;
+const int FarClipPlane = 6;
+const std::vector<int> clipPlanes = { LeftClipPlane, RightClipPlane, BottomClipPlane, TopClipPlane, NearClipPlane, FarClipPlane };
+void addCrossInfo(Point p1, Point p2, map<Point, map<Point, int>>& crossInfo)
+{
+	//auto it1 = crossInfo.find(p1);
+	//if (it1 != crossInfo.end())
+	//{
+	//	it1->second[p2] = 1;
+	//}
+	//else
+	//{
+	//	crossInfo[p1][p2] = 1;
+	//}
+	crossInfo[p1][p2] = 1;
+}
+bool checkSamePoint(vector<Point>& points)
+{
+	map<Point, int> testSame;
+	for (auto it = points.begin(); it != points.end();)
+	{
+		if (testSame.find(*it) == testSame.end())
+		{
+			testSame[*it] = 1;
+			it++;
+		}
+		else
+		{
+			it = points.erase(it);
+		}
+	}
+
+	return points.size() >= 3;
+}
+void addSurface(Polyhedron& polyhedron, vector<Point>& points, map<Point, int>& pointInfo)
+{
+	if (checkSamePoint(points))
+	{
+		polyhedron.indexs.push_back({});
+		for (int i = 0; i < points.size(); i++)
+		{
+			auto it = pointInfo.find(points[i]);
+			if (it != pointInfo.end())
+			{
+				polyhedron.indexs.back().push_back(it->second);
+			}
+			else
+			{
+				polyhedron.points.push_back(points[i]);
+				int idx = polyhedron.points.size() - 1;
+				polyhedron.indexs.back().push_back(idx);
+
+				pointInfo[points[i]] = idx;
+			}
+		}
+	}
+}
+vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
+{
+	vector<Point> ret;
+
+	if (crossInfo.size() < 3)
+		return ret;
+
+	auto beginPoint = crossInfo.begin()->first;
+	ret.push_back(beginPoint);
+
+	auto curPoint = beginPoint;
+	while (true)
+	{
+		//assert(crossInfo.find(curPoint) != crossInfo.end());
+		if (crossInfo.find(curPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return ret;
+		}
+		auto nextPoint = crossInfo[curPoint].begin()->first;
+		assert(crossInfo[curPoint][nextPoint] == 1);
+
+		//assert(crossInfo.find(nextPoint) != crossInfo.end());
+		if (crossInfo.find(nextPoint) == crossInfo.end())
+		{
+			ret.clear();
+			return ret;
+		}
+		if (crossInfo[nextPoint].find(curPoint) == crossInfo[nextPoint].end())
+		{
+			ret.clear();
+			return ret;
+		}
+		assert(crossInfo[nextPoint][curPoint] == 1);
+
+		crossInfo[curPoint].erase(nextPoint);
+		if (crossInfo[curPoint].size() == 0)
+		{
+			crossInfo.erase(curPoint);
+		}
+
+		crossInfo[nextPoint].erase(curPoint);
+		if (crossInfo[nextPoint].size() == 0)
+		{
+			crossInfo.erase(nextPoint);
+		}
+
+		if (nextPoint != beginPoint)
+			ret.push_back(nextPoint);
+		else
+			break;
+		curPoint = nextPoint;
+	}
+
+	return ret;
+}
+
+void antiClockPoints(vector<Point>& points, Vec3 normalVec)
+{
+	Point p0 = points[0];
+	descartes(p0);
+	Point p1 = points[1];
+	descartes(p1);
+	Point p2 = points[2];
+	descartes(p2);
+
+	Vec3 a = { p1.x - p0.x, p1.y - p0.y, -(p1.z - p0.z) }; // z取负值是因为在左手坐标系和右手坐标系z反号
+	Vec3 b = { p2.x - p1.x, p2.y - p1.y, -(p2.z - p1.z) };
+	Vec3 crossVec = cross(a, b);
+	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
+	if (!antiClocked)
+	{
+		std::reverse(points.begin(), points.end());
+	}
+}
+Vec3 getClipPlaneNormalVec(int clipPlane)
+{
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		return{ -1, 0, 0 };
+	case RightClipPlane:
+		return{ 1, 0, 0 };
+	case BottomClipPlane:
+		return{ 0, -1, 0 };
+	case TopClipPlane:
+		return{ 0, 1, 0 };
+	case NearClipPlane:
+		return{ 0, 0, -1 };
+	case FarClipPlane:
+		return{ 0, 0, 1 };
+	}
+}
+
+bool inside(Point p, int clipPlane)
+{
+	if (p.h != 0)
+	{
+		float sn = sign(p.h);
+		switch (clipPlane)
+		{
+		case LeftClipPlane:
+			return sn * (p.h + p.x) > 0;
+		case RightClipPlane:
+			return sn * (p.h - p.x) > 0;
+		case BottomClipPlane:
+			return sn * (p.h + p.y) > 0;
+		case TopClipPlane:
+			return sn * (p.h - p.y) > 0;
+		case NearClipPlane:
+			return sn * (p.h + p.z) > 0;
+		case FarClipPlane:
+			return sn * (p.h - p.z) > 0;
+		}
+	}
+	return false;
+}
+Point clacCrossPoint(Point p1, Point p2, int clipPlane)
+{
+	float u = 0.f;
+	switch (clipPlane)
+	{
+	case LeftClipPlane:
+		u = (p1.x + p1.h) / ((p1.x + p1.h) - (p2.x + p2.h));
+		break;
+	case RightClipPlane:
+		u = (p1.x - p1.h) / ((p1.x - p1.h) - (p2.x - p2.h));
+		break;
+	case BottomClipPlane:
+		u = (p1.y + p1.h) / ((p1.y + p1.h) - (p2.y + p2.h));
+		break;
+	case TopClipPlane:
+		u = (p1.y - p1.h) / ((p1.y - p1.h) - (p2.y - p2.h));
+		break;
+	case NearClipPlane:
+		u = (p1.z + p1.h) / ((p1.z + p1.h) - (p2.z + p2.h));
+		break;
+	case FarClipPlane:
+		u = (p1.z - p1.h) / ((p1.z - p1.h) - (p2.z - p2.h));
+		break;
+	default:
+		break;
+	}
+
+	return{ p1.x + (p2.x - p1.x) * u,
+		p1.y += (p2.y - p1.y) * u ,
+		p1.z += (p2.z - p1.z) * u,
+		p1.h += (p2.h - p1.h) * u };
+}
+vector<Point> clipSurface(const vector<Point>& points, int clipPlane, map<Point, map<Point, int>>& crossInfo)
+{
+	if (points.size() < 3)
+	{
+		printf("%d\n", points.size());
+	}
+
+	vector<Point> ret;
 	vector<Point> cross;
 	for (int i = 0; i < points.size(); i++)
 	{
@@ -3121,33 +4300,33 @@ void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
 bool checkEntire(Polyhedron& polyhedron)
 {
 	bool allInside = true;
-	bool allOutside = true;
-	for (auto& p : polyhedron.points)
+	for (auto& clipPlane : clipPlanes)
 	{
-		for (auto& clipPlane : clipPlanes)
+		bool allOutside = true;
+		for (auto& p : polyhedron.points)
 		{
-			if (!inside(p, clipPlane))
-				allInside = false;
-			else
+			if (inside(p, clipPlane))
 				allOutside = false;
+			else
+				allInside = false;
+		}
+
+		if (allInside)
+		{
+			continue;
+		}
+
+		if (allOutside)
+		{
+			polyhedron.points = {};
+			polyhedron.indexs = {};
+			return true;
 		}
 	}
 
-	if (allInside)
-	{
-		return true;
-	}
-
-	if (allOutside)
-	{
-		polyhedron.points = {};
-		polyhedron.indexs = {};
-		return true;
-	}
-
-	return false;
+	return allInside;
 }
-void commonClip(Polyhedron& polyhedron)
+void clipHomogeneous(Polyhedron& polyhedron)
 {
 	if (!checkEntire(polyhedron))
 	{
@@ -3180,13 +4359,18 @@ void view()
 
 	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
 
-
 	transformPoints(m, temp.points);
-	for (auto& p : temp.points)
-		descartes(p);
 
 	auto temp_clip = temp;
-	commonClip(temp_clip);
+	clipHomogeneous(temp_clip);
+
+	for (auto& p : temp.points)
+		descartes(p);
+	if (temp_clip.points.size() > 0)
+	{
+		for (auto& p : temp_clip.points)
+			descartes(p);
+	}
 
 	transformPoints(m1, temp.points);
 	if (temp_clip.points.size() > 0)
@@ -3208,13 +4392,429 @@ void drawFunc()
 
 	glFlush();
 }
-void code_10_exercise_13_test()
+void code_10_exercise_20()
 {
 	camera = new Camera({ 100, 200, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
 	glutDisplayFunc(drawFunc);
 }
 #endif
 
+#ifdef CHAPTER_10_EXERCISE_21
+GLint winWidth = 600, winHeight = 600;
+GLfloat x0 = 100.0, y_0 = 50.0, z0 = -50.0;
+GLfloat xref = 50.0, yref = 50.0, zref = 0.0;
+GLfloat Vx = 0.0, Vy = 1.0, Vz = 0.0;
+GLfloat xwMin = -40.0, ywMin = -60.0, xwMax = 40.0, ywMax = 60.0;
+GLfloat dnear = 25.0, dfar = 125.0;
+void init(void)
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glMatrixMode(GL_MODELVIEW);
+	gluLookAt(x0, y_0, z0, xref, yref, zref, Vx, Vy, Vz);
+	glMatrixMode(GL_PROJECTION);
+	glFrustum(xwMin, xwMax, ywMin, ywMax, dnear, dfar);
+}
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 1.0, 0.0);
+	glPolygonMode(GL_FRONT, GL_FILL);
+	glPolygonMode(GL_BACK, GL_LINE);
+
+	glBegin(GL_QUADS);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(100.0, 0.0, 0.0);
+	glVertex3f(100.0, 100.0, 0.0);
+	glVertex3f(0.0, 100.0, 0.0);
+	glEnd();
+
+	glFlush();
+}
+void reshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glViewport(0, 0, newWidth, newHeight);
+	winWidth = newWidth;
+	winHeight = newHeight;
+}
+void main(int argc, char** argv)
+{
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitWindowPosition(50, 50);
+	glutInitWindowSize(winWidth, winHeight);
+	glutCreateWindow("Perspective View of A Square");
+
+	init();
+	glutDisplayFunc(displayFcn);
+	glutReshapeFunc(reshapeFcn);
+	glutMainLoop();
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_22
+Camera *camera = nullptr;
+GLfloat x0 = 100.0, y_0 = 50.0, z0 = 50.0;
+GLfloat xref = 50.0, yref = 50.0, zref = 0.0;
+GLfloat Vx = 0.0, Vy = 1.0, Vz = 0.0;
+GLfloat xwMin = -80.0, ywMin = -60.0, xwMax = 80.0, ywMax = 60.0;
+GLfloat dnear = 25.0, dfar = 125.0;
+void reshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glViewport(0, 0, newWidth, newHeight);
+	winWidth = newWidth;
+	winHeight = newHeight;
+}
+void drawFunc()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	Point pu = { camera->_viewP0.x - camera->_n.x,
+		camera->_viewP0.y - camera->_n.y,
+		camera->_viewP0.z - camera->_n.z, };
+	gluLookAt(camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z, 
+		pu.x, pu.y, pu.z,
+		camera->_v.x, camera->_v.y, camera->_v.z);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glFrustum(xwMin, xwMax, ywMin, ywMax, dnear, dfar);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 1.0, 0.0);
+	glPolygonMode(GL_FRONT, GL_FILL);
+	glPolygonMode(GL_BACK, GL_LINE);
+
+	glBegin(GL_QUADS);
+	glVertex3f(0.0, 0.0, 0.0);
+	glVertex3f(100.0, 0.0, 0.0);
+	glVertex3f(100.0, 100.0, 0.0);
+	glVertex3f(0.0, 100.0, 0.0);
+	glEnd();
+
+	glFlush();
+}
+void code_10_exercise_22()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	camera = new Camera({ x0, y_0, z0 }, { x0 - xref, y_0 - yref, z0 - zref }, { Vx, Vy, Vz }, 500);
+	glutDisplayFunc(drawFunc);
+	glutReshapeFunc(reshapeFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_23
+Camera *camera = nullptr;
+GLfloat x0 = 100.0, y_0 = 50.0, z0 = 500.0;
+GLfloat xref = 50.0, yref = 50.0, zref = 0.0;
+GLfloat Vx = 0.0, Vy = 1.0, Vz = 0.0;
+GLfloat xwMin = -80.0, ywMin = -60.0, xwMax = 80.0, ywMax = 60.0;
+GLfloat dnear = 145.0, dfar = 1250.0;
+Polyhedron cube = {
+	{ { 0.f, 0.f, 0.f },{ 100.f, 0.f, 0.f },{ 100.f, 100.f, 0.f },{ 0.f, 100.f, 0.f },
+	{ 0.f, 0.f, -100.f },{ 100.f, 0.f, -100.f },{ 100.f, 100.f, -100.f },{ 0.f, 100.f, -100.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void reshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glViewport(0, 0, newWidth, newHeight);
+	winWidth = newWidth;
+	winHeight = newHeight;
+}
+void drawFunc()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	Point pu = { camera->_viewP0.x - camera->_n.x,
+		camera->_viewP0.y - camera->_n.y,
+		camera->_viewP0.z - camera->_n.z, };
+	gluLookAt(camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z,
+		pu.x, pu.y, pu.z,
+		camera->_v.x, camera->_v.y, camera->_v.z);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glFrustum(xwMin, xwMax, ywMin, ywMax, dnear, dfar);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolyhedron3D(cube);
+
+	glFlush();
+}
+void code_10_exercise_23()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	camera = new Camera({ x0, y_0, z0 }, { x0 - xref, y_0 - yref, z0 - zref }, { Vx, Vy, Vz }, 500);
+	glutDisplayFunc(drawFunc);
+	glutReshapeFunc(reshapeFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_24
+GLfloat x0 = 50.0, y_0 = 50.0, z0 = 50.0;
+GLfloat xref = 50.0, yref = 50.0, zref = 0.0;
+GLfloat Vx = 0.0, Vy = 1.0, Vz = 0.0;
+GLfloat xwMin = -400.0, ywMin = -300.0, xwMax = 400.0, ywMax = 300.0;
+GLfloat dnear = 25.0, dfar = 1250.0;
+Polyhedron cube = {
+	{ { 0.f, 0.f, 0.f },{ 100.f, 0.f, 0.f },{ 100.f, 100.f, 0.f },{ 0.f, 100.f, 0.f },
+	{ 0.f, 0.f, -100.f },{ 100.f, 0.f, -100.f },{ 100.f, 100.f, -100.f },{ 0.f, 100.f, -100.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void reshapeFcn(GLint newWidth, GLint newHeight)
+{
+	glViewport(0, 0, newWidth, newHeight);
+	winWidth = newWidth;
+	winHeight = newHeight;
+}
+void drawFunc()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(x0, y_0, z0, xref, yref, zref, Vx, Vy, Vz);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(xwMin, xwMax, ywMin, ywMax, dnear, dfar);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolyhedron3D(cube);
+
+	glFlush();
+}
+void code_10_exercise_24()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glutDisplayFunc(drawFunc);
+	glutReshapeFunc(reshapeFcn);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_25
+GLfloat x0 = 50.0, y_0 = 50.0, z0 = 50.0;
+GLfloat xref = 50.0, yref = 50.0, zref = 0.0;
+GLfloat Vx = 0.0, Vy = 1.0, Vz = 0.0;
+GLfloat xwMin = -200.0, ywMin = -300.0, xwMax = 200.0, ywMax = 300.0;
+GLfloat dnear = 25.0, dfar = 1250.0;
+Polyhedron cube = {
+	{ { 0.f, 0.f, 0.f },{ 100.f, 0.f, 0.f },{ 100.f, 100.f, 0.f },{ 0.f, 100.f, 0.f },
+	{ 0.f, 0.f, -100.f },{ 100.f, 0.f, -100.f },{ 100.f, 100.f, -100.f },{ 0.f, 100.f, -100.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	Vec3 Vp = { 1.f, 1.f, 2 * 1.414f };
+
+	// 设置斜投影矩阵
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(x0, y_0, z0, xref, yref, zref, Vx, Vy, Vz);
+
+	glMatrixMode(GL_PROJECTION);
+	auto m = normalMatrix(xwMin, xwMax, ywMin, ywMax, -dnear, -dfar) *
+		parallelProjectionMatrix(Vp, -dnear);
+	glLoadIdentity();
+	glMultMatrixf(m);
+
+	glViewport(0, 0, 400, 600);
+
+	//GLfloat test[16];
+	//glGetFloatv(GL_PROJECTION_MATRIX, test);
+
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolyhedron3D(cube);
+
+	// 先斜切变换对象，再正投影
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glMultMatrixf(shearZrefMatrix(-Vp.x / Vp.z, -Vp.y / Vp.z, -dnear));
+	gluLookAt(x0, y_0, z0, xref, yref, zref, Vx, Vy, Vz);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(xwMin, xwMax, ywMin, ywMax, dnear, dfar);
+
+	glViewport(400, 0, 400, 600);
+
+	glColor3f(0.0, 1.0, 0.0);
+	drawPolyhedron3D(cube);
+
+	glFlush();
+}
+void code_10_exercise_25()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glutDisplayFunc(drawFunc);
+}
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_ADD_2
+Camera *camera = nullptr;
+enum ProjectionType
+{
+	Orthogonal, // 正交投影
+	Parallel, // 平行投影
+	Perspective, // 透视投影
+};
+ProjectionType projectionType = Perspective;
+GLfloat dnear = 1.f, dfar = 1200.f;
+Vec3 parallelVec = { 1.f, 1.f, 2 * 1.414f };;
+
+void normalKeyFcn(unsigned char key, int x, int y)
+{
+	//printf("normalKeyFcn %d, %d, %d\n", key, x, y);
+	switch (key)
+	{
+	case 'a':
+	case 'A':
+		projectionType = Orthogonal;
+		break;
+	case 's':
+	case 'S':
+		projectionType = Parallel;
+		break;
+	case 'd':
+	case 'D':
+		projectionType = Perspective;
+		break;
+	default:
+		break;
+	}
+	glutPostRedisplay();
+}
+Polyhedron cube = {
+	{ { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
+	{ -50.f, -50.f, -50.f },{ 50.f, -50.f, -50.f },{ 50.f, 50.f, -50.f },{ -50.f, 50.f, -50.f } },
+	{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
+};
+
+void view1()
+{
+	winWidth = 260, winHeight = 200;
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 400, 0, 600);
+
+	glViewport(0, 0, 400, 600);
+	
+	auto temp = cube;
+
+	Point viewPortPoint = { 70.f, 200.f };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+	auto m = viewMatrix(camera->_viewP0, camera->_n, camera->_v);
+
+	if (projectionType == Orthogonal)
+	{
+		m = normalMatrix(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2, -dnear, -dfar) *
+			orthogonalProjectionMatrix() * m;
+	}
+	else if (projectionType == Parallel)
+	{
+		m = normalMatrix(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2, -dnear, -dfar) *
+			parallelProjectionMatrix(parallelVec, -dnear) * m;
+	}
+	else if (projectionType == Perspective)
+	{
+		float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+		float clipWinWidth = winWidth / winHeight * clipWinHeight;
+		m = perspectiveProjectionAndNormalMatrix(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, -dnear, -dfar) * m;
+	}
+
+	auto m1 = viewportMatrix(viewPortPoint.x, viewPortPoint.x + winWidth, viewPortPoint.y, viewPortPoint.y + winHeight);
+	
+	transformPoints(m, temp.points);
+	for (auto& p : temp.points)
+		descartes(p);
+
+	auto temp_clip = temp;
+	clip(temp_clip);
+
+	transformPoints(m1, temp.points);
+	if (temp_clip.points.size() > 0)
+		transformPoints(m1, temp_clip.points);
+
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolyhedron(temp);
+	glColor3f(1.0, 0.0, 0.0);
+	if (temp_clip.points.size() > 0)
+		drawPolyhedron(temp_clip);
+}
+void view2()
+{
+	winWidth = 260, winHeight = 200;
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(400, 800, 0, 600);
+
+	glViewport(400, 0, 400, 600);
+
+	Point viewPortPoint = { 470.f, 200.f };
+	glColor3f(1.0, 1.0, 1.0);
+	drawPolygon({ viewPortPoint,{ viewPortPoint.x + winWidth, viewPortPoint.y, 0 },{ viewPortPoint.x + winWidth,viewPortPoint.y + winHeight, 0 },{ viewPortPoint.x, viewPortPoint.y + winHeight, 0 } });
+
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	Point pu = { camera->_viewP0.x - camera->_n.x,
+		camera->_viewP0.y - camera->_n.y,
+		camera->_viewP0.z - camera->_n.z, };
+	gluLookAt(camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z,
+		pu.x, pu.y, pu.z,
+		camera->_v.x, camera->_v.y, camera->_v.z);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	if (projectionType == Orthogonal)
+	{
+		glOrtho(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2, dnear, dfar);
+	}
+	else if (projectionType == Parallel)
+	{
+		auto m = normalMatrix(-winWidth / 2, winWidth / 2, -winHeight / 2, winHeight / 2, -dnear, -dfar) *
+			parallelProjectionMatrix(parallelVec, -dnear);
+		glMultMatrixf(m);
+	}
+	else if (projectionType == Perspective)
+	{
+		float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+		float clipWinWidth = winWidth / winHeight * clipWinHeight;
+		glFrustum(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, dnear, dfar);
+	}
+
+	glViewport(viewPortPoint.x, viewPortPoint.y, winWidth, winHeight);
+	
+	glColor3f(1.0, 0.0, 0.0);
+	drawPolyhedron3D(cube);
+}
+void drawFunc()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	view1();
+
+	view2();
+
+	glFlush();
+}
+void code_10_exercise_add_2()
+{
+	camera = new Camera({ 100, 200, 500 }, { 0, 0, 1 }, { 0, 1, 0 }, 1000);
+	glutDisplayFunc(drawFunc);
+	glutKeyboardFunc(normalKeyFcn);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_10_COMMON
@@ -3299,6 +4899,34 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_10_EXERCISE_13_TEST
 	code_10_exercise_13_test();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_16
+	code_10_exercise_16();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_20
+	code_10_exercise_20();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_22
+	code_10_exercise_22();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_23
+	code_10_exercise_23();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_24
+	code_10_exercise_24();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_25
+	code_10_exercise_25();
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_ADD_2
+	code_10_exercise_add_2();
 #endif
 
 	glutMainLoop();

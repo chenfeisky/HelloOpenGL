@@ -16,8 +16,21 @@
 //#define CHAPTER_10_EXERCISE_11
 //#define CHAPTER_10_EXERCISE_12
 //#define CHAPTER_10_EXERCISE_13
-#define CHAPTER_10_EXERCISE_13_TEST
-
+//#define CHAPTER_10_EXERCISE_13_TEST
+//#define CHAPTER_10_EXERCISE_14
+//#define CHAPTER_10_EXERCISE_15
+//#define CHAPTER_10_EXERCISE_16
+//#define CHAPTER_10_EXERCISE_17
+//#define CHAPTER_10_EXERCISE_18
+//#define CHAPTER_10_EXERCISE_19
+//#define CHAPTER_10_EXERCISE_20
+//#define CHAPTER_10_EXERCISE_21
+//#define CHAPTER_10_EXERCISE_22
+//#define CHAPTER_10_EXERCISE_23
+//#define CHAPTER_10_EXERCISE_24
+//#define CHAPTER_10_EXERCISE_25
+//#define CHAPTER_10_EXERCISE_ADD_1
+#define CHAPTER_10_EXERCISE_ADD_2
 
 #ifdef CHAPTER_10_CAMERA
 #define CHAPTER_10_COMMON
@@ -55,6 +68,10 @@
 #define CHAPTER_10_COMMON
 #endif
 
+#ifdef CHAPTER_10_EXERCISE_15
+#define CHAPTER_10_EXERCISE_9
+#endif
+
 #ifdef CHAPTER_10_EXERCISE_9
 #define CHAPTER_10_COMMON
 #endif
@@ -71,12 +88,62 @@
 #define CHAPTER_10_COMMON
 #endif
 
+#ifdef CHAPTER_10_EXERCISE_14
+#define CHAPTER_10_EXERCISE_13
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_17
+#define CHAPTER_10_EXERCISE_13
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_18
+#define CHAPTER_10_EXERCISE_13
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_19
+#define CHAPTER_10_EXERCISE_13
+#endif
+
 #ifdef CHAPTER_10_EXERCISE_13
 #define CHAPTER_10_COMMON
+#define ClipPolyhedron
 #endif
 
 #ifdef CHAPTER_10_EXERCISE_13_TEST
 #define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_16
+#define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_20
+#define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_22
+#define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_23
+#define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_24
+#define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_25
+#define CHAPTER_10_COMMON
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_ADD_1
+#define CHAPTER_10_EXERCISE_ADD_2
+#endif
+
+#ifdef CHAPTER_10_EXERCISE_ADD_2
+#define CHAPTER_10_COMMON
+#define ClipPolyhedron
 #endif
 
 //////////////////////////////////////////////////////////////////////////
