@@ -54,6 +54,9 @@
     <ClInclude Include="opengl11h.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="opengl12h.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl4.cpp">
@@ -96,6 +99,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="opengl11.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl12.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
