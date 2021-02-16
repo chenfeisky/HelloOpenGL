@@ -5,3 +5,4 @@ HelloOpenGL.VC.VC.opendb
 .vs/
 *.TMP
 HelloOpenGL/opengl6.cpp.orig
+HelloOpenGL.sdf
