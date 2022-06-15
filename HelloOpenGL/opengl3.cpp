@@ -1,5 +1,6 @@
 #include "common.h"
 
+
 #ifdef CHAPTER_3
 #include "opengl3h.h"
 
