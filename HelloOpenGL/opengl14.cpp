@@ -4,7 +4,8 @@
 #include "opengl14h.h"
 
 #ifdef CHAPTER_14_COMMON
-float winWidth = 800, winHeight = 600;
+float winWidth = 600, winHeight = 600;
+float widthMin = 0, widthMax = 800, heightMin = 0, heightMax = 600;
 #endif
 
 #ifdef CHAPTER_14_8_2
@@ -125,8 +126,40 @@ void main(int argc, char** argv)
 }
 #endif
 
+#ifdef CHAPTER_14_16_1
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][3] = { {-40.0, -40.0, 0.0}, {-10.0, 200.0, 0.0}, {10.0, -200.0, 0.0}, {40.0, 40.0, 0.0} };
+	glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, *ctrlPts);
+	glEnable(GL_MAP1_VERTEX_3);
+	GLint k;
+	glColor3f(0.0, 0.0, 1.0);
+	glBegin(GL_LINE_STRIP);
+	for (k = 0; k <= 50; k++)
+		glEvalCoord1f(GLfloat(k) / 50.0);
+	glEnd();
+
+	glColor3f(1.0, 0.0, 0.0);
+	glPointSize(5.0);
+	glBegin(GL_POINTS);
+	for (k = 0; k < 4; k++)
+		glVertex3fv(&ctrlPts[k][0]);
+	glEnd();
+
+	glFlush();
+
+}
+void code_14_16_1()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////
-// CHAPTER_13_COMMON
+// CHAPTER_14_COMMON
 
 #ifdef CHAPTER_14_COMMON
 void init(void)
@@ -135,11 +168,18 @@ void init(void)
 	glColor3f(1.0, 1.0, 1.0); // °×É«»æÖÆ
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0, winWidth , 0, winHeight);
+	gluOrtho2D(widthMin, widthMax, heightMin, heightMax);
 }
 
 void main(int argc, char** argv)
 {
+#ifdef CHAPTER_14_16_1
+	widthMin = -50;
+	widthMax = 50;
+	heightMin = -50;
+	heightMax = 50;
+#endif
+
 	//srand(time(0));
 	srand(100);
 	glutInit(&argc, argv);
@@ -150,8 +190,8 @@ void main(int argc, char** argv)
 
 	init();
 
-#ifdef CHAPTER_13_xx
-	code_12_1_2();
+#ifdef CHAPTER_14_16_1
+	code_14_16_1();
 #endif
 
 	glutMainLoop();
