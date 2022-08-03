@@ -1,6 +1,6 @@
 #include "common.h"
 
-#ifdef CHAPTER_4
+#if CHAPTER==4
 #include "opengl4h.h"
 
 #ifdef CHAPTER_4_COMMON

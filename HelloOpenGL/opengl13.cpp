@@ -1,6 +1,6 @@
 #include "common.h"
 
-#ifdef CHAPTER_13
+#if CHAPTER==13
 #include "opengl13h.h"
 
 #ifdef CHAPTER_13_COMMON

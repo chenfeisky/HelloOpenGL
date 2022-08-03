@@ -1,6 +1,6 @@
 #include "common.h"
 
-#ifdef CHAPTER_9
+#if CHAPTER==9
 #include "opengl9h.h"
 
 #ifdef CHAPTER_9_COMMON

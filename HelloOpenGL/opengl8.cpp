@@ -1,6 +1,6 @@
 #include "common.h"
 
-#ifdef CHAPTER_8
+#if CHAPTER==8
 #include "opengl8h.h"
 
 #ifdef CHAPTER_8_COMMON

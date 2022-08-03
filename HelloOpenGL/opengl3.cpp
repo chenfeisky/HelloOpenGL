@@ -1,7 +1,7 @@
 #include "common.h"
 
 
-#ifdef CHAPTER_3
+#if CHAPTER==3
 #include "opengl3h.h"
 
 #ifdef CHAPTER_3_5_5

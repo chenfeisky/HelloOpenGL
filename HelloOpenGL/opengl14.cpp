@@ -1,11 +1,16 @@
 #include "common.h"
 
-#ifdef CHAPTER_14
+#if CHAPTER==14
 #include "opengl14h.h"
 
+#ifdef OPENGL_CAMERA
+#include "openglCamera.h"
+Camera* camera = nullptr;
+#endif
+
 #ifdef CHAPTER_14_COMMON
-float winWidth = 600, winHeight = 600;
-float widthMin = 0, widthMax = 800, heightMin = 0, heightMax = 600;
+float winWidth = 800, winHeight = 600;
+float widthMin = 0, widthMax = winWidth, heightMin = 0, heightMax = winHeight;
 #endif
 
 #ifdef CHAPTER_14_8_2
@@ -157,6 +162,107 @@ void code_14_16_1()
 }
 #endif
 
+#ifdef CHAPTER_14_16_1_1
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][3] = { {-40.0, -40.0, 0.0}, {-10.0, 200.0, 0.0}, {10.0, -200.0, 0.0}, {40.0, 40.0, 0.0} };
+	glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, *ctrlPts);
+	glEnable(GL_MAP1_VERTEX_3);
+	GLint k;
+	glColor3f(0.0, 0.0, 1.0);
+	glMapGrid1f(50, 0.0, 1.0);
+	glEvalMesh1(GL_LINE, 0, 50);
+
+	glColor3f(1.0, 0.0, 0.0);
+	glPointSize(5.0);
+	glBegin(GL_POINTS);
+	for (k = 0; k < 4; k++)
+		glVertex3fv(&ctrlPts[k][0]);
+	glEnd();
+
+	glFlush();
+
+}
+void code_14_16_1_1()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_14_16_2
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 4, 0.0, 1.0, 12, 4, &ctrlPts[0][0][0]);
+	glEnable(GL_MAP2_VERTEX_3);
+	GLint k, j;
+	glColor3f(0.0, 0.0, 1.0);
+	for (k = 0; k <= 8; k++)
+	{
+		glBegin(GL_LINE_STRIP);
+		for (j = 0; j <= 40; j++)
+			glEvalCoord2f(GLfloat(j) / 40.0, GLfloat(k) / 8.0);
+		glEnd();
+
+		glBegin(GL_LINE_STRIP);
+		for (j = 0; j <= 40; j++)
+			glEvalCoord2f(GLfloat(k) / 8.0, GLfloat(j) / 40.0);
+		glEnd();
+	}
+	glFlush();
+}
+void code_14_16_2()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0 ));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
+
+#ifdef CHAPTER_14_16_2_1
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 4, 0.0, 1.0, 12, 4, &ctrlPts[0][0][0]);
+	glEnable(GL_MAP2_VERTEX_3);
+
+	glColor3f(0.0, 0.0, 1.0);
+	glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+	glEvalMesh2(GL_LINE, 0, 8, 0, 8);
+	glFlush();
+}
+void code_14_16_2_1()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_14_COMMON
@@ -174,10 +280,24 @@ void init(void)
 void main(int argc, char** argv)
 {
 #ifdef CHAPTER_14_16_1
-	widthMin = -50;
-	widthMax = 50;
-	heightMin = -50;
-	heightMax = 50;
+	widthMin = -400;
+	widthMax = 400;
+	heightMin = -300;
+	heightMax = 300;
+#endif
+
+#ifdef CHAPTER_14_16_1_1
+	widthMin = -400;
+	widthMax = 400;
+	heightMin = -300;
+	heightMax = 300;
+#endif
+
+#ifdef CHAPTER_14_16_2_1
+	widthMin = -4;
+	widthMax = 4;
+	heightMin = -3;
+	heightMax = 3;
 #endif
 
 	//srand(time(0));
@@ -192,6 +312,18 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_14_16_1
 	code_14_16_1();
+#endif
+
+#ifdef CHAPTER_14_16_1_1
+	code_14_16_1_1();
+#endif
+
+#ifdef CHAPTER_14_16_2
+	code_14_16_2();
+#endif
+
+#ifdef CHAPTER_14_16_2_1
+	code_14_16_2_1();
 #endif
 
 	glutMainLoop();

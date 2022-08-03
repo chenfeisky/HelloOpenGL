@@ -25,12 +25,22 @@
 using std::vector;
 
 //#define TOOLS
-#define CHAPTER_14
+#define CHAPTER 14
 #define WIN_DEBUG
+
+
+#ifdef CHAPTER
+#define CHAPTERHEAD(x) opengl##x
+#define _CHAPTERNAME(x) CHAPTERHEAD(x)h.h
+#define CHAPTERNAME _CHAPTERNAME(CHAPTER)
+#define _FILENAME(x) #x
+#define FILENAME(x) _FILENAME(x)
+#include FILENAME(CHAPTERNAME)
+#endif
 
 using namespace std;
 
-#define PI 3.1415926
+#define PI 3.141592653589793
 
 #ifdef WIN_DEBUG
 #include <Windows.h>

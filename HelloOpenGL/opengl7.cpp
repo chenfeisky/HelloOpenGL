@@ -1,6 +1,6 @@
 #include "common.h"
 
-#ifdef CHAPTER_7
+#if CHAPTER==7
 #include "opengl7h.h"
 
 #ifdef CHAPTER_7_COMMON
