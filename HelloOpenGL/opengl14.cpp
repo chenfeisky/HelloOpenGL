@@ -263,6 +263,172 @@ void code_14_16_2_1()
 }
 #endif
 
+#ifdef CHAPTER_14_16_2_2
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 4, 0.0, 1.0, 12, 4, &ctrlPts[0][0][0]);
+	glEnable(GL_MAP2_VERTEX_3);
+
+	glColor3f(0.0, 0.0, 1.0);
+
+	GLfloat u1 = 0.f, u2 = 1.f, nu1 = 0.f, nu2 = 8.f, nu = 8.f;
+	GLfloat v1 = 0.f, v2 = 1.f, nv1 = 0.f, nv2 = 8.f, nv = 8.f;
+	for (GLint k = nu1; k <= nu2; k++)
+	{
+		glBegin(GL_LINE_STRIP);
+		for (GLint j = nv1; j <= nv2; j++)
+			glEvalCoord2f(u1 + k * (u2 - u1) / nu, v1 + j * (v2 - v1) / nv);
+		glEnd();
+	}
+	for (GLint j = nv1; j <= nv2; j++)
+	{
+		glBegin(GL_LINE_STRIP);
+		for (GLint k = nu1; k <= nu2; k++)
+			glEvalCoord2f(u1 + k * (u2 - u1) / nu, v1 + j * (v2 - v1) / nv);
+		glEnd();
+	}
+	glFlush();
+}
+void code_14_16_2_2()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
+
+#ifdef CHAPTER_14_16_2_3
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 4, 0.0, 1.0, 12, 4, &ctrlPts[0][0][0]);
+	glEnable(GL_MAP2_VERTEX_3);
+
+	glColor3f(0.0, 0.0, 1.0);
+	glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+	glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+	glFlush();
+}
+void code_14_16_2_3()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
+
+#ifdef CHAPTER_14_16_2_4
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 4, 0.0, 1.0, 12, 4, &ctrlPts[0][0][0]);
+	glEnable(GL_MAP2_VERTEX_3);
+
+	glColor3f(0.0, 0.0, 1.0);
+	glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+	glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+
+	GLfloat u1 = 0.f, u2 = 1.f, nu1 = 0.f, nu2 = 8.f, nu = 8.f;
+	GLfloat v1 = 0.f, v2 = 1.f, nv1 = 0.f, nv2 = 8.f, nv = 8.f;
+	for (GLint k = nu1; k < nu2; k++)
+	{
+		glBegin(GL_QUAD_STRIP);
+		for (GLint j = nv1; j <= nv2; j++)
+		{
+			glEvalCoord2f(u1 + k * (u2 - u1) / nu, v1 + j * (v2 - v1) / nv);
+			glEvalCoord2f(u1 + (k + 1) * (u2 - u1) / nu, v1 + j * (v2 - v1) / nv);
+		}
+		glEnd();
+	}
+	glFlush();
+}
+void code_14_16_2_4()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
+
+#ifdef CHAPTER_14_16_2_5
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+	glMap2f(GL_MAP2_VERTEX_3, 0.0, 1.0, 3, 4, 0.0, 1.0, 12, 4, &ctrlPts[0][0][0]);
+	glEnable(GL_MAP2_VERTEX_3);
+
+	glColor3f(0.0, 0.0, 1.0);
+	glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+	glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+
+	GLfloat u1 = 0.f, u2 = 1.f, nu1 = 0.f, nu2 = 8.f, nu = 8.f;
+	GLfloat v1 = 0.f, v2 = 1.f, nv1 = 0.f, nv2 = 8.f, nv = 8.f;
+	for (GLint k = nu1; k < nu2; k++)
+	{
+		glBegin(GL_QUAD_STRIP);
+		for (GLint j = nv1; j < nv2; j++)
+		{
+			glEvalCoord2f(u1 + k * (u2 - u1) / nu, v1 + j * (v2 - v1) / nv);
+			glEvalCoord2f(u1 + (k + 1) * (u2 - u1) / nu, v1 + j * (v2 - v1) / nv);
+			glEvalCoord2f(u1 + k * (u2 - u1) / nu, v1 + (j + 1) * (v2 - v1) / nv);
+			glEvalCoord2f(u1 + (k + 1) * (u2 - u1) / nu, v1 + (j + 1) * (v2 - v1) / nv);
+		}
+		glEnd();
+	}
+	glFlush();
+}
+void code_14_16_2_5()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_14_COMMON
@@ -324,6 +490,22 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_14_16_2_1
 	code_14_16_2_1();
+#endif
+
+#ifdef CHAPTER_14_16_2_2
+	code_14_16_2_2();
+#endif
+
+#ifdef CHAPTER_14_16_2_3
+	code_14_16_2_3();
+#endif
+
+#ifdef CHAPTER_14_16_2_4
+	code_14_16_2_4();
+#endif
+
+#ifdef CHAPTER_14_16_2_5
+	code_14_16_2_5();
 #endif
 
 	glutMainLoop();
