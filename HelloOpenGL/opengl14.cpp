@@ -430,6 +430,78 @@ void code_14_16_2_5()
 }
 #endif
 
+#ifdef CHAPTER_14_16_3
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLfloat knotVector[8] = { 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0 };
+	GLfloat ctrlPts[4][3] = { {-4.0, 0.0, 0.0}, {-2.0, 8.0, 0.0}, {2.0, -8.0, 0.0}, {4.0, 0.0, 0.0} };
+	
+	GLUnurbsObj* cubicBezCurve;
+
+	cubicBezCurve = gluNewNurbsRenderer();
+	gluBeginCurve(cubicBezCurve);
+	gluNurbsCurve(cubicBezCurve, 8, knotVector, 3, &ctrlPts[0][0], 4, GL_MAP1_VERTEX_3);
+	gluEndCurve(cubicBezCurve);
+
+	glFlush();
+}
+void code_14_16_3()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
+#ifdef CHAPTER_14_16_5
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLUnurbsObj* bezSurface;
+
+	GLfloat ctrlPts[4][4][3] = {
+	{ {-15, -15, 40}, {-5, -15, 20},
+	  {-5, -15, -10}, {15, -15, 20} },
+	{ {-15, -5, 10}, {-5, -5, 30},
+	  {5, -5, -0}, {15, -5, -10} },
+	{ {-15, 5, 40}, {-5, 5, 0},
+	  {5, 5, 30}, {15, 5, 40} },
+	{ {-15, 15, -20}, {-5, 15, -20},
+	  {5, 15, 0}, {15, 15, -10} }
+	};
+
+	GLfloat outerTrimPts[5][2] = { {0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}, {0.0, 0.0} };
+	GLfloat innerTrimPts1[3][2] = { {0.25, 0.5}, {0.5, 0.75}, {0.75, 0.5} };
+	GLfloat innerTrimPts2[4][2] = { {0.75, 0.5}, {0.75, 0.25}, {0.25, 0.25}, {0.25, 0.5} };
+
+	GLfloat surfKnots[8] = { 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0 };
+	GLfloat trimCurveKnots[8] = { 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0 };
+
+	bezSurface = gluNewNurbsRenderer();
+
+	gluBeginCurve(bezSurface);
+	gluNurbsSurface(bezSurface, 8, surfKnots, 8, surfKnots, 4 * 3, 3, &ctrlPts[0][0][0], 4, 4, GL_MAP2_VERTEX_3);
+	gluBeginTrim(bezSurface);
+	gluPwlCurve(bezSurface, 5, &outerTrimPts[0][0], 2, GLU_MAP1_TRIM_2);
+	gluEndTrim(bezSurface);
+	gluBeginTrim(bezSurface);
+	gluPwlCurve(bezSurface, 3, &innerTrimPts1[0][0], 2, GLU_MAP1_TRIM_2);
+	gluNurbsCurve(bezSurface, 8, trimCurveKnots, 2, &innerTrimPts2[0][0], 4, GLU_MAP1_TRIM_2);
+	gluEndTrim(bezSurface);
+	gluEndSurface(bezSurface);
+
+	glFlush();
+}
+
+void code_14_16_5()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_14_COMMON
 
@@ -464,6 +536,13 @@ void main(int argc, char** argv)
 	widthMax = 4;
 	heightMin = -3;
 	heightMax = 3;
+#endif
+
+#ifdef CHAPTER_14_16_3
+	widthMin = -8;
+	widthMax = 8;
+	heightMin = -6;
+	heightMax = 6;
 #endif
 
 	//srand(time(0));
@@ -506,6 +585,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_14_16_2_5
 	code_14_16_2_5();
+#endif
+
+#ifdef CHAPTER_14_16_3
+	code_14_16_3();
+#endif
+
+#ifdef CHAPTER_14_16_5
+	code_14_16_5();
 #endif
 
 	glutMainLoop();
