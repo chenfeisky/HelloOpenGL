@@ -14,7 +14,7 @@
 #define ROTATE_Y_FACTOR (0.1f)
 #define REVOLVE_X_FACTOR (0.25f)
 #define REVOLVE_Y_FACTOR (0.25f)
-#define MOVE_FACTOR (0.02f)
+#define MOVE_FACTOR (0.5f)
 #define MOUSE_WHEEL_FACTOR (1.f)
 #define MOUSE_MIDDLE_FACTOR (0.08f)
 
@@ -25,6 +25,7 @@ static float winWidth, winHeight;
 static void (*displayFcn)(void) = nullptr;
 static GLfloat dnear = 1, dfar = 2000;
 static Camera* camera = nullptr;
+static int fps = 60;
 
 static class Matrix
 {
@@ -79,6 +80,8 @@ public:
 	void Init();
 	void AddMouseEventListen(void (*func)(int button, MouseEvent mouseEvent, int x, int y));
 	void AddKeyEventListen(void (*func)(unsigned char key, KeyEvent keyEvent));
+
+	static void onTimer(int);
 
 private:
 	void onMouseFunc(int button, int state, int x, int y);
@@ -190,6 +193,13 @@ void InputManager::update()
 	lastTick = curTick;
 }
 
+void InputManager::onTimer(int)
+{
+	InputManager::GetInstance()->update();
+	camera->update();
+	glutTimerFunc((unsigned)(1000.f / fps), onTimer, 0);
+}
+
 void InputManager::Init()
 {
 	glutMouseFunc([](int button, int state, int x, int y)
@@ -210,11 +220,8 @@ void InputManager::Init()
 		});
 
 	lastTick = clock();
-	glutIdleFunc([]()
-		{
-			InputManager::GetInstance()->update();
-			camera->update();
-		});
+
+	glutTimerFunc((unsigned)(1000.f / fps), onTimer, 0);
 }
 
 void InputManager::AddMouseEventListen(void (*func)(int button, MouseEvent mouseEvent, int x, int y))
@@ -596,16 +603,16 @@ static Vec3 rotate2ViewVec(const Vec3& v)
 	return ret;
 }
 
-Camera::Camera(Point position, Rotator rotation, float moveSpeed)
+Camera::Camera(Point position, Rotator rotation, float moveSpeed, float wheelSpeed, float middleDrageSpeed, float leftDrageSpeed, float rightDrageSpeed)
 {
 	Vec3 N = rotate2ViewVec(-1 * (rotation.GetForwardVector()));
 	Vec3 V = rotate2ViewVec(rotation.GetUpVector());
-	init(position, N, V, moveSpeed);
+	init(position, N, V, moveSpeed, wheelSpeed, middleDrageSpeed, leftDrageSpeed, rightDrageSpeed);
 }
 
-Camera::Camera(Point viewP0, Vec3 N, Vec3 V, float moveSpeed)
+Camera::Camera(Point viewP0, Vec3 N, Vec3 V, float moveSpeed, float wheelSpeed, float middleDrageSpeed, float leftDrageSpeed, float rightDrageSpeed)
 {
-	init(viewP0, N, V, moveSpeed);
+	init(viewP0, N, V, moveSpeed, wheelSpeed, middleDrageSpeed, leftDrageSpeed, rightDrageSpeed);
 }
 
 void Camera::setLookPoint(Point lookPoint, float lookDistance)
@@ -614,7 +621,7 @@ void Camera::setLookPoint(Point lookPoint, float lookDistance)
 	_lookDistance = lookDistance;
 }
 
-void Camera::init(Point viewP0, Vec3 N, Vec3 V, float moveSpeed)
+void Camera::init(Point viewP0, Vec3 N, Vec3 V, float moveSpeed, float wheelSpeed, float middleDrageSpeed, float leftDrageSpeed, float rightDrageSpeed)
 {
 	_viewP0 = viewP0;
 
@@ -625,6 +632,10 @@ void Camera::init(Point viewP0, Vec3 N, Vec3 V, float moveSpeed)
 	_v = cross(_n, _u);
 
 	_moveSpeed = moveSpeed;
+	_wheelSpeed = wheelSpeed;
+	_middleDrageSpeed = middleDrageSpeed;
+	_leftDrageSpeed = leftDrageSpeed;
+	_rightDrageSpeed = rightDrageSpeed;
 
 	initInputEvent();
 
@@ -759,11 +770,11 @@ void Camera::onLeftMouseButtonDown(int x, int y)
 void Camera::onLeftMouseButtonDrage(int dx, int dy)
 {
 	Point focusPoint = _viewP0 - _n * _focus;
-	printf("focusPoint %f %f %f\n", focusPoint.x, focusPoint.y, focusPoint.z);
+	//printf("focusPoint %f %f %f\n", focusPoint.x, focusPoint.y, focusPoint.z);
 
 	Rotator r = GetCameraRotator();
-	r.Yaw += dx * REVOLVE_X_FACTOR;
-	r.Pitch += dy * REVOLVE_X_FACTOR;
+	r.Yaw += dx * _leftDrageSpeed * REVOLVE_X_FACTOR;
+	r.Pitch += dy * _leftDrageSpeed * REVOLVE_X_FACTOR;
 	r.Pitch = std::max(MIN_PITCH, r.Pitch);
 	r.Pitch = std::min(MAX_PITCH, r.Pitch);
 	r.Roll = 0;
@@ -788,8 +799,8 @@ void Camera::onRightMouseButtonDown(int x, int y)
 void Camera::onRightMouseButtonDrage(int dx, int dy)
 {
 	Rotator r = GetCameraRotator();
-	r.Yaw += dx * ROTATE_X_FACTOR;
-	r.Pitch += dy * ROTATE_Y_FACTOR;
+	r.Yaw += dx * _rightDrageSpeed * ROTATE_X_FACTOR;
+	r.Pitch += dy * _rightDrageSpeed * ROTATE_Y_FACTOR;
 	r.Pitch = std::max(MIN_PITCH, r.Pitch);
 	r.Pitch = std::min(MAX_PITCH, r.Pitch);
 	r.Roll = 0;
@@ -810,18 +821,18 @@ void Camera::onMiddleMouseButtonDown(int x, int y)
 
 void Camera::onMiddleMouseButtonDrage(int dx, int dy)
 {
-	move_dir({ 0, -(float)dy * _moveSpeed * MOUSE_MIDDLE_FACTOR, 0 });
-	move_dir({ -(float)dx * _moveSpeed * MOUSE_MIDDLE_FACTOR, 0, 0 });
+	move_dir({ 0, -(float)dy * _middleDrageSpeed * MOUSE_MIDDLE_FACTOR, 0 });
+	move_dir({ -(float)dx * _middleDrageSpeed * MOUSE_MIDDLE_FACTOR, 0, 0 });
 }
 
 void Camera::onMouseWheelDown()
 {
-	move_dir({ 0, 0, 1 * _moveSpeed * MOUSE_WHEEL_FACTOR });
+	move_dir({ 0, 0, 1 * _wheelSpeed * MOUSE_WHEEL_FACTOR });
 }
 
 void Camera::onMouseWheelUp()
 {
-	move_dir({ 0, 0, -1 * _moveSpeed * MOUSE_WHEEL_FACTOR });
+	move_dir({ 0, 0, -1 * _wheelSpeed * MOUSE_WHEEL_FACTOR });
 }
 
 void Camera::on_W_Axis()

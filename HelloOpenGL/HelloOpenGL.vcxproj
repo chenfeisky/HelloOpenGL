@@ -90,6 +90,7 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClInclude Include="opengl12h.h" />
     <ClInclude Include="opengl13h.h" />
     <ClInclude Include="opengl14h.h" />
+    <ClInclude Include="opengl16h.h" />
     <ClInclude Include="opengl3h.h" />
     <ClInclude Include="opengl4h.h" />
     <ClInclude Include="opengl5h.h" />
@@ -108,6 +109,7 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="opengl12.cpp" />
     <ClCompile Include="opengl13.cpp" />
     <ClCompile Include="opengl14.cpp" />
+    <ClCompile Include="opengl16.cpp" />
     <ClCompile Include="opengl3.cpp" />
     <ClCompile Include="opengl4.cpp" />
     <ClCompile Include="opengl5.cpp" />

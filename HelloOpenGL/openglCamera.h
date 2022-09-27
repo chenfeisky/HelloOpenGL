@@ -44,8 +44,8 @@ private:
 class Camera
 {
 public:
-	Camera(Point position = Point(0.f, 0.f, 0.f), Rotator rotation = Rotator(0.f, 0.f, 0.f), float moveSpeed = 1.f);
-	Camera(Point viewP0, Vec3 N, Vec3 V, float moveSpeed = 1.f);
+	Camera(Point position = Point(0.f, 0.f, 0.f), Rotator rotation = Rotator(0.f, 0.f, 0.f), float moveSpeed = 1.f, float wheelSpeed = 1.f, float middleDrageSpeed = 1.f, float leftDrageSpeed = 1.f, float rightDrageSpeed = 1.f);
+	Camera(Point viewP0, Vec3 N, Vec3 V, float moveSpeed = 1.f, float wheelSpeed = 1.f, float middleDrageSpeed = 1.f, float leftDrageSpeed = 1.f, float rightDrageSpeed = 1.f);
 	void setLookPoint(Point lookPoint, float lookDistance = 100.f);
 	void update();
 
@@ -60,7 +60,12 @@ private:
 	float _lastTick = 0.f;
 	Point _lookPoint = Point(0.f, 0.f, 0.f);
 	float _lookDistance = 0.f;
+
 	float _moveSpeed = 1.f;
+	float _wheelSpeed = 1.f;
+	float _middleDrageSpeed = 1.f;
+	float _leftDrageSpeed = 1.f;
+	float _rightDrageSpeed = 1.f;
 	
 	bool moving = false;
 	float moveCurTime = 0.f;
@@ -69,7 +74,7 @@ private:
 	Point moveTargetPoint = Point(0.f, 0.f, 0.f);
 	void (*moveCallback)() = nullptr;
 
-	void init(Point viewP0, Vec3 N, Vec3 V, float moveSpeed);
+	void init(Point viewP0, Vec3 N, Vec3 V, float moveSpeed, float wheelSpeed, float middleDrageSpeed, float leftDrageSpeed, float rightDrageSpeed);
 	void initInputEvent();
 
 	Rotator GetCameraRotator();
