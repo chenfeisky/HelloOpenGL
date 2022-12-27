@@ -6,14 +6,14 @@
 #ifdef CHAPTER_9_COMMON
 GLsizei winWidth = 800, winHeight = 600;
 
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
 inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f2); }
 inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 
-// µã£¬ÏòÁ¿
+// ç‚¹ï¼Œå‘é‡
 class Point
 {
 public:
@@ -28,7 +28,7 @@ bool operator!=(const Point& p1, const Point& p2)
 	return !(p1 == p2);
 }
 
-// ¾ØÕó
+// çŸ©é˜µ
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -129,7 +129,7 @@ void transformPoint(Matrix& m, Point& point)
 	point.z = temp[2][0];
 }
 
-// ÏòÁ¿
+// å‘é‡
 typedef Point Vec3;
 Vec3 cross(const Vec3& v1, const Vec3& v2)
 {
@@ -175,7 +175,7 @@ void normal(Vec3& v)
 	v.z = v.z / len;
 }
 
-// ¼ÆËã
+// è®¡ç®—
 Point centerPoint(const std::vector<Point>& points)
 {
 	Point center;
@@ -192,7 +192,7 @@ Point centerPoint(const std::vector<Point>& points)
 	center.z = zSum / size;
 	return center;
 }
-// »æÖÆ
+// ç»˜åˆ¶
 void drawPolygon(const std::vector<Point>& points)
 {
 	glBegin(GL_POLYGON);
@@ -200,7 +200,7 @@ void drawPolygon(const std::vector<Point>& points)
 		glVertex3f(p.x, p.y, p.z);
 	glEnd();
 }
-// ×ø±êÖá
+// åæ ‡è½´
 void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStart = -winHeight, float yEnd = winHeight)
 {
 	glBegin(GL_LINES);
@@ -925,7 +925,7 @@ void test()
 	m2 = RotateMatrix2(u);
 	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
 	
-	// ×¢ÒâÕâÀï²»ÄÜÓÃu=(1,0,0)£¬ÒòÎªRotateMatrix2¼ÆËãd=0,RotateMatrix1¼ÆËãuy_Ä£³¤Ò²ÊÇ0
+	// æ³¨æ„è¿™é‡Œä¸èƒ½ç”¨u=(1,0,0)ï¼Œå› ä¸ºRotateMatrix2è®¡ç®—d=0,RotateMatrix1è®¡ç®—uy_æ¨¡é•¿ä¹Ÿæ˜¯0
 }
 void displayFcn(void)
 {
@@ -1269,8 +1269,8 @@ void displayFcn(void)
 	m2 = rotateMatrix2(tx, ty, tz, u, theta);
 	printf("u=(%f, %f, %f) same = %s\n", u.x, u.y, u.z, m1 == m2 ? "true" : "false");
 
-	// ×¢ÒâÕâÀï²»ÄÜÓÃu=(1,0,0)£¬ÒòÎªrotateMatrix1¼ÆËã·ÖÄ¸d=0¡£µ«»¯¼òºó¿ÉÏûÈ¥d£¬¼´£¨9.39£©Ê½
-	// ¹Ê»¯¼òºó£¨ÔÚrotateMatrix2ÖĞ£©¿ÉÊ¹ÓÃu=(1,0,0)
+	// æ³¨æ„è¿™é‡Œä¸èƒ½ç”¨u=(1,0,0)ï¼Œå› ä¸ºrotateMatrix1è®¡ç®—åˆ†æ¯d=0ã€‚ä½†åŒ–ç®€åå¯æ¶ˆå»dï¼Œå³ï¼ˆ9.39ï¼‰å¼
+	// æ•…åŒ–ç®€åï¼ˆåœ¨rotateMatrix2ä¸­ï¼‰å¯ä½¿ç”¨u=(1,0,0)
 	//u = { 1, 0, 0 };
 	//m1 = rotateMatrix1(tx, ty, tz, u, theta);
 	//m2 = rotateMatrix2(tx, ty, tz, u, theta);
@@ -2822,7 +2822,7 @@ void code_9_exercise_17()
 #endif
 
 #ifdef CHAPTER_9_EXERCISE_ADD_1
-// ´ò¿ªÁ½ÕßËã·¨µÄÆäÖĞÖ®Ò»
+// æ‰“å¼€ä¸¤è€…ç®—æ³•çš„å…¶ä¸­ä¹‹ä¸€
 //#define SUTHERLAN_HODGMAN
 #define WEILER_ATHERTON
 struct Rect
@@ -2880,7 +2880,7 @@ struct Path
 };
 Matrix translateMatrix(float tx, float ty, float tz)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][3] = tx;
@@ -2890,7 +2890,7 @@ Matrix translateMatrix(float tx, float ty, float tz)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2901,7 +2901,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2914,7 +2914,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleMatrix(float sx, float sy, float sz)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -2924,7 +2924,7 @@ Matrix scaleMatrix(float sx, float sy, float sz)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy, float sz)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -2937,7 +2937,7 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy, float sz)
 }
 Matrix shearXMatrix(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -2945,10 +2945,10 @@ Matrix shearXMatrix(float shx)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ²Ã¼ô
+// è£å‰ª
 #ifdef SUTHERLAN_HODGMAN
 //////////////////////////////////////////////////////////////////////////
-// Sutherlan-Hodgman¶à±ßĞÎ²Ã¼ôËã·¨(Í¹¶à±ßĞÎ)
+// Sutherlan-Hodgmanå¤šè¾¹å½¢è£å‰ªç®—æ³•(å‡¸å¤šè¾¹å½¢)
 bool operator < (const Point& p1, const Point& p2)
 {
 	if (p1.x < p2.x)
@@ -3240,7 +3240,7 @@ void cutResult(const std::vector<Point>& polygon, std::map<AntiClockBoundary, st
 	}
 }
 
-// ·Ö¸î±ß½çÉÏµÄ¶à×é¶¥µã Ëã·¨
+// åˆ†å‰²è¾¹ç•Œä¸Šçš„å¤šç»„é¡¶ç‚¹ ç®—æ³•
 void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, Point wMin, Point wMax, std::vector<std::vector<Point>>& result)
 {
 	std::map<AntiClockBoundary, std::vector<Point>> _boundaryOrderInfo;
@@ -3274,21 +3274,21 @@ bool operator < (const Point& p1, const Point& p2)
 }
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Polygon, // ¶à±ßĞÎµã
-	ClipWindow,	 // ²Ã¼ô´°¿Úµã
-				 //SAME,    // ¹²Í¬µã
-				 CrossIn, // ²Ã¼ô´°¿Ú½ø½»µã
-				 CrossOut, //²Ã¼ô´°¿Ú³ö½»µã
+	None,    // æ— ç±»å‹
+	Polygon, // å¤šè¾¹å½¢ç‚¹
+	ClipWindow,	 // è£å‰ªçª—å£ç‚¹
+				 //SAME,    // å…±åŒç‚¹
+				 CrossIn, // è£å‰ªçª—å£è¿›äº¤ç‚¹
+				 CrossOut, //è£å‰ªçª—å£å‡ºäº¤ç‚¹
 };
 struct CrossPointInfo
 {
 	Point point = { 0, 0, 0 };
 	PointType type = PointType::None;
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	int lineIdx1 = 0; // ²Ã¼ô´°¿Ú±ßË÷Òı
-	int lineIdx2 = 0; // ¶à±ßĞÎ±ßË÷Òı
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	int lineIdx1 = 0; // è£å‰ªçª—å£è¾¹ç´¢å¼•
+	int lineIdx2 = 0; // å¤šè¾¹å½¢è¾¹ç´¢å¼•
 };
 struct LineWithCross
 {
@@ -3299,13 +3299,13 @@ struct LineWithCross
 struct PointInfo
 {
 	Point point = { 0, 0, 0 };
-	PointType type = PointType::None; // ÀàĞÍ
-	int idx1 = -1;   // ²Ã¼ô´°¿Ú¶¥µã Êı×éË÷Òı
-	int idx2 = -1;	// ¶à±ßĞÎ¶¥µã Êı×éË÷Òı
-	bool dealed = false; // ÊÇ·ñÒÑ´¦Àí
+	PointType type = PointType::None; // ç±»å‹
+	int idx1 = -1;   // è£å‰ªçª—å£é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	int idx2 = -1;	// å¤šè¾¹å½¢é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	bool dealed = false; // æ˜¯å¦å·²å¤„ç†
 };
 //////////////////////////////////////////////////////////////////////////
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -4110,7 +4110,7 @@ void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-// Ïß¶Î²Ã¼ôËã·¨
+// çº¿æ®µè£å‰ªç®—æ³•
 const GLint winLeftBitCode = 0x01;
 const GLint winRightBitCode = 0x02;
 const GLint winBottomBitCode = 0x04;
@@ -4245,10 +4245,10 @@ float curDirection;
 float wheelRadius = 0;
 Path* path = nullptr;
 
-// ²Ã¼ô´°¿Ú
+// è£å‰ªçª—å£
 float clipwinRotate = 0;
 float deltaClipwinRotate = 5 * PI / 180;
-Point clipwinPos = { 0, 0, 0 }; // ÖĞĞÄµã
+Point clipwinPos = { 0, 0, 0 }; // ä¸­å¿ƒç‚¹
 float deltaClipwinPos = 5;
 float clipwinWidth = 200;
 float clipwinHeight = 150;
@@ -4256,7 +4256,7 @@ float deltaClipwinSize = 10;
 bool clipwinFollow = true;
 bool clipwinMode = false;
 
-// ÊÓ¿Ú
+// è§†å£
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
 float xnvmin = xvmin / winWidth;
 float xnvmax = xvmax / winWidth;
@@ -4431,11 +4431,11 @@ void drawWheel()
 }
 Matrix updateViewCoord()
 {
-	// ÕâÀï½«¹Û²ì×ø±êÏµÔ­µãÄ¬ÈÏÎª²Ã¼ô´°¿ÚÖĞĞÄµã¡£ÆäÊµ¹Û²ì×ø±êÏµµÄÔ­µãÓ°ÏìµÄ¾ÍÊÇµãÔÚ¹Û²ì×ø±êÏµÖĞ
-	// µÄ¾ø¶Ô×ø±êÖµ£¬µ«Õâ¸ö¾ø¶Ô×ø±êÖµµÄÊıÖµ²¢²»ÖØÒª£¬ÖØÒªµÄÊÇµãºÍ²Ã¼ô´°¿ÚµÄÏà¶ÔÎ»ÖÃ¹ØÏµ£¬ÒòÎª×îÖÕÊÓ
-	// ¿ÚÖĞÏÔÊ¾µÄÊÇ²Ã¼ôºóµÄÄÚÈİ£¬¶ø²Ã¼ôºóµÄÄÚÈİ¾ÍÊÇÕâ¸öÏà¶ÔÎ»ÖÃ¹ØÏµ¾ö¶¨µÄ£¬¸úÁ½ÕßµÄ¾ø¶Ô×ø±êÖµÎŞ¹Ø¡£
-	// ¶øÓÉÓÚÊÇ¸ÕÌå±ä»»£¨Ğı×ª£¬Æ½ÒÆ£©£¬Ïà¶ÔÎ»ÖÃ¹ØÏµ¶¼²»»á±ä£¬ËùÒÔ£¬ÎªÁË·½±ãºóĞø¼ÆËã(²»È»²Ã¼ô´°¿ÚÎ»
-	// ÖÃ»¹Òª¼ÆËã)£¬ÕâÀïÑ¡¹Û²ì×ø±êÏµÔ­µãÎª²Ã¼ô´°¿ÚÖĞĞÄµã£¨²Ã¼ô´°¿Ú±ä»»ºóÔÚ¹Û²ì×ø±êÏµµÄÔ­µã£©
+	// è¿™é‡Œå°†è§‚å¯Ÿåæ ‡ç³»åŸç‚¹é»˜è®¤ä¸ºè£å‰ªçª—å£ä¸­å¿ƒç‚¹ã€‚å…¶å®è§‚å¯Ÿåæ ‡ç³»çš„åŸç‚¹å½±å“çš„å°±æ˜¯ç‚¹åœ¨è§‚å¯Ÿåæ ‡ç³»ä¸­
+	// çš„ç»å¯¹åæ ‡å€¼ï¼Œä½†è¿™ä¸ªç»å¯¹åæ ‡å€¼çš„æ•°å€¼å¹¶ä¸é‡è¦ï¼Œé‡è¦çš„æ˜¯ç‚¹å’Œè£å‰ªçª—å£çš„ç›¸å¯¹ä½ç½®å…³ç³»ï¼Œå› ä¸ºæœ€ç»ˆè§†
+	// å£ä¸­æ˜¾ç¤ºçš„æ˜¯è£å‰ªåçš„å†…å®¹ï¼Œè€Œè£å‰ªåçš„å†…å®¹å°±æ˜¯è¿™ä¸ªç›¸å¯¹ä½ç½®å…³ç³»å†³å®šçš„ï¼Œè·Ÿä¸¤è€…çš„ç»å¯¹åæ ‡å€¼æ— å…³ã€‚
+	// è€Œç”±äºæ˜¯åˆšä½“å˜æ¢ï¼ˆæ—‹è½¬ï¼Œå¹³ç§»ï¼‰ï¼Œç›¸å¯¹ä½ç½®å…³ç³»éƒ½ä¸ä¼šå˜ï¼Œæ‰€ä»¥ï¼Œä¸ºäº†æ–¹ä¾¿åç»­è®¡ç®—(ä¸ç„¶è£å‰ªçª—å£ä½
+	// ç½®è¿˜è¦è®¡ç®—)ï¼Œè¿™é‡Œé€‰è§‚å¯Ÿåæ ‡ç³»åŸç‚¹ä¸ºè£å‰ªçª—å£ä¸­å¿ƒç‚¹ï¼ˆè£å‰ªçª—å£å˜æ¢ååœ¨è§‚å¯Ÿåæ ‡ç³»çš„åŸç‚¹ï¼‰
 
 	return rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y, 0);
 }
@@ -4572,7 +4572,7 @@ void updateView()
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	// Ö±½Ó¶Ôµã½øĞĞ´¦Àí
+	// ç›´æ¥å¯¹ç‚¹è¿›è¡Œå¤„ç†
 	//temp = curWheel1;
 	//transformPoints(viewTransform, temp);
 	//transformPoints(updateViewport(), temp);
@@ -4585,7 +4585,7 @@ void updateView()
 	//clipPoint(temp);
 	//viewWheels2 = temp;
 
-	// ¸ù¾İ³¤Öá¼ÆËã
+	// æ ¹æ®é•¿è½´è®¡ç®—
 	/*transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
 	auto sviewX = (xvmax - xvmin) / clipwinWidth;
@@ -4621,10 +4621,10 @@ void updateView()
 	clipPoint(viewWheels1);
 	clipPoint(viewWheels2);*/
 
-	// ÂÖ×Ó»æÖÆÎªÍÖÔ²£¬ÊÇÎªÁË±£Ö¤ÏñËØµÄÁ¬¹áĞÔ£¬·ñÔòËõ·Åºó»á³öÏÖÏñËØ¼äµÄ¼ä¸ô
-	// ¹Û²ì±ä»»¹ı³ÌÎª Ğ±ÇĞ->Ğı×ª->XY·½ÏòËõ·Å£¬ÒòÍÖÔ²Ğı×ªºóÔÙËõ·ÅÎŞ·¨µÃÖªÍÖÔ²µÄ²ÎÊı£¬
-	// ËùÒÔ½«±ä»»¹ı³Ì¸ÄÎª XY·½ÏòËõ·Å£¨ÍÖÔ²ÖáÏò£©->Ğ±ÇĞ->Ğı×ª
-	// ·½·¨Îª ¼ÆËãÁ½¸ö¾ØÕó²¢ÁîÆäÏàµÈ
+	// è½®å­ç»˜åˆ¶ä¸ºæ¤­åœ†ï¼Œæ˜¯ä¸ºäº†ä¿è¯åƒç´ çš„è¿è´¯æ€§ï¼Œå¦åˆ™ç¼©æ”¾åä¼šå‡ºç°åƒç´ é—´çš„é—´éš”
+	// è§‚å¯Ÿå˜æ¢è¿‡ç¨‹ä¸º æ–œåˆ‡->æ—‹è½¬->XYæ–¹å‘ç¼©æ”¾ï¼Œå› æ¤­åœ†æ—‹è½¬åå†ç¼©æ”¾æ— æ³•å¾—çŸ¥æ¤­åœ†çš„å‚æ•°ï¼Œ
+	// æ‰€ä»¥å°†å˜æ¢è¿‡ç¨‹æ”¹ä¸º XYæ–¹å‘ç¼©æ”¾ï¼ˆæ¤­åœ†è½´å‘ï¼‰->æ–œåˆ‡->æ—‹è½¬
+	// æ–¹æ³•ä¸º è®¡ç®—ä¸¤ä¸ªçŸ©é˜µå¹¶ä»¤å…¶ç›¸ç­‰
 	transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
 	auto sx = (xvmax - xvmin) / clipwinWidth;
@@ -4756,7 +4756,7 @@ void scale(float sx, float sy)
 	transformPoints(m, curWheelHolder2);
 
 	ellipse({ 0, 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
-	// ÏÈĞ±ÇĞÔÙËõ·Å£¬Ğ±ÇĞ²ÎÊı½«±äÎªÔ­Ê¼µÄsx/sy±¶£¬¿ÉÒÔ¶Ô±ÈÏÈĞ±ÇĞÔÙËõ·ÅºÍÏÈËõ·ÅÔÙĞ±ÇĞµÄ¾ØÕóµÃ³ö´Ë½áÂÛ
+	// å…ˆæ–œåˆ‡å†ç¼©æ”¾ï¼Œæ–œåˆ‡å‚æ•°å°†å˜ä¸ºåŸå§‹çš„sx/syå€ï¼Œå¯ä»¥å¯¹æ¯”å…ˆæ–œåˆ‡å†ç¼©æ”¾å’Œå…ˆç¼©æ”¾å†æ–œåˆ‡çš„çŸ©é˜µå¾—å‡ºæ­¤ç»“è®º
 	tansShx *= (sx / sy);
 	transformPoints(rotateByPointMatrix({ 0, 0, 0 }, curDirection) * shearXMatrix(tansShx), curWheel1);
 	curWheel2 = curWheel1;
@@ -5397,16 +5397,16 @@ void showOperatorNotice()
 	printf("S: decrease FPS.\n");
 	printf("D: add speed.\n");
 	printf("A: decrease speed.\n");
-	printf("¡ú: add scale x.\n");
-	printf("¡û: decrease scale x.\n");
-	printf("¡ü: add scale y.\n");
-	printf("¡ı: decrease scale y.\n");
-	printf("CTRL ¡ú: reflect to +x.\n");
-	printf("CTRL ¡û: reflect to -x.\n");
-	printf("CTRL ¡ü: reflect to +y.\n");
-	printf("CTRL ¡ı: reflect to -y.\n");
-	printf("SHIFT ¡ú: add shear.\n");
-	printf("SHIFT ¡û: decrease shear.\n");
+	printf("â†’: add scale x.\n");
+	printf("â†: decrease scale x.\n");
+	printf("â†‘: add scale y.\n");
+	printf("â†“: decrease scale y.\n");
+	printf("CTRL â†’: reflect to +x.\n");
+	printf("CTRL â†: reflect to -x.\n");
+	printf("CTRL â†‘: reflect to +y.\n");
+	printf("CTRL â†“: reflect to -y.\n");
+	printf("SHIFT â†’: add shear.\n");
+	printf("SHIFT â†: decrease shear.\n");
 	printf("R: reset state. \n");
 	printf("V: clip window mode. \n");
 	printf("ESC: command mode.\n");
@@ -5443,16 +5443,16 @@ void showViewOperatorNotice()
 	system("cls");
 	printf("Clip Window Operator: \n");
 	printf("F: fllow the car.\n");
-	printf("¡ú: move right.\n");
-	printf("¡û: move left.\n");
-	printf("¡ü: move up.\n");
-	printf("¡ı: move down.\n");
-	printf("CTRL ¡ú: add width.\n");
-	printf("CTRL ¡û: decrease width.\n");
-	printf("CTRL ¡ü: add height. \n");
-	printf("CTRL ¡ı: decrease height. \n");
-	printf("SHIFT ¡ü: add angle.\n");
-	printf("SHIFT ¡ı: decrease angle.\n");
+	printf("â†’: move right.\n");
+	printf("â†: move left.\n");
+	printf("â†‘: move up.\n");
+	printf("â†“: move down.\n");
+	printf("CTRL â†’: add width.\n");
+	printf("CTRL â†: decrease width.\n");
+	printf("CTRL â†‘: add height. \n");
+	printf("CTRL â†“: decrease height. \n");
+	printf("SHIFT â†‘: add angle.\n");
+	printf("SHIFT â†“: decrease angle.\n");
 	printf("R: reset state\n");
 	printf("ESC: back.\n");
 }
@@ -5786,7 +5786,7 @@ struct Path
 };
 Matrix scaleMatrix4(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -5795,7 +5795,7 @@ Matrix scaleMatrix4(float sx, float sy)
 }
 Matrix shearXMatrix4(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -5828,10 +5828,10 @@ Path* path = nullptr;
 float wheelRadian = 0.f;
 Matrix curTransform(4, 4);
 
-// ²Ã¼ô´°¿Ú
+// è£å‰ªçª—å£
 float clipwinRotate = 0;
 float deltaClipwinRotate = 5 * PI / 180;
-Point clipwinPos = { 0, 0, 0 }; // ÖĞĞÄµã
+Point clipwinPos = { 0, 0, 0 }; // ä¸­å¿ƒç‚¹
 float deltaClipwinPos = 5;
 float clipwinWidth = 200;
 float clipwinHeight = 150;
@@ -5839,7 +5839,7 @@ float deltaClipwinSize = 10;
 bool clipwinFollow = true;
 bool clipwinMode = false;
 
-// ÊÓ¿Ú
+// è§†å£
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
 
 void initPath()
@@ -6036,7 +6036,7 @@ void scale(float sx, float sy)
 	scaleX *= sx;
 	scaleY *= sy;
 
-	// ÏÈĞ±ÇĞÔÙËõ·Å£¬Ğ±ÇĞ²ÎÊı½«±äÎªÔ­Ê¼µÄsx/sy±¶£¬¿ÉÒÔ¶Ô±ÈÏÈĞ±ÇĞÔÙËõ·ÅºÍÏÈËõ·ÅÔÙĞ±ÇĞµÄ¾ØÕóµÃ³ö´Ë½áÂÛ
+	// å…ˆæ–œåˆ‡å†ç¼©æ”¾ï¼Œæ–œåˆ‡å‚æ•°å°†å˜ä¸ºåŸå§‹çš„sx/syå€ï¼Œå¯ä»¥å¯¹æ¯”å…ˆæ–œåˆ‡å†ç¼©æ”¾å’Œå…ˆç¼©æ”¾å†æ–œåˆ‡çš„çŸ©é˜µå¾—å‡ºæ­¤ç»“è®º
 	tansShx *= (sx / sy);
 	curTransform = scaleMatrix4(sx, sy) * curTransform;
 }
@@ -6108,8 +6108,8 @@ void updateClipwinPos()
 }
 void updateViewport()
 {
-	// »æÖÆÊÓ¿Ú1
-	// ÕâÀïÖ±½Ó²ÉÓÃopenglÍ¶Ó°±ä»»µ½ÊÓ¿Ú
+	// ç»˜åˆ¶è§†å£1
+	// è¿™é‡Œç›´æ¥é‡‡ç”¨openglæŠ•å½±å˜æ¢åˆ°è§†å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
@@ -6215,10 +6215,10 @@ void update()
 	curPosition = nextP;
 	curDirection = dir;
 
-	// gluOrtho2DÖ®ºóµÄ»æÖÆ²Å»áÊ¹ÓÃĞÂµÄÊÓ¿Ú£¬·ñÔòÈôÔÚgluOrtho2DÖ®Ç°»æÖÆ£¬»æÖÆÊ¹ÓÃÖ®Ç°µÄÊÓ¿Ú£¬ÏÂ´ÎĞÂÊÓ¿Ú²ÅÉúĞ§
-	// Òò´ËµÚÒ»´Î»æÖÆµÄĞ§¹ûÊÇ»æÖÆÍ¼ĞÎÒÆ¶¯£¬µ«ÊÓ¿Ú²»¶¯£¬¼´»æÖÆÍ¼ĞÎ³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë
-	// ÏÂ´Î»æÖÆÊ±£¬»áÊ×ÏÈÉúĞ§ÉÏ´ÎµÄÊÓ¿ÚÉèÖÃ£¬¼´ÊÓ¿ÚÖĞĞÄÎª»æÖÆÍ¼ĞÎÖĞĞÄ£¬µ«ÊÇÍ¼ĞÎ´ËÊ±ÓÖ»áÒÆ¶¯£¬¼´»æÖÆÍ¼ĞÎÓÖ»á³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë
-	// ÕâÑùÃ¿Ö¡»æÖÆ¶¼»á³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë£¬ÒòÎªdeltaÊÇ±äÁ¿£¬ËùÒÔÃ¿Ö¡Î»ÖÃ¶¼ÓĞĞ¡Æ«²î£¬Ôì³ÉÊÓ¾õ²ĞÓ°£¬»æÖÆ¶¶¶¯
+	// gluOrtho2Dä¹‹åçš„ç»˜åˆ¶æ‰ä¼šä½¿ç”¨æ–°çš„è§†å£ï¼Œå¦åˆ™è‹¥åœ¨gluOrtho2Dä¹‹å‰ç»˜åˆ¶ï¼Œç»˜åˆ¶ä½¿ç”¨ä¹‹å‰çš„è§†å£ï¼Œä¸‹æ¬¡æ–°è§†å£æ‰ç”Ÿæ•ˆ
+	// å› æ­¤ç¬¬ä¸€æ¬¡ç»˜åˆ¶çš„æ•ˆæœæ˜¯ç»˜åˆ¶å›¾å½¢ç§»åŠ¨ï¼Œä½†è§†å£ä¸åŠ¨ï¼Œå³ç»˜åˆ¶å›¾å½¢è¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»
+	// ä¸‹æ¬¡ç»˜åˆ¶æ—¶ï¼Œä¼šé¦–å…ˆç”Ÿæ•ˆä¸Šæ¬¡çš„è§†å£è®¾ç½®ï¼Œå³è§†å£ä¸­å¿ƒä¸ºç»˜åˆ¶å›¾å½¢ä¸­å¿ƒï¼Œä½†æ˜¯å›¾å½¢æ­¤æ—¶åˆä¼šç§»åŠ¨ï¼Œå³ç»˜åˆ¶å›¾å½¢åˆä¼šè¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»
+	// è¿™æ ·æ¯å¸§ç»˜åˆ¶éƒ½ä¼šè¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»ï¼Œå› ä¸ºdeltaæ˜¯å˜é‡ï¼Œæ‰€ä»¥æ¯å¸§ä½ç½®éƒ½æœ‰å°åå·®ï¼Œé€ æˆè§†è§‰æ®‹å½±ï¼Œç»˜åˆ¶æŠ–åŠ¨
 	updateWindowPosition();
 	updateClipwinPos();
 
@@ -6276,13 +6276,13 @@ void update()
 	glTranslated(-32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
 
-	// ²Ã¼ô´°¿Ú
+	// è£å‰ªçª—å£
 	glLoadIdentity();
 	glTranslatef(clipwinPos.x, clipwinPos.y, 0.f);
 	glRotatef(clipwinRotate * 180 / PI, 0.0, 0.0, 1.0);
 	drawWindow();
 
-	// »æÖÆ×´Ì¬ÎÄ×Ö£¬ÊÓ¿Ú
+	// ç»˜åˆ¶çŠ¶æ€æ–‡å­—ï¼Œè§†å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
@@ -6768,16 +6768,16 @@ void showOperatorNotice()
 	printf("S: decrease FPS.\n");
 	printf("D: add speed.\n");
 	printf("A: decrease speed.\n");
-	printf("¡ú: add scale x.\n");
-	printf("¡û: decrease scale x.\n");
-	printf("¡ü: add scale y.\n");
-	printf("¡ı: decrease scale y.\n");
-	printf("CTRL ¡ú: reflect to +x.\n");
-	printf("CTRL ¡û: reflect to -x.\n");
-	printf("CTRL ¡ü: reflect to +y.\n");
-	printf("CTRL ¡ı: reflect to -y.\n");
-	printf("SHIFT ¡ú: add shear.\n");
-	printf("SHIFT ¡û: decrease shear.\n");
+	printf("â†’: add scale x.\n");
+	printf("â†: decrease scale x.\n");
+	printf("â†‘: add scale y.\n");
+	printf("â†“: decrease scale y.\n");
+	printf("CTRL â†’: reflect to +x.\n");
+	printf("CTRL â†: reflect to -x.\n");
+	printf("CTRL â†‘: reflect to +y.\n");
+	printf("CTRL â†“: reflect to -y.\n");
+	printf("SHIFT â†’: add shear.\n");
+	printf("SHIFT â†: decrease shear.\n");
 	printf("R: reset state. \n");
 	printf("V: clip window mode. \n");
 	printf("ESC: command mode.\n");
@@ -6814,16 +6814,16 @@ void showViewOperatorNotice()
 	system("cls");
 	printf("Clip Window Operator: \n");
 	printf("F: fllow the car.\n");
-	printf("¡ú: move right.\n");
-	printf("¡û: move left.\n");
-	printf("¡ü: move up.\n");
-	printf("¡ı: move down.\n");
-	printf("CTRL ¡ú: add width.\n");
-	printf("CTRL ¡û: decrease width.\n");
-	printf("CTRL ¡ü: add height. \n");
-	printf("CTRL ¡ı: decrease height. \n");
-	printf("SHIFT ¡ü: add angle.\n");
-	printf("SHIFT ¡ı: decrease angle.\n");
+	printf("â†’: move right.\n");
+	printf("â†: move left.\n");
+	printf("â†‘: move up.\n");
+	printf("â†“: move down.\n");
+	printf("CTRL â†’: add width.\n");
+	printf("CTRL â†: decrease width.\n");
+	printf("CTRL â†‘: add height. \n");
+	printf("CTRL â†“: decrease height. \n");
+	printf("SHIFT â†‘: add angle.\n");
+	printf("SHIFT â†“: decrease angle.\n");
 	printf("R: reset state\n");
 	printf("ESC: back.\n");
 }
@@ -7083,7 +7083,7 @@ void code_9_exercise_add_2()
 #ifdef CHAPTER_9_COMMON
 void init(void)
 {
-	// ºÚÉ«±³¾°É«
+	// é»‘è‰²èƒŒæ™¯è‰²
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

@@ -79,9 +79,9 @@ void drawFunction(void)
 }
 void init(void)
 {
-	// ǳ��ɫ
+	// Ç³»ÒÉ«
 	glClearColor(0.8, 0.8, 0.8, 0.0);
-	// ��ɫ
+	// ºÚÉ«
 	//glClearColor(0.0, 0.0, 0.0, 0.0);
 	
 	glMatrixMode(GL_PROJECTION);

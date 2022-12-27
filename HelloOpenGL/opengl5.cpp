@@ -593,7 +593,7 @@ void linePlot(string fileName)
 	ifstream dataFile(fileName);
 	if (!dataFile)
 	{
-		printf("´ò¿ªÎÄ¼ş%sÊ§°Ü£¡\n", fileName);
+		printf("æ‰“å¼€æ–‡ä»¶%så¤±è´¥ï¼\n", fileName);
 		return;
 	}
 	char buf[1024];
@@ -643,7 +643,7 @@ void linePlot(string fileName)
 	ifstream dataFile(fileName);
 	if (!dataFile)
 	{
-		printf("´ò¿ªÎÄ¼ş%sÊ§°Ü£¡\n", fileName);
+		printf("æ‰“å¼€æ–‡ä»¶%så¤±è´¥ï¼\n", fileName);
 		return;
 	}
 	char buf[1024];
@@ -905,7 +905,7 @@ Color3f findColor(int index)
 	if (colorTable.find(index) != colorTable.end())
 		return colorTable[index];
 	
-	printf("Ã»ÓĞÕÒµ½ÑÕÉ«Ë÷Òı£º%d\n", index);
+	printf("æ²¡æœ‰æ‰¾åˆ°é¢œè‰²ç´¢å¼•ï¼š%d\n", index);
 	return { 0.0, 0.0, 0.0 };
 }
 void drawFunction()
@@ -954,7 +954,7 @@ void drawFunction()
 }
 void code_5_exercise_14()
 {
-	printf("Ö¡»º´æ×îĞ¡³ß´çÊÇ%d×Ö½Ú\n", 14 * 10 * 120);
+	printf("å¸§ç¼“å­˜æœ€å°å°ºå¯¸æ˜¯%då­—èŠ‚\n", 14 * 10 * 120);
 	glutDisplayFunc(drawFunction);
 }
 #endif
@@ -966,11 +966,11 @@ void drawFunction()
 }
 void code_5_exercise_15()
 {
-	printf("¹²ÓĞ%dÖÖ»Ò¶ÈµÈ¼¶\n", (int)pow(2, 8));
-	printf("×Ü¹²ÄÜÏÔÊ¾%dÖÖÑÕÉ«\n", (int)pow(2, 24));
-	printf("Í¬Ê±ÄÜÏÔÊ¾%dÖÖÑÕÉ«\n", (int)pow(2,16));
-	printf("×ÜµÄ´æ´¢ÈİÁ¿ÊÇ%d×Ö½Ú\n", 1024 * 768 * 16 / 8);
-	printf("Ò»ÖÖ·½°¸£ºÊ¹Ö¡»º´æÖĞÃ¿ÏñËØÎ»Êı¼õÉÙÖÁ8Î»£¬Ôö¼ÓÑÕÉ«±íµÄÊıÁ¿Îª %d ÕÅ£¬ÕâÑùÖ¡»º´æµÄ´æ´¢ÈİÁ¿Îª%d×Ö½Ú\n", (int)(pow(2,16) / pow(2, 8)), 1024 * 768 * 8 / 8);
+	printf("å…±æœ‰%dç§ç°åº¦ç­‰çº§\n", (int)pow(2, 8));
+	printf("æ€»å…±èƒ½æ˜¾ç¤º%dç§é¢œè‰²\n", (int)pow(2, 24));
+	printf("åŒæ—¶èƒ½æ˜¾ç¤º%dç§é¢œè‰²\n", (int)pow(2,16));
+	printf("æ€»çš„å­˜å‚¨å®¹é‡æ˜¯%då­—èŠ‚\n", 1024 * 768 * 16 / 8);
+	printf("ä¸€ç§æ–¹æ¡ˆï¼šä½¿å¸§ç¼“å­˜ä¸­æ¯åƒç´ ä½æ•°å‡å°‘è‡³8ä½ï¼Œå¢åŠ é¢œè‰²è¡¨çš„æ•°é‡ä¸º %d å¼ ï¼Œè¿™æ ·å¸§ç¼“å­˜çš„å­˜å‚¨å®¹é‡ä¸º%då­—èŠ‚\n", (int)(pow(2,16) / pow(2, 8)), 1024 * 768 * 8 / 8);
 
 	glutDisplayFunc(drawFunction);
 }
@@ -1112,7 +1112,7 @@ void drawFunction()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Éî¶ÈÖµÎ»ÒÆ
+	// æ·±åº¦å€¼ä½ç§»
 	float z = 1;
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glPolygonOffset(0.75, 1.0);
@@ -1137,7 +1137,7 @@ void drawFunction()
 
 	glDisable(GL_POLYGON_OFFSET_FILL);
 
-	// ¶à±ßĞÎÏû³ıÑ¡¶¨±ß
+	// å¤šè¾¹å½¢æ¶ˆé™¤é€‰å®šè¾¹
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBegin(GL_POLYGON);
 	glVertex3f(300, 100, 0);
@@ -1152,7 +1152,7 @@ void drawFunction()
 	GLubyte vertIndex[] = { 0, 1, 2, 3 };
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_BYTE, vertIndex);
 
-	// ·´×ßÑù
+	// åèµ°æ ·
 	glColor3f(0.0, 0.0, 0.0);
 	glBegin(GL_LINES);
 	glVertex3f(500, 400, 0);
@@ -1194,7 +1194,7 @@ Color3f findColor(int index)
 	if (colorTable.find(index) != colorTable.end())
 		return colorTable[index];
 
-	printf("Ã»ÓĞÕÒµ½ÑÕÉ«Ë÷Òı£º%d\n", index);
+	printf("æ²¡æœ‰æ‰¾åˆ°é¢œè‰²ç´¢å¼•ï¼š%d\n", index);
 	return{ 0.0, 0.0, 0.0 };
 }
 void drawFunction()

@@ -1,7 +1,7 @@
-// µÚÁùÕÂ´úÂë
+// ç¬¬å…­ç« ä»£ç 
 
-// Ñ¡ÔñÒ»¸ö£¬×¢ÊÍµôÆäËûµÄ
-//#define CHAPTER_6_Test_1  // BresenhamÖÐµã»­ÏßËã·¨
+// é€‰æ‹©ä¸€ä¸ªï¼Œæ³¨é‡ŠæŽ‰å…¶ä»–çš„
+//#define CHAPTER_6_Test_1  // Bresenhamä¸­ç‚¹ç”»çº¿ç®—æ³•
 //#define CHAPTER_6_1_2
 //#define CHAPTER_6_1_3
 //#define CHAPTER_6_4_2
@@ -13,8 +13,8 @@
 //#define CHAPTER_6_EXERCISE_5
 //#define CHAPTER_6_EXERCISE_6
 //#define CHAPTER_6_EXERCISE_7
-//#define CHAPTER_6_EXERCISE_7_Test_1 // ²¢ÐÐ»­Ïß£º´¹Ö±¾àÀëËã·¨
-//#define CHAPTER_6_EXERCISE_7_Test_2 // ²¢ÐÐ»­Ïß£ºÉ¨ÃèÏßËã·¨
+//#define CHAPTER_6_EXERCISE_7_Test_1 // å¹¶è¡Œç”»çº¿ï¼šåž‚ç›´è·ç¦»ç®—æ³•
+//#define CHAPTER_6_EXERCISE_7_Test_2 // å¹¶è¡Œç”»çº¿ï¼šæ‰«æçº¿ç®—æ³•
 //#define CHAPTER_6_EXERCISE_8
 //#define CHAPTER_6_EXERCISE_9
 //#define CHAPTER_6_EXERCISE_10
@@ -23,8 +23,8 @@
 //#define CHAPTER_6_EXERCISE_13
 //#define CHAPTER_6_EXERCISE_14
 //#define CHAPTER_6_EXERCISE_15
-//#define CHAPTER_6_EXERCISE_16   // Èý½×Ì©ÀÕÕ¹¿ªÊ½ÖÐµãËã·¨(¾ö²ß²ÎÊý¼ò»¯ÎªÓÐÏÞ´Î¼Ó·¨)
-#define CHAPTER_6_EXERCISE_16_Test1   // n½×Ì©ÀÕÕ¹¿ªÊ½ÖÐµãËã·¨(¾ö²ß²ÎÊýÐèÒª¼Ó·¨ºÍ³Ë·¨)
+//#define CHAPTER_6_EXERCISE_16   // ä¸‰é˜¶æ³°å‹’å±•å¼€å¼ä¸­ç‚¹ç®—æ³•(å†³ç­–å‚æ•°ç®€åŒ–ä¸ºæœ‰é™æ¬¡åŠ æ³•)
+#define CHAPTER_6_EXERCISE_16_Test1   // né˜¶æ³°å‹’å±•å¼€å¼ä¸­ç‚¹ç®—æ³•(å†³ç­–å‚æ•°éœ€è¦åŠ æ³•å’Œä¹˜æ³•)
 //#define CHAPTER_6_EXERCISE_17
 //#define CHAPTER_6_EXERCISE_18
 //#define CHAPTER_6_EXERCISE_19
@@ -37,7 +37,7 @@
 //#define CHAPTER_6_EXERCISE_26
 //#define CHAPTER_6_EXERCISE_27
 //#define CHAPTER_6_EXERCISE_28
-//#define CHAPTER_6_EXERCISE_29	// ¼òµ¥Ïß¿íº¯Êý£¬²»º¬¶Ëµã´¦Àí
+//#define CHAPTER_6_EXERCISE_29	// ç®€å•çº¿å®½å‡½æ•°ï¼Œä¸å«ç«¯ç‚¹å¤„ç†
 //#define CHAPTER_6_EXERCISE_30
 //#define CHAPTER_6_EXERCISE_31
 //#define CHAPTER_6_EXERCISE_32
@@ -45,7 +45,7 @@
 //#define CHAPTER_6_EXERCISE_34
 //#define CHAPTER_6_EXERCISE_35
 //#define CHAPTER_6_EXERCISE_36
-//#define CHAPTER_6_EXERCISE_37 // Wu·´×ßÑùËã·¨
+//#define CHAPTER_6_EXERCISE_37 // Wuåèµ°æ ·ç®—æ³•
 //#define CHAPTER_6_EXERCISE_38
 //#define CHAPTER_6_EXERCISE_39
 //#define CHAPTER_6_EXERCISE_40
@@ -56,20 +56,20 @@
 //#define CHAPTER_6_EXERCISE_45
 //#define CHAPTER_6_EXERCISE_46
 //#define CHAPTER_6_EXERCISE_47
-//#define CHAPTER_6_EXERCISE_48	// ¿ÉÖ¸¶¨Í¼°¸Ìî³äÆðÊ¼µãµÄ É¨ÃèÏß/±ß½ç/·ºÀÄ Ìî³äËã·¨ 
+//#define CHAPTER_6_EXERCISE_48	// å¯æŒ‡å®šå›¾æ¡ˆå¡«å……èµ·å§‹ç‚¹çš„ æ‰«æçº¿/è¾¹ç•Œ/æ³›æ»¥ å¡«å……ç®—æ³• 
 //#define CHAPTER_6_EXERCISE_49
-//#define CHAPTER_6_EXERCISE_50 // ×Ö·ûÍ¼°¸Ìî³ä
+//#define CHAPTER_6_EXERCISE_50 // å­—ç¬¦å›¾æ¡ˆå¡«å……
 //#define CHAPTER_6_EXERCISE_51
 //#define CHAPTER_6_EXERCISE_52
 //#define CHAPTER_6_EXERCISE_53
-//#define CHAPTER_6_EXERCISE_54 // Bresenham Áã¿í
-//#define CHAPTER_6_EXERCISE_54_Test1 // ¹ýÈ¡Ñù£¨¼´³¬²ÉÑù£©
-//#define CHAPTER_6_EXERCISE_54_Test2 // ¹ýÈ¡Ñù£¨¶àÖØ²ÉÑù,¼´±ßÔµ²ÉÑù£©
-//#define CHAPTER_6_EXERCISE_54_Test3 // ¹ýÈ¡Ñù£¨¼ÓÈ¨,³¬²ÉÑù,¶àÖØ²ÉÑù£©
-//#define CHAPTER_6_EXERCISE_55 // ÖÐµãÏß Áã¿í
-//#define CHAPTER_6_EXERCISE_56 // Áã¿íÍÖÔ²Ïß / ¹ý²ÉÑùÍÖÔ²Ïß / ¶àÖØ²ÉÑùÍÖÔ²Ìî³ä
-//#define CHAPTER_6_EXERCISE_57 // ³¬²ÉÑù/¶àÖØ²ÉÑùÌî³ä,Í¬CHAPTER_6_EXERCISE_54_Test1ºÍCHAPTER_6_EXERCISE_54_Test2
-//#define CHAPTER_6_EXERCISE_58 // ÇøÓòÈ¡Ñù
+//#define CHAPTER_6_EXERCISE_54 // Bresenham é›¶å®½
+//#define CHAPTER_6_EXERCISE_54_Test1 // è¿‡å–æ ·ï¼ˆå³è¶…é‡‡æ ·ï¼‰
+//#define CHAPTER_6_EXERCISE_54_Test2 // è¿‡å–æ ·ï¼ˆå¤šé‡é‡‡æ ·,å³è¾¹ç¼˜é‡‡æ ·ï¼‰
+//#define CHAPTER_6_EXERCISE_54_Test3 // è¿‡å–æ ·ï¼ˆåŠ æƒ,è¶…é‡‡æ ·,å¤šé‡é‡‡æ ·ï¼‰
+//#define CHAPTER_6_EXERCISE_55 // ä¸­ç‚¹çº¿ é›¶å®½
+//#define CHAPTER_6_EXERCISE_56 // é›¶å®½æ¤­åœ†çº¿ / è¿‡é‡‡æ ·æ¤­åœ†çº¿ / å¤šé‡é‡‡æ ·æ¤­åœ†å¡«å……
+//#define CHAPTER_6_EXERCISE_57 // è¶…é‡‡æ ·/å¤šé‡é‡‡æ ·å¡«å……,åŒCHAPTER_6_EXERCISE_54_Test1å’ŒCHAPTER_6_EXERCISE_54_Test2
+//#define CHAPTER_6_EXERCISE_58 // åŒºåŸŸå–æ ·
 //#define CHAPTER_6_EXERCISE_ADD_1
 //#define CHAPTER_6_EXERCISE_ADD_2
 

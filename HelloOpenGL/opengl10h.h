@@ -1,6 +1,6 @@
-// ��ʮ�´���
+// 第十章代码
 
-// ѡ��һ����ע�͵�������
+// 选择一个，注释掉其他的
 #define CHAPTER_10_10_6
 //#define CHAPTER_10_CAMERA
 //#define CHAPTER_10_EXERCISE_1

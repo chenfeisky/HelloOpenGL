@@ -6,7 +6,7 @@
 #ifdef CHAPTER_4_COMMON
 GLsizei winWidth = 800, winHeight = 600;
 
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 bool equal(float f1, float f2)
 {
 	return std::abs(f1 - f2) < 0.0001;
@@ -18,8 +18,8 @@ bool equal(float f1, float f2)
 #ifdef CHAPTER_4_Test
 enum Order
 {
-	AntiClockwise,  // ÄæÊ±Õë
-	Clockwise,		// Ë³Ê±Õë
+	AntiClockwise,  // é€†æ—¶é’ˆ
+	Clockwise,		// é¡ºæ—¶é’ˆ
 };
 
 
@@ -46,8 +46,8 @@ struct Vec
 	float y;
 };
 
-// ¼ÆËãÁ½Ö±ÏßµÄ½»µã
-// Ö±Ïß¹«Ê½£ºAX+BY+C=0
+// è®¡ç®—ä¸¤ç›´çº¿çš„äº¤ç‚¹
+// ç›´çº¿å…¬å¼ï¼šAX+BY+C=0
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Vec& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -58,8 +58,8 @@ bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Vec&
 	return true;
 }
 
-// ¼ì²éµãÊÇ·ñÓëÉäÏß·½ÏòÏàÍ¬
-// ÉäÏßÓÉ¶ËµãrayPointºÍ½Ç¶ÈrayRadius¹¹³É
+// æ£€æŸ¥ç‚¹æ˜¯å¦ä¸å°„çº¿æ–¹å‘ç›¸åŒ
+// å°„çº¿ç”±ç«¯ç‚¹rayPointå’Œè§’åº¦rayRadiusæ„æˆ
 bool testSameDir(Vec rayPoint, float rayRadius, Vec testPoint)
 {
 	if (equal(PI / 2, rayRadius))
@@ -125,13 +125,13 @@ void drowPolygon(void)
 	glFlush();
 }
 
-// ¼ÆËãÁ½Æ½ÃæÏòÁ¿µÄ²æ»ı£¨ÏòÁ¿»ı£©µÄZÖá×ø±ê
+// è®¡ç®—ä¸¤å¹³é¢å‘é‡çš„å‰ç§¯ï¼ˆå‘é‡ç§¯ï¼‰çš„Zè½´åæ ‡
 int crossProduct(const Vec& vector1, const Vec& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
 
-// ¸ù¾İ¶¥µãÊı×éµÃµ½±ßÏòÁ¿
+// æ ¹æ®é¡¶ç‚¹æ•°ç»„å¾—åˆ°è¾¹å‘é‡
 void getSideVec(const vector<Vec>& vertex, vector<Vec>& sideVec)
 {
 	sideVec.clear();
@@ -146,8 +146,8 @@ void getSideVec(const vector<Vec>& vertex, vector<Vec>& sideVec)
 	}
 }
 
-// °´Ê±ÕëË³ĞòÅÅĞò¶¥µãÊı×é£º
-// ÒÀ´ÎÏàÁ¬±ßÏòÁ¿²æ»ıµ±ÕıÖµ¶àÓÚ¸ºÖµÔòÎªÄæÊ±Õë£¬µ±¸ºÖµ¶àÓÚÕıÖµÔòÎªË³Ê±Õë
+// æŒ‰æ—¶é’ˆé¡ºåºæ’åºé¡¶ç‚¹æ•°ç»„ï¼š
+// ä¾æ¬¡ç›¸è¿è¾¹å‘é‡å‰ç§¯å½“æ­£å€¼å¤šäºè´Ÿå€¼åˆ™ä¸ºé€†æ—¶é’ˆï¼Œå½“è´Ÿå€¼å¤šäºæ­£å€¼åˆ™ä¸ºé¡ºæ—¶é’ˆ
 void sortPoints(Order order, vector<Vec>& vertex)
 {
 	vector<Vec> sideVec;
@@ -176,8 +176,8 @@ void sortPoints(Order order, vector<Vec>& vertex)
 	}
 }
 
-// ÊÇ·ñÊÇÍ¹¶à±ßĞÎ:
-// ÄæÊ±ÕëÅÅĞòºó£¬Èç¹ûÓĞ±ßÏòÁ¿²æ»ıÎª¸º£¬ÔòÎª°¼¶à±ßĞÎ
+// æ˜¯å¦æ˜¯å‡¸å¤šè¾¹å½¢:
+// é€†æ—¶é’ˆæ’åºåï¼Œå¦‚æœæœ‰è¾¹å‘é‡å‰ç§¯ä¸ºè´Ÿï¼Œåˆ™ä¸ºå‡¹å¤šè¾¹å½¢
 bool isConvexPolygon(const vector<Vec>& vertex)
 {
 	vector<Vec> sortVertex = vertex;
@@ -198,8 +198,8 @@ bool isConvexPolygon(const vector<Vec>& vertex)
 }
 
 
-// ·Ö¸î¶à±ßĞÎ£º
-// µÚÒ»Ìõ°¼±ßµÄÑÓ³¤ÏßÓë×î½üµÄ±ß×÷ÇĞ¸î
+// åˆ†å‰²å¤šè¾¹å½¢ï¼š
+// ç¬¬ä¸€æ¡å‡¹è¾¹çš„å»¶é•¿çº¿ä¸æœ€è¿‘çš„è¾¹ä½œåˆ‡å‰²
 void cutPolygon(const vector<Vec>& vertex, vector<vector<Vec>>& polygons, bool isSort = false)
 {
 	vector<Vec> sortVertex = vertex;
@@ -321,7 +321,7 @@ void cutPolygon(const vector<Vec>& vertex, vector<vector<Vec>>& polygons, bool i
 	}
 }
 
-// ·Ö¸î¶à±ßĞÎ³ÉÈı½ÇĞÎ¼¯:
+// åˆ†å‰²å¤šè¾¹å½¢æˆä¸‰è§’å½¢é›†:
 void cutPolygonT(const vector<Vec>& vertex, vector<vector<Vec>>& polygons, bool isSort = false)
 {
 	if (!isConvexPolygon(vertex))
@@ -342,7 +342,7 @@ void cutPolygonT(const vector<Vec>& vertex, vector<vector<Vec>>& polygons, bool 
 
 float radius = 0.0f;
 
-// ÄÚÍâ²âÊÔ£ºÆæÅ¼¹æÔò
+// å†…å¤–æµ‹è¯•ï¼šå¥‡å¶è§„åˆ™
 bool isInnerPoint(const vector<Vec>& vertex, Vec point)
 {
 	radius = std::rand() % 360;
@@ -407,8 +407,8 @@ bool isInnerPoint(const vector<Vec>& vertex, Vec point)
 	return count % 2 == 1;
 }
 
-// Í³¼ÆÏòÁ¿Óë¶à±ßĞÎ²æ»ıµÄÊıÁ¿
-// ²æ»ıÎªÕı+1£¬Îª¸º-1£¬¶à±ßĞÎ±ØĞëÎªÒÑÅÅĞò
+// ç»Ÿè®¡å‘é‡ä¸å¤šè¾¹å½¢å‰ç§¯çš„æ•°é‡
+// å‰ç§¯ä¸ºæ­£+1ï¼Œä¸ºè´Ÿ-1ï¼Œå¤šè¾¹å½¢å¿…é¡»ä¸ºå·²æ’åº
 int calculateCrossPcount(const vector<Vec>& vertex, Vec point, float radius )
 {
 	vector<Vec> sideVec;
@@ -488,7 +488,7 @@ int calculateCrossPcount(const vector<Vec>& vertex, Vec point, float radius )
 }
 
 
-// ÄÚÍâ²âÊÔ£º·ÇÁã»·ÈÆÊı
+// å†…å¤–æµ‹è¯•ï¼šéé›¶ç¯ç»•æ•°
 bool isInnerPointR(const vector<Vec>& vertex, Vec point)
 {
 	radius = std::rand() % 360;
@@ -514,7 +514,7 @@ bool isInnerPointR(const vector<Vec>& vertex, Vec point)
 }
 
 
-// ÄÚÍâ²âÊÔ£ºÁ½ÇøÓòµÄ²¢¼¯
+// å†…å¤–æµ‹è¯•ï¼šä¸¤åŒºåŸŸçš„å¹¶é›†
 bool isInnerPointU(const vector<Vec>& vertexA, const vector<Vec>& vertexB, Vec point, bool isSort = false)
 {
 	vector<Vec> sortVertexA = vertexA;
@@ -570,7 +570,7 @@ bool isInnerPointU(const vector<Vec>& vertexA, const vector<Vec>& vertexB, Vec p
 	return count > 0;
 }
 
-// ÄÚÍâ²âÊÔ£ºÁ½ÇøÓòµÄ½»¼¯
+// å†…å¤–æµ‹è¯•ï¼šä¸¤åŒºåŸŸçš„äº¤é›†
 bool isInnerPointI(const vector<Vec>& vertexA, const vector<Vec>& vertexB, Vec point, bool isSort = false)
 {
 	vector<Vec> sortVertexA = vertexA;
@@ -626,7 +626,7 @@ bool isInnerPointI(const vector<Vec>& vertexA, const vector<Vec>& vertexB, Vec p
 	return count > 1;
 }
 
-// ÄÚÍâ²âÊÔ£ºÁ½ÇøÓòµÄ²î¼¯
+// å†…å¤–æµ‹è¯•ï¼šä¸¤åŒºåŸŸçš„å·®é›†
 bool isInnerPointS(const vector<Vec>& vertexA, const vector<Vec>& vertexB, Vec point, bool isSort = false)
 {
 	vector<Vec> sortVertexA = vertexA;
@@ -711,11 +711,11 @@ void getrayPoint()
 void polygonTest(void)
 {
 
-	// ÅĞ¶Ï¶à±ßĞÎÊÇ·ñÎªÍ¹¶à±ßĞÎ
+	// åˆ¤æ–­å¤šè¾¹å½¢æ˜¯å¦ä¸ºå‡¸å¤šè¾¹å½¢
 	//printf("%d", isConvexPolygon(vertexs));
 
 
-	// ÇĞ¸î°¼¶à±ßĞÎ
+	// åˆ‡å‰²å‡¹å¤šè¾¹å½¢
 	//vector<Vec> vertexs = { { 550, 300 },
 	//{ 660, 550 },
 	//{ 700, 50 },
@@ -727,7 +727,7 @@ void polygonTest(void)
 	//cutPolygon(vertexs, drawPolygons);
 
 
-	// ÇĞ¸î¶à±ßĞÎÎªÈı½ÇĞÎ
+	// åˆ‡å‰²å¤šè¾¹å½¢ä¸ºä¸‰è§’å½¢
 	//vector<Vec> vertexs = { { 300, 550 },
 	//{ 200, 300 },
 	//{ 400, 100 },
@@ -737,7 +737,7 @@ void polygonTest(void)
 	//cutPolygonT(vertexs, drawPolygons);
 
 
-	// ÄÚÍâ²âÊÔ:ÆæÅ¼¹æÔò
+	// å†…å¤–æµ‹è¯•:å¥‡å¶è§„åˆ™
 	//vector<Vec> vertexs =
 	//{
 	//	{ 400, 550 },
@@ -756,7 +756,7 @@ void polygonTest(void)
 	//getrayPoint();
 
 
-	//// ÄÚÍâ²âÊÔ:·ÇÁã»·ÈÆÊı
+	//// å†…å¤–æµ‹è¯•:éé›¶ç¯ç»•æ•°
 	//vector<Vec> vertexs =
 	//{
 	//	{ 400, 550 },
@@ -775,7 +775,7 @@ void polygonTest(void)
 	//getrayPoint();
 
 
-	//// ÄÚÍâ²âÊÔ:Á½ÇøÓòµÄ²¢¼¯
+	//// å†…å¤–æµ‹è¯•:ä¸¤åŒºåŸŸçš„å¹¶é›†
 	//vector<Vec> vertexsA =
 	//{
 	//	{ 375, 500 },
@@ -797,7 +797,7 @@ void polygonTest(void)
 	//printf("%d", isInnerPointU(vertexsA, vertexsB, __P));
 	//getrayPoint();
 
-	//// ÄÚÍâ²âÊÔ:Á½ÇøÓòµÄ½»¼¯
+	//// å†…å¤–æµ‹è¯•:ä¸¤åŒºåŸŸçš„äº¤é›†
 	//vector<Vec> vertexsA =
 	//{
 	//	{ 375, 500 },
@@ -819,7 +819,7 @@ void polygonTest(void)
 	//printf("%d", isInnerPointI(vertexsA, vertexsB, __P));
 	//getrayPoint();
 
-	// ÄÚÍâ²âÊÔ:Á½ÇøÓòµÄ²î¼¯
+	// å†…å¤–æµ‹è¯•:ä¸¤åŒºåŸŸçš„å·®é›†
 	vector<Vec> vertexsA =
 	{
 		{ 375, 500 },
@@ -939,13 +939,13 @@ void winReshapeFcn(int newWidth, int newHeight)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	//½«£¨newWidth£¬ newHeight£©Ó³Éäµ½£¨winWidth£¬ winHeight£©£¬ÔÙ°´£¨newWidth£¬ newHeight£©²ÃÇĞ
+	//å°†ï¼ˆnewWidthï¼Œ newHeightï¼‰æ˜ å°„åˆ°ï¼ˆwinWidthï¼Œ winHeightï¼‰ï¼Œå†æŒ‰ï¼ˆnewWidthï¼Œ newHeightï¼‰è£åˆ‡
 	//gluOrtho2D(0.0, (GLdouble)newWidth, 0.0, (GLdouble)newHeight);
 
-	// ²»¸Ä±äĞÎ×´£¬Ö»°´£¨newWidth£¬ newHeight£©²ÃÇĞ
+	// ä¸æ”¹å˜å½¢çŠ¶ï¼ŒåªæŒ‰ï¼ˆnewWidthï¼Œ newHeightï¼‰è£åˆ‡
 	//gluOrtho2D(0.0, (GLdouble)winWidth, 0.0, (GLdouble)winHeight);
 
-	// ±£³ÖÍ¼ĞÎÓë´°¿ÚµÄ³ß´ç±ÈÀı(Ö»ÄÜËõĞ¡,·Å´óµÄ»°ÒòÎªÓ³ÉäÇøÓòµÄÏŞÖÆ£¬½«²»ÄÜÏÔÊ¾ÍêÈ«£¬²Î¼ûÊéÉÏ×¢ÊÍ)
+	// ä¿æŒå›¾å½¢ä¸çª—å£çš„å°ºå¯¸æ¯”ä¾‹(åªèƒ½ç¼©å°,æ”¾å¤§çš„è¯å› ä¸ºæ˜ å°„åŒºåŸŸçš„é™åˆ¶ï¼Œå°†ä¸èƒ½æ˜¾ç¤ºå®Œå…¨ï¼Œå‚è§ä¹¦ä¸Šæ³¨é‡Š)
 	gluOrtho2D(0.0, (GLdouble)winWidth * ((GLdouble)winWidth / (GLdouble)newWidth), 0.0, (GLdouble)winHeight * ((GLdouble)winHeight / (GLdouble)newHeight));
 	
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1117,7 +1117,7 @@ void pieChart(void)
 	GLfloat dataSum = 0.0;
 	circCtr.x = winWidth / 2;
 	circCtr.y = winHeight / 2;
-	circleMidpoint(circCtr, radius); // ×Ô¼ºÊµÏÖ
+	circleMidpoint(circCtr, radius); // è‡ªå·±å®ç°
 	for (k = 0; k < nSlices; k++)
 		dataSum += dataValues[k];
 	for (k = 0; k < nSlices; k++)
@@ -1294,18 +1294,18 @@ void displayFcn(void)
 }
 void code_4_exercise_1()
 {
-	// ¶¥µã±í 
+	// é¡¶ç‚¹è¡¨ 
 	Point v1 = { 0, 0, 0 }, v2 = { 0, 0, 1 }, v3 = { 1, 0, 1 }, v4 = { 1, 0, 0 },\
 		  v5 = { 0, 1, 0 }, v6 = { 0, 1, 1 }, v7 = { 1, 1, 1 }, v8 = { 1, 1, 0 };
 	vertexTable = { v1, v2, v3, v4, v5, v6, v7, v8 };
 
-	// ±ß±í
+	// è¾¹è¡¨
 	Edge e1 = { v1, v2 }, e2 = { v2, v3 }, e3 = { v3, v4 }, e4 = { v4, v1 }, \
 		 e5 = { v5, v1 }, e6 = { v6, v2 }, e7 = { v7, v3 }, e8 = { v8, v4 }, \
 		 e9 = { v5, v6 }, e10 = { v6, v7 }, e11 = { v7, v8 }, e12 = { v8, v5 };
 	edgeTable = {e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12};
 
-	// Ãæ±í
+	// é¢è¡¨
 	Surface s1 = { { e1, e5, e9, e6 } }, s2 = { { e2, e7, e10, e6 } }, s3 = { { e3, e8, e11, e7 } }, s4 = { { e4, e8, e12, e5 } }, \
 			s5 = { { e9, e10, e11, e12 } }, s6 = { { e1, e2, e3, e4 } };
 	surfaceTable = { s1, s2, s3, s4, s5, s6 };
@@ -1342,20 +1342,20 @@ void code_4_exercise_2()
 {
 	int size1, size2, size3;
 	//////////////////////////////////////////////////////////////////////////
-	// µÚÒ»ÖÖ£º¶¥µã±í£¬±ß±í£¬Ãæ±í
+	// ç¬¬ä¸€ç§ï¼šé¡¶ç‚¹è¡¨ï¼Œè¾¹è¡¨ï¼Œé¢è¡¨
 	{
-		// ¶¥µã±í
+		// é¡¶ç‚¹è¡¨
 		Point v1 = { 0, 0, 0 }, v2 = { 0, 0, 1 }, v3 = { 1, 0, 1 }, v4 = { 1, 0, 0 }, \
 			v5 = { 0, 1, 0 }, v6 = { 0, 1, 1 }, v7 = { 1, 1, 1 }, v8 = { 1, 1, 0 };
 		vector<Point> vertexTable = { v1, v2, v3, v4, v5, v6, v7, v8 };
 
-		// ±ß±í
+		// è¾¹è¡¨
 		Edge e1 = { v1, v2 }, e2 = { v2, v3 }, e3 = { v3, v4 }, e4 = { v4, v1 }, \
 			e5 = { v5, v1 }, e6 = { v6, v2 }, e7 = { v7, v3 }, e8 = { v8, v4 }, \
 			e9 = { v5, v6 }, e10 = { v6, v7 }, e11 = { v7, v8 }, e12 = { v8, v5 };
 		vector<Edge> edgeTable = { e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12 };
 
-		// Ãæ±í
+		// é¢è¡¨
 		Surface s1 = { { e1, e5, e9, e6 } }, s2 = { { e2, e7, e10, e6 } }, s3 = { { e3, e8, e11, e7 } }, s4 = { { e4, e8, e12, e5 } }, \
 			s5 = { { e9, e10, e11, e12 } }, s6 = { { e1, e2, e3, e4 } };
 		vector<Surface> surfaceTable = { s1, s2, s3, s4, s5, s6 };
@@ -1364,14 +1364,14 @@ void code_4_exercise_2()
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	// µÚ¶şÖÖ£º¶¥µã±í£¬Ãæ±í
+	// ç¬¬äºŒç§ï¼šé¡¶ç‚¹è¡¨ï¼Œé¢è¡¨
 	{
-		// ¶¥µã±í 
+		// é¡¶ç‚¹è¡¨ 
 		Point v1 = { 0, 0, 0 }, v2 = { 0, 0, 1 }, v3 = { 1, 0, 1 }, v4 = { 1, 0, 0 }, \
 			v5 = { 0, 1, 0 }, v6 = { 0, 1, 1 }, v7 = { 1, 1, 1 }, v8 = { 1, 1, 0 };
 		vector<Point> vertexTable = { v1, v2, v3, v4, v5, v6, v7, v8 };
 
-		// Ãæ±í
+		// é¢è¡¨
 		Surface_2 s1 = { { v2, v1, v5, v6 } }, s2 = { { v2, v3, v7, v6 } }, s3 = { { v3, v4, v8, v7 } }, s4 = { { v1, v4, v8, v5 } }, \
 			s5 = { { v6, v7, v8, v5 } }, s6 = { { v2, v3, v4, v1 } };
 		vector<Surface_2> surfaceTable = { s1, s2, s3, s4, s5, s6 };
@@ -1380,9 +1380,9 @@ void code_4_exercise_2()
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	// µÚÈıÖÖ£ºÃæ±í
+	// ç¬¬ä¸‰ç§ï¼šé¢è¡¨
 	{
-		// Ãæ±í
+		// é¢è¡¨
 		Surface_3 s1 = { { { 0, 0, 1 }, { 0, 0, 0 }, { 0, 1, 0 }, { 0, 1, 1 } } },\
 			s2 = { { { 0, 0, 1 }, { 1, 0, 1 }, { 1, 1, 1 }, { 0, 1, 1 } } },\
 			s3 = { { { 1, 0, 1 }, { 1, 0, 0 }, { 1, 1, 0 }, { 1, 1, 1 } } },\
@@ -1455,19 +1455,19 @@ struct Surface
 	vector<Edge> edges;
 	void setEdges(const vector<Edge>& eds){ edges = eds; }
 };
-// ¶¥µã±í
+// é¡¶ç‚¹è¡¨
 Point v1 = { 0, 0, 0 }, v2 = { 0, 0, 1 }, v3 = { 1, 0, 1 }, v4 = { 1, 0, 0 }, \
 v5 = { 0, 1, 0 }, v6 = { 0, 1, 1 }, v7 = { 1, 1, 1 }, v8 = { 1, 1, 0 };
 vector<Point> vertexTable = { v1, v2, v3, v4, v5, v6, v7, v8 };
 
-// ±ß±í
+// è¾¹è¡¨
 Surface s1, s2, s3, s4, s5, s6;
 Edge e1 = { v1, v2, { &s1, &s6 } }, e2 = { v2, v3, { &s2, &s6 } }, e3 = { v3, v4, { &s3, &s6 } }, e4 = { v4, v1, {&s4, &s6} }, \
 e5 = { v5, v1, { &s1, &s4 } }, e6 = { v6, v2, { &s1, &s2 } }, e7 = { v7, v3, { &s2, &s3 } }, e8 = { v8, v4, {&s3, &s4} }, \
 e9 = { v5, v6, { &s1, &s5 } }, e10 = { v6, v7, { &s2, &s5 } }, e11 = { v7, v8, { &s3, &s5 } }, e12 = { v8, v5, {&s4,&s5} };
 vector<Edge> edgeTable = { e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12 };
 
-// Ãæ±í
+// é¢è¡¨
 vector<Surface> surfaceTable;
 void initialize()
 {
@@ -1633,22 +1633,22 @@ bool checkEdgeSurfaceConsistency()
 void code_4_exercise_4()
 {
 	initialize();
-	printf("Ã¿Ò»¶¥µãÖÁÉÙÓĞÁ½Ìõ±ßÒÔÆä×÷Îª¶Ëµã£º%s\n", checkVertex() ? "ÊÇ":"·ñ");
-	printf("Ã¿Ìõ±ßÖÁÉÙÊÇÒ»¸ö¶à±ßĞÎµÄ×é³É²¿·Ö£º%s\n", checkEdge() ? "ÊÇ": "·ñ");
-	printf("Ã¿Ò»¸ö¶à±ßĞÎ¶¼ÊÇ·â±ÕµÄ£º%s\n", checkSurfaceClose() ? "ÊÇ": "·ñ");
-	printf("Ã¿¸ö¶à±ßĞÎÖÁÉÙÓĞÒ»Ìõ¹²Ïí±ß£º%s\n", checkShareEdge() ? "ÊÇ":"·ñ");
-	printf("Èç¹û±ß±í°üº¬Ö¸Ïò¶à±ßĞÎµÄÖ¸Õë£¬ÄÇÃ´ÓÉ¶à±ßĞÎÖ¸ÕëÒıÓÃµÄÃ¿Ìõ±ß¶¼ÓĞÒ»¸ö·´ÏòÖ¸ÕëÖ¸»Ø¸Ã¶à±ßĞÎ£º%s\n", checkEdgeSurfaceConsistency() ? "ÊÇ": "·ñ");
+	printf("æ¯ä¸€é¡¶ç‚¹è‡³å°‘æœ‰ä¸¤æ¡è¾¹ä»¥å…¶ä½œä¸ºç«¯ç‚¹ï¼š%s\n", checkVertex() ? "æ˜¯":"å¦");
+	printf("æ¯æ¡è¾¹è‡³å°‘æ˜¯ä¸€ä¸ªå¤šè¾¹å½¢çš„ç»„æˆéƒ¨åˆ†ï¼š%s\n", checkEdge() ? "æ˜¯": "å¦");
+	printf("æ¯ä¸€ä¸ªå¤šè¾¹å½¢éƒ½æ˜¯å°é—­çš„ï¼š%s\n", checkSurfaceClose() ? "æ˜¯": "å¦");
+	printf("æ¯ä¸ªå¤šè¾¹å½¢è‡³å°‘æœ‰ä¸€æ¡å…±äº«è¾¹ï¼š%s\n", checkShareEdge() ? "æ˜¯":"å¦");
+	printf("å¦‚æœè¾¹è¡¨åŒ…å«æŒ‡å‘å¤šè¾¹å½¢çš„æŒ‡é’ˆï¼Œé‚£ä¹ˆç”±å¤šè¾¹å½¢æŒ‡é’ˆå¼•ç”¨çš„æ¯æ¡è¾¹éƒ½æœ‰ä¸€ä¸ªåå‘æŒ‡é’ˆæŒ‡å›è¯¥å¤šè¾¹å½¢ï¼š%s\n", checkEdgeSurfaceConsistency() ? "æ˜¯": "å¦");
 }
 #endif
 #ifdef CHAPTER_4_EXERCISE_5
 void code_4_exercise_5()
 {
-	// ×ó£ºA = -1, B = 0, C = 0, D = 0
-	// Ç°£ºA = 0, B = 0, C = 1, D = -1
-	// ÓÒ£ºA = 1, B = 0, C = 0, D = -1
-	// ºó£ºA = 0 B = 0, C = -1, D = 0
-	// ÉÏ£ºA = 0, B = 1, C = 0, D = -1
-	// ÏÂ£ºA = 0, B = -1, C = 0, D = 0
+	// å·¦ï¼šA = -1, B = 0, C = 0, D = 0
+	// å‰ï¼šA = 0, B = 0, C = 1, D = -1
+	// å³ï¼šA = 1, B = 0, C = 0, D = -1
+	// åï¼šA = 0 B = 0, C = -1, D = 0
+	// ä¸Šï¼šA = 0, B = 1, C = 0, D = -1
+	// ä¸‹ï¼šA = 0, B = -1, C = 0, D = 0
 }
 #endif
 
@@ -1698,11 +1698,11 @@ void checkPoint(Point p)
 	int A = -1, B = 0, C = 0, D = 0;
 	int ret = A * p.x + B * p.y + C * p.z + D;
 	if (ret > 0)
-		printf("µã£¨%d, %d, %d£©ÔÚÆ½ÃæÇ°·½\n", p.x, p.y, p.z);
+		printf("ç‚¹ï¼ˆ%d, %d, %dï¼‰åœ¨å¹³é¢å‰æ–¹\n", p.x, p.y, p.z);
 	else if (ret == 0)
-		printf("µã£¨%d, %d, %d£©ÔÚÆ½ÃæÉÏ\n", p.x, p.y, p.z);
+		printf("ç‚¹ï¼ˆ%d, %d, %dï¼‰åœ¨å¹³é¢ä¸Š\n", p.x, p.y, p.z);
 	else
-		printf("µã£¨%d, %d, %d£©ÔÚÆ½Ãæºó·½\n", p.x, p.y, p.z);
+		printf("ç‚¹ï¼ˆ%d, %d, %dï¼‰åœ¨å¹³é¢åæ–¹\n", p.x, p.y, p.z);
 }
 void code_4_exercise_7()
 {
@@ -1740,7 +1740,7 @@ void checkPoint(Point p)
 		int D = -x1*(y2*z3 - y3*z2) - x2*(y3*z1 - y1*z3) - x3*(y1*z2 - y2*z1);
 		if (A * p.x + B * p.y + C * p.z + D > 0)
 		{
-			printf("µã£¨%f, %f, %f£©ÔÚÁ¢·½ÌåÍâ²¿\n", p.x, p.y, p.z);
+			printf("ç‚¹ï¼ˆ%f, %f, %fï¼‰åœ¨ç«‹æ–¹ä½“å¤–éƒ¨\n", p.x, p.y, p.z);
 			return;
 		}
 		else if (A * p.x + B * p.y + C * p.z + D == 0)
@@ -1750,11 +1750,11 @@ void checkPoint(Point p)
 	}
 	if (teston)
 	{
-		printf("µã£¨%f, %f, %f£©ÔÚÁ¢·½Ìå±íÃæ\n", p.x, p.y, p.z);
+		printf("ç‚¹ï¼ˆ%f, %f, %fï¼‰åœ¨ç«‹æ–¹ä½“è¡¨é¢\n", p.x, p.y, p.z);
 	}
 	else
 	{
-		printf("µã£¨%f, %f, %f£©ÔÚÁ¢·½ÌåÄÚ²¿\n", p.x, p.y, p.z);
+		printf("ç‚¹ï¼ˆ%f, %f, %fï¼‰åœ¨ç«‹æ–¹ä½“å†…éƒ¨\n", p.x, p.y, p.z);
 	}
 }
 void code_4_exercise_8()
@@ -1769,8 +1769,8 @@ void code_4_exercise_8()
 #ifdef CHAPTER_4_EXERCISE_9
 void code_4_exercise_9()
 {
-	// Èç¹û±äÎª×óÊÖ×ø±êÏµ£¬ÔòAx+By+Cz+D>0±íÊ¾ÄÚ²¿£¬Ax+By+Cz+D<0±íÊ¾Íâ²¿.ÒòÎª´ÓÍâ²¿¿´ÏòÄÚ²¿£¬ÄæÊ±ÕëÕı·½Ïò¾ÍÊÇ×ø±êÖáÕı·½Ïò£¬
-	//¶ø×óÓÒÊÖ×ø±êÏµ×ø±êÖáÕı·½ÏòÕıºÃÏà·´£¬¼´ÔÚÓÒÊÖÏµÖĞµÄÍâ²¿,ÕıºÃÊÇ×óÊÖÏµµÄÄÚ²¿£¨±ÈÈç¶ÔÓÚÁ¢·½ÌåµÄ×îÍâÃæ,×óÊÖZ>0±íÊ¾Íâ²¿£¬ÓÒÊÖZ>0±íÊ¾ÄÚ²¿£©
+	// å¦‚æœå˜ä¸ºå·¦æ‰‹åæ ‡ç³»ï¼Œåˆ™Ax+By+Cz+D>0è¡¨ç¤ºå†…éƒ¨ï¼ŒAx+By+Cz+D<0è¡¨ç¤ºå¤–éƒ¨.å› ä¸ºä»å¤–éƒ¨çœ‹å‘å†…éƒ¨ï¼Œé€†æ—¶é’ˆæ­£æ–¹å‘å°±æ˜¯åæ ‡è½´æ­£æ–¹å‘ï¼Œ
+	//è€Œå·¦å³æ‰‹åæ ‡ç³»åæ ‡è½´æ­£æ–¹å‘æ­£å¥½ç›¸åï¼Œå³åœ¨å³æ‰‹ç³»ä¸­çš„å¤–éƒ¨,æ­£å¥½æ˜¯å·¦æ‰‹ç³»çš„å†…éƒ¨ï¼ˆæ¯”å¦‚å¯¹äºç«‹æ–¹ä½“çš„æœ€å¤–é¢,å·¦æ‰‹Z>0è¡¨ç¤ºå¤–éƒ¨ï¼Œå³æ‰‹Z>0è¡¨ç¤ºå†…éƒ¨ï¼‰
 }
 #endif
 
@@ -1786,9 +1786,9 @@ bool check(Point p)
 void code_4_exercise_10()
 {
 	if (check({ 2, -1, -1 }) && check({ 1, -2, 2 }))
-		printf("Îåµã¹²Ãæ\n");
+		printf("äº”ç‚¹å…±é¢\n");
 	else
-		printf("Îåµã²»¹²Ãæ\n");
+		printf("äº”ç‚¹ä¸å…±é¢\n");
 }
 #endif
 
@@ -1810,9 +1810,9 @@ void check(const vector<Point>& vertexTable)
 	int D = -x1*(y2*z3 - y3*z2) - x2*(y3*z1 - y1*z3) - x3*(y1*z2 - y2*z1);
 	int ret = A * vertexTable[3].x + B * vertexTable[3].y + C * vertexTable[3].z + D;
 	if (ret == 0)
-		printf("ËÄ±ßĞÎ¹²Ãæ\n");
+		printf("å››è¾¹å½¢å…±é¢\n");
 	else
-		printf("ËÄ±ßĞÎ²»¹²Ãæ\n");
+		printf("å››è¾¹å½¢ä¸å…±é¢\n");
 
 }
 void code_4_exercise_11()
@@ -1842,11 +1842,11 @@ void check(const vector<Point>& vertexTable)
 	{
 		if (A * vertexTable[i].x + B * vertexTable[i].y + C * vertexTable[i].z + D != 0)
 		{
-			printf("¶à±ßĞÎ²»¹²Ãæ\n");
+			printf("å¤šè¾¹å½¢ä¸å…±é¢\n");
 			return;
 		}
 	}
-	printf("¶à±ßĞÎ¹²Ãæ\n");
+	printf("å¤šè¾¹å½¢å…±é¢\n");
 }
 void code_4_exercise_12()
 {
@@ -2015,12 +2015,12 @@ void check(const vector<Point>& ploygon)
 		{
 			if (ploygon[i] == ploygon[j])
 			{
-				printf("¶à±ßĞÎÊÇÓĞÖØ¸´¶¥µã»ò¹²Ïß¶¥µãµÄÍË»¯¶à±ßĞÎ\n");
+				printf("å¤šè¾¹å½¢æ˜¯æœ‰é‡å¤é¡¶ç‚¹æˆ–å…±çº¿é¡¶ç‚¹çš„é€€åŒ–å¤šè¾¹å½¢\n");
 				return;
 			}
 		}
 	}
-	printf("¶à±ßĞÎÊÇ·ÇÍË»¯¶à±ßĞÎ\n");
+	printf("å¤šè¾¹å½¢æ˜¯éé€€åŒ–å¤šè¾¹å½¢\n");
 }
 void code_4_exercise_16()
 {
@@ -2064,7 +2064,7 @@ void drowPolygon(void)
 	}
 	glFlush();
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -2108,13 +2108,13 @@ void check(const vector<Point>& ploygon)
 				if (point.x > E1Xmin && point.x < E1Xmax && point.x > E2Xmin && point.x < E2Xmax &&
 					point.y > E1Ymin && point.y < E1Ymax && point.y > E2Ymin && point.y < E2Ymax)
 				{
-					printf("¶à±ßĞÎÊÇ×ÔÏà½»¶à±ßĞÎ\n");
+					printf("å¤šè¾¹å½¢æ˜¯è‡ªç›¸äº¤å¤šè¾¹å½¢\n");
 					return;
 				}
 			}
 		}
 	}
-	printf("¶à±ßĞÎ²»ÊÇ×ÔÏà½»¶à±ßĞÎ\n");
+	printf("å¤šè¾¹å½¢ä¸æ˜¯è‡ªç›¸äº¤å¤šè¾¹å½¢\n");
 }
 void code_4_exercise_17()
 {
@@ -2194,13 +2194,13 @@ bool isConvexPolygon(const vector<Point>& ploygon)
 			{
 				if (last * xp < 0)
 				{
-					printf("¶à±ßĞÎÊÇ°¼¶à±ßĞÎ\n");
+					printf("å¤šè¾¹å½¢æ˜¯å‡¹å¤šè¾¹å½¢\n");
 					return false;
 				}
 			}
 		}
 	}
-	printf("¶à±ßĞÎÊÇÍ¹¶à±ßĞÎ\n");
+	printf("å¤šè¾¹å½¢æ˜¯å‡¸å¤šè¾¹å½¢\n");
 	return true;
 }
 
@@ -2256,7 +2256,7 @@ int crossProduct(const Vector& vector1, const Vector& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -2391,7 +2391,7 @@ inline bool operator<(const Point& p1, const Point& p2)
 {
 	return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -2559,7 +2559,7 @@ int crossProduct(const Vector& vector1, const Vector& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -2637,7 +2637,7 @@ void check(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 			}
 		}
 	}
-	printf("µã(%f, %f)ÊÇ%s\n", checkPoint.x, checkPoint.y, count != 0 ? "ÄÚµã" : "Íâµã");
+	printf("ç‚¹(%f, %f)æ˜¯%s\n", checkPoint.x, checkPoint.y, count != 0 ? "å†…ç‚¹" : "å¤–ç‚¹");
 }
 void code_4_exercise_21()
 {
@@ -2672,7 +2672,7 @@ inline bool operator<(const Point& p1, const Point& p2)
 {
 	return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -2759,7 +2759,7 @@ void check(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 			}
 		}
 	}
-	printf("µã(%f, %f)ÊÇ%s\n", checkPoint.x, checkPoint.y, count != 0 ? "ÄÚµã" : "Íâµã");
+	printf("ç‚¹(%f, %f)æ˜¯%s\n", checkPoint.x, checkPoint.y, count != 0 ? "å†…ç‚¹" : "å¤–ç‚¹");
 }
 void code_4_exercise_22()
 {
@@ -2802,7 +2802,7 @@ int crossProduct(const Vector& vector1, const Vector& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))
@@ -2888,7 +2888,7 @@ void check(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 			}
 		}
 	}
-	printf("µã(%f, %f)ÊÇ%s,·ÇÁã»·ÈÆÊıÊÇ£º%d\n", checkPoint.x, checkPoint.y, count != 0 ? "ÄÚµã" : "Íâµã", count);
+	printf("ç‚¹(%f, %f)æ˜¯%s,éé›¶ç¯ç»•æ•°æ˜¯ï¼š%d\n", checkPoint.x, checkPoint.y, count != 0 ? "å†…ç‚¹" : "å¤–ç‚¹", count);
 }
 void code_4_exercise_23()
 {
@@ -3371,7 +3371,7 @@ int crossProduct(const Vector& vector1, const Vector& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (equal(A1 * B2, A2 * B1))

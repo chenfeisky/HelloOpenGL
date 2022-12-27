@@ -548,10 +548,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBres(53, 95, 706, 95);		  // Ë®Æ½Ïß
-	lineBres(495, 25, 495, 556);	  // ´¹Ö±Ïß
-	lineBres(3, 3, 600, 600);         // 45¶ÈĞ±Ïß£¨m=1£©
-	lineBres(25, 575, 500, 100);      // 45¶ÈĞ±Ïß£¨m=-1)
+	lineBres(53, 95, 706, 95);		  // æ°´å¹³çº¿
+	lineBres(495, 25, 495, 556);	  // å‚ç›´çº¿
+	lineBres(3, 3, 600, 600);         // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineBres(25, 575, 500, 100);      // 45åº¦æ–œçº¿ï¼ˆm=-1)
 
 	lineBres(172, 134, 525, 243);	  // 0<m<1
 	lineBres(222, 95, 521, 549);	  // m>1
@@ -569,8 +569,8 @@ void code_6_exercise_2()
 #ifdef CHAPTER_6_EXERCISE_3
 typedef struct { int x, y; } Point2;
 // 0<m<1(m>1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
-// starFormNext: ´ÓÏÂÒ»¸öµã¿ªÊ¼»æÖÆ
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
+// starFormNext: ä»ä¸‹ä¸€ä¸ªç‚¹å¼€å§‹ç»˜åˆ¶
 void lineBres1(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false, bool starFormNext = false)
 {
 	if (x0 > xEnd)
@@ -616,8 +616,8 @@ void lineBres1(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false, bool s
 	}
 }
 // -1<m<0(m<-1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
-// starFormNext: ´ÓÏÂÒ»¸öµã¿ªÊ¼»æÖÆ
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
+// starFormNext: ä»ä¸‹ä¸€ä¸ªç‚¹å¼€å§‹ç»˜åˆ¶
 void lineBres2(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false, bool starFormNext = false)
 {
 	if (x0 > xEnd)
@@ -662,7 +662,7 @@ void lineBres2(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false, bool s
 			setPixel(x, y);
 	}
 }
-// starFormNext: ´ÓÏÂÒ»¸öµã¿ªÊ¼»æÖÆ
+// starFormNext: ä»ä¸‹ä¸€ä¸ªç‚¹å¼€å§‹ç»˜åˆ¶
 void lineBres(int x0, int y0, int xEnd, int yEnd, bool starFormNext = false)
 {
 	if (x0 > xEnd)
@@ -706,7 +706,7 @@ void drawPolyline()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
 
-	// Ã»ÓĞ´¦Àí¶ËµãµÄÕÛÏß
+	// æ²¡æœ‰å¤„ç†ç«¯ç‚¹çš„æŠ˜çº¿
 	glColor3f(1.0, 0.0, 0.0);
 	lineBres(120, 417, 372, 464);
 	glColor3f(0.0, 1.0, 0.0);
@@ -714,11 +714,11 @@ void drawPolyline()
 	glColor3f(0.0, 0.0, 1.0);
 	lineBres(626, 393, 715, 466);
 
-	// ´¦Àí¶ËµãµÄÕÛÏß£¨±ÜÃâÖØ¸´»æÖÆ¶Ëµã£©
+	// å¤„ç†ç«¯ç‚¹çš„æŠ˜çº¿ï¼ˆé¿å…é‡å¤ç»˜åˆ¶ç«¯ç‚¹ï¼‰
 	glColor3f(1.0, 0.0, 0.0);
 	lineBres(120, 114, 347, 209);
 	glColor3f(0.0, 1.0, 0.0);
-	lineBres(347, 209, 543, 107, true); // ´Ë´¦Ê¹ÓÃ|m|<1µÄ¶Ô³ÆËã·¨£¬y²½½øËã·¨ÔÚÉÏÒ»ÌâÖĞ¸ø³ö,Á½Õß²î±ğ²»´ó£¬Ö»ÓĞ²¢ĞĞËã·¨ÖĞÓĞÇø±ğ£¬²Î¼ûµÚ7Ìâ
+	lineBres(347, 209, 543, 107, true); // æ­¤å¤„ä½¿ç”¨|m|<1çš„å¯¹ç§°ç®—æ³•ï¼Œyæ­¥è¿›ç®—æ³•åœ¨ä¸Šä¸€é¢˜ä¸­ç»™å‡º,ä¸¤è€…å·®åˆ«ä¸å¤§ï¼Œåªæœ‰å¹¶è¡Œç®—æ³•ä¸­æœ‰åŒºåˆ«ï¼Œå‚è§ç¬¬7é¢˜
 	glColor3f(0.0, 0.0, 1.0);
 	lineBres(543, 107, 668, 254, true);
 
@@ -780,7 +780,7 @@ void code_6_exercise_4()
 
 #ifdef CHAPTER_6_EXERCISE_5
 // 0<m<1(m>1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
 void lineBresMid1(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false)
 {
 	if (x0 > xEnd)
@@ -821,7 +821,7 @@ void lineBresMid1(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false)
 	}
 }
 // -1<m<0(m<-1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
 void lineBresMid2(int x0, int y0, int xEnd, int yEnd, bool XYmirror = false)
 {
 	if (x0 > xEnd)
@@ -903,10 +903,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresMid(75, 289, 766, 289);	  // Ë®Æ½Ïß
-	lineBresMid(376, 577, 376, 52);   // ´¹Ö±Ïß
-	lineBresMid(5, 5, 500, 500);      // 45¶ÈĞ±Ïß£¨m=1£©
-	lineBresMid(25, 575, 500, 100);   // 45¶ÈĞ±Ïß£¨m=-1£©
+	lineBresMid(75, 289, 766, 289);	  // æ°´å¹³çº¿
+	lineBresMid(376, 577, 376, 52);   // å‚ç›´çº¿
+	lineBresMid(5, 5, 500, 500);      // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineBresMid(25, 575, 500, 100);   // 45åº¦æ–œçº¿ï¼ˆm=-1ï¼‰
 
 	lineBresMid(144, 148, 638, 235);  // 0<m<1
 	lineBresMid(214, 90, 547, 492);   // m>1
@@ -921,7 +921,7 @@ void code_6_exercise_5()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_6
-int nThread = 4; // ËÄ¸ö´¦ÀíÏß³Ì
+int nThread = 4; // å››ä¸ªå¤„ç†çº¿ç¨‹
 inline int Round(const float a)
 {
 	if (a >= 0)
@@ -1155,7 +1155,7 @@ void code_6_exercise_6()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_7
-int nThread = 4; // ËÄ¸ö´¦ÀíÏß³Ì
+int nThread = 4; // å››ä¸ªå¤„ç†çº¿ç¨‹
 inline int Round(const float a)
 {
 	if (a >= 0)
@@ -1412,7 +1412,7 @@ void lineBres(int x0, int y0, int xEnd, int yEnd)
 		if (fabs((float)dy) > fabs((float)dx))
 		{
 
-			//lineBres2(y0, x0, yEnd ,xEnd, true); // ¶Ô³ÆËã·¨°æ±¾£¬ºÍy²½½øËã·¨Ïà±È£¬¶Ô³ÆËã·¨²î±ğ²»´ó£¬Ö÷ÒªÊÇxºÍy·½ÏòÉÏ²»Í¬µÄÎó²îÔì³ÉµÄ
+			//lineBres2(y0, x0, yEnd ,xEnd, true); // å¯¹ç§°ç®—æ³•ç‰ˆæœ¬ï¼Œå’Œyæ­¥è¿›ç®—æ³•ç›¸æ¯”ï¼Œå¯¹ç§°ç®—æ³•å·®åˆ«ä¸å¤§ï¼Œä¸»è¦æ˜¯xå’Œyæ–¹å‘ä¸Šä¸åŒçš„è¯¯å·®é€ æˆçš„
 			lineBres2M(x0, y0, xEnd, yEnd);
 		}
 		else
@@ -1508,10 +1508,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineParallelBres(75, 289, 766, 289);   // Ë®Æ½Ïß
-	lineParallelBres(376, 577, 376, 52);   // ´¹Ö±Ïß
-	lineParallelBres(5, 5, 500, 500);      // 45¶ÈĞ±Ïß£¨m=1£©
-	lineParallelBres(25, 575, 500, 100);   // 45¶ÈĞ±Ïß£¨m=-1£©
+	lineParallelBres(75, 289, 766, 289);   // æ°´å¹³çº¿
+	lineParallelBres(376, 577, 376, 52);   // å‚ç›´çº¿
+	lineParallelBres(5, 5, 500, 500);      // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineParallelBres(25, 575, 500, 100);   // 45åº¦æ–œçº¿ï¼ˆm=-1ï¼‰
 
 	lineParallelBres(144, 148, 638, 235);  // 0<m<1
 	lineParallelBres(214, 90, 547, 492);   // m>1
@@ -1527,7 +1527,7 @@ void code_6_exercise_7()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_7_Test_1
-int nThread = 4; // ËÄ¸ö´¦ÀíÏß³Ì
+int nThread = 4; // å››ä¸ªå¤„ç†çº¿ç¨‹
 struct Rect
 {
 	int x, y, w, h;
@@ -1605,10 +1605,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineDistance(75, 289, 766, 289);   // Ë®Æ½Ïß
-	lineDistance(376, 577, 376, 52);   // ´¹Ö±Ïß
-	lineDistance(5, 5, 500, 500);      // 45¶ÈĞ±Ïß£¨m=1£©
-	lineDistance(25, 575, 500, 100);   // 45¶ÈĞ±Ïß£¨m=-1£©
+	lineDistance(75, 289, 766, 289);   // æ°´å¹³çº¿
+	lineDistance(376, 577, 376, 52);   // å‚ç›´çº¿
+	lineDistance(5, 5, 500, 500);      // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineDistance(25, 575, 500, 100);   // 45åº¦æ–œçº¿ï¼ˆm=-1ï¼‰
 
 	lineDistance(144, 148, 638, 235);  // 0<m<1
 	lineDistance(214, 90, 547, 492);   // m>1
@@ -1624,7 +1624,7 @@ void code_6_exercise_7_1()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_7_Test_2
-int nThread = 4; // ËÄ¸ö´¦ÀíÏß³Ì
+int nThread = 4; // å››ä¸ªå¤„ç†çº¿ç¨‹
 int calcLineX(int x0, int y0, int xEnd, int yEnd, int y)
 {
 	return (double)((xEnd - x0)*(y - y0)) / (yEnd - y0) + x0;
@@ -1666,7 +1666,7 @@ void lineScan(int x0, int y0, int xEnd, int yEnd)
 	bool xStep = true;
 	if (dy < 0)
 	{
-		//m < -1£¬´ÓÓÒÏò×ó
+		//m < -1ï¼Œä»å³å‘å·¦
 		if (std::abs(dx) < std::abs(dy))
 		{
 			xStep = false;
@@ -1713,10 +1713,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineScan(75, 289, 766, 289);   // Ë®Æ½Ïß
-	lineScan(376, 577, 376, 52);   // ´¹Ö±Ïß
-	lineScan(5, 5, 500, 500);      // 45¶ÈĞ±Ïß£¨m=1£©
-	lineScan(25, 575, 500, 100);   // 45¶ÈĞ±Ïß£¨m=-1£©
+	lineScan(75, 289, 766, 289);   // æ°´å¹³çº¿
+	lineScan(376, 577, 376, 52);   // å‚ç›´çº¿
+	lineScan(5, 5, 500, 500);      // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineScan(25, 575, 500, 100);   // 45åº¦æ–œçº¿ï¼ˆm=-1ï¼‰
 
 	lineScan(144, 148, 638, 235);  // 0<m<1
 	lineScan(214, 90, 547, 492);   // m>1
@@ -1738,7 +1738,7 @@ void drawFunc()
 void code_6_exercise_8()
 {
 	glutDisplayFunc(drawFunc);
-	printf("(x, y)ÏñËØµÄÖ¡»º´æ×Ö½ÚµØÖ·ÊÇ:0 + y * 80 * 100 + x \n");
+	printf("(x, y)åƒç´ çš„å¸§ç¼“å­˜å­—èŠ‚åœ°å€æ˜¯:0 + y * 80 * 100 + x \n");
 }
 #endif
 
@@ -1749,7 +1749,7 @@ void drawFunc()
 void code_6_exercise_9()
 {
 	glutDisplayFunc(drawFunc);
-	printf("(x, y)ÏñËØµÄÖ¡»º´æÎ»µØÖ·ÊÇ:0 + y * 120 * 120 + x \n");
+	printf("(x, y)åƒç´ çš„å¸§ç¼“å­˜ä½åœ°å€æ˜¯:0 + y * 120 * 120 + x \n");
 }
 #endif
 
@@ -1760,7 +1760,7 @@ void drawFunc()
 void code_6_exercise_10()
 {
 	glutDisplayFunc(drawFunc);
-	printf("(x, y)ÏñËØµÄÖ¡»º´æÎ»µØÖ·ÊÇ:0 + y * 120 * 120 + x \n");
+	printf("(x, y)åƒç´ çš„å¸§ç¼“å­˜ä½åœ°å€æ˜¯:0 + y * 120 * 120 + x \n");
 }
 #endif
 
@@ -1990,10 +1990,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	lineBresByAddr(75, 289, 766, 289);   // Ë®Æ½Ïß
-	lineBresByAddr(376, 577, 376, 52);   // ´¹Ö±Ïß
-	lineBresByAddr(5, 5, 500, 500);      // 45¶ÈĞ±Ïß£¨m=1£©
-	lineBresByAddr(25, 575, 500, 100);   // 45¶ÈĞ±Ïß£¨m=-1£©
+	lineBresByAddr(75, 289, 766, 289);   // æ°´å¹³çº¿
+	lineBresByAddr(376, 577, 376, 52);   // å‚ç›´çº¿
+	lineBresByAddr(5, 5, 500, 500);      // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineBresByAddr(25, 575, 500, 100);   // 45åº¦æ–œçº¿ï¼ˆm=-1ï¼‰
 
 	lineBresByAddr(144, 148, 638, 235);  // 0<m<1
 	lineBresByAddr(214, 90, 547, 492);   // m>1
@@ -2093,11 +2093,11 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// °×É«Ô²Ã»ÓĞ¼¸ºÎ²¹³¥
+	// ç™½è‰²åœ†æ²¡æœ‰å‡ ä½•è¡¥å¿
 	glColor3f(1.0, 1.0, 1.0);
 	circleMid(100, 100, 50,false);
 
-	// ºìÉ«Ô²ÓĞ¼¸ºÎ²¹³¥
+	// çº¢è‰²åœ†æœ‰å‡ ä½•è¡¥å¿
 	glColor3f(1.0, 0.0, 0.0);
 	circleMid(100, 100, 50,true);
 
@@ -2110,7 +2110,7 @@ void code_6_exercise_12()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_13
-int nThread = 4; // ËÄ¸ö´¦ÀíÏß³Ì
+int nThread = 4; // å››ä¸ªå¤„ç†çº¿ç¨‹
 inline int Round(const double a)
 {
 	if (a >= 0)
@@ -2283,7 +2283,7 @@ void code_6_exercise_14()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_15
-int nThread = 4; // ËÄ¸ö´¦ÀíÏß³Ì
+int nThread = 4; // å››ä¸ªå¤„ç†çº¿ç¨‹
 inline int Round(const float a)
 {
 	if (a >= 0)
@@ -2362,7 +2362,7 @@ void ellipseParallelMid(int xCenter, int yCenter, int Rx, int Ry)
 {
 	if (nThread % 2 != 0)
 	{
-		printf("±ØĞëÊÇÅ¼Êı¸öÏß³Ì!!!\n");
+		printf("å¿…é¡»æ˜¯å¶æ•°ä¸ªçº¿ç¨‹!!!\n");
 		return;
 	}
 
@@ -2492,7 +2492,7 @@ void code_6_exercise_16()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_16_Test1
-int n = 7; // n½×Ì©ÀÕÕ¹¿ªÊ½
+int n = 7; // né˜¶æ³°å‹’å±•å¼€å¼
 inline int Round(const double a)
 {
 	if (a >= 0)
@@ -2534,7 +2534,7 @@ void sinMidn(int xc, int yc)
 {
 	int m = (n+1) / 2;
 	int x = 0, y = 0;
-	__int64 p = 0; // 7½×ÒÔÉÏÊ±intÔ½½ç£¬¹ÊÓÃ64Î»int
+	__int64 p = 0; // 7é˜¶ä»¥ä¸Šæ—¶intè¶Šç•Œï¼Œæ•…ç”¨64ä½int
 	for (int i = 0; i < m; i++)
 	{
 		p += pow(-1, i + 1 - 1)* fact(2 * m - 1, 2 * m - 1 - (2 * (i + 1) - 1)) * pow(10, 2 * m - 1 - (2 * (i + 1) - 1));
@@ -2580,8 +2580,8 @@ void code_6_exercise_16_1()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_17
-int n = 5; // n½×Ì©ÀÕÕ¹¿ªÊ½
-int period = 3; // ÖÜÆÚÊı
+int n = 5; // né˜¶æ³°å‹’å±•å¼€å¼
+int period = 3; // å‘¨æœŸæ•°
 inline int Round(const double a)
 {
 	if (a >= 0)
@@ -2627,7 +2627,7 @@ void sinMidn(int xc, int yc)
 {
 	int m = (n + 1) / 2;
 	int x = 0, y = 0;
-	__int64 p = 0; // 7½×ÒÔÉÏÊ±intÔ½½ç£¬¹ÊÓÃ64Î»int
+	__int64 p = 0; // 7é˜¶ä»¥ä¸Šæ—¶intè¶Šç•Œï¼Œæ•…ç”¨64ä½int
 	for (int i = 0; i < m; i++)
 	{
 		p += pow(-1, i + 1 - 1)* fact(2 * m - 1, 2 * m - 1 - (2 * (i + 1) - 1)) * pow(10, 2 * m - 1 - (2 * (i + 1) - 1));
@@ -2673,7 +2673,7 @@ void code_6_exercise_17()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_18
-int n = 5; // n½×Ì©ÀÕÕ¹¿ªÊ½
+int n = 5; // né˜¶æ³°å‹’å±•å¼€å¼
 double A = 2;
 double k = 0.25;
 double w = 2.5;
@@ -2791,7 +2791,7 @@ void code_6_exercise_18()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_19
-int n = 5; // n½×Ì©ÀÕÕ¹¿ªÊ½
+int n = 5; // né˜¶æ³°å‹’å±•å¼€å¼
 inline int Round(const double a)
 {
 	if (a >= 0)
@@ -2909,7 +2909,7 @@ void cube(int xc, int yc)
 	int y = 0;
 	sinPlotPoints(xc, yc, x, y);
 	
-	//ÕÒµ½Áã½çµã£¨Ğ±ÂÊ´óÓÚµÈÓÚ1£©
+	//æ‰¾åˆ°é›¶ç•Œç‚¹ï¼ˆæ–œç‡å¤§äºç­‰äº1ï¼‰
 	int i = 0;
 	for (; i < winWidth / 2; i++)
 	{
@@ -2945,7 +2945,7 @@ void cube(int xc, int yc)
 	}
 	sinPlotPoints(xc, yc, x, y);
 
-	// Ğ±ÂÊĞ¡ÓÚ1
+	// æ–œç‡å°äº1
 	while (x < i)
 	{
 		xk1 += dxk;
@@ -2970,7 +2970,7 @@ void cube(int xc, int yc)
 		sinPlotPoints(xc, yc, x, y);
 	}
 
-	// Ğ±ÂÊ´óÓÚ1
+	// æ–œç‡å¤§äº1
 	while (y < winHeight / 2)
 	{
 		double p = pow((double)12 * (y + 1), (double)1 / 3) - (x + 0.5);
@@ -3000,7 +3000,7 @@ void code_6_exercise_20()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_21
-int n = 5; // n½×Ì©ÀÕÕ¹¿ªÊ½
+int n = 5; // né˜¶æ³°å‹’å±•å¼€å¼
 inline int Round(const double a)
 {
 	if (a >= 0)
@@ -3111,8 +3111,8 @@ void parabola(int xc, int yc)
 	int x = -5, y = 0;
 	plotPoint(xc, yc, x, y);
 
-	float p = pow((0 + 1), 2) - 5 - (-5 + 0.5);// ÆğÊ¼x=-5,y=0
-	while (x < -4) // x >= -4.75Ê±£¬Ğ±ÂÊĞ¡ÓÚ1 
+	float p = pow((0 + 1), 2) - 5 - (-5 + 0.5);// èµ·å§‹x=-5,y=0
+	while (x < -4) // x >= -4.75æ—¶ï¼Œæ–œç‡å°äº1 
 	{
 		if (p > 0)
 		{
@@ -3127,8 +3127,8 @@ void parabola(int xc, int yc)
 		plotPoint(xc, yc, x, y);
 	}
 
-	p = pow(x + 1 + 5, 0.5) - (y + 0.5);// ÆğÊ¼x=-4,y=1
-	while (x < 10) // Ğ±ÂÊ´óÓÚ1 
+	p = pow(x + 1 + 5, 0.5) - (y + 0.5);// èµ·å§‹x=-4,y=1
+	while (x < 10) // æ–œç‡å¤§äº1 
 	{
 		if (p > 0)
 		{
@@ -3186,8 +3186,8 @@ void parabola(int xc, int yc)
 	int x = 0, y = 50;
 	plotPoint(xc, yc, x, y);
 
-	float p = -1 * pow((0 + 1), 2) + 50 - (50 - 0.5);// ÆğÊ¼x=0,y=50
-	while (x < 1) // x >= 0.5Ê±£¬Ğ±ÂÊ´óÓÚ1 
+	float p = -1 * pow((0 + 1), 2) + 50 - (50 - 0.5);// èµ·å§‹x=0,y=50
+	while (x < 1) // x >= 0.5æ—¶ï¼Œæ–œç‡å¤§äº1 
 	{
 		x++;
 		if (p > 0)
@@ -3202,8 +3202,8 @@ void parabola(int xc, int yc)
 		plotPoint(xc, yc, x, y);
 	}
 
-	p = pow(50 - (y - 1), 0.5) - (x + 0.5);// ÆğÊ¼x=1,y=49
-	while (x < 5) // Ğ±ÂÊ´óÓÚ1 
+	p = pow(50 - (y - 1), 0.5) - (x + 0.5);// èµ·å§‹x=1,y=49
+	while (x < 5) // æ–œç‡å¤§äº1 
 	{
 		if (p > 0)
 		{
@@ -3265,9 +3265,9 @@ void parabola(int xc, int yc)
 
 	int sign = a > 0 ? 1 : -1;
 
-	float slope = std::fabs(1 / (2 * a)); // Ğ±ÂÊ¾ø¶ÔÖµÎª1
+	float slope = std::fabs(1 / (2 * a)); // æ–œç‡ç»å¯¹å€¼ä¸º1
 
-	// Ğ±ÂÊ¾ø¶ÔÖµĞ¡ÓÚ1
+	// æ–œç‡ç»å¯¹å€¼å°äº1
 	float p = a * pow((0 + 1), 2) + b - (b + sign * 0.5);
 	float _a = a * (1 + 2 * x);
 	float da = 2 * a;
@@ -3297,7 +3297,7 @@ void parabola(int xc, int yc)
 		plotPoint(xc, yc, x, y);
 	}
 
-	// Ğ±ÂÊ¾ø¶ÔÖµ´óÓÚ1
+	// æ–œç‡ç»å¯¹å€¼å¤§äº1
 	p = pow(((y + sign * 1) - b) / a, 0.5) - (x + 0.5);
 	while (x < winWidth / 2)
 	{
@@ -3620,12 +3620,12 @@ void lineBres(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMod
 		}
 	}
 }
-// ¹Ì¶¨ÏñËØÊı»®Ïß
+// å›ºå®šåƒç´ æ•°åˆ’çº¿
 void lineType1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	lineBres(x0, y0, xEnd, yEnd, lineTypeMode);
 }
-// ¹Ì¶¨³¤¶È»®Ïß
+// å›ºå®šé•¿åº¦åˆ’çº¿
 void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	int dx = std::abs(x0 - xEnd);
@@ -3654,7 +3654,7 @@ void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	}
 	lineBres(x0, y0, xEnd, yEnd, newLineTypeMode);
 }
-// ·Ö¶Î»®Ïß
+// åˆ†æ®µåˆ’çº¿
 void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	int dx = xEnd - x0;
@@ -3700,7 +3700,7 @@ void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 				begin = false;
 			}
 
-			// ÍË³öÌõ¼ş
+			// é€€å‡ºæ¡ä»¶
 			if (std::abs(Round((start + j + 1) * rateX)) >= std::abs(dx))
 			{
 				if (begin)
@@ -3717,9 +3717,9 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	lineType1(100, 100, 200, 200, "1");// ÊµÏß
-	lineType1(100, 150, 200, 250, "11111111000");// »®Ïß
-	lineType1(100, 200, 200, 300, "1100");// µãÏß
+	lineType1(100, 100, 200, 200, "1");// å®çº¿
+	lineType1(100, 150, 200, 250, "11111111000");// åˆ’çº¿
+	lineType1(100, 200, 200, 300, "1100");// ç‚¹çº¿
 
 	lineType1(100, 450, 200, 400, "1");
 	lineType1(100, 500, 200, 450, "11111111000");
@@ -3766,7 +3766,7 @@ bool needPixel(int index, const std::string& lineTypeMode)
 	return lineTypeMode[index % lineTypeMode.size()] == '1';
 }
 // 0<m<1(m>1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
 void lineBresMid1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode, bool XYmirror = false)
 {
 	if (x0 > xEnd)
@@ -3820,7 +3820,7 @@ void lineBresMid1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTyp
 	}
 }
 // -1<m<0(m<-1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
 void lineBresMid2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode, bool XYmirror = false)
 {
 	if (x0 > xEnd)
@@ -3910,12 +3910,12 @@ void lineBresMid(int x0, int y0, int xEnd, int yEnd, const std::string& lineType
 		}
 	}
 }
-// ¹Ì¶¨ÏñËØÊı»®Ïß
+// å›ºå®šåƒç´ æ•°åˆ’çº¿
 void lineType1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	lineBresMid(x0, y0, xEnd, yEnd, lineTypeMode);
 }
-// ¹Ì¶¨³¤¶È»®Ïß
+// å›ºå®šé•¿åº¦åˆ’çº¿
 void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	int dx = std::abs(x0 - xEnd);
@@ -3944,7 +3944,7 @@ void lineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 	}
 	lineBresMid(x0, y0, xEnd, yEnd, newLineTypeMode);
 }
-// ·Ö¶Î»®Ïß
+// åˆ†æ®µåˆ’çº¿
 void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	int dx = xEnd - x0;
@@ -3990,7 +3990,7 @@ void lineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMo
 				begin = false;
 			}
 
-			// ÍË³öÌõ¼ş
+			// é€€å‡ºæ¡ä»¶
 			if (std::abs(Round((start + j + 1) * rateX)) >= std::abs(dx))
 			{
 				if (begin)
@@ -4007,9 +4007,9 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	lineType1(100, 100, 200, 200, "1");  // ÊµÏß
-	lineType1(100, 150, 200, 250, "11111111000"); // »®Ïß
-	lineType1(100, 200, 200, 300, "1100"); // µãÏß
+	lineType1(100, 100, 200, 200, "1");  // å®çº¿
+	lineType1(100, 150, 200, 250, "11111111000"); // åˆ’çº¿
+	lineType1(100, 200, 200, 300, "1100"); // ç‚¹çº¿
 
 	lineType1(100, 450, 200, 400, "1");
 	lineType1(100, 500, 200, 450, "11111111000");
@@ -4248,7 +4248,7 @@ void threadFunc(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeM
 {
 	lineBres(x0, y0, xEnd, yEnd, lineTypeMode);
 }
-// ¹Ì¶¨ÏñËØÊı»®Ïß
+// å›ºå®šåƒç´ æ•°åˆ’çº¿
 void parallelLineType1(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	//std::vector<std::thread> threads;
@@ -4283,7 +4283,7 @@ void parallelLineType1(int x0, int y0, int xEnd, int yEnd, const std::string& li
 	//for (auto& thread : threads)
 	//	thread.join();
 }
-// ¹Ì¶¨³¤¶È»®Ïß
+// å›ºå®šé•¿åº¦åˆ’çº¿
 void parallelLineType2(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	int dx = xEnd - x0;
@@ -4379,7 +4379,7 @@ void _threadFunc(int x0, int y0, int xEnd, int yEnd, const std::string& lineType
 		}
 	}
 }
-// ·Ö¶Î»®Ïß
+// åˆ†æ®µåˆ’çº¿
 void parallelLineType3(int x0, int y0, int xEnd, int yEnd, const std::string& lineTypeMode)
 {
 	int dx = xEnd - x0;
@@ -4416,9 +4416,9 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	parallelLineType1(100, 100, 200, 200, "1");  // ÊµÏß
-	parallelLineType1(100, 150, 200, 250, "11111111000"); // »®Ïß
-	parallelLineType1(100, 200, 200, 300, "1100"); // µãÏß
+	parallelLineType1(100, 100, 200, 200, "1");  // å®çº¿
+	parallelLineType1(100, 150, 200, 250, "11111111000"); // åˆ’çº¿
+	parallelLineType1(100, 200, 200, 300, "1100"); // ç‚¹çº¿
 
 	parallelLineType1(100, 450, 200, 400, "1");
 	parallelLineType1(100, 500, 200, 450, "11111111000");
@@ -4656,10 +4656,10 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	lineBres(53, 95, 706, 95, 1);		  // Ë®Æ½Ïß
-	lineBres(495, 25, 495, 556, 2);	  // ´¹Ö±Ïß
-	lineBres(3, 3, 600, 600, 3);         // 45¶ÈĞ±Ïß£¨m=1£©
-	lineBres(25, 575, 500, 100, 4);      // 45¶ÈĞ±Ïß£¨m=-1)
+	lineBres(53, 95, 706, 95, 1);		  // æ°´å¹³çº¿
+	lineBres(495, 25, 495, 556, 2);	  // å‚ç›´çº¿
+	lineBres(3, 3, 600, 600, 3);         // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineBres(25, 575, 500, 100, 4);      // 45åº¦æ–œçº¿ï¼ˆm=-1)
 
 	lineBres(172, 134, 525, 243, 10);	  // 0<m<1
 	lineBres(222, 95, 521, 549, 10);	  // m>1
@@ -4897,7 +4897,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -4917,7 +4917,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -4975,7 +4975,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -5014,7 +5014,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -5098,18 +5098,18 @@ void lineRect(int x0, int y0, int xEnd, int yEnd, int width)
 	points.push_back({ xEnd - vertexX + (std::abs(vertexX) >= 1 ? offset : 0), yEnd - vertexY + (std::abs(vertexY) >= 1 ? offset : 0) });
 	points.push_back({ xEnd + vertexX, yEnd + vertexY });
 
-	// Ö±Ïß
+	// ç›´çº¿
 	//glColor3f(1.0, 1.0, 1.0);
 	//lineBres(x0, y0, xEnd, yEnd);
 
-	// Ïß¿ò
+	// çº¿æ¡†
 	//glColor3f(1.0, 0.0, 0.0);
 	//lineBres(points[0].x, points[0].y, points[1].x, points[1].y);
 	//lineBres(points[1].x, points[1].y, points[2].x, points[2].y);
 	//lineBres(points[2].x, points[2].y, points[3].x, points[3].y);
 	//lineBres(points[3].x, points[3].y, points[0].x, points[0].y);
 
-	// Ìî³ä
+	// å¡«å……
 	glColor3f(1.0, 1.0, 1.0);
 	fillPolygon(points);
 }
@@ -5118,10 +5118,10 @@ void drawFunc()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
-	lineRect(53, 95, 706, 95, 10);		  // Ë®Æ½Ïß			
-	lineRect(495, 25, 495, 556, 10);	  // ´¹Ö±Ïß
-	lineRect(30, 30, 340, 340, 10);         // 45¶ÈĞ±Ïß£¨m=1£©
-	lineRect(25, 575, 500, 100, 10);      // 45¶ÈĞ±Ïß£¨m=-1)
+	lineRect(53, 95, 706, 95, 10);		  // æ°´å¹³çº¿			
+	lineRect(495, 25, 495, 556, 10);	  // å‚ç›´çº¿
+	lineRect(30, 30, 340, 340, 10);         // 45åº¦æ–œçº¿ï¼ˆm=1ï¼‰
+	lineRect(25, 575, 500, 100, 10);      // 45åº¦æ–œçº¿ï¼ˆm=-1)
 
 	lineRect(172, 134, 525, 243, 10);	  // 0<m<1
 	lineRect(222, 95, 521, 549, 10);	  // m>1
@@ -5382,7 +5382,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -5401,7 +5401,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
 			lines[next].y0--;
 	}
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -5459,7 +5459,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -5498,7 +5498,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -5589,9 +5589,9 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	lineBres(120, 200, 285, 280, 10);		  // ´¹Ö±Çø¶ÎÌî³ä
-	lineBres(368, 185, 460, 395, 10);		  // Ë®Æ½Çø¶ÎÌî³ä
-	lineWithFillPolygon(700, 200, 500, 400, 10); // Ìî³ä¶à±ßĞÎ
+	lineBres(120, 200, 285, 280, 10);		  // å‚ç›´åŒºæ®µå¡«å……
+	lineBres(368, 185, 460, 395, 10);		  // æ°´å¹³åŒºæ®µå¡«å……
+	lineWithFillPolygon(700, 200, 500, 400, 10); // å¡«å……å¤šè¾¹å½¢
 
 	glFlush();
 }
@@ -6179,7 +6179,7 @@ inline int Round(const float a)
 	else
 		return int(a - 0.5);
 }
-// ÖĞµã»­Ô²Ëã·¨£¨ÄæÊ±Õë0-45¶ÈÔ²£©
+// ä¸­ç‚¹ç”»åœ†ç®—æ³•ï¼ˆé€†æ—¶é’ˆ0-45åº¦åœ†ï¼‰
 //void circlePlotPoints(int xc, int yc, int x, int y)
 //{
 //	setPixel(xc + x, yc + y);
@@ -6278,7 +6278,7 @@ void fillRound(int xc, int yc, float r, RoundType type)
 	int d2y = 0;
 	int p = Round((float)5 / 4 - r);
 	double aa;
-	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // Èç¹ûÊÇÕûÊıÔòÆ«ÒÆ£¬±£³Ö¼¸ºÎÌØÕ÷.Èç¹ûÊÇĞ¡Êı(>=0.5)Ôò²»Æ«ÒÆ
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // å¦‚æœæ˜¯æ•´æ•°åˆ™åç§»ï¼Œä¿æŒå‡ ä½•ç‰¹å¾.å¦‚æœæ˜¯å°æ•°(>=0.5)åˆ™ä¸åç§»
 	hLineRound(0, 0, xRound, xc, yc, type, offset);
 	int endY = Round(r / std::sqrt(2));
 	for (int curY = 1; curY <= endY; curY++)
@@ -6525,7 +6525,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -6544,7 +6544,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
 			lines[next].y0--;
 	}
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -6601,7 +6601,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -6640,7 +6640,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -6751,13 +6751,13 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	// ´¹Ö±ÑØÏßÂ·¾¶Çø¶ÎÌî³ä£¨Ìî³ä²»ÍêÕû£©
+	// å‚ç›´æ²¿çº¿è·¯å¾„åŒºæ®µå¡«å……ï¼ˆå¡«å……ä¸å®Œæ•´ï¼‰
 	lineBresWithLineCap(102, 381, 242, 500, 20, LineCap::ButtCap);
 	lineBresWithLineCap(302, 381, 442, 500, 20, LineCap::RoundCap);
 	lineBresWithLineCap(502, 381, 642, 500, 20, LineCap::ProjectingSquareCap);
 	lineBresWithLineCap(650, 381, 750, 381, 20, LineCap::RoundCap);
 
-	// ¶à±ßĞÎÌî³ä
+	// å¤šè¾¹å½¢å¡«å……
 	lineFillPolygonWithLineCap(102, 81, 242, 200, 20, LineCap::ButtCap);
 	lineFillPolygonWithLineCap(302, 81, 442, 200, 20, LineCap::RoundCap);
 	lineFillPolygonWithLineCap(502, 81, 642, 200, 20, LineCap::ProjectingSquareCap);
@@ -6771,7 +6771,7 @@ void code_6_exercise_34()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_35
-float MinMiterAngel = PI / 6; // ×îĞ¡µÄĞ±½ÇÁ¬½Ó½Ç¶È£¨Ğ¡ÓÚ´ËÖµ½«ÇĞ»»ÎªĞ±ÇĞÁ¬½Ó£©
+float MinMiterAngel = PI / 6; // æœ€å°çš„æ–œè§’è¿æ¥è§’åº¦ï¼ˆå°äºæ­¤å€¼å°†åˆ‡æ¢ä¸ºæ–œåˆ‡è¿æ¥ï¼‰
 struct Point { int x; int y; };
 struct Line
 {
@@ -6810,15 +6810,15 @@ enum class RoundType
 };
 enum class LineCap
 {
-	ButtCap = 1,	// ·½Ã±
-	RoundCap = 2,	// Ô²Ã±
-	ProjectingSquareCap = 3, // Í»·½Ã±
+	ButtCap = 1,	// æ–¹å¸½
+	RoundCap = 2,	// åœ†å¸½
+	ProjectingSquareCap = 3, // çªæ–¹å¸½
 };
 enum class BrokenLineJoin
 {
-	MiterJoin = 1,	// Ğ±½ÇÁ¬½Ó
-	RoundJoin = 2,	// Ô²Á¬½Ó
-	BevelJoin = 3,	// Ğ±ÇĞÁ¬½Ó
+	MiterJoin = 1,	// æ–œè§’è¿æ¥
+	RoundJoin = 2,	// åœ†è¿æ¥
+	BevelJoin = 3,	// æ–œåˆ‡è¿æ¥
 };
 inline int Round(const float a)
 {
@@ -6889,7 +6889,7 @@ void fillRound(int xc, int yc, float r, RoundType type)
 	int d2y = 0;
 	int p = Round((float)5 / 4 - r);
 	double aa;
-	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // Èç¹ûÊÇÕûÊıÔòÆ«ÒÆ£¬±£³Ö¼¸ºÎÌØÕ÷.Èç¹ûÊÇĞ¡Êı(>=0.5)Ôò²»Æ«ÒÆ
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // å¦‚æœæ˜¯æ•´æ•°åˆ™åç§»ï¼Œä¿æŒå‡ ä½•ç‰¹å¾.å¦‚æœæ˜¯å°æ•°(>=0.5)åˆ™ä¸åç§»
 	hLineRound(0, 0, xRound, xc, yc, type, offset);
 	int endY = Round(r / std::sqrt(2));
 	for (int curY = 1; curY <= endY; curY++)
@@ -6914,7 +6914,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -6933,7 +6933,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		else if (lines[i].y1 - lines[i].y0 < 0 && lines[next].y1 - lines[next].y0 < 0)
 			lines[next].y0--;
 	}
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -6990,7 +6990,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -7029,7 +7029,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -7145,7 +7145,7 @@ float calcAngle(int x0, int y0, int x1, int y1, int x2, int y2)
 	float yb = y2 - y1;
 	float cos = (xa * xb + ya * yb) / (std::sqrt(xa*xa+ya*ya)*std::sqrt(xb*xb + yb*yb));
 	float ret = std::acos(cos);
-	// ¹æÕûµ½×îĞ¡"ÊıÖµ"(0µ½180»òÕß0µ½-180)
+	// è§„æ•´åˆ°æœ€å°"æ•°å€¼"(0åˆ°180æˆ–è€…0åˆ°-180)
 	if (ret > PI)
 	{
 		ret -= 2 * PI;
@@ -7196,7 +7196,7 @@ void drawbrokenLineJoin(int x0, int y0, int x1, int y1, int x2, int y2, float wi
 		_y1 = y1 + _y1;
 		_x2 = x1 + _x2;
 		_y2 = y1 + _y2;
-		float x, y; // Íâ±ßÔµ½»µã
+		float x, y; // å¤–è¾¹ç¼˜äº¤ç‚¹
 		if (x1 == x0 && x1 == x2)
 		{
 			return;
@@ -7265,8 +7265,8 @@ void drawFunc()
 	brokenLineWithJoin({ { 324,390 },{ 241,185 },{ 463,199 },{ 391,297 } }, 20, BrokenLineJoin::RoundJoin);
 	brokenLineWithJoin({ { 572,419 },{ 572,252 },{ 636,343 },{ 729,269 } }, 20, BrokenLineJoin::BevelJoin);
 
-	brokenLineWithJoin({ { 100, 40 },{ 200, 40 },{ 100,80 } }, 20, BrokenLineJoin::MiterJoin); // Ğ¡ÓÚ30¶È
-	brokenLineWithJoin({ { 250, 40 },{ 350, 40 },{ 250,140 } }, 20, BrokenLineJoin::MiterJoin); // ´óÓÚ30¶È
+	brokenLineWithJoin({ { 100, 40 },{ 200, 40 },{ 100,80 } }, 20, BrokenLineJoin::MiterJoin); // å°äº30åº¦
+	brokenLineWithJoin({ { 250, 40 },{ 350, 40 },{ 250,140 } }, 20, BrokenLineJoin::MiterJoin); // å¤§äº30åº¦
 
 	glFlush();
 }
@@ -7982,9 +7982,9 @@ void drawFunc()
 	// m<-1
 	lineBres(488, 318, 553, 79, false);
 	lineBres(538, 318, 603, 79, true);
-	// Ë®Æ½
+	// æ°´å¹³
 	lineBres(42, 49, 242, 49, true);
-	// ´¹Ö±
+	// å‚ç›´
 	lineBres(282, 22, 282, 170, true);
 
 	glColor3f(1.0, 1.0, 1.0);
@@ -8088,7 +8088,7 @@ float calcRealRate(int x, int Rx, int Ry)
 
 	float tan = fabs((float)Ry * x / (Rx * std::sqrt(Rx * Rx - x * x)));
 	if (tan < 1.0)
-		return std::sqrt(1 / (1 + tan * tan)); // cos  Ğ±ÂÊĞ¡ÓÚ1Ê±£¬ÇúÏß³¤¶ÈÓëxÖáÏàµÈ£¬ËùÒÔµ÷Õû³¤¶ÈĞèÒª²ÎÕÕx£»·´Ö®£¬²ÎÕÕy
+		return std::sqrt(1 / (1 + tan * tan)); // cos  æ–œç‡å°äº1æ—¶ï¼Œæ›²çº¿é•¿åº¦ä¸xè½´ç›¸ç­‰ï¼Œæ‰€ä»¥è°ƒæ•´é•¿åº¦éœ€è¦å‚ç…§xï¼›åä¹‹ï¼Œå‚ç…§y
 	else
 		return std::sqrt(tan * tan / (1 + tan * tan)); // sin
 }
@@ -8100,7 +8100,7 @@ std::string makeNewLineTypeMode(int x, int Rx, int Ry, const std::string& lineTy
 	int curCount = 0;
 	for (int i = 0;; i++)
 	{
-		// ÍË³öÌõ¼ş
+		// é€€å‡ºæ¡ä»¶
 		if (i == lineTypeMode.size())
 		{
 			newLineTypeMode.append(Round(curCount * realRate), curType);
@@ -8135,7 +8135,7 @@ void drawWithSlope(int xCenter, int yCenter, int Rx, int Ry, const std::list<Poi
 			setPixel(xCenter + it->x, yCenter + it->y);
 	}
 }
-// ¹Ì¶¨ÏñËØÊı»®Ïß
+// å›ºå®šåƒç´ æ•°åˆ’çº¿
 void ellipseLineType1(int xCenter, int yCenter, int Rx, int Ry, const std::string& lineTypeMode)
 {
 	std::vector<std::list<Point2>> points = std::vector<std::list<Point2>>(4);
@@ -8143,7 +8143,7 @@ void ellipseLineType1(int xCenter, int yCenter, int Rx, int Ry, const std::strin
 	std::list<Point2> ellipsePoints = makeAllEllipsePoints(points);
 	draw(xCenter, yCenter, ellipsePoints, lineTypeMode);
 }
-// ¹Ì¶¨³¤¶È»®Ïß
+// å›ºå®šé•¿åº¦åˆ’çº¿
 void ellipseLineType2(int xCenter, int yCenter, int Rx, int Ry, const std::string& lineTypeMode)
 {
 	std::vector<std::list<Point2>> points = std::vector<std::list<Point2>>(4);
@@ -8156,13 +8156,13 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glColor3f(1.0, 1.0, 1.0);
-	ellipseLineType1(150, 400, 100, 50, "1");// ÊµÏß
-	ellipseLineType1(400, 400, 100, 50, "11111111000");// »®Ïß
-	ellipseLineType1(650, 400, 100, 50, "1100");// µãÏß
+	ellipseLineType1(150, 400, 100, 50, "1");// å®çº¿
+	ellipseLineType1(400, 400, 100, 50, "11111111000");// åˆ’çº¿
+	ellipseLineType1(650, 400, 100, 50, "1100");// ç‚¹çº¿
 
-	ellipseLineType2(150, 200, 100, 50, "1");// ÊµÏß
-	ellipseLineType2(400, 200, 100, 50, "11111111000");// »®Ïß
-	ellipseLineType2(650, 200, 100, 50, "1100");// µãÏß
+	ellipseLineType2(150, 200, 100, 50, "1");// å®çº¿
+	ellipseLineType2(400, 200, 100, 50, "11111111000");// åˆ’çº¿
+	ellipseLineType2(650, 200, 100, 50, "1100");// ç‚¹çº¿
 
 	glFlush();
 }
@@ -8413,7 +8413,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -8433,7 +8433,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -8491,7 +8491,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point zeroPoint)
@@ -8530,7 +8530,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -8663,7 +8663,7 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry)
 	int y = Ry;
 	int px = 0;
 	int py = twoRx2*y;
-	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	/*Region 1*/
 	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
 	while (px < py)
@@ -8674,15 +8674,15 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry)
 			p += Ry2 + px;
 		else
 		{
-			hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter); // »æÖÆÉÏÒ»Ìõx×î´óµÄÉ¨ÃèÏß
+			hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter); // ç»˜åˆ¶ä¸Šä¸€æ¡xæœ€å¤§çš„æ‰«æçº¿
 
 			y--;
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	}
-	hLineEllipsePlot(y, 0, x, xCenter, yCenter); // »æÖÆ×îºóÒ»ÌõÉ¨ÃèÏß
+	hLineEllipsePlot(y, 0, x, xCenter, yCenter); // ç»˜åˆ¶æœ€åä¸€æ¡æ‰«æçº¿
 
 	/*Region 2*/
 	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
@@ -8765,7 +8765,7 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, const Stencil& s)
 	int y = Ry;
 	int px = 0;
 	int py = twoRx2*y;
-	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	/*Region 1*/
 	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
 	while (px < py)
@@ -8776,15 +8776,15 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry, const Stencil& s)
 			p += Ry2 + px;
 		else
 		{
-			hLineEllipsePlot(y, 0, x - 1, s, xCenter, yCenter); // »æÖÆÉÏÒ»Ìõx×î´óµÄÉ¨ÃèÏß
+			hLineEllipsePlot(y, 0, x - 1, s, xCenter, yCenter); // ç»˜åˆ¶ä¸Šä¸€æ¡xæœ€å¤§çš„æ‰«æçº¿
 
 			y--;
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	}
-	hLineEllipsePlot(y, 0, x, s, xCenter, yCenter); // »æÖÆ×îºóÒ»ÌõÉ¨ÃèÏß
+	hLineEllipsePlot(y, 0, x, s, xCenter, yCenter); // ç»˜åˆ¶æœ€åä¸€æ¡æ‰«æçº¿
 
 												 /*Region 2*/
 	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
@@ -8868,7 +8868,7 @@ struct Point
 {
 	GLfloat x, y, z;
 };
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 bool Equal(float f1, float f2){ return std::abs(f1 - f2) < 0.0001;}
 bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
@@ -8886,7 +8886,7 @@ int crossProduct(const Vector& vector1, const Vector& vector2)
 {
 	return vector1.x * vector2.y - vector1.y * vector2.x;
 }
-// ¼ÆËãÁ½ÌõÖ±ÏßµÄ½»µã£¨Ö±Ïß¹«Ê½£ºAx+By+C=0£©
+// è®¡ç®—ä¸¤æ¡ç›´çº¿çš„äº¤ç‚¹ï¼ˆç›´çº¿å…¬å¼ï¼šAx+By+C=0ï¼‰
 bool linesPoint(float A1, float B1, float C1, float A2, float B2, float C2, Point& point)
 {
 	if (Equal(A1 * B2, A2 * B1))
@@ -8903,7 +8903,7 @@ bool sameDir(Vector v1, Vector v2)
 }
 bool checkRayWay(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 {
-	// rayPointÔÚ°üÎ§ºĞÍâ
+	// rayPointåœ¨åŒ…å›´ç›’å¤–
 	float Xmin = ploygon[0].x, Xmax = ploygon[0].x, Ymin = ploygon[0].y, Ymax = ploygon[0].y;
 	for (auto& p : ploygon)
 	{
@@ -9006,7 +9006,7 @@ bool checkInner(Point checkPoint, Point rayPoint, const vector<Point>& ploygon)
 			}
 		}
 	}
-	//printf("µã(%f, %f)ÊÇ%s\n", checkPoint.x, checkPoint.y, count != 0 ? "ÄÚµã" : "Íâµã");
+	//printf("ç‚¹(%f, %f)æ˜¯%s\n", checkPoint.x, checkPoint.y, count != 0 ? "å†…ç‚¹" : "å¤–ç‚¹");
 	return count != 0;
 }
 void fillRect(const vector<Point>& ploygon)
@@ -9062,12 +9062,12 @@ void code_6_exercise_43()
 #endif
 
 #ifdef CHAPTER_6_EXERCISE_44
-// ×îĞ¡»¯±ÀÀ£µÄÔ­Òò£ºµã»÷×îĞ¡»¯°´Å¥Ö®ºó£¬openglÖØ»æ´°¿Ú£¬µ«ÊÇ´ËÊ±´°¿ÚµÄ³ß´çÎª×îĞ¡»¯£¨0,0£©£¬¼´²»ÄÜ»­³ö±ß½çÏß£¬ËùÒÔ±ß½çÌõ¼şÅĞ¶ÏÊ§°Ü
-// µ«ÊÇµã»÷ÈÎÎñÀ¸×îĞ¡»¯£¬opengl²»ÖØ»æ£¬ËùÒÔ²»»á³öÎÊÌâ
+// æœ€å°åŒ–å´©æºƒçš„åŸå› ï¼šç‚¹å‡»æœ€å°åŒ–æŒ‰é’®ä¹‹åï¼Œopenglé‡ç»˜çª—å£ï¼Œä½†æ˜¯æ­¤æ—¶çª—å£çš„å°ºå¯¸ä¸ºæœ€å°åŒ–ï¼ˆ0,0ï¼‰ï¼Œå³ä¸èƒ½ç”»å‡ºè¾¹ç•Œçº¿ï¼Œæ‰€ä»¥è¾¹ç•Œæ¡ä»¶åˆ¤æ–­å¤±è´¥
+// ä½†æ˜¯ç‚¹å‡»ä»»åŠ¡æ æœ€å°åŒ–ï¼Œopenglä¸é‡ç»˜ï¼Œæ‰€ä»¥ä¸ä¼šå‡ºé—®é¢˜
 struct Point { int x; int y; };
-//#define SHOW_DRAW // ÏÔÊ¾»æÖÆ¹ı³Ì
+//#define SHOW_DRAW // æ˜¾ç¤ºç»˜åˆ¶è¿‡ç¨‹
 #ifdef SHOW_DRAW
-int showTime = 1; //ºÁÃë
+int showTime = 1; //æ¯«ç§’
 #endif
 struct Color3f
 {
@@ -9398,9 +9398,9 @@ void code_6_exercise_44()
 
 #ifdef CHAPTER_6_EXERCISE_45
 struct Point { int x; int y; };
-//#define SHOW_DRAW // ÏÔÊ¾»æÖÆ¹ı³Ì
+//#define SHOW_DRAW // æ˜¾ç¤ºç»˜åˆ¶è¿‡ç¨‹
 #ifdef SHOW_DRAW
-int showTime = 1; //ºÁÃë
+int showTime = 1; //æ¯«ç§’
 #endif
 struct Color3f
 {
@@ -9755,19 +9755,19 @@ void drawFunc()
 	std::vector<Point> points2 = { { 300, 350 },{ 351, 350 },{ 351, 399 },{ 400, 399 },{ 400, 450 },{ 350, 450 },{ 350, 400 },{ 300, 400 } };
 	std::vector<Point> points3 = { { 100, 150 },{ 151, 150 },{ 151, 199 },{ 200, 199 },{ 200, 250 },{ 150, 250 },{ 150, 200 },{ 100, 200 } };
 	std::vector<Point> points4 = { { 300, 150 },{ 351, 150 },{ 351, 199 },{ 400, 199 },{ 400, 250 },{ 350, 250 },{ 350, 200 },{ 300, 200 } };
-	// 4ÁªÍ¨
+	// 4è”é€š
 	drawRect(points1);
 	boundaryFill4(120, 370, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
-	// 8ÁªÍ¨
+	// 8è”é€š
 	drawRect(points2);
 	boundaryFill8(320, 370, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
-	// 4ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 4è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points3);
 	boundaryFill4ByStack(120, 170, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 	
-	// 8ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 8è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points4);
 	boundaryFill8ByStack(320, 170, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
@@ -9781,9 +9781,9 @@ void code_6_exercise_45()
 
 #ifdef CHAPTER_6_EXERCISE_46
 struct Point { int x; int y; };
-#define SHOW_DRAW // ÏÔÊ¾»æÖÆ¹ı³Ì
+#define SHOW_DRAW // æ˜¾ç¤ºç»˜åˆ¶è¿‡ç¨‹
 #ifdef SHOW_DRAW
-int showTime = 1; //ºÁÃë
+int showTime = 1; //æ¯«ç§’
 #endif
 struct Color3f
 {
@@ -9961,11 +9961,11 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	// 4ÁªÍ¨
+	// 4è”é€š
 	ellipseMidpoint(200, 300, 100, 50);
 	boundaryFill4(200, 300, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
-	// 4ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 4è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	ellipseMidpoint(500, 300, 100, 50);
 	boundaryFill4ByStack(500, 300, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 
@@ -9979,9 +9979,9 @@ void code_6_exercise_46()
 
 #ifdef CHAPTER_6_EXERCISE_47
 struct Point { int x; int y; };
-#define SHOW_DRAW // ÏÔÊ¾»æÖÆ¹ı³Ì
+#define SHOW_DRAW // æ˜¾ç¤ºç»˜åˆ¶è¿‡ç¨‹
 #ifdef SHOW_DRAW
-int showTime = 1; //ºÁÃë
+int showTime = 1; //æ¯«ç§’
 #endif
 struct Color3f
 {
@@ -10398,27 +10398,27 @@ void drawFunc()
 	std::vector<Point> points3 = { { 100, 150 },{ 151, 150 },{ 151, 199 },{ 200, 199 },{ 200, 250 },{ 150, 250 },{ 150, 200 },{ 100, 200 } };
 	std::vector<Point> points4 = { { 300, 150 },{ 351, 150 },{ 351, 199 },{ 400, 199 },{ 400, 250 },{ 350, 250 },{ 350, 200 },{ 300, 200 } };
 	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f }, { 0.f, 1.f, 0.f }, { 0.f, 0.f, 1.f } };
-	// 4ÁªÍ¨
+	// 4è”é€š
 	drawRect(points1, colors);
 	glColor3f(1.0, 1.0, 1.0);
 	floodFill4(120, 370, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 
-	// 8ÁªÍ¨
+	// 8è”é€š
 	drawRect(points2, colors);
 	glColor3f(1.0, 1.0, 1.0);
 	floodFill8(320, 370, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 
-	// 4ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 4è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points3, colors);
 	glColor3f(1.0, 1.0, 1.0);
 	floodFill4ByStack(120, 170, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 
-	// 8ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 8è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points4, colors);
 	glColor3f(1.0, 1.0, 1.0);
 	floodFill8ByStack(320, 170, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 
-	// 4ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 4è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	glColor3f(1.0, 0.0, 0.0);
 	ellipseMidpoint(600, 300, 100, 50);
 	glColor3f(1.0, 1.0, 1.0);
@@ -10434,9 +10434,9 @@ void code_6_exercise_47()
 
 #ifdef CHAPTER_6_EXERCISE_48
 struct Point { int x; int y; };
-#define SHOW_DRAW // ÏÔÊ¾»æÖÆ¹ı³Ì
+#define SHOW_DRAW // æ˜¾ç¤ºç»˜åˆ¶è¿‡ç¨‹
 #ifdef SHOW_DRAW
-int showTime = 1; //ºÁÃë
+int showTime = 1; //æ¯«ç§’
 #endif
 struct Color3f
 {
@@ -10688,7 +10688,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -10708,7 +10708,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -10766,7 +10766,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const Stencil& s, Point zeroPoint)
@@ -10805,7 +10805,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -11152,26 +11152,26 @@ void drawFunc()
 			{ 0, 0, 0, 1, 1, 1, 0, 0, 0 },
 		}, 0, 0 };
 
-	// É¨ÃèÏßÌî³ä
+	// æ‰«æçº¿å¡«å……
 	drawRect(points1);
 	fillPolygon(points1, s, { 0, 0 });
 
-	// ±ß½çÌî³ä
-	// 4ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// è¾¹ç•Œå¡«å……
+	// 4è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points2);
 	boundaryFill4ByStack(370, 370, {1.f, 1.f, 1.f}, { 1.f, 1.f, 1.f }, s, { 0, 0 });
 
-	// 8ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 8è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points3);
 	boundaryFill8ByStack(570, 370, { 1.f, 1.f, 1.f }, { 1.f, 1.f, 1.f }, s, { 0, 0 });
 
-	// ·ºÀÄÌî³ä
-	// 4ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// æ³›æ»¥å¡«å……
+	// 4è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points4, colors);
 	glColor3f(1.0, 1.0, 1.0);
 	floodFill4ByStack(370, 170, { 0.f, 0.f, 0.f }, s, { 0, 0 });
 
-	// 8ÁªÍ¨£¨Ê¹ÓÃ¶ÑÕ»£©
+	// 8è”é€šï¼ˆä½¿ç”¨å †æ ˆï¼‰
 	drawRect(points5, colors);
 	glColor3f(1.0, 1.0, 1.0);
 	floodFill8ByStack(570, 170, { 0.f, 0.f, 0.f }, s, { 0, 0 });
@@ -11195,8 +11195,8 @@ struct ColorMix
 	Color3f color;
 	float percent;
 };
-bool SHOW_DRAW = true; // ÏÔÊ¾»æÖÆ¹ı³Ì
-int showTime = 1; //ºÁÃë
+bool SHOW_DRAW = true; // æ˜¾ç¤ºç»˜åˆ¶è¿‡ç¨‹
+int showTime = 1; //æ¯«ç§’
 // 0<m<1
 void lineBres1(int x0, int y0, int xEnd, int yEnd)
 {
@@ -11632,7 +11632,7 @@ Color3f mixColors(const std::vector<ColorMix>& colors)
 }
 int calcInverseNumberByBefore(const std::vector<int>& permutation)
 {
-	// Ç°ÏòËÑË÷¸ü´óÊıËã·¨
+	// å‰å‘æœç´¢æ›´å¤§æ•°ç®—æ³•
 	int ret = 0;
 	for (int i = 0; i < permutation.size(); i++)
 	{
@@ -11646,7 +11646,7 @@ int calcInverseNumberByBefore(const std::vector<int>& permutation)
 }
 int calcInverseNumberByAfter(const std::vector<int>& permutation)
 {
-	// ºóÏòËÑË÷¸üĞ¡ÊıËã·¨
+	// åå‘æœç´¢æ›´å°æ•°ç®—æ³•
 	int ret = 0;
 	for (int i = 0; i < permutation.size(); i++)
 	{
@@ -11772,13 +11772,13 @@ void linearSoftFillBoundary4(Point fillPoint, const std::vector<ColorMix>& sourc
 {
 	assert(sourceColors.size() == newColors.size());
 
-	// Ä£Äâ³öÔ´Ìî³ä
+	// æ¨¡æ‹Ÿå‡ºæºå¡«å……
 	auto sourceColor = mixColors(sourceColors);
 	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
 	SHOW_DRAW = false;
 	boundaryFill4ByStack(fillPoint.x, fillPoint.y, sourceColor, { 1.0, 1.0, 1.0 });
 	
-	// ¼ÆËãÌî³äÏµÊı£¬²¢Ìî³äĞÂÑÕÉ«
+	// è®¡ç®—å¡«å……ç³»æ•°ï¼Œå¹¶å¡«å……æ–°é¢œè‰²
 	std::vector<ColorMix> sourceColorsMix;
 	for (auto c : sourceColors)
 		sourceColorsMix.push_back({ c.color, 0.f });
@@ -11795,13 +11795,13 @@ void linearSoftFillBoundary8(Point fillPoint, const std::vector<ColorMix>& sourc
 {
 	assert(sourceColors.size() == newColors.size());
 
-	// Ä£Äâ³öÔ´Ìî³ä
+	// æ¨¡æ‹Ÿå‡ºæºå¡«å……
 	auto sourceColor = mixColors(sourceColors);
 	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
 	SHOW_DRAW = false;
 	boundaryFill8ByStack(fillPoint.x, fillPoint.y, sourceColor, { 1.0, 1.0, 1.0 });
 
-	// ¼ÆËãÌî³äÏµÊı£¬²¢Ìî³äĞÂÑÕÉ«
+	// è®¡ç®—å¡«å……ç³»æ•°ï¼Œå¹¶å¡«å……æ–°é¢œè‰²
 	std::vector<ColorMix> sourceColorsMix;
 	for (auto c : sourceColors)
 		sourceColorsMix.push_back({ c.color, 0.f });
@@ -11818,13 +11818,13 @@ void linearSoftFillFlood4(Point fillPoint, const std::vector<ColorMix>& sourceCo
 {
 	assert(sourceColors.size() == newColors.size());
 
-	// Ä£Äâ³öÔ´Ìî³ä
+	// æ¨¡æ‹Ÿå‡ºæºå¡«å……
 	auto sourceColor = mixColors(sourceColors);
 	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
 	SHOW_DRAW = false;
 	floodFill4ByStack(fillPoint.x, fillPoint.y, sourceColor, { 0.0, 0.0, 0.0 });
 
-	// ¼ÆËãÌî³äÏµÊı£¬²¢Ìî³äĞÂÑÕÉ«
+	// è®¡ç®—å¡«å……ç³»æ•°ï¼Œå¹¶å¡«å……æ–°é¢œè‰²
 	std::vector<ColorMix> sourceColorsMix;
 	for (auto c : sourceColors)
 		sourceColorsMix.push_back({ c.color, 0.f });
@@ -11841,13 +11841,13 @@ void linearSoftFillFlood8(Point fillPoint, const std::vector<ColorMix>& sourceCo
 {
 	assert(sourceColors.size() == newColors.size());
 
-	// Ä£Äâ³öÔ´Ìî³ä
+	// æ¨¡æ‹Ÿå‡ºæºå¡«å……
 	auto sourceColor = mixColors(sourceColors);
 	glColor3f(sourceColor.r, sourceColor.g, sourceColor.b);
 	SHOW_DRAW = false;
 	floodFill8ByStack(fillPoint.x, fillPoint.y, sourceColor, { 0.0, 0.0, 0.0 });
 
-	// ¼ÆËãÌî³äÏµÊı£¬²¢Ìî³äĞÂÑÕÉ«
+	// è®¡ç®—å¡«å……ç³»æ•°ï¼Œå¹¶å¡«å……æ–°é¢œè‰²
 	std::vector<ColorMix> sourceColorsMix;
 	for (auto c : sourceColors)
 		sourceColorsMix.push_back({ c.color, 0.f });
@@ -11874,7 +11874,7 @@ void drawFunc()
 	
 	std::vector<Color3f> colors = { { 1.f, 0.f, 0.f },{ 0.f, 1.f, 0.f },{ 0.f, 0.f, 1.f } };
 
-	// 2ÖÖÑÕÉ«£¨F+B£©
+	// 2ç§é¢œè‰²ï¼ˆF+Bï¼‰
 	drawRect(points1);
 	linearSoftFillBoundary4({ 120, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { {1.0, 0.0, 0.0},{ 0.0, 0.0, 0.0 } });
 
@@ -11882,7 +11882,7 @@ void drawFunc()
 	drawRect(points2);
 	linearSoftFillBoundary8({ 320, 370 }, { { 1.0, 1.0, 1.0, 0.5 },{ 0.0, 0.0, 0.0, 0 } }, { { 1.0, 0.0, 0.0 },{ 0.0, 0.0, 0.0 } });
 
-	// 3ÖÖÑÕÉ«£¨F+B1+B2»òF1+F2+B£©
+	// 3ç§é¢œè‰²ï¼ˆF+B1+B2æˆ–F1+F2+Bï¼‰
 	glColor3f(1.0, 1.0, 1.0);
 	drawRect(points3);
 	linearSoftFillBoundary4(
@@ -11899,7 +11899,7 @@ void drawFunc()
 	{ { 0.0, 1.0, 0.0 },{ 0.0, 0.0, 1.0 },{ 0.0, 0.0, 0.0 } }
 	);
 
-	// 4ÖÖÑÕÉ«£¨F + B1 + B2 + B3»òF1 + F2 + B1 + B2»òF1 + F2 + F3 + B£©
+	// 4ç§é¢œè‰²ï¼ˆF + B1 + B2 + B3æˆ–F1 + F2 + B1 + B2æˆ–F1 + F2 + F3 + Bï¼‰
 	drawRect(points5, colors);
 	linearSoftFillFlood4(
 	{ 470, 170 },
@@ -12183,7 +12183,7 @@ void drawFunc()
 	texts['B'] = B;
 	texts['C'] = C;
 
-	// PI/2 ÏòÉÏÏòÁ¿
+	// PI/2 å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(120, 420, "ABC", { 2, PI / 2, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -12193,7 +12193,7 @@ void drawFunc()
 	glColor3f(1.0f, 1.0f, 1.0f);
 	drawString(140, 400, "ABC", { 2, PI / 2, TextPath::RIGHT }, texts);
 
-	// 0 ÏòÉÏÏòÁ¿
+	// 0 å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(340, 400, "ABC", { 2, 0, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -12203,7 +12203,7 @@ void drawFunc()
 	glColor3f(1.0f, 1.0f, 1.0f);
 	drawString(320, 380, "ABC", { 2, 0, TextPath::RIGHT }, texts);
 
-	// PI ÏòÉÏÏòÁ¿
+	// PI å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(500, 400, "ABC", { 2, PI, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -12213,7 +12213,7 @@ void drawFunc()
 	glColor3f(1.0f, 1.0f, 1.0f);
 	drawString(520, 420, "ABC", { 2, PI, TextPath::RIGHT }, texts);
 
-	// PI/6 ÏòÉÏÏòÁ¿
+	// PI/6 å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(120, 220, "ABC", { 2, PI/6, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);	 
@@ -12223,7 +12223,7 @@ void drawFunc()
 	glColor3f(1.0f, 1.0f, 1.0f);	 
 	drawString(140, 200, "ABC", { 2, PI/6, TextPath::RIGHT }, texts);
 
-	// PI/4 ÏòÉÏÏòÁ¿
+	// PI/4 å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(320, 220, "ABC", { 2, PI / 4, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -12233,7 +12233,7 @@ void drawFunc()
 	glColor3f(1.0f, 1.0f, 1.0f);
 	drawString(340, 200, "ABC", { 2, PI / 4, TextPath::RIGHT }, texts);
 
-	// PI*3/4 ÏòÉÏÏòÁ¿
+	// PI*3/4 å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(520, 220, "ABC", { 2, PI * 3 / 4, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -12243,7 +12243,7 @@ void drawFunc()
 	glColor3f(1.0f, 1.0f, 1.0f);
 	drawString(540, 200, "ABC", { 2, PI * 3 / 4, TextPath::RIGHT }, texts);
 
-	// -PI/4 ÏòÉÏÏòÁ¿
+	// -PI/4 å‘ä¸Šå‘é‡
 	glColor3f(1.0f, 0.0f, 0.0f);
 	drawString(740, 200, "ABC", { 2, -PI / 4, TextPath::UP }, texts);
 	glColor3f(0.0f, 1.0f, 0.0f);
@@ -12444,7 +12444,7 @@ void drawString(double x, double y, const std::string& str, const TextInfo& info
 	double _x = x;
 	double _y = y;
 
-	// ×óÓÒ³õ´Î¶¨Î»µ½ĞĞµ×²¿
+	// å·¦å³åˆæ¬¡å®šä½åˆ°è¡Œåº•éƒ¨
 	switch (info.textPath)
 	{
 	case TextPath::UP:
@@ -12471,7 +12471,7 @@ void drawString(double x, double y, const std::string& str, const TextInfo& info
 	{
 		if (str[i] == '\n')
 		{
-			// »»ĞĞ¶¨Î»
+			// æ¢è¡Œå®šä½
 			switch (info.textPath)
 			{
 			case TextPath::UP:
@@ -12500,7 +12500,7 @@ void drawString(double x, double y, const std::string& str, const TextInfo& info
 		{
 			if (newLine)
 			{
-				// ¶ÔÆë¶¨Î»
+				// å¯¹é½å®šä½
 				double curLineWidth = getLineDistance(i, str, info, texts);
 				switch (info.textPath)
 				{
@@ -12602,7 +12602,7 @@ void drawString(double x, double y, const std::string& str, const TextInfo& info
 			if (texts.find(str[i]) != texts.end())
 			{
 				const Stencil& s = texts.find(str[i])->second;
-				// Ã¿Ò»¸öÎÄ×Ö¶¨Î»
+				// æ¯ä¸€ä¸ªæ–‡å­—å®šä½
 				switch (info.textPath)
 				{
 				case TextPath::DOWN:
@@ -12930,7 +12930,7 @@ void fillRound(int xc, int yc, float r)
 	int d2y = 0;
 	int p = Round((float)5 / 4 - r);
 	double aa;
-	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // Èç¹ûÊÇÕûÊıÔòÆ«ÒÆ£¬±£³Ö¼¸ºÎÌØÕ÷.Èç¹ûÊÇĞ¡Êı(>=0.5)Ôò²»Æ«ÒÆ
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // å¦‚æœæ˜¯æ•´æ•°åˆ™åç§»ï¼Œä¿æŒå‡ ä½•ç‰¹å¾.å¦‚æœæ˜¯å°æ•°(>=0.5)åˆ™ä¸åç§»
 	hLineRound(0, 0, xRound, xc, yc, offset);
 	int endY = Round(r / std::sqrt(2));
 	for (int curY = 1; curY <= endY; curY++)
@@ -13170,31 +13170,31 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	// µã±ê¼Ç
+	// ç‚¹æ ‡è®°
 	drawMarkerPoint({ 100, 520 }, 1, { 1.0, 1.0, 1.0 });
 	drawMarkerPoint({ 300, 520 }, 2, { 1.0, 0.0, 0.0 });
 	drawMarkerPoint({ 500, 520 }, 5, { 0.0, 1.0, 0.0 });
 	drawMarkerPoint({ 700, 520 }, 10, { 0.0, 0.0, 1.0 });
 
-	// Ô²±ê¼Ç
+	// åœ†æ ‡è®°
 	drawMarkerRound({ 100, 420 }, 1, { 1.0, 1.0, 1.0 });
 	drawMarkerRound({ 300, 420 }, 2, { 1.0, 0.0, 0.0 });
 	drawMarkerRound({ 500, 420 }, 5, { 0.0, 1.0, 0.0 });
 	drawMarkerRound({ 700, 420 }, 10, { 0.0, 0.0, 1.0 });
 
-	// Ê®×Ö±ê¼Ç
+	// åå­—æ ‡è®°
 	drawMarkerCross({ 100, 320 }, 1, { 1.0, 1.0, 1.0 });
 	drawMarkerCross({ 300, 320 }, 2, { 1.0, 0.0, 0.0 });
 	drawMarkerCross({ 500, 320 }, 5, { 0.0, 1.0, 0.0 });
 	drawMarkerCross({ 700, 320 }, 10, { 0.0, 0.0, 1.0 });
 
-	// Ê®×ÖX±ê¼Ç
+	// åå­—Xæ ‡è®°
 	drawMarkerCrossX({ 100, 220 }, 1, { 1.0, 1.0, 1.0 });
 	drawMarkerCrossX({ 300, 220 }, 2, { 1.0, 0.0, 0.0 });
 	drawMarkerCrossX({ 500, 220 }, 5, { 0.0, 1.0, 0.0 });
 	drawMarkerCrossX({ 700, 220 }, 10, { 0.0, 0.0, 1.0 });
 
-	// ĞÇ±ê¼Ç
+	// æ˜Ÿæ ‡è®°
 	drawMarkerStar({ 100, 120 }, 1, { 1.0, 1.0, 1.0 });
 	drawMarkerStar({ 300, 120 }, 2, { 1.0, 0.0, 0.0 });
 	drawMarkerStar({ 500, 120 }, 5, { 0.0, 1.0, 0.0 });
@@ -13567,7 +13567,7 @@ struct BaseInfo
 	int yEnd;
 	int AALevel;
 };
-//// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+//// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 //bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 //bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 //bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
@@ -13827,7 +13827,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -13847,7 +13847,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -13905,13 +13905,13 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint = false)
 {
 	if (realPoint)
-	{ // Ö±½Ó¼ÆËãÉ¨ÃèÏß½»µã
+	{ // ç›´æ¥è®¡ç®—æ‰«æçº¿äº¤ç‚¹
 		std::vector<Point> points;
 		for (int curY = beginY; curY < endY; curY++)
 		{
@@ -13942,7 +13942,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 	else
-	{ // bresÖ±ÏßËã·¨
+	{ // bresç›´çº¿ç®—æ³•
 		std::vector<std::vector<Point>> points;
 		for (int curY = beginY; curY < endY; curY++)
 		{
@@ -13976,7 +13976,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 							line.counter += std::abs(line.sortedLine.dy * 2);
 							if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-								(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+								(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 							{
 								line.counter -= std::abs(line.sortedLine.dx * 2);
 								break;
@@ -14118,7 +14118,7 @@ void drawFunc()
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	// BresenhamÖ±Ïß±ßËã·¨
+	// Bresenhamç›´çº¿è¾¹ç®—æ³•
 	lineBres(20, 568, 158, 573);
 	lineSSAA(20, 538, 158, 543, 2);
 	lineSSAA(20, 508, 158, 513, 4);
@@ -14140,7 +14140,7 @@ void drawFunc()
 	//auto time1 = clock();
 	//auto aaa = time1 - time0;
 	
-	// Ö±½Ó¼ÆËã±ß£¬Ö±½Ó¼ÆËãÉ¨ÃèÏß½»µã
+	// ç›´æ¥è®¡ç®—è¾¹ï¼Œç›´æ¥è®¡ç®—æ‰«æçº¿äº¤ç‚¹
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(420, 568, 558, 573);
 	lineSSAA(420, 538, 558, 543, 2, true);
@@ -14226,7 +14226,7 @@ struct BaseInfo
 	int yEnd;
 	int AALevel;
 };
-//// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+//// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 //bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 //bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 //bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
@@ -14575,7 +14575,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -14595,7 +14595,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -14653,7 +14653,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, std::map<int, std::vector<std::vector<Point>>>& pixelInfo, int& lastY)
@@ -14692,7 +14692,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -15220,7 +15220,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -15240,7 +15240,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -15298,13 +15298,13 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo, bool realPoint, const WeightingMaskInfo& weightInfo)
 {
 	if (realPoint)
-	{ // Ö±½Ó¼ÆËãÉ¨ÃèÏß½»µã
+	{ // ç›´æ¥è®¡ç®—æ‰«æçº¿äº¤ç‚¹
 		std::vector<Point> points;
 		for (int curY = beginY; curY < endY; curY++)
 		{
@@ -15335,7 +15335,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 		}
 	}
 	else
-	{ // bresÖ±ÏßËã·¨
+	{ // bresç›´çº¿ç®—æ³•
 		std::vector<std::vector<Point>> points;
 		for (int curY = beginY; curY < endY; curY++)
 		{
@@ -15369,7 +15369,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 							line.counter += std::abs(line.sortedLine.dy * 2);
 							if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-								(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+								(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 							{
 								line.counter -= std::abs(line.sortedLine.dx * 2);
 								break;
@@ -15720,7 +15720,7 @@ void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& acti
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -15924,7 +15924,7 @@ void drawFunc()
 
 
 
-	// ³¬²ÉÑù
+	// è¶…é‡‡æ ·
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(20, 568, 158, 573);
 	lineSSAA(20, 538, 158, 543, 3, false, weightInfo3);
@@ -15943,7 +15943,7 @@ void drawFunc()
 	polygonSSAA({ { 119, 187 },{ 322, 198 },{ 277, 250 },{ 145, 243 } }, 4, false, weightInfo4);
 	polygonSSAA({ { 119, 87 },{ 322, 98 },{ 277, 150 },{ 145, 143 } }, 8, false, weightInfo8);
 
-	// ¶àÖØ²ÉÑù
+	// å¤šé‡é‡‡æ ·
 	glColor3f(1.0, 1.0, 1.0);
 	lineBres(420, 568, 558, 573);
 	lineMSAA(420, 538, 558, 543, 3, weightInfo3);
@@ -16040,7 +16040,7 @@ void setSubPixelDy(int subX, int subY, const BaseInfo& baseInfo, std::map<Point,
 	lastInfo[{curX, curY}]++;
 }
 // 0<m<1(m>1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
 void lineBresMid1(int x0, int y0, int xEnd, int yEnd, bool XYmirror, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
@@ -16081,7 +16081,7 @@ void lineBresMid1(int x0, int y0, int xEnd, int yEnd, bool XYmirror, const BaseI
 	}
 }
 // -1<m<0(m<-1)
-// XYmirror: x,y×ø±ê½»»»£¨ÑØy=xÖ±Ïß¶Ô³Æ±ä»»£©
+// XYmirror: x,yåæ ‡äº¤æ¢ï¼ˆæ²¿y=xç›´çº¿å¯¹ç§°å˜æ¢ï¼‰
 void lineBresMid2(int x0, int y0, int xEnd, int yEnd, bool XYmirror, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
 	if (x0 > xEnd)
@@ -16807,7 +16807,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -16827,7 +16827,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -16885,12 +16885,12 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLinesSSAA(int beginY, int endY, std::vector<ActiveLine>& activeLines, const BaseInfo& baseInfo, std::map<Point, int>& lastInfo)
 {
-	// bresÖ±ÏßËã·¨
+	// bresç›´çº¿ç®—æ³•
 	std::vector<std::vector<Point>> points;
 	for (int curY = beginY; curY < endY; curY++)
 	{
@@ -16924,7 +16924,7 @@ void fillWithActiveLinesSSAA(int beginY, int endY, std::vector<ActiveLine>& acti
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -17169,7 +17169,7 @@ void fillWithActiveLinesMSAA(int beginY, int endY, std::vector<ActiveLine>& acti
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -17332,8 +17332,8 @@ struct SortedLine
 	int endX;
 	int dx;
 	int dy;
-	float m; // Ğ±ÂÊ
-	float m_inverse; // Ğ§ÂÊµÄµ¹Êı
+	float m; // æ–œç‡
+	float m_inverse; // æ•ˆç‡çš„å€’æ•°
 	int two_dx; // 2dx
 	int two_dy; // 2dy
 	int two_dy_minus_two_dx; // 2dy - 2dx
@@ -17351,8 +17351,8 @@ struct ActiveLine
 	int curX;
 	float counterStepLast;
 	float counterStep;
-	int lastStep; // ÉÏÒ»´Î½»µãËùÔÚµÄx(y)
-	int lastY; // ÉÏÒ»´ÎÑ¡ÔñµÄyÖµ£¬½öĞ±ÂÊ¾ø¶ÔÖµĞ¡ÓÚ1Ê±ÓĞĞ§
+	int lastStep; // ä¸Šä¸€æ¬¡äº¤ç‚¹æ‰€åœ¨çš„x(y)
+	int lastY; // ä¸Šä¸€æ¬¡é€‰æ‹©çš„yå€¼ï¼Œä»…æ–œç‡ç»å¯¹å€¼å°äº1æ—¶æœ‰æ•ˆ
 	std::map<Point, float> cachePoints;
 };
 struct PointInfo
@@ -17382,7 +17382,7 @@ void setGrayPixel(int x, int y, float grayPercent)
 	//if (grayPercent != 1.f)
 		//printf("(%d, %d) %f\n", x, y, grayPercent);
 }
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 inline int Round(const float a)
 {
@@ -17780,7 +17780,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -17887,7 +17887,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 					{// m>1
 						float s = 0.f;
 						if (curY == beginY)
-						{// ³õÊ¼µã
+						{// åˆå§‹ç‚¹
 							if (beginY == line.sortedLine.minY)
 							{
 								line.counter += line.sortedLine.dy;
@@ -18024,7 +18024,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 					{// m<-1
 						float s = 0.f;
 						if (curY == beginY)
-						{// ³õÊ¼µã
+						{// åˆå§‹ç‚¹
 							if (beginY == line.sortedLine.minY)
 							{
 								line.counter += line.sortedLine.dy;
@@ -18174,7 +18174,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 							{
 								float s = 0.f;
 								if (line.curX == line.sortedLine.beginX)
-								{// ³õÊ¼µã
+								{// åˆå§‹ç‚¹
 									line.counter += line.sortedLine.dx;
 									line.counterStep += 0.5 + 0.5 * line.sortedLine.m;
 									line.lastStep = curY;
@@ -18267,7 +18267,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 											//printf("(%d, %d)\n", line.curX, line.lastY);
 										}
 
-										// ÕâÀïÉ¨ÃèÏß+1
+										// è¿™é‡Œæ‰«æçº¿+1
 										line.curX++;
 										line.lastStep++;
 										break;
@@ -18336,7 +18336,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 							{
 								float s = 0.f;
 								if (line.curX == line.sortedLine.beginX)
-								{// ³õÊ¼µã
+								{// åˆå§‹ç‚¹
 									line.counter += line.sortedLine.dx;
 									line.counterStep += 0.5 + 0.5 * std::fabs(line.sortedLine.m);
 									line.lastStep = curY;
@@ -18425,7 +18425,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 											//_debugPoints.push_back({ line.curX, line.lastY });
 										}
 
-										// ÕâÀïÉ¨ÃèÏß+1
+										// è¿™é‡Œæ‰«æçº¿+1
 										line.curX--;
 										line.lastStep++;
 										break;
@@ -18930,7 +18930,7 @@ void circleMid(GLint xc, GLint yc, GLint radius)
 	}
 }
 
-int nThread = 4; // 4Ïß³Ì²¢ĞĞ¼ÆËã
+int nThread = 4; // 4çº¿ç¨‹å¹¶è¡Œè®¡ç®—
 void ThreadFunc1(int xCenter, int yCenter, int Rx, int Ry, double x, int xEnd)
 {
 	int Rx2 = Rx*Rx;
@@ -18995,7 +18995,7 @@ void ellipseParallelMid(int xCenter, int yCenter, int Rx, int Ry)
 {
 	if (nThread % 2 != 0)
 	{
-		printf("±ØĞëÊÇÅ¼Êı¸öÏß³Ì!!!\n");
+		printf("å¿…é¡»æ˜¯å¶æ•°ä¸ªçº¿ç¨‹!!!\n");
 		return;
 	}
 
@@ -19314,7 +19314,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -19334,7 +19334,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -19392,7 +19392,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -19431,7 +19431,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -19515,7 +19515,7 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry)
 	int y = Ry;
 	int px = 0;
 	int py = twoRx2*y;
-	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	/*Region 1*/
 	p = Round(Ry2 - (Rx2*Ry) + (0.25*Rx2));
 	while (px < py)
@@ -19526,15 +19526,15 @@ void fillEllipse(int xCenter, int yCenter, int Rx, int Ry)
 			p += Ry2 + px;
 		else
 		{
-			hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter); // »æÖÆÉÏÒ»Ìõx×î´óµÄÉ¨ÃèÏß
+			hLineEllipsePlot(y, 0, x - 1, xCenter, yCenter); // ç»˜åˆ¶ä¸Šä¸€æ¡xæœ€å¤§çš„æ‰«æçº¿
 
 			y--;
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	}
-	hLineEllipsePlot(y, 0, x, xCenter, yCenter); // »æÖÆ×îºóÒ»ÌõÉ¨ÃèÏß
+	hLineEllipsePlot(y, 0, x, xCenter, yCenter); // ç»˜åˆ¶æœ€åä¸€æ¡æ‰«æçº¿
 
 												 /*Region 2*/
 	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
@@ -19576,7 +19576,7 @@ void fillRound(int xc, int yc, float r)
 	int d2y = 0;
 	int p = Round((float)5 / 4 - r);
 	double aa;
-	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // Èç¹ûÊÇÕûÊıÔòÆ«ÒÆ£¬±£³Ö¼¸ºÎÌØÕ÷.Èç¹ûÊÇĞ¡Êı(>=0.5)Ôò²»Æ«ÒÆ
+	int offset = Round(std::modf(r, &aa)) == 0 ? 1 : 0; // å¦‚æœæ˜¯æ•´æ•°åˆ™åç§»ï¼Œä¿æŒå‡ ä½•ç‰¹å¾.å¦‚æœæ˜¯å°æ•°(>=0.5)åˆ™ä¸åç§»
 	hLineRound(0, 0, xRound, xc, yc, offset);
 	int endY = Round(r / std::sqrt(2));
 	for (int curY = 1; curY <= endY; curY++)
@@ -19900,62 +19900,62 @@ void drawFunc()
 	glColor3f(1.0, 1.0, 1.0);
 
 	int startTime, endTime;
-	printf("É¨ÃèÏßÌî³äËã·¨£º\n");
+	printf("æ‰«æçº¿å¡«å……ç®—æ³•ï¼š\n");
 
 	startTime = GetTickCount();
 	fillPolygon({ { 124, 531 },{ 74, 506 },{ 71, 450 },{ 162, 453 },{ 178, 492 } });
 	endTime = GetTickCount();
-	printf("¶à±ßĞÎ cost time:%d ms\n", endTime - startTime);
+	printf("å¤šè¾¹å½¢ cost time:%d ms\n", endTime - startTime);
 
 	startTime = GetTickCount();
 	fillEllipse(335, 485, 100, 60);
 	endTime = GetTickCount();
-	printf("ÍÖÔ² cost time:%d ms\n", endTime - startTime);
+	printf("æ¤­åœ† cost time:%d ms\n", endTime - startTime);
 
 	startTime = GetTickCount();
 	fillRound(620, 485, 80);
 	endTime = GetTickCount();
-	printf("Ô² cost time:%d ms\n", endTime - startTime);
+	printf("åœ† cost time:%d ms\n", endTime - startTime);
 
-	printf("±ß½çÌî³äËã·¨£º\n");
+	printf("è¾¹ç•Œå¡«å……ç®—æ³•ï¼š\n");
 
 	polygon({ { 124, 351 },{ 74, 326 },{ 71, 270 },{ 162, 273 },{ 178, 312 } });
 	startTime = GetTickCount();
 	boundaryFill4ByStack(115, 310, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 	endTime = GetTickCount();
-	printf("¶à±ßĞÎ cost time:%d ms\n", endTime - startTime);
+	printf("å¤šè¾¹å½¢ cost time:%d ms\n", endTime - startTime);
 
 	ellipseMidpoint(335, 305, 100, 60);
 	startTime = GetTickCount();
 	boundaryFill4ByStack(335, 305, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 	endTime = GetTickCount();
-	printf("ÍÖÔ² cost time:%d ms\n", endTime - startTime);
+	printf("æ¤­åœ† cost time:%d ms\n", endTime - startTime);
 
 	circleMid(620, 305, 80);
 	startTime = GetTickCount();
 	boundaryFill4ByStack(620, 305, { 1.0, 1.0, 1.0 }, { 1.0, 1.0, 1.0 });
 	endTime = GetTickCount();
-	printf("Ô² cost time:%d ms\n", endTime - startTime);
+	printf("åœ† cost time:%d ms\n", endTime - startTime);
 	
-	printf("·ºÀÄÌî³äËã·¨£º\n");
+	printf("æ³›æ»¥å¡«å……ç®—æ³•ï¼š\n");
 
 	polygon({ { 124, 171 },{ 74, 146 },{ 71, 90 },{ 162, 93 },{ 178, 132 } });
 	startTime = GetTickCount();
 	floodFill4ByStack(115, 130, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 	endTime = GetTickCount();
-	printf("¶à±ßĞÎ cost time:%d ms\n", endTime - startTime);
+	printf("å¤šè¾¹å½¢ cost time:%d ms\n", endTime - startTime);
 	
 	ellipseMidpoint(335, 125, 100, 60);
 	startTime = GetTickCount();
 	floodFill4ByStack(335, 125, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 	endTime = GetTickCount();
-	printf("ÍÖÔ² cost time:%d ms\n", endTime - startTime);
+	printf("æ¤­åœ† cost time:%d ms\n", endTime - startTime);
 
 	circleMid(620, 125, 80);
 	startTime = GetTickCount();
 	floodFill4ByStack(620, 125, { 1.0, 1.0, 1.0 }, { 0.0, 0.0, 0.0 });
 	endTime = GetTickCount();
-	printf("Ô² cost time:%d ms\n", endTime - startTime);
+	printf("åœ† cost time:%d ms\n", endTime - startTime);
 
 	glFlush();
 }
@@ -19971,7 +19971,7 @@ void code_6_exercise_add_2()
 #ifdef CHAPTER_6_COMMON
 void init(void)
 {
-	// ºÚÉ«±³¾°É«
+	// é»‘è‰²èƒŒæ™¯è‰²
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

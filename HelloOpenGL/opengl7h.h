@@ -1,11 +1,11 @@
-// �����´���
+// 第七章代码
 
-// ѡ��һ����ע�͵�������
-//#define CHAPTER_7_1_1 // ��άƽ��
-//#define CHAPTER_7_1_2 // ��ά��ת
-//#define CHAPTER_7_1_3 // ��ά����
-//#define CHAPTER_7_4_11 // ��ά���Ͼ���
-//#define CHAPTER_7_10 // OpenGL���α任
+// 选择一个，注释掉其他的
+//#define CHAPTER_7_1_1 // 二维平移
+//#define CHAPTER_7_1_2 // 二维旋转
+//#define CHAPTER_7_1_3 // 二维缩放
+//#define CHAPTER_7_4_11 // 二维复合矩阵
+//#define CHAPTER_7_10 // OpenGL几何变换
 //#define CHAPTER_7_EXERCISE_1
 //#define CHAPTER_7_EXERCISE_2
 //#define CHAPTER_7_EXERCISE_3
@@ -30,8 +30,8 @@
 //#define CHAPTER_7_EXERCISE_22
 //#define CHAPTER_7_EXERCISE_23
 //#define CHAPTER_7_EXERCISE_24
-//#define CHAPTER_7_EXERCISE_24_1 // �ݹ黯��任
-//#define CHAPTER_7_EXERCISE_24_2 // �齫�ݹ�
+//#define CHAPTER_7_EXERCISE_24_1 // 递归化简变换
+//#define CHAPTER_7_EXERCISE_24_2 // 麻将递归
 //#define CHAPTER_7_EXERCISE_25
 //#define CHAPTER_7_EXERCISE_26
 //#define CHAPTER_7_EXERCISE_27

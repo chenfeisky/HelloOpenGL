@@ -1,6 +1,6 @@
-// 第十二章代码
+// 绗崄浜岀珷浠ｇ爜
 
-// 选择一个，注释掉其他的
+// 閫夋嫨涓�涓紝娉ㄩ噴鎺夊叾浠栫殑
 //#define CHAPTER_12_10
 #define CHAPTER_12_1_2
 //#define CHAPTER_12_6_1

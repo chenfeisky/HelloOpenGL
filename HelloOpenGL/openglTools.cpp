@@ -142,7 +142,7 @@ void main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(winWidth, winHeight);
-	glutCreateWindow("»­Í¼¹¤¾ß");
+	glutCreateWindow("ç”»å›¾å·¥å…·");
 
 	init();
 

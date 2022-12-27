@@ -61,8 +61,8 @@ void code_11_4()
 #ifdef CHAPTER_11_COMMON
 void init(void)
 {
-	glClearColor(0.0, 0.0, 0.0, 0.0); // ºÚÉ«±³¾°É«
-	glColor3f(1.0, 1.0, 1.0); // °×É«»æÖÆ
+	glClearColor(0.0, 0.0, 0.0, 0.0); // ÂºÃšÃ‰Â«Â±Â³Â¾Â°Ã‰Â«
+	glColor3f(1.0, 1.0, 1.0); // Â°Ã—Ã‰Â«Â»Ã¦Ã–Ã†
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth , 0, winHeight);

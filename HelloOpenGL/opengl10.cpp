@@ -7,7 +7,7 @@
 float winWidth = 800, winHeight = 600;
 float floatEqualValue = 0.0001f;
 //////////////////////////////////////////////////////////////////////////
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < floatEqualValue; }
 inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
@@ -15,7 +15,7 @@ inline bool GreaterQ(float f1, float f2) { return Greater(f1, f2) || Equal(f1, f
 inline bool LessQ(float f1, float f2) { return Less(f1, f2) || Equal(f1, f2); }
 
 //////////////////////////////////////////////////////////////////////////
-// µã
+// ç‚¹
 class Point
 {
 public:
@@ -74,7 +74,7 @@ void homogeneous(Point& p, float h)
 	p.h = h;
 }
 //////////////////////////////////////////////////////////////////////////
-// ¾ØÕó
+// çŸ©é˜µ
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -178,7 +178,7 @@ void transformPoint(Matrix& m, Point& point)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ÏòÁ¿
+// å‘é‡
 class Vec3
 {
 public:
@@ -229,7 +229,7 @@ void normal(Vec3& v)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ¼ÆËã
+// è®¡ç®—
 Point centerPoint(const std::vector<Point>& points)
 {
 	Point center;
@@ -257,7 +257,7 @@ float sign(float f)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ¶àÃæÌå
+// å¤šé¢ä½“
 class Polyhedron
 {
 public:
@@ -266,8 +266,8 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
-// »æÖÆ
-// Ö±Ïß
+// ç»˜åˆ¶
+// ç›´çº¿
 void drawLine(Point p1, Point p2)
 {
 	glBegin(GL_LINES);
@@ -275,7 +275,7 @@ void drawLine(Point p1, Point p2)
 	glVertex2f(p2.x, p2.y);
 	glEnd();
 }
-// ¶şÎ¬¶à±ßĞÎ
+// äºŒç»´å¤šè¾¹å½¢
 void drawPolygon(const std::vector<Point>& points)
 {
 	glBegin(GL_LINE_LOOP);
@@ -283,7 +283,7 @@ void drawPolygon(const std::vector<Point>& points)
 		glVertex3f(p.x, p.y, p.z);
 	glEnd();
 }
-// ¶şÎ¬×ø±êÖá
+// äºŒç»´åæ ‡è½´
 void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStart = -winHeight, float yEnd = winHeight)
 {
 	glBegin(GL_LINES);
@@ -293,7 +293,7 @@ void drawCoordinate(float xStart = -winWidth, float xEnd = winWidth, float yStar
 	glVertex3f(0, yEnd, 0);
 	glEnd();
 }
-// ÈıÎ¬¶àÃæÌå
+// ä¸‰ç»´å¤šé¢ä½“
 void drawPolyhedron(const Polyhedron& polyhedron)
 {
 	for (auto& index : polyhedron.indexs)
@@ -321,8 +321,8 @@ void drawPolyhedron3D(const Polyhedron& polyhedron)
 
 
 //////////////////////////////////////////////////////////////////////////
-// ÈıÎ¬¼¸ºÎ±ä»»
-// Æ½ÒÆ
+// ä¸‰ç»´å‡ ä½•å˜æ¢
+// å¹³ç§»
 Matrix translateMatrix(float tx, float ty, float tz)
 {
 	Matrix m(4, 4);
@@ -333,7 +333,7 @@ Matrix translateMatrix(float tx, float ty, float tz)
 
 	return m;
 }
-// ÈÎÒâÖáĞı×ª
+// ä»»æ„è½´æ—‹è½¬
 Matrix rotateMatrix(Point p0, Vec3 u, float theta)
 {
 	normal(u);
@@ -366,10 +366,10 @@ Matrix rotateMatrix(Point p0, Vec3 u, float theta)
 
 	return T_ * MR * T;
 }
-// ÈÎÒâµãËõ·Å
+// ä»»æ„ç‚¹ç¼©æ”¾
 Matrix scaleMatrix(Point p0, float sx, float sy, float sz)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -380,7 +380,7 @@ Matrix scaleMatrix(Point p0, float sx, float sy, float sz)
 	ret[2][3] = p0.z * (1 - sz);
 	return ret;
 }
-// ´íÇĞ£¨²Î¿¼zÖá£©
+// é”™åˆ‡ï¼ˆå‚è€ƒzè½´ï¼‰
 Matrix shearZrefMatrix(float shzx, float shzy, float zref)
 {
 	Matrix Mzshear(4, 4);
@@ -393,8 +393,8 @@ Matrix shearZrefMatrix(float shzx, float shzy, float zref)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ÈıÎ¬¹Û²ì¾ØÕó
-// ½¨Ä£±ä»»
+// ä¸‰ç»´è§‚å¯ŸçŸ©é˜µ
+// å»ºæ¨¡å˜æ¢
 Matrix modelMatrix(Point o, Vec3 X, Vec3 Y)
 {
 	Vec3 x = X;
@@ -423,7 +423,7 @@ Matrix modelMatrix(Point o, Vec3 X, Vec3 Y)
 
 	return R * T;
 }
-// ¹Û²ì±ä»»
+// è§‚å¯Ÿå˜æ¢
 Matrix viewMatrix(Point p0, Vec3 N, Vec3 V)
 {
 	Vec3 n = N;
@@ -452,14 +452,14 @@ Matrix viewMatrix(Point p0, Vec3 N, Vec3 V)
 
 	return R * T;
 }
-// ÕıÍ¶Ó°±ä»»
+// æ­£æŠ•å½±å˜æ¢
 Matrix orthogonalProjectionMatrix()
 {
 	Matrix m(4, 4);
 	matrixSetIdentity(m);
 	return m;
 }
-// Æ½ĞĞÍ¶Ó°±ä»»
+// å¹³è¡ŒæŠ•å½±å˜æ¢
 Matrix parallelProjectionMatrix(Vec3 Vp, float zvp)
 {
 	Matrix M_oblique(4, 4);
@@ -471,7 +471,7 @@ Matrix parallelProjectionMatrix(Vec3 Vp, float zvp)
 
 	return M_oblique;
 }
-// Í¸ÊÓÍ¶Ó°ºÍ¹æ·¶»¯¾ØÕó
+// é€è§†æŠ•å½±å’Œè§„èŒƒåŒ–çŸ©é˜µ
 Matrix perspectiveProjectionAndNormalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
 {
 	Matrix M_normpers(4, 4);
@@ -487,7 +487,7 @@ Matrix perspectiveProjectionAndNormalMatrix(float xwmin, float xwmax, float ywmi
 
 	return M_normpers;
 }
-// Í¸ÊÓÍ¶Ó°
+// é€è§†æŠ•å½±
 Matrix perspectiveProjectionMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
 {
 	Matrix M_obliquepers(4, 4);
@@ -503,7 +503,7 @@ Matrix perspectiveProjectionMatrix(float xwmin, float xwmax, float ywmin, float 
 
 	return M_obliquepers;
 }
-// ¹æ·¶»¯±ä»»£¨Í¸ÊÓÍ¶Ó°£©
+// è§„èŒƒåŒ–å˜æ¢ï¼ˆé€è§†æŠ•å½±ï¼‰
 Matrix normalMatrix_perspective(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
 {
 	Matrix M_ortho_norm(4, 4);
@@ -515,7 +515,7 @@ Matrix normalMatrix_perspective(float xwmin, float xwmax, float ywmin, float ywm
 
 	return M_ortho_norm;
 }
-// ¹æ·¶»¯±ä»»
+// è§„èŒƒåŒ–å˜æ¢
 Matrix normalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float znear, float zfar)
 {
 	Matrix M_ortho_norm(4, 4);
@@ -529,7 +529,7 @@ Matrix normalMatrix(float xwmin, float xwmax, float ywmin, float ywmax, float zn
 
 	return M_ortho_norm;
 }
-// ÊÓ¿Ú±ä»»
+// è§†å£å˜æ¢
 Matrix viewportMatrix(float xvmin, float xvmax, float yvmin, float yvmax)
 {
 	Matrix M_normviewvol_3Dscreen(4, 4);
@@ -831,7 +831,7 @@ vector<Point> createClipSuface(map<Point, map<Point, int>>& crossInfo)
 
 void antiClockPoints(vector<Point>& points, Vec3 normalVec)
 {
-	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // zÈ¡¸ºÖµÊÇÒòÎªÔÚ×óÊÖ×ø±êÏµºÍÓÒÊÖ×ø±êÏµz·´ºÅ
+	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // zå–è´Ÿå€¼æ˜¯å› ä¸ºåœ¨å·¦æ‰‹åæ ‡ç³»å’Œå³æ‰‹åæ ‡ç³»zåå·
 	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, -(points[2].z - points[1].z) };
 	Vec3 crossVec = cross(a, b);
 	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
@@ -972,7 +972,7 @@ void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
 			addSurface(newPolyhedron, points, pointInfo);
 	}
 
-	// ²Ã¼ôÃæÉÏµÄÃæ
+	// è£å‰ªé¢ä¸Šçš„é¢
 	if (crossInfo.size() > 2)
 	{
 		auto clipSurfacePoints = createClipSuface(crossInfo);
@@ -1040,7 +1040,7 @@ void init(void)
 	GLfloat test[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, test);
 
-	// ²âÊÔopengl¹Û²ì¾ØÕó
+	// æµ‹è¯•openglè§‚å¯ŸçŸ©é˜µ
 	/*glLoadIdentity();
 	Vec3 n = { x0 - xref, y_0 - yref, z0 - zref };
 	normal(n);
@@ -1110,7 +1110,7 @@ void main(int argc, char** argv)
 	glutMainLoop();
 }
 
-// ²âÊÔÉãÏñ»ú
+// æµ‹è¯•æ‘„åƒæœº
 //Point viewP0 = { 0, 0, 100 };
 //GLfloat dnear = 1, dfar = 2000;
 //std::vector<Point> cube = { { -50.f, -50.f, 50.f },{ 50.f, -50.f, 50.f },{ 50.f, 50.f, 50.f },{ -50.f, 50.f, 50.f },
@@ -1351,7 +1351,7 @@ void displayFcn()
 		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
 	};
 
-	// ÕıÍ¶Ó°
+	// æ­£æŠ•å½±
 	auto temp = cube;
 	transformPoints(viewportMatrix(0, winWidth / 3, 0, winHeight) *
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
@@ -1360,7 +1360,7 @@ void displayFcn()
 		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
 	drawPolyhedron(temp);
 
-	// ÕıÍ¶Ó°(Æ½ĞĞÍ¶Ó°)
+	// æ­£æŠ•å½±(å¹³è¡ŒæŠ•å½±)
 	temp = cube;
 	transformPoints(viewportMatrix(winWidth / 3, 2 * winWidth / 3, 0, winHeight) *
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
@@ -1369,7 +1369,7 @@ void displayFcn()
 		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
 	drawPolyhedron(temp);
 
-	// Ğ±Æ½ĞĞÍ¶Ó°
+	// æ–œå¹³è¡ŒæŠ•å½±
 	temp = cube;
 	transformPoints(viewportMatrix(2 * winWidth / 3, winWidth, 0, winHeight) *
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
@@ -1400,7 +1400,7 @@ void displayFcn()
 		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
 	};
 
-	// ÕıÍ¶Ó°
+	// æ­£æŠ•å½±
 	auto temp = cube;
 	transformPoints(viewportMatrix(0, winWidth / 3, 0, winHeight) *
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
@@ -1409,7 +1409,7 @@ void displayFcn()
 		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
 	drawPolyhedron(temp);
 
-	// ÕıÍ¶Ó°(Æ½ĞĞÍ¶Ó°)
+	// æ­£æŠ•å½±(å¹³è¡ŒæŠ•å½±)
 	temp = cube;
 	transformPoints(viewportMatrix(winWidth / 3, 2 * winWidth / 3, 0, winHeight) *
 		normalMatrix(-winWidth / 6, winWidth / 6, -winHeight / 2, winHeight / 2, -60.f, -200.f) *
@@ -1419,7 +1419,7 @@ void displayFcn()
 		modelMatrix({ -100.f, -300.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
 	drawPolyhedron(temp);
 
-	// Ğ±Æ½ĞĞÍ¶Ó°
+	// æ–œå¹³è¡ŒæŠ•å½±
 	temp = cube;
 	Vec3 Vp = { 1.f, 1.f, 2 * 1.414f };
 	transformPoints(viewportMatrix(2 * winWidth / 3, winWidth, 0, winHeight) *
@@ -1453,7 +1453,7 @@ void displayFcn()
 		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
 	};
 	
-	// Ö±½ÓÊ¹ÓÃ¸´ºÏÍ¶Ó°+¹æ·¶»¯¾ØÕó
+	// ç›´æ¥ä½¿ç”¨å¤åˆæŠ•å½±+è§„èŒƒåŒ–çŸ©é˜µ
 	auto temp = cube;
 	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1463,7 +1463,7 @@ void displayFcn()
 	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight), temp.points);
 	drawPolyhedron(temp);
 
-	// µ¥¶ÀµÄÍ¶Ó°£¬¹æ·¶»¯¾ØÕó
+	// å•ç‹¬çš„æŠ•å½±ï¼Œè§„èŒƒåŒ–çŸ©é˜µ
 	temp = cube;
 	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1497,7 +1497,7 @@ void displayFcn()
 		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
 	};
 
-	// Ö±½ÓÊ¹ÓÃ¸´ºÏÍ¶Ó°+¹æ·¶»¯¾ØÕó
+	// ç›´æ¥ä½¿ç”¨å¤åˆæŠ•å½±+è§„èŒƒåŒ–çŸ©é˜µ
 	auto temp = cube;
 	transformPoints(viewMatrix(viewP0, { 1, 0, 1 }, { 0, 1, 0 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1507,7 +1507,7 @@ void displayFcn()
 	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight), temp.points);
 	drawPolyhedron(temp);
 
-	// µ¥¶ÀµÄÍ¶Ó°£¬¹æ·¶»¯¾ØÕó
+	// å•ç‹¬çš„æŠ•å½±ï¼Œè§„èŒƒåŒ–çŸ©é˜µ
 	temp = cube;
 	transformPoints(viewMatrix(viewP0, { 1, 0, 1 }, { 0, 1, 0 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1541,7 +1541,7 @@ void displayFcn()
 		{ { 0, 1, 2, 3 },{ 1, 5, 6, 2 },{ 4, 7, 6, 5 },{ 0, 3, 7, 4 },{ 0, 4, 5, 1 },{ 2, 6, 7, 3 } }
 	};
 	
-	// Ö±½ÓÊ¹ÓÃ¸´ºÏÍ¶Ó°+¹æ·¶»¯¾ØÕó
+	// ç›´æ¥ä½¿ç”¨å¤åˆæŠ•å½±+è§„èŒƒåŒ–çŸ©é˜µ
 	auto temp = cube;
 	transformPoints(viewMatrix(viewP0, { 1, 1, 1 }, { -100, 200, -100 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1551,7 +1551,7 @@ void displayFcn()
 	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight), temp.points);
 	drawPolyhedron(temp);
 
-	// µ¥¶ÀµÄÍ¶Ó°£¬¹æ·¶»¯¾ØÕó
+	// å•ç‹¬çš„æŠ•å½±ï¼Œè§„èŒƒåŒ–çŸ©é˜µ
 	temp = cube;
 	transformPoints(viewMatrix(viewP0, { 1, 1, 1 }, { -100, 200, -100 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1674,7 +1674,7 @@ void displayFcn()
 
 	float xwmin = -300, xwmax = 100, ywmin = -winHeight / 4, ywmax = winHeight / 4;
 	float znear = -40.f, zfar = -200.f;
-	// Ö±½ÓÊ¹ÓÃ¸´ºÏÍ¶Ó°+¹æ·¶»¯¾ØÕó
+	// ç›´æ¥ä½¿ç”¨å¤åˆæŠ•å½±+è§„èŒƒåŒ–çŸ©é˜µ
 	auto temp = cube;
 	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1684,7 +1684,7 @@ void displayFcn()
 	transformPoints(viewportMatrix(0, winWidth / 2, winHeight / 2, winHeight), temp.points);
 	drawPolyhedron(temp);
 
-	// µ¥¶ÀµÄÍ¶Ó°£¬¹æ·¶»¯¾ØÕó
+	// å•ç‹¬çš„æŠ•å½±ï¼Œè§„èŒƒåŒ–çŸ©é˜µ
 	temp = cube;
 	transformPoints(viewMatrix(viewP0, { 0, 0, 1 }, { 0, 1, 0 }) *
 		modelMatrix({ -100.f, -100.f, -100.f }, { 1, 0, 0 }, { 0, 1, 0 }), temp.points);
@@ -1695,7 +1695,7 @@ void displayFcn()
 	transformPoints(viewportMatrix(winWidth / 2, winWidth, winHeight / 2, winHeight), temp.points);
 	drawPolyhedron(temp);
 
-	// ÓÃ¶Ô³ÆÍ¸ÊÓÍ¶Ó°(P294(10.33))+Æ½ÒÆÀ´´úÌæĞ±Í¸ÊÓÍ¶Ó°(P294(10.34))£¬ºóĞø°´ÊéÉÏµÄ·½·¨¼ÆËã
+	// ç”¨å¯¹ç§°é€è§†æŠ•å½±(P294(10.33))+å¹³ç§»æ¥ä»£æ›¿æ–œé€è§†æŠ•å½±(P294(10.34))ï¼Œåç»­æŒ‰ä¹¦ä¸Šçš„æ–¹æ³•è®¡ç®—
 	temp = cube;
 	// P294(10.33)
 	Matrix M_pers(4, 4);
@@ -1718,9 +1718,9 @@ void displayFcn()
 	transformPoints(viewportMatrix(0, winWidth / 2, 0, winHeight / 2), temp.points);
 	drawPolyhedron(temp);
 
-	// ÓÃµ¥¶ÀµÄ¶Ô³ÆÍ¸ÊÓÍ¶Ó°+Æ½ÒÆÀ´´úÌæµ¥¶ÀµÄĞ±Í¸ÊÓÍ¶Ó°£¬È»ºóÔÙ¹æ·¶»¯¾ØÕó
+	// ç”¨å•ç‹¬çš„å¯¹ç§°é€è§†æŠ•å½±+å¹³ç§»æ¥ä»£æ›¿å•ç‹¬çš„æ–œé€è§†æŠ•å½±ï¼Œç„¶åå†è§„èŒƒåŒ–çŸ©é˜µ
 	temp = cube;
-	// µ¥¶ÀµÄ¶Ô³ÆÍ¸ÊÓÍ¶Ó°
+	// å•ç‹¬çš„å¯¹ç§°é€è§†æŠ•å½±
 	Matrix M_perspective(4, 4);
 	matrixSetIdentity(M_perspective);
 	M_perspective[0][0] = -znear;
@@ -2422,7 +2422,7 @@ bool lineClipLiangBarsk(Point& p1, Point& p2)
 								p1.y = p1.y + u1 * dy;
 								p1.z = p1.z + u1 * dz;
 							}
-							//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ¾«È·µ½¸¡µãÊı»æÍ¼
+							//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 							//drawLine(p1, p2);
 							return true;
 						}
@@ -2543,7 +2543,7 @@ bool lineClipLiangBarsk(Point& p1, Point& p2)
 								p1.y = p1.y + u1 * dy;
 								p1.z = p1.z + u1 * dz;
 							}
-							//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ¾«È·µ½¸¡µãÊı»æÍ¼
+							//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 							//drawLine(p1, p2);
 							return true;
 						}
@@ -3197,7 +3197,7 @@ vector<vector<Point>> createClipSuface(map<Point, map<Point, int>>& crossInfo)
 
 void antiClockPoints(vector<Point>& points, Vec3 normalVec)
 {
-	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // zÈ¡¸ºÖµÊÇÒòÎªÔÚ×óÊÖ×ø±êÏµºÍÓÒÊÖ×ø±êÏµz·´ºÅ
+	Vec3 a = { points[1].x - points[0].x, points[1].y - points[0].y, -(points[1].z - points[0].z) }; // zå–è´Ÿå€¼æ˜¯å› ä¸ºåœ¨å·¦æ‰‹åæ ‡ç³»å’Œå³æ‰‹åæ ‡ç³»zåå·
 	Vec3 b = { points[2].x - points[1].x, points[2].y - points[1].y, -(points[2].z - points[1].z) };
 	Vec3 crossVec = cross(a, b);
 	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
@@ -3484,7 +3484,7 @@ void clipClipPlane(vector<Polyhedron>& polyhedrons, int clipPlane)
 		}
 	}
 	
-	// ²Ã¼ôÃæÉÏµÄÃæ
+	// è£å‰ªé¢ä¸Šçš„é¢
 	if (crossInfo.size() > 2)
 	{
 		auto clipSurfaces = createClipSuface(crossInfo);
@@ -3849,7 +3849,7 @@ void clipClipPlane(Polyhedron& polyhedron, Surface& clipPlane)
 			addSurface(newPolyhedron, points, pointInfo);
 	}
 
-	// ²Ã¼ôÃæÉÏµÄÃæ
+	// è£å‰ªé¢ä¸Šçš„é¢
 	if (crossInfo.size() >= 3)
 	{
 		auto clipSurfacePoints = createClipSuface(crossInfo);
@@ -4140,7 +4140,7 @@ void antiClockPoints(vector<Point>& points, Vec3 normalVec)
 	Point p2 = points[2];
 	descartes(p2);
 
-	Vec3 a = { p1.x - p0.x, p1.y - p0.y, -(p1.z - p0.z) }; // zÈ¡¸ºÖµÊÇÒòÎªÔÚ×óÊÖ×ø±êÏµºÍÓÒÊÖ×ø±êÏµz·´ºÅ
+	Vec3 a = { p1.x - p0.x, p1.y - p0.y, -(p1.z - p0.z) }; // zå–è´Ÿå€¼æ˜¯å› ä¸ºåœ¨å·¦æ‰‹åæ ‡ç³»å’Œå³æ‰‹åæ ‡ç³»zåå·
 	Vec3 b = { p2.x - p1.x, p2.y - p1.y, -(p2.z - p1.z) };
 	Vec3 crossVec = cross(a, b);
 	bool antiClocked = crossVec.x * normalVec.x >= 0 && crossVec.y * normalVec.y >= 0 && crossVec.z * normalVec.z >= 0;
@@ -4287,7 +4287,7 @@ void clipClipPlane(Polyhedron& polyhedron, int clipPlane)
 			addSurface(newPolyhedron, points, pointInfo);
 	}
 
-	// ²Ã¼ôÃæÉÏµÄÃæ
+	// è£å‰ªé¢ä¸Šçš„é¢
 	if (crossInfo.size() > 2)
 	{
 		auto clipSurfacePoints = createClipSuface(crossInfo);
@@ -4607,7 +4607,7 @@ void drawFunc()
 	glClear(GL_COLOR_BUFFER_BIT);
 	Vec3 Vp = { 1.f, 1.f, 2 * 1.414f };
 
-	// ÉèÖÃĞ±Í¶Ó°¾ØÕó
+	// è®¾ç½®æ–œæŠ•å½±çŸ©é˜µ
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt(x0, y_0, z0, xref, yref, zref, Vx, Vy, Vz);
@@ -4626,7 +4626,7 @@ void drawFunc()
 	glColor3f(0.0, 1.0, 0.0);
 	drawPolyhedron3D(cube);
 
-	// ÏÈĞ±ÇĞ±ä»»¶ÔÏó£¬ÔÙÕıÍ¶Ó°
+	// å…ˆæ–œåˆ‡å˜æ¢å¯¹è±¡ï¼Œå†æ­£æŠ•å½±
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glMultMatrixf(shearZrefMatrix(-Vp.x / Vp.z, -Vp.y / Vp.z, -dnear));
@@ -4654,9 +4654,9 @@ void code_10_exercise_25()
 Camera *camera = nullptr;
 enum ProjectionType
 {
-	Orthogonal, // Õı½»Í¶Ó°
-	Parallel, // Æ½ĞĞÍ¶Ó°
-	Perspective, // Í¸ÊÓÍ¶Ó°
+	Orthogonal, // æ­£äº¤æŠ•å½±
+	Parallel, // å¹³è¡ŒæŠ•å½±
+	Perspective, // é€è§†æŠ•å½±
 };
 ProjectionType projectionType = Perspective;
 GLfloat dnear = 1.f, dfar = 1200.f;
@@ -4822,8 +4822,8 @@ void code_10_exercise_add_2()
 #ifdef CHAPTER_10_COMMON
 void init(void)
 {
-	glClearColor(0.0, 0.0, 0.0, 0.0); // ºÚÉ«±³¾°É«
-	glColor3f(1.0, 1.0, 1.0); // °×É«»æÖÆ
+	glClearColor(0.0, 0.0, 0.0, 0.0); // é»‘è‰²èƒŒæ™¯è‰²
+	glColor3f(1.0, 1.0, 1.0); // ç™½è‰²ç»˜åˆ¶
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth , 0, winHeight);

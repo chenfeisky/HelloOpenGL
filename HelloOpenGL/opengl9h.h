@@ -1,6 +1,6 @@
-// µÚ¾ÅÕÂ´úÂë
+// ç¬¬ä¹ç« ä»£ç 
 
-// Ñ¡ÔñÒ»¸ö£¬×¢ÊÍµôÆäËûµÄ
+// é€‰æ‹©ä¸€ä¸ªï¼Œæ³¨é‡ŠæŽ‰å…¶ä»–çš„
 //#define CHAPTER_9_1
 //#define CHAPTER_9_2_3
 //#define CHAPTER_9_3
@@ -22,7 +22,7 @@
 //#define CHAPTER_9_EXERCISE_13
 //#define CHAPTER_9_EXERCISE_14
 //#define CHAPTER_9_EXERCISE_15
-//#define CHAPTER_9_EXERCISE_15_1 // ÈýÎ¬¶¨ÏòËõ·Å
+//#define CHAPTER_9_EXERCISE_15_1 // ä¸‰ç»´å®šå‘ç¼©æ”¾
 //#define CHAPTER_9_EXERCISE_16
 //#define CHAPTER_9_EXERCISE_17
 //#define CHAPTER_9_EXERCISE_18

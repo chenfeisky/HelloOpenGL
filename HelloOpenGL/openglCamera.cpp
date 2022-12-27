@@ -583,7 +583,7 @@ Vec3 Rotator::RotateVector(const Vec3& V)
 	return ret;
 }
 
-// ¹Û²ì×ø±êÏµ×ªĞı×ª×ø±êÏµ£¨UE4£©
+// è§‚å¯Ÿåæ ‡ç³»è½¬æ—‹è½¬åæ ‡ç³»ï¼ˆUE4ï¼‰
 static Vec3 view2RotateVec(const Vec3& v)
 {
 	Vec3 ret;
@@ -593,7 +593,7 @@ static Vec3 view2RotateVec(const Vec3& v)
 	return ret;
 }
 
-// Ğı×ª×ø±êÏµ£¨UE4£©×ª¹Û²ì×ø±êÏµ
+// æ—‹è½¬åæ ‡ç³»ï¼ˆUE4ï¼‰è½¬è§‚å¯Ÿåæ ‡ç³»
 static Vec3 rotate2ViewVec(const Vec3& v)
 {
 	Vec3 ret;

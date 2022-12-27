@@ -165,8 +165,8 @@ bool test = false;
 void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT); 
-	// ע������������ȫ�����ݣ�������ֻ�����һ�εĻ��ƣ���ΪglutSwapBuffers����һ�ε�ǰ̨���ݽ�������
-	// ���ں�̨�����γ��˲���������ȫ�����
+	// 注意这里必须清除全部内容，而不能只清除上一次的绘制，因为glutSwapBuffers将上一次的前台内容交换到了
+	// 现在后台，故形成了残留，必须全部清除
 
 	curPoint.x = origPoint.x + runTime * speed.x;
 	curPoint.y = origPoint.y + runTime * speed.y;
@@ -243,16 +243,16 @@ void mouseFcn(GLint button, GLint action, GLint x, GLint y)
 
 void code_12_1_2()
 {
-	// ������1�ֽڶ��룬ȷ��colorShape��ÿһ�е����ݸպö��ܱ���ȷ��ȡ��
-	// �����õ�Ĭ��ֵ��4������colorShape������Ϊ����30 * 50 * 3 + 50 * 2������ÿ�ж�2���ֽڣ�����ȷ������ȷ��ȡ��
-	// ��Ϊԭ��ÿ��30 * 3���ֽڣ�90 / 4��������������Ķ�ȡ��һ�е����ݡ���������Ϊÿ��92���Լ������պñ�4������������ȷ�Ķ�ȡ��
-	// ��Ȼÿ�д���92���ֽ�Ҳû���⡣
-	// �ر�ע�⣺������û����glReadPixels���ʲ������ֶ�����ν������ʹ��glReadPixels��������glReadPixelsʹ�õ�
-	// ��4�ֽڶ��룬�ʱ���glPixelStorei(GL_UNPACK_ALIGNMENT, 4)����Ӧ��colorShape������Ϊ����30 * 50 * 3 + 50 * 2
+	// 这里用1字节对齐，确保colorShape中每一行的数据刚好都能被正确读取。
+	// 若采用的默认值（4），则colorShape必须设为大于30 * 50 * 3 + 50 * 2，这样每行多2个字节，才能确保被正确读取。
+	// 因为原本每行30 * 3个字节，90 / 4除不尽，将错误的读取下一行的数据。而现在设为每行92个自己，将刚好被4整除，故能正确的读取。
+	// 当然每行大于92个字节也没问题。
+	// 特别注意：本例中没有用glReadPixels，故采用哪种都无所谓。但若使用glReadPixels，则由于glReadPixels使用的
+	// 是4字节对齐，故必须glPixelStorei(GL_UNPACK_ALIGNMENT, 4)，相应的colorShape必须设为大于30 * 50 * 3 + 50 * 2
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
 	
-	glClearColor(0.0, 0.0, 0.0, 0.0); // ��ɫ����ɫ
+	glClearColor(0.0, 0.0, 0.0, 0.0); // 黑色背景色
 
 	lastTick = clock();
 	
@@ -366,7 +366,7 @@ void preDealFrame(Frame* frame1, Frame* frame2)
 	std::vector<Bone> newBones;
 	for (int i = 0; i < boneNumMin; i++)
 	{
-		if (i < Ne) // ǰNe����
+		if (i < Ne) // 前Ne条边
 		{
 			auto& bone = frameMin->bones[i];
 			if (Ne + 1 <= 1)
@@ -548,16 +548,16 @@ Animation walkAnimation2()
 	float sp = 20;
 	keyFrame kf1;
 	kf1.bones = {
-		{{ {65, 450},{65, 308} }}, // ����
+		{{ {65, 450},{65, 308} }}, // 躯干
 
-		{{ {65, 405},{40, 333} }}, // ��1
-		{{ {65, 405},{123, 346} }}, // ��2
+		{{ {65, 405},{40, 333} }}, // 手1
+		{{ {65, 405},{123, 346} }}, // 手2
 
-		{{ {65, 307},{53, 224} }}, // ��1
-		{{ {53, 224},{33, 167} }}, // ��1
+		{{ {65, 307},{53, 224} }}, // 脚1
+		{{ {53, 224},{33, 167} }}, // 脚1
 
-		{{ {65, 307},{98, 229} }}, // ��2
-		{{ {98, 229},{123, 167} }}, // ��2
+		{{ {65, 307},{98, 229} }}, // 脚2
+		{{ {98, 229},{123, 167} }}, // 脚2
 	};
 	kf1.time = 0;
 
@@ -740,7 +740,7 @@ void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// ��ʼλ��
+	// 初始位置
 	glColor3f(1.0, 0.0, 0.0);
 	for (int i = 0; i < ani.keyFrames.size(); i++)
 	{
@@ -867,13 +867,13 @@ void code_12_6_1()
 {
 	lastTick = clock();
 
-	// �����߶���
+	// 简单行走动画
 	// ani = walkAnimation1();
 
-	// �������߶���
+	// 骨骼行走动画
 	ani = walkAnimation2();
 
-	// ���ζ���
+	// 变形动画
 	// ani = changeShapeAnimation();
 
 	glutDisplayFunc(displayFcn);
@@ -994,7 +994,7 @@ void displayFcn(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// ��ʼλ��
+	// 初始位置
 	glColor3f(1.0, 0.0, 0.0);
 	for (int i = 0; i < ani.keyFrames.size(); i++)
 	{
@@ -1070,10 +1070,10 @@ void update(void)
 
 	runTime += dt;
 
-	//auto t = getNextFrameTimeByLiner();   // ���Բ�ֵ�����٣�
-	//auto t = getNextFrameTimeBySpeedUp(); // ���ٲ�ֵ
-	//auto t = getNextFrameTimeBySlowDown();// ���ٲ�ֵ
-	auto t = getNextFrameTimeByBoth();      // ���ٺͼ��ٲ�ֵ
+	//auto t = getNextFrameTimeByLiner();   // 线性插值（匀速）
+	//auto t = getNextFrameTimeBySpeedUp(); // 加速插值
+	//auto t = getNextFrameTimeBySlowDown();// 减速插值
+	auto t = getNextFrameTimeByBoth();      // 加速和减速插值
 
 	if (runTime >= t)
 	{
@@ -1151,8 +1151,8 @@ void code_12_6_2()
 #ifdef CHAPTER_12_COMMON
 void init(void)
 {
-	glClearColor(0.0, 0.0, 0.0, 0.0); // ��ɫ����ɫ
-	glColor3f(1.0, 1.0, 1.0); // ��ɫ����
+	glClearColor(0.0, 0.0, 0.0, 0.0); // 黑色背景色
+	glColor3f(1.0, 1.0, 1.0); // 白色绘制
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth , 0, winHeight);

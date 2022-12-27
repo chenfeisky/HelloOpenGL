@@ -9,34 +9,34 @@
 #include "testcamera.h"
 #include "testbmp.h"
 
-/** ¶¨Òå¹âÔ´µÄÊôĞÔÖµ */
-GLfloat LightAmbient[] = { 0.5f, 0.5f, 0.5f, 1.0f };    /**< »·¾³¹â²ÎÊı */
-GLfloat LightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };    /**< ÂşÉä¹â²ÎÊı */
-GLfloat LightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };   /**< ¾µÃæ¹â²ÎÊı */
-GLfloat LightPosition[] = { 0.0f, 0.0f, 2.0f, 1.0f };   /**< ¹âÔ´Î»ÖÃ */
+/** å®šä¹‰å…‰æºçš„å±æ€§å€¼ */
+GLfloat LightAmbient[] = { 0.5f, 0.5f, 0.5f, 1.0f };    /**< ç¯å¢ƒå…‰å‚æ•° */
+GLfloat LightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };    /**< æ¼«å°„å…‰å‚æ•° */
+GLfloat LightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };   /**< é•œé¢å…‰å‚æ•° */
+GLfloat LightPosition[] = { 0.0f, 0.0f, 2.0f, 1.0f };   /**< å…‰æºä½ç½® */
 
 Camera m_Camera;
 CBMPLoader m_Texture;
 
-/** ¼ÓÔØÎ»Í¼ÎÆÀí(Ä¾ÏäÌùÍ¼) */
+/** åŠ è½½ä½å›¾çº¹ç†(æœ¨ç®±è´´å›¾) */
 bool LoadTexture()
 {
-	if (!m_Texture.LoadBitmap("image.bmp"))                                         /**< ÔØÈëÎ»Í¼ÎÄ¼ş */
+	if (!m_Texture.LoadBitmap("image.bmp"))                                         /**< è½½å…¥ä½å›¾æ–‡ä»¶ */
 	{
-		MessageBox(NULL, (LPCSTR)"loadTexture error", (LPCSTR)"error", MB_OK);    /**< Èç¹ûÔØÈëÊ§°ÜÔòµ¯³ö¶Ô»°¿ò */
+		MessageBox(NULL, (LPCSTR)"loadTexture error", (LPCSTR)"error", MB_OK);    /**< å¦‚æœè½½å…¥å¤±è´¥åˆ™å¼¹å‡ºå¯¹è¯æ¡† */
 		return false;
 	}
 
-	glGenTextures(1, &m_Texture.ID);                                                /**< Éú³ÉÒ»¸öÎÆÀí¶ÔÏóÃû³Æ */
-	glBindTexture(GL_TEXTURE_2D, m_Texture.ID);                                     /**< ´´½¨ÎÆÀí¶ÔÏó */
+	glGenTextures(1, &m_Texture.ID);                                                /**< ç”Ÿæˆä¸€ä¸ªçº¹ç†å¯¹è±¡åç§° */
+	glBindTexture(GL_TEXTURE_2D, m_Texture.ID);                                     /**< åˆ›å»ºçº¹ç†å¯¹è±¡ */
 
-																					/** ¿ØÖÆÂË²¨ */
+																					/** æ§åˆ¶æ»¤æ³¢ */
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	/** ´´½¨ÎÆÀí */
+	/** åˆ›å»ºçº¹ç† */
 	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, m_Texture.imageWidth,
 		m_Texture.imageHeight, GL_RGB, GL_UNSIGNED_BYTE,
 		m_Texture.image);
@@ -44,35 +44,35 @@ bool LoadTexture()
 	return true;
 }
 
-/** »æÖÆÍø¸ñµØÃæ */
+/** ç»˜åˆ¶ç½‘æ ¼åœ°é¢ */
 void DrawGrid()
 {
-	/** »ñµÃ³¡¾°ÖĞÒ»Ğ©×´Ì¬  */
+	/** è·å¾—åœºæ™¯ä¸­ä¸€äº›çŠ¶æ€  */
 	GLboolean  lp, tp;
 	glGetBooleanv(GL_LIGHTING, &lp);
 	glGetBooleanv(GL_TEXTURE_2D, &tp);
 
-	/** ¹Ø±ÕÎÆÀíºÍ¹âÕÕ */
+	/** å…³é—­çº¹ç†å’Œå…‰ç…§ */
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_LIGHTING);
 
-	/** »æÖÆ¹ı³Ì */
-	glPushAttrib(GL_CURRENT_BIT);   /**< ±£´æµ±Ç°ÊôĞÔ */
-	glPushMatrix();                 /**< Ñ¹Èë¶ÑÕ» */
+	/** ç»˜åˆ¶è¿‡ç¨‹ */
+	glPushAttrib(GL_CURRENT_BIT);   /**< ä¿å­˜å½“å‰å±æ€§ */
+	glPushMatrix();                 /**< å‹å…¥å †æ ˆ */
 	glTranslatef(0.0f, 0.0f, 0.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);    /**< ÉèÖÃÑÕÉ« */
+	glColor3f(0.0f, 0.0f, 1.0f);    /**< è®¾ç½®é¢œè‰² */
 
-									/** ÔÚX,ZÆ½ÃæÉÏ»æÖÆÍø¸ñ */
+									/** åœ¨X,Zå¹³é¢ä¸Šç»˜åˆ¶ç½‘æ ¼ */
 	for (float i = -50; i <= 50; i += 1)
 	{
-		/** »æÖÆÏß */
+		/** ç»˜åˆ¶çº¿ */
 		glBegin(GL_LINES);
 
-		/** XÖá·½Ïò */
+		/** Xè½´æ–¹å‘ */
 		glVertex3f(-50, 0, i);
 		glVertex3f(50, 0, i);
 
-		/** ZÖá·½Ïò */
+		/** Zè½´æ–¹å‘ */
 		glVertex3f(i, 0, -50);
 		glVertex3f(i, 0, 50);
 
@@ -81,17 +81,17 @@ void DrawGrid()
 	glPopMatrix();
 	glPopAttrib();
 
-	/** »Ö¸´³¡¾°×´Ì¬ */
+	/** æ¢å¤åœºæ™¯çŠ¶æ€ */
 	if (tp)
 		glEnable(GL_TEXTURE_2D);
 	if (lp)
 		glEnable(GL_LIGHTING);
 }
 
-/** »æÖÆÇòÌå */
+/** ç»˜åˆ¶çƒä½“ */
 void DrawSphere()
 {
-	/** ÉèÖÃ²ÄÖÊÊôĞÔ */
+	/** è®¾ç½®æè´¨å±æ€§ */
 	GLfloat mat_ambient[] = { 0.9f, 0.5f, 0.8f, 1.0f };
 	GLfloat mat_diffuse[] = { 0.9f, 0.5f, 0.8f, 1.0f };
 	GLfloat mat_shininess[] = { 100.0f };
@@ -99,12 +99,12 @@ void DrawSphere()
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
-	/** »ñµÃÎÆÀíÆôÓÃ×´Ì¬ */
+	/** è·å¾—çº¹ç†å¯ç”¨çŠ¶æ€ */
 	GLboolean tp;
 	glGetBooleanv(GL_TEXTURE_2D, &tp);
-	glDisable(GL_TEXTURE_2D);                   /**< ¹Ø±ÕÎÆÀí */
+	glDisable(GL_TEXTURE_2D);                   /**< å…³é—­çº¹ç† */
 
-												/** »æÖÆ¹ı³Ì */
+												/** ç»˜åˆ¶è¿‡ç¨‹ */
 	glPushMatrix();
 	glTranslatef(-5.0f, 2.0f, -10.0f);
 	GLUquadricObj * sphere = gluNewQuadric();
@@ -114,15 +114,15 @@ void DrawSphere()
 	gluDeleteQuadric(sphere);
 	glPopMatrix();
 
-	/** »Ö¸´×´Ì¬ */
+	/** æ¢å¤çŠ¶æ€ */
 	if (tp)
 		glEnable(GL_TEXTURE_2D);
 }
 
-/** »æÖÆÄ¾Ïä */
+/** ç»˜åˆ¶æœ¨ç®± */
 void DrawBox()
 {
-	/** ÉèÖÃ²ÄÖÊÊôĞÔ */
+	/** è®¾ç½®æè´¨å±æ€§ */
 	GLfloat mat_ambient[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 	GLfloat mat_diffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
@@ -131,42 +131,42 @@ void DrawBox()
 	glPushMatrix();
 	glTranslatef(5.0f, 2.0f, -10.0f);
 	glScalef(2.0f, 2.0f, 2.0f);
-	/** Ñ¡ÔñÎÆÀí */
+	/** é€‰æ‹©çº¹ç† */
 	glBindTexture(GL_TEXTURE_2D, m_Texture.ID);
-	/** ¿ªÊ¼»æÖÆËÄ±ßĞÎ */
+	/** å¼€å§‹ç»˜åˆ¶å››è¾¹å½¢ */
 	glBegin(GL_QUADS);
-	/// Ç°²àÃæ
-	glNormal3f(0.0f, 0.0f, 1.0f);                               /**< Ö¸¶¨·¨ÏßÖ¸Ïò¹Û²ìÕß */
+	/// å‰ä¾§é¢
+	glNormal3f(0.0f, 0.0f, 1.0f);                               /**< æŒ‡å®šæ³•çº¿æŒ‡å‘è§‚å¯Ÿè€… */
 	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 1.0f);
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 1.0f);
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 1.0f);
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 1.0f);
-	/// ºó²àÃæ
-	glNormal3f(0.0f, 0.0f, -1.0f);                              /**< Ö¸¶¨·¨Ïß±³Ïò¹Û²ìÕß */
+	/// åä¾§é¢
+	glNormal3f(0.0f, 0.0f, -1.0f);                              /**< æŒ‡å®šæ³•çº¿èƒŒå‘è§‚å¯Ÿè€… */
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, 1.0f, -1.0f);
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(1.0f, 1.0f, -1.0f);
 	glTexCoord2f(0.0f, 0.0f); glVertex3f(1.0f, -1.0f, -1.0f);
-	/// ¶¥Ãæ
-	glNormal3f(0.0f, 1.0f, 0.0f);                               /**< Ö¸¶¨·¨ÏßÏòÉÏ */
+	/// é¡¶é¢
+	glNormal3f(0.0f, 1.0f, 0.0f);                               /**< æŒ‡å®šæ³•çº¿å‘ä¸Š */
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, -1.0f);
 	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, 1.0f, 1.0f);
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, 1.0f, 1.0f);
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, -1.0f);
-	/// µ×Ãæ
-	glNormal3f(0.0f, -1.0f, 0.0f);                              /**< Ö¸¶¨·¨Ïß³¯ÏÂ */
+	/// åº•é¢
+	glNormal3f(0.0f, -1.0f, 0.0f);                              /**< æŒ‡å®šæ³•çº¿æœä¸‹ */
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(1.0f, -1.0f, -1.0f);
 	glTexCoord2f(0.0f, 0.0f); glVertex3f(1.0f, -1.0f, 1.0f);
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 1.0f);
-	/// ÓÒ²àÃæ
-	glNormal3f(1.0f, 0.0f, 0.0f);                               /**< Ö¸¶¨·¨Ïß³¯ÓÒ */
+	/// å³ä¾§é¢
+	glNormal3f(1.0f, 0.0f, 0.0f);                               /**< æŒ‡å®šæ³•çº¿æœå³ */
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, -1.0f);
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, -1.0f);
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(1.0f, 1.0f, 1.0f);
 	glTexCoord2f(0.0f, 0.0f); glVertex3f(1.0f, -1.0f, 1.0f);
-	/// ×ó²àÃæ
-	glNormal3f(-1.0f, 0.0f, 0.0f);                              /**< Ö¸¶¨·¨Ïß³¯×ó */
+	/// å·¦ä¾§é¢
+	glNormal3f(-1.0f, 0.0f, 0.0f);                              /**< æŒ‡å®šæ³•çº¿æœå·¦ */
 	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 1.0f);
 	glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 1.0f);
@@ -184,35 +184,35 @@ void init(void)
 	glShadeModel(GL_SMOOTH);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-	/** ÉèÖÃ¹âÔ´µÄÊôĞÔÖµ */
-	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);     /**< ÉèÖÃ»·¾³¹â */
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);     /**< ÉèÖÃÂşÉä¹â */
-	glLightfv(GL_LIGHT1, GL_SPECULAR, LightSpecular);   /**< ÉèÖÃÂşÉä¹â */
+	/** è®¾ç½®å…‰æºçš„å±æ€§å€¼ */
+	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);     /**< è®¾ç½®ç¯å¢ƒå…‰ */
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);     /**< è®¾ç½®æ¼«å°„å…‰ */
+	glLightfv(GL_LIGHT1, GL_SPECULAR, LightSpecular);   /**< è®¾ç½®æ¼«å°„å…‰ */
 
-														/** ÆôÓÃ¹âÔ´ºÍÎÆÀí */
+														/** å¯ç”¨å…‰æºå’Œçº¹ç† */
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_TEXTURE_2D);
 
-	/** ÔØÈëÎÆÀí */
+	/** è½½å…¥çº¹ç† */
 	if (!LoadTexture())
-		MessageBox(NULL, (LPCSTR)"ÔØÈëÎÆÀíÊ§°Ü!", (LPCSTR)"´íÎó", MB_OK);
+		MessageBox(NULL, (LPCSTR)"è½½å…¥çº¹ç†å¤±è´¥!", (LPCSTR)"é”™è¯¯", MB_OK);
 
-	/** ÉèÖÃÉãÏñ»ú */
+	/** è®¾ç½®æ‘„åƒæœº */
 	m_Camera.setCamera(0.0f, 1.5f, 6.0f, 0.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
 
 void display(void)
 {
-	/** ÓÃ»§×Ô¶¨ÒåµÄ»æÖÆ¹ı³Ì */
+	/** ç”¨æˆ·è‡ªå®šä¹‰çš„ç»˜åˆ¶è¿‡ç¨‹ */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	/** ·ÅÖÃÉãÏñ»ú */
+	/** æ”¾ç½®æ‘„åƒæœº */
 	m_Camera.setLook();
-	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);   /**< ÉèÖÃ¹âÔ´Î»ÖÃ */
+	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);   /**< è®¾ç½®å…‰æºä½ç½® */
 
-														/**< »æÖÆ¹ı³Ì */
+														/**< ç»˜åˆ¶è¿‡ç¨‹ */
 	DrawGrid();
 	DrawSphere();
 	DrawBox();
@@ -222,7 +222,7 @@ void display(void)
 
 void ChangeSize(int width, int height)
 {
-	glViewport(0, 0, width, height);                                    /**< ÖØĞÂÉèÖÃÊÓ¿Ú */
+	glViewport(0, 0, width, height);                                    /**< é‡æ–°è®¾ç½®è§†å£ */
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1.0f, 100.0f);
@@ -274,7 +274,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB);
 	glutInitWindowSize(800, 600);
 	glutInitWindowPosition((GetSystemMetrics(SM_CXSCREEN) >> 1) - 400, (GetSystemMetrics(SM_CYSCREEN) >> 1) - 300);
-	glutCreateWindow("ÉãÏñ»úÂşÓÎ");
+	glutCreateWindow("æ‘„åƒæœºæ¼«æ¸¸");
 	init();
 	glutReshapeFunc(ChangeSize);
 	glutDisplayFunc(display);

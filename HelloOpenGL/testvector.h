@@ -1,13 +1,13 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
-#include <math.h>                            /**< °üº¬mathÍ·ÎÄ¼þ */
+#include <math.h>                            /**< åŒ…å«mathå¤´æ–‡ä»¶ */
 
-/** ÏòÁ¿Àà */
+/** å‘é‡ç±» */
 class Vector3
 {
 public:
-	/** ¹¹Ôìº¯Êý */
+	/** æž„é€ å‡½æ•° */
 	Vector3() { x = 0.0; y = 0.0; z = 0.0; }
 	Vector3(float xx, float yy, float zz)
 	{
@@ -22,13 +22,13 @@ public:
 		z = vec.z;
 	}
 
-	/** ³ÉÔ±º¯Êý */
-	inline float length();                       /**< ¼ÆËãÏòÁ¿³¤¶È */
-	Vector3 normalize();                         /**< µ¥Î»»¯ÏòÁ¿ */
-	float dotProduct(const Vector3& v);          /**< ¼ÆËãµã»ý */
-	Vector3 crossProduct(const Vector3& v);      /**< ¼ÆËã²æ»ý */
+	/** æˆå‘˜å‡½æ•° */
+	inline float length();                       /**< è®¡ç®—å‘é‡é•¿åº¦ */
+	Vector3 normalize();                         /**< å•ä½åŒ–å‘é‡ */
+	float dotProduct(const Vector3& v);          /**< è®¡ç®—ç‚¹ç§¯ */
+	Vector3 crossProduct(const Vector3& v);      /**< è®¡ç®—å‰ç§¯ */
 
-												 /** ÖØÔØ²Ù×÷·û */
+												 /** é‡è½½æ“ä½œç¬¦ */
 	Vector3 operator + (const Vector3& v);
 	Vector3 operator - (const Vector3& v);
 	Vector3 operator * (float scale);

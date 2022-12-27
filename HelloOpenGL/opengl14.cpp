@@ -508,8 +508,8 @@ void code_14_16_5()
 #ifdef CHAPTER_14_COMMON
 void init(void)
 {
-	glClearColor(0.0, 0.0, 0.0, 0.0); // ºÚÉ«±³¾°É«
-	glColor3f(1.0, 1.0, 1.0); // °×É«»æÖÆ
+	glClearColor(0.0, 0.0, 0.0, 0.0); // é»‘è‰²èƒŒæ™¯è‰²
+	glColor3f(1.0, 1.0, 1.0); // ç™½è‰²ç»˜åˆ¶
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(widthMin, widthMax, heightMin, heightMax);

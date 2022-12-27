@@ -1,17 +1,17 @@
 //#include "stdafx.h"
 #include <stdio.h>
-#include "testvector.h"                       /**< °üº¬Í·ÎÄ¼þ */
+#include "testvector.h"                       /**< åŒ…å«å¤´æ–‡ä»¶ */
 
-/** ¼ÆËãÏòÁ¿µÄ³¤¶È */
+/** è®¡ç®—å‘é‡çš„é•¿åº¦ */
 inline float Vector3::length()
 {
 	return (float)(x * x + y * y + z * z);
 }
 
-/** µ¥Î»»¯Ò»ÏòÁ¿ */
+/** å•ä½åŒ–ä¸€å‘é‡ */
 Vector3 Vector3::normalize()
 {
-	float len = length();                  /**< ¼ÆËãÏòÁ¿³¤¶È */
+	float len = length();                  /**< è®¡ç®—å‘é‡é•¿åº¦ */
 	if (len == 0)
 		len = 1;
 	x = x / len;
@@ -21,13 +21,13 @@ Vector3 Vector3::normalize()
 	return *this;
 }
 
-/** µã»ý */
+/** ç‚¹ç§¯ */
 float Vector3::dotProduct(const Vector3& v)
 {
 	return (x * v.x + y * v.y + z * v.z);
 }
 
-/** ²æ»ý */
+/** å‰ç§¯ */
 Vector3 Vector3::crossProduct(const Vector3& v)
 {
 	Vector3 vec;
@@ -39,7 +39,7 @@ Vector3 Vector3::crossProduct(const Vector3& v)
 	return vec;
 }
 
-/** ²Ù×÷·û + */
+/** æ“ä½œç¬¦ + */
 Vector3 Vector3::operator +(const Vector3& v)
 {
 	Vector3 vec;
@@ -51,7 +51,7 @@ Vector3 Vector3::operator +(const Vector3& v)
 	return vec;
 }
 
-/** ²Ù×÷·û - */
+/** æ“ä½œç¬¦ - */
 Vector3 Vector3::operator -(const Vector3& v)
 {
 	Vector3 vec;
@@ -63,7 +63,7 @@ Vector3 Vector3::operator -(const Vector3& v)
 	return vec;
 }
 
-/** ²Ù×÷·û * */
+/** æ“ä½œç¬¦ * */
 Vector3 Vector3::operator *(float scale)
 {
 	x = x * scale;
@@ -73,7 +73,7 @@ Vector3 Vector3::operator *(float scale)
 	return *this;
 }
 
-/** ²Ù×÷·û / */
+/** æ“ä½œç¬¦ / */
 Vector3 Vector3::operator /(float scale)
 {
 	if (scale != 0.0)
@@ -85,7 +85,7 @@ Vector3 Vector3::operator /(float scale)
 	return *this;
 }
 
-/** ¸ººÅ */
+/** è´Ÿå· */
 Vector3 Vector3::operator -()
 {
 	Vector3 vec(-x, -y, -z);

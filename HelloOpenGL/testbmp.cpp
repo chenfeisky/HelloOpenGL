@@ -1,78 +1,78 @@
 //#include "stdafx.h"
 #include <stdio.h>
-#include"testbmp.h"              /**< °üº¬Í·ÎÄ¼þ */
+#include"testbmp.h"              /**< åŒ…å«å¤´æ–‡ä»¶ */
 
-/** ¹¹Ôìº¯Êý */
+/** æž„é€ å‡½æ•° */
 CBMPLoader::CBMPLoader()
 {
-	/** ³õÊ¼»¯³ÉÔ±ÖµÎª0 */
+	/** åˆå§‹åŒ–æˆå‘˜å€¼ä¸º0 */
 	image = 0;
 	imageWidth = 0;
 	imageHeight = 0;
 }
 
-/** Îö¹¹º¯Êý */
+/** æžæž„å‡½æ•° */
 CBMPLoader::~CBMPLoader()
 {
-	FreeImage(); /**< ÊÍ·ÅÍ¼ÏñÊý¾ÝÕ¼¾ÝµÄÄÚ´æ */
+	FreeImage(); /**< é‡Šæ”¾å›¾åƒæ•°æ®å æ®çš„å†…å­˜ */
 }
 
-/** ×°ÔØÒ»¸öÎ»Í¼ÎÄ¼þ */
+/** è£…è½½ä¸€ä¸ªä½å›¾æ–‡ä»¶ */
 bool CBMPLoader::LoadBitmap(char *file)
 {
-	FILE *pFile = 0; /**< ÎÄ¼þÖ¸Õë */
+	FILE *pFile = 0; /**< æ–‡ä»¶æŒ‡é’ˆ */
 
-					 /** ´´½¨Î»Í¼ÎÄ¼þÐÅÏ¢ºÍÎ»Í¼ÎÄ¼þÍ·½á¹¹ */
+					 /** åˆ›å»ºä½å›¾æ–‡ä»¶ä¿¡æ¯å’Œä½å›¾æ–‡ä»¶å¤´ç»“æž„ */
 	BITMAPINFOHEADER bitmapInfoHeader;
 	BITMAPFILEHEADER header;
 
-	unsigned char textureColors = 0;/**< ÓÃÓÚ½«Í¼ÏñÑÕÉ«´ÓBGR±ä»»µ½RGB */
+	unsigned char textureColors = 0;/**< ç”¨äºŽå°†å›¾åƒé¢œè‰²ä»ŽBGRå˜æ¢åˆ°RGB */
 
-									/** ´ò¿ªÎÄ¼þ,²¢¼ì²é´íÎó */
+									/** æ‰“å¼€æ–‡ä»¶,å¹¶æ£€æŸ¥é”™è¯¯ */
 	//pFile = fopen(file, "rb");
 	fopen_s(&pFile, file, "rb");
 	if (pFile == 0) return false;
 
-	/** ¶ÁÈëÎ»Í¼ÎÄ¼þÍ·ÐÅÏ¢ */
+	/** è¯»å…¥ä½å›¾æ–‡ä»¶å¤´ä¿¡æ¯ */
 	fread(&header, sizeof(BITMAPFILEHEADER), 1, pFile);
 
-	/** ¼ì²é¸ÃÎÄ¼þÊÇ·ñÎªÎ»Í¼ÎÄ¼þ */
+	/** æ£€æŸ¥è¯¥æ–‡ä»¶æ˜¯å¦ä¸ºä½å›¾æ–‡ä»¶ */
 	if (header.bfType != BITMAP_ID)
 	{
-		fclose(pFile);             /**< Èô²»ÊÇÎ»Í¼ÎÄ¼þ,Ôò¹Ø±ÕÎÄ¼þ²¢·µ»Ø */
+		fclose(pFile);             /**< è‹¥ä¸æ˜¯ä½å›¾æ–‡ä»¶,åˆ™å…³é—­æ–‡ä»¶å¹¶è¿”å›ž */
 		return false;
 	}
 
-	/** ¶ÁÈëÎ»Í¼ÎÄ¼þÐÅÏ¢ */
+	/** è¯»å…¥ä½å›¾æ–‡ä»¶ä¿¡æ¯ */
 	fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, pFile);
 
-	/** ±£´æÍ¼ÏñµÄ¿í¶ÈºÍ¸ß¶È */
+	/** ä¿å­˜å›¾åƒçš„å®½åº¦å’Œé«˜åº¦ */
 	imageWidth = bitmapInfoHeader.biWidth;
 	imageHeight = bitmapInfoHeader.biHeight;
 
-	/** È·±£¶ÁÈ¡Êý¾ÝµÄ´óÐ¡ */
+	/** ç¡®ä¿è¯»å–æ•°æ®çš„å¤§å° */
 	if (bitmapInfoHeader.biSizeImage == 0)
 		bitmapInfoHeader.biSizeImage = bitmapInfoHeader.biWidth *
 		bitmapInfoHeader.biHeight * 3;
 
-	/** ½«Ö¸ÕëÒÆµ½Êý¾Ý¿ªÊ¼Î»ÖÃ */
+	/** å°†æŒ‡é’ˆç§»åˆ°æ•°æ®å¼€å§‹ä½ç½® */
 	fseek(pFile, header.bfOffBits, SEEK_SET);
 
-	/** ·ÖÅäÄÚ´æ */
+	/** åˆ†é…å†…å­˜ */
 	image = new unsigned char[bitmapInfoHeader.biSizeImage];
 
-	/** ¼ì²éÄÚ´æ·ÖÅäÊÇ·ñ³É¹¦ */
-	if (!image)                        /**< Èô·ÖÅäÄÚ´æÊ§°ÜÔò·µ»Ø */
+	/** æ£€æŸ¥å†…å­˜åˆ†é…æ˜¯å¦æˆåŠŸ */
+	if (!image)                        /**< è‹¥åˆ†é…å†…å­˜å¤±è´¥åˆ™è¿”å›ž */
 	{
 		delete[] image;
 		fclose(pFile);
 		return false;
 	}
 
-	/** ¶ÁÈ¡Í¼ÏñÊý¾Ý */
+	/** è¯»å–å›¾åƒæ•°æ® */
 	fread(image, 1, bitmapInfoHeader.biSizeImage, pFile);
 
-	/** ½«Í¼ÏñÑÕÉ«Êý¾Ý¸ñÊ½½øÐÐ½»»»,ÓÉBGR×ª»»ÎªRGB */
+	/** å°†å›¾åƒé¢œè‰²æ•°æ®æ ¼å¼è¿›è¡Œäº¤æ¢,ç”±BGRè½¬æ¢ä¸ºRGB */
 	for (int index = 0; index < (int)bitmapInfoHeader.biSizeImage; index += 3)
 	{
 		textureColors = image[index];
@@ -80,14 +80,14 @@ bool CBMPLoader::LoadBitmap(char *file)
 		image[index + 2] = textureColors;
 	}
 
-	fclose(pFile);       /**< ¹Ø±ÕÎÄ¼þ */
-	return true;         /**< ³É¹¦·µ»Ø */
+	fclose(pFile);       /**< å…³é—­æ–‡ä»¶ */
+	return true;         /**< æˆåŠŸè¿”å›ž */
 }
 
-/** ÊÍ·ÅÄÚ´æ */
+/** é‡Šæ”¾å†…å­˜ */
 void CBMPLoader::FreeImage()
 {
-	/** ÊÍ·Å·ÖÅäµÄÄÚ´æ */
+	/** é‡Šæ”¾åˆ†é…çš„å†…å­˜ */
 	if (image)
 	{
 		delete[] image;

@@ -453,7 +453,7 @@ void displayFcn(void)
 
 	glColor3f(1.0, 1.0, 1.0);
 	
-	// Á¬Ğø±ä»»Á½´Î 
+	// è¿ç»­å˜æ¢ä¸¤æ¬¡ 
 	std::vector<Point> curPoints = originalPoints;
 	auto m1 = rotateMatrix({ 0, 0 }, 10 * PI / 180);
 	auto m2 = rotateMatrix({ 0, 0 }, 20 * PI / 180);
@@ -464,7 +464,7 @@ void displayFcn(void)
 	glTranslatef(50.0, 300.0, 0.0);
 	triangle(curPoints);
 
-	// ¸´ºÏ¾ØÕó
+	// å¤åˆçŸ©é˜µ
 	curPoints = originalPoints;
 	auto m = m2 * m1;
 	transformPoints(m, curPoints);
@@ -472,7 +472,7 @@ void displayFcn(void)
 	glTranslatef(250.0, 300.0, 0.0);
 	triangle(curPoints);
 
-	// ±ä»»Ò»´Î(Á½½ÇÖ®ºÍ)
+	// å˜æ¢ä¸€æ¬¡(ä¸¤è§’ä¹‹å’Œ)
 	curPoints = originalPoints;
 	transformPoints(rotateMatrix({ 0, 0 }, 30 * PI / 180), curPoints);
 	glLoadIdentity();
@@ -480,7 +480,7 @@ void displayFcn(void)
 	triangle(curPoints);
 
 	glColor3f(1.0, 0.0, 0.0);
-	// Á¬Ğø±ä»»Á½´Î 
+	// è¿ç»­å˜æ¢ä¸¤æ¬¡ 
 	curPoints = originalPoints;
 	m1 = rotateMatrix({ 50, 50 }, 10 * PI / 180);
 	m2 = rotateMatrix({ 50, 50 }, 20 * PI / 180);
@@ -490,7 +490,7 @@ void displayFcn(void)
 	glTranslatef(50.0, 100.0, 0.0);
 	triangle(curPoints);
 
-	// ¸´ºÏ¾ØÕó
+	// å¤åˆçŸ©é˜µ
 	curPoints = originalPoints;
 	m = m2 * m1;
 	transformPoints(m, curPoints);
@@ -498,7 +498,7 @@ void displayFcn(void)
 	glTranslatef(250.0, 100.0, 0.0);
 	triangle(curPoints);
 	
-	// ±ä»»Ò»´Î(Á½½ÇÖ®ºÍ)
+	// å˜æ¢ä¸€æ¬¡(ä¸¤è§’ä¹‹å’Œ)
 	curPoints = originalPoints;
 	transformPoints(rotateMatrix({ 50, 50 }, 30 * PI / 180), curPoints);
 	glLoadIdentity();
@@ -564,7 +564,7 @@ void square(const std::vector<Point>& points)
 }
 Matrix dirScaleMatrix(float s1, float s2, float theta)
 {
-	// »ùÓÚÔ­µãµÄ¶¨ÏòĞı×ª
+	// åŸºäºåŸç‚¹çš„å®šå‘æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = s1 * std::pow(cos(theta), 2) + s2 * std::pow(sin(theta), 2);
@@ -575,7 +575,7 @@ Matrix dirScaleMatrix(float s1, float s2, float theta)
 }
 Matrix dirScaleByPointMatrix(float tx, float ty, float s1, float s2, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãµÄ¶¨ÏòĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹çš„å®šå‘æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = s1 * std::pow(cos(theta), 2) + s2 * std::pow(sin(theta), 2);
@@ -592,7 +592,7 @@ Matrix dirScaleByPointMatrix(float tx, float ty, float s1, float s2, float theta
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -630,7 +630,7 @@ void displayFcn(void)
 
 	glColor3f(1.0, 1.0, 1.0);
 
-	// Ô­µãµÄ¶¨ÏòËõ·Å
+	// åŸç‚¹çš„å®šå‘ç¼©æ”¾
 	curPoints = originalPoints;
 	transformPoints(dirScaleMatrix(1, 2, 45 * PI / 180), curPoints);
 	glMatrixMode(GL_MODELVIEW);
@@ -641,7 +641,7 @@ void displayFcn(void)
 
 	glColor3f(1.0, 0.0, 0.0);
 
-	// ÓÉÒ»ÏµÁĞ±ä»»¶ø³ÉµÄ Ö¸¶¨µã¶¨ÏòËõ·Å
+	// ç”±ä¸€ç³»åˆ—å˜æ¢è€Œæˆçš„ æŒ‡å®šç‚¹å®šå‘ç¼©æ”¾
 	curPoints = originalPoints;
 	transformPoints(translateMatrix(-50, -50), curPoints);
 	transformPoints(dirScaleMatrix(1, 2, 45 * PI / 180), curPoints);
@@ -651,7 +651,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// ÓÉÒ»ÏµÁĞ±ä»»Éú³ÉµÄ¸´ºÏ Ö¸¶¨µã¶¨ÏòËõ·Å
+	// ç”±ä¸€ç³»åˆ—å˜æ¢ç”Ÿæˆçš„å¤åˆ æŒ‡å®šç‚¹å®šå‘ç¼©æ”¾
 	curPoints = originalPoints;
 	auto compound = translateMatrix(50, 50) * dirScaleMatrix(1, 2, 45 * PI / 180) * translateMatrix(-50, -50);
 	transformPoints(compound, curPoints);
@@ -660,7 +660,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// ¼ÆËãËùµÃµÄ¸´ºÏ Ö¸¶¨µã¶¨ÏòËõ·Å
+	// è®¡ç®—æ‰€å¾—çš„å¤åˆ æŒ‡å®šç‚¹å®šå‘ç¼©æ”¾
 	curPoints = originalPoints;
 	transformPoints(dirScaleByPointMatrix(50, 50, 1, 2, 45 * PI / 180), curPoints);
 	glLoadIdentity();
@@ -727,7 +727,7 @@ void square(const std::vector<Point>& points)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -736,7 +736,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -747,7 +747,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -760,7 +760,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -769,7 +769,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -810,8 +810,8 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 	
-	// Æ½ÒÆ
-	// ¸´ºÏÆ½ÒÆ
+	// å¹³ç§»
+	// å¤åˆå¹³ç§»
 	curPoints = originalPoints;
 	compound = translateMatrix(0, 30) * translateMatrix(30, 0);
 	transformPoints(compound, curPoints);
@@ -821,7 +821,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// ¸´ºÏÆ½ÒÆ£¬½»»»´ÎĞò
+	// å¤åˆå¹³ç§»ï¼Œäº¤æ¢æ¬¡åº
 	curPoints = originalPoints;
 	compound = translateMatrix(30, 0) * translateMatrix(0, 30);
 	transformPoints(compound, curPoints);
@@ -830,8 +830,8 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// Ğı×ª
-	// »ùÓÚÔ­µã¸´ºÏĞı×ª
+	// æ—‹è½¬
+	// åŸºäºåŸç‚¹å¤åˆæ—‹è½¬
 	curPoints = originalPoints;
 	compound = rotateMatrix(20 * PI / 180) * rotateMatrix(10 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -840,7 +840,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÔ­µã¸´ºÏĞı×ª, ½»»»´ÎĞò 
+	// åŸºäºåŸç‚¹å¤åˆæ—‹è½¬, äº¤æ¢æ¬¡åº 
 	curPoints = originalPoints;
 	compound = rotateMatrix(10 * PI / 180) * rotateMatrix(20 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -849,7 +849,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÖ¸¶¨µã¸´ºÏĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹å¤åˆæ—‹è½¬
 	curPoints = originalPoints;
 	compound = rotateByPointMatrix({50, 50}, 20 * PI / 180) * rotateByPointMatrix({ 50, 50 }, 10 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -858,7 +858,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÖ¸¶¨µã¸´ºÏĞı×ª, ½»»»´ÎĞò 
+	// åŸºäºæŒ‡å®šç‚¹å¤åˆæ—‹è½¬, äº¤æ¢æ¬¡åº 
 	curPoints = originalPoints;
 	compound = rotateByPointMatrix({ 50, 50 }, 10 * PI / 180) * rotateByPointMatrix({ 50, 50 }, 20 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -867,8 +867,8 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// Ëõ·Å
-	// »ùÓÚÔ­µã¸´ºÏËõ·Å
+	// ç¼©æ”¾
+	// åŸºäºåŸç‚¹å¤åˆç¼©æ”¾
 	curPoints = originalPoints;
 	compound = scaleMatrix(0.8, 0.4) * scaleMatrix(0.5, 0.5);
 	transformPoints(compound, curPoints);
@@ -877,7 +877,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÔ­µã¸´ºÏËõ·Å, ½»»»´ÎĞò 
+	// åŸºäºåŸç‚¹å¤åˆç¼©æ”¾, äº¤æ¢æ¬¡åº 
 	curPoints = originalPoints;
 	compound = scaleMatrix(0.5, 0.5) * scaleMatrix(0.8, 0.4);
 	transformPoints(compound, curPoints);
@@ -886,7 +886,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÖ¸¶¨µã¸´ºÏËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹å¤åˆç¼©æ”¾
 	curPoints = originalPoints;
 	compound = scaleByPointMatrix({ 50, 50 }, 0.8, 0.4) * scaleByPointMatrix({ 50, 50 }, 0.5, 0.5);
 	transformPoints(compound, curPoints);
@@ -895,7 +895,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÖ¸¶¨µã¸´ºÏËõ·Å, ½»»»´ÎĞò 
+	// åŸºäºæŒ‡å®šç‚¹å¤åˆç¼©æ”¾, äº¤æ¢æ¬¡åº 
 	curPoints = originalPoints;
 	compound = scaleByPointMatrix({ 50, 50 }, 0.5, 0.5) * scaleByPointMatrix({ 50, 50 }, 0.8, 0.4);
 	transformPoints(compound, curPoints);
@@ -964,7 +964,7 @@ void square(const std::vector<Point>& points)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -975,7 +975,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -988,7 +988,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -997,7 +997,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -1038,8 +1038,8 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	// »ùÓÚÔ­µã
-	// Ò»ÖÂËõ·Å+Ğı×ª
+	// åŸºäºåŸç‚¹
+	// ä¸€è‡´ç¼©æ”¾+æ—‹è½¬
 	curPoints = originalPoints;
 	compound = rotateMatrix(30 * PI / 180) * scaleMatrix(0.5, 0.5);
 	transformPoints(compound, curPoints);
@@ -1049,7 +1049,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// Ğı×ª+Ò»ÖÂËõ·Å
+	// æ—‹è½¬+ä¸€è‡´ç¼©æ”¾
 	curPoints = originalPoints;
 	compound = scaleMatrix(0.5, 0.5) * rotateMatrix(30 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -1058,7 +1058,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// ·ÇÒ»ÖÂËõ·Å+Ğı×ª
+	// éä¸€è‡´ç¼©æ”¾+æ—‹è½¬
 	curPoints = originalPoints;
 	compound = rotateMatrix(30 * PI / 180) * scaleMatrix(1, 0.5);
 	transformPoints(compound, curPoints);
@@ -1067,7 +1067,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// Ğı×ª+·ÇÒ»ÖÂËõ·Å
+	// æ—‹è½¬+éä¸€è‡´ç¼©æ”¾
 	curPoints = originalPoints;
 	compound = scaleMatrix(1, 0.5) * rotateMatrix(30 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -1076,8 +1076,8 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// »ùÓÚÖ¸¶¨µã
-	// Ò»ÖÂËõ·Å+Ğı×ª
+	// åŸºäºæŒ‡å®šç‚¹
+	// ä¸€è‡´ç¼©æ”¾+æ—‹è½¬
 	curPoints = originalPoints;
 	compound = rotateByPointMatrix({ 50, 50 }, 30 * PI / 180) * scaleByPointMatrix({50, 50}, 0.5, 0.5);
 	transformPoints(compound, curPoints);
@@ -1086,7 +1086,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// Ğı×ª+Ò»ÖÂËõ·Å
+	// æ—‹è½¬+ä¸€è‡´ç¼©æ”¾
 	curPoints = originalPoints;
 	compound = scaleByPointMatrix({ 50, 50 }, 0.5, 0.5) * rotateByPointMatrix({ 50, 50 }, 30 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -1095,7 +1095,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// ·ÇÒ»ÖÂËõ·Å+Ğı×ª
+	// éä¸€è‡´ç¼©æ”¾+æ—‹è½¬
 	curPoints = originalPoints;
 	compound = rotateByPointMatrix({ 50, 50 }, 30 * PI / 180) * scaleByPointMatrix({ 50, 50 }, 1, 0.5);
 	transformPoints(compound, curPoints);
@@ -1104,7 +1104,7 @@ void displayFcn(void)
 	drawCoordinate();
 	square(curPoints);
 
-	// Ğı×ª+·ÇÒ»ÖÂËõ·Å
+	// æ—‹è½¬+éä¸€è‡´ç¼©æ”¾
 	curPoints = originalPoints;
 	compound = scaleByPointMatrix({ 50, 50 }, 1, 0.5) * rotateByPointMatrix({ 50, 50 }, 30 * PI / 180);
 	transformPoints(compound, curPoints);
@@ -1175,7 +1175,7 @@ void square(const std::vector<Point>& points)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -1184,7 +1184,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -1197,7 +1197,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -1208,7 +1208,7 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy)
 }
 Matrix TRSMatrix(Point p, float tx, float ty, float theta, float sx, float sy)
 {
-	// Æ½ÒÆ£¬Ğı×ª£¬Ëõ·Å¸´ºÏ¾ØÕó
+	// å¹³ç§»ï¼Œæ—‹è½¬ï¼Œç¼©æ”¾å¤åˆçŸ©é˜µ
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx * std::cos(theta);
@@ -1278,7 +1278,7 @@ void code_7_exercise_6()
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_7
-// ¸ÄÎª1:1µÈ±ÈÀıÍ¶Ó°£¬·½±ã²é¿´±ä»»Ğ§¹û£¬·ñÔò½«²úÉúÀ­ÉìĞÎ±ä
+// æ”¹ä¸º1:1ç­‰æ¯”ä¾‹æŠ•å½±ï¼Œæ–¹ä¾¿æŸ¥çœ‹å˜æ¢æ•ˆæœï¼Œå¦åˆ™å°†äº§ç”Ÿæ‹‰ä¼¸å½¢å˜
 GLfloat xwcMin = 0.0, xwcMax = 225.0;
 GLfloat ywcMin = 0.0, ywcMax = 225.0;
 float sx = 0.f, sy = 0.f, theta = 0.f, tx = 0.f, ty = 0.f;
@@ -1415,7 +1415,7 @@ void code_7_exercise_7()
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_8
-// ¸ÄÎª1:1µÈ±ÈÀıÍ¶Ó°£¬·½±ã²é¿´±ä»»Ğ§¹û£¬·ñÔò½«²úÉúÀ­ÉìĞÎ±ä
+// æ”¹ä¸º1:1ç­‰æ¯”ä¾‹æŠ•å½±ï¼Œæ–¹ä¾¿æŸ¥çœ‹å˜æ¢æ•ˆæœï¼Œå¦åˆ™å°†äº§ç”Ÿæ‹‰ä¼¸å½¢å˜
 GLfloat xwcMin = 0.0, xwcMax = 225.0;
 GLfloat ywcMin = 0.0, ywcMax = 225.0;
 class wcPt2D
@@ -1557,7 +1557,7 @@ void code_7_exercise_8()
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_9
-// ¸ÄÎª1:1µÈ±ÈÀıÍ¶Ó°£¬·½±ã²é¿´±ä»»Ğ§¹û£¬·ñÔò½«²úÉúÀ­ÉìĞÎ±ä
+// æ”¹ä¸º1:1ç­‰æ¯”ä¾‹æŠ•å½±ï¼Œæ–¹ä¾¿æŸ¥çœ‹å˜æ¢æ•ˆæœï¼Œå¦åˆ™å°†äº§ç”Ÿæ‹‰ä¼¸å½¢å˜
 GLfloat xwcMin = 0.0, xwcMax = 225.0;
 GLfloat ywcMin = 0.0, ywcMax = 225.0;
 class wcPt2D
@@ -1750,7 +1750,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -1761,7 +1761,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix reflectionXMatrix()
 {
-	// »ùÓÚxÖá·´Éä
+	// åŸºäºxè½´åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[1][1] = -1;
@@ -1769,7 +1769,7 @@ Matrix reflectionXMatrix()
 }
 Matrix reflectionYXMatrix()
 {
-	// »ùÓÚy=x·´Éä
+	// åŸºäºy=xåå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = 0;
@@ -1812,7 +1812,7 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	// Ö±½Ó¸ø³ö·´Éä¾ØÕó
+	// ç›´æ¥ç»™å‡ºåå°„çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1824,7 +1824,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Ë³Ê±Õë45 - xÖá·´Éä - ÄæÊ±Õë45
+	// é¡ºæ—¶é’ˆ45 - xè½´åå°„ - é€†æ—¶é’ˆ45
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(300, 250, 0.0);
@@ -1836,7 +1836,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// xÖá·´Éä - ÄæÊ±Õë90
+	// xè½´åå°„ - é€†æ—¶é’ˆ90
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(550, 250, 0.0);
@@ -1908,7 +1908,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -1919,7 +1919,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix reflectionYMatrix()
 {
-	// »ùÓÚyÖá·´Éä
+	// åŸºäºyè½´åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = -1;
@@ -1927,7 +1927,7 @@ Matrix reflectionYMatrix()
 }
 Matrix reflectionY_XMatrix()
 {
-	// »ùÓÚy=-x·´Éä
+	// åŸºäºy=-xåå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = 0;
@@ -1970,7 +1970,7 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	// Ö±½Ó¸ø³ö·´Éä¾ØÕó
+	// ç›´æ¥ç»™å‡ºåå°„çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1982,7 +1982,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Ë³Ê±Õë45 - yÖá·´Éä - ÄæÊ±Õë45
+	// é¡ºæ—¶é’ˆ45 - yè½´åå°„ - é€†æ—¶é’ˆ45
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(500, 250, 0.0);
@@ -1994,7 +1994,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// yÖá·´Éä - ÄæÊ±Õë90
+	// yè½´åå°„ - é€†æ—¶é’ˆ90
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(750, 250, 0.0);
@@ -2066,7 +2066,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2077,7 +2077,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix reflectionXMatrix()
 {
-	// »ùÓÚxÖá·´Éä
+	// åŸºäºxè½´åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[1][1] = -1;
@@ -2085,7 +2085,7 @@ Matrix reflectionXMatrix()
 }
 Matrix reflectionYMatrix()
 {
-	// »ùÓÚyÖá·´Éä
+	// åŸºäºyè½´åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = -1;
@@ -2093,7 +2093,7 @@ Matrix reflectionYMatrix()
 }
 Matrix reflectionOMatrix()
 {
-	// »ùÓÚÔ­µã·´Éä
+	// åŸºäºåŸç‚¹åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = -1;
@@ -2132,7 +2132,7 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	// Ö±½Ó¸ø³ö·´Éä¾ØÕó
+	// ç›´æ¥ç»™å‡ºåå°„çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -2144,7 +2144,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// xÖá·´Éä - yÖá·´Éä
+	// xè½´åå°„ - yè½´åå°„
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(550, 400, 0.0);
@@ -2156,7 +2156,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// yÖá·´Éä - xÖá·´Éä
+	// yè½´åå°„ - xè½´åå°„
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(200, 150, 0.0);
@@ -2168,7 +2168,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// »ùÓÚÔ­µãĞı×ª180
+	// åŸºäºåŸç‚¹æ—‹è½¬180
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(550, 150, 0.0);
@@ -2239,7 +2239,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -2248,7 +2248,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2259,7 +2259,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix reflectionXMatrix()
 {
-	// »ùÓÚxÖá·´Éä
+	// åŸºäºxè½´åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[1][1] = -1;
@@ -2267,7 +2267,7 @@ Matrix reflectionXMatrix()
 }
 Matrix reflectionLineMatrix(float m, float b)
 {
-	// »ùÓÚy=mx+bÖ±ÏßµÄ·´Éä
+	// åŸºäºy=mx+bç›´çº¿çš„åå°„
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	float theta = std::atan(m);
@@ -2317,7 +2317,7 @@ void displayFcn(void)
 	float m = std::tan(theta);
 	float b = 50;
 
-	// Ö±½Ó¸ø³ö·´Éä¾ØÕó
+	// ç›´æ¥ç»™å‡ºåå°„çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -2329,7 +2329,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Æ½ÒÆ-b, Ğı×ª-theta, xÖá·´Éä, Ğı×ªtheta, Æ½ÒÆb
+	// å¹³ç§»-b, æ—‹è½¬-theta, xè½´åå°„, æ—‹è½¬theta, å¹³ç§»b
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(350, 300, 0.0);
@@ -2341,7 +2341,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Æ½ÒÆ-b, xÖá·´Éä, Ğı×ª2theta, Æ½ÒÆb
+	// å¹³ç§»-b, xè½´åå°„, æ—‹è½¬2theta, å¹³ç§»b
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(600, 300, 0.0);
@@ -2413,7 +2413,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -2422,7 +2422,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2433,7 +2433,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix reflectionOLineMatrix(float m)
 {
-	// »ùÓÚy=mxÖ±Ïß·´Éä
+	// åŸºäºy=mxç›´çº¿åå°„
 	float theta = std::atan(m);
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
@@ -2445,7 +2445,7 @@ Matrix reflectionOLineMatrix(float m)
 }
 Matrix reflection2LineMatrix(float m1, float m2)
 {
-	// »ùÓÚÁ½Ìõ¹ıÔ­µãÖ±ÏßµÄÁ¬Ğø·´Éä,ÏÈm1,È»ºóm2
+	// åŸºäºä¸¤æ¡è¿‡åŸç‚¹ç›´çº¿çš„è¿ç»­åå°„,å…ˆm1,ç„¶åm2
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	float theta = 2 * (std::atan(m2) - std::atan(m1));
@@ -2496,7 +2496,7 @@ void displayFcn(void)
 	float theta2 = 45 * PI / 180;
 	float m2 = std::tan(theta2);
 
-	// Ö±½Ó¸ø³ö·´Éä¾ØÕó
+	// ç›´æ¥ç»™å‡ºåå°„çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -2508,7 +2508,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Á¬ĞøÁ½´Î·´Éä
+	// è¿ç»­ä¸¤æ¬¡åå°„
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(350, 300, 0.0);
@@ -2522,7 +2522,7 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Ò»´ÎĞı×ª
+	// ä¸€æ¬¡æ—‹è½¬
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(600, 300, 0.0);
@@ -2593,7 +2593,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -2602,7 +2602,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2613,7 +2613,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -2622,7 +2622,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix shearXMatrix(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -2630,7 +2630,7 @@ Matrix shearXMatrix(float shx)
 }
 Matrix shearXByParallelXLineMatrix(float shx, float y_ref)
 {
-	// »ùÓÚÆ½ĞĞÓÚxÖáÖ±Ïß£¨¼´y=y_ref£©µÄx·½Ïò´íÇĞ
+	// åŸºäºå¹³è¡Œäºxè½´ç›´çº¿ï¼ˆå³y=y_refï¼‰çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -2676,10 +2676,10 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 	
-	// »ùÓÚÔ­µãµÄ´íÇĞ
+	// åŸºäºåŸç‚¹çš„é”™åˆ‡
 	float shx = 2;
 
-	// Ö±½Ó¸ø³ö´íÇĞ¾ØÕó
+	// ç›´æ¥ç»™å‡ºé”™åˆ‡çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -2692,8 +2692,8 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 	
-	// Ò»ÏµÁĞ»ù±¾±ä»»:Ğı×ªtheta,Ëõ·Å(sx,sy),Ğı×ª-theta2,Ëõ·Å(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1)
-	float theta = 15 * PI / 180; // ÓÉÓÃ»§Ö¸¶¨
+	// ä¸€ç³»åˆ—åŸºæœ¬å˜æ¢:æ—‹è½¬theta,ç¼©æ”¾(sx,sy),æ—‹è½¬-theta2,ç¼©æ”¾(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1)
+	float theta = 15 * PI / 180; // ç”±ç”¨æˆ·æŒ‡å®š
 	float cos1 = cos(theta);
 	float sin1 = sin(theta);
 	float tan1 = tan(theta);
@@ -2719,11 +2719,11 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// »ùÓÚÆ½ĞĞÓÚxÖá²Î¿¼ÏßµÄ´íÇĞ
+	// åŸºäºå¹³è¡Œäºxè½´å‚è€ƒçº¿çš„é”™åˆ‡
 	shx = 0.5;
 	float y_ref = -100;
 
-	// Ö±½Ó¸ø³ö´íÇĞ¾ØÕó
+	// ç›´æ¥ç»™å‡ºé”™åˆ‡çŸ©é˜µ
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(100, 150, 0.0);
@@ -2735,8 +2735,8 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Ò»ÏµÁĞ»ù±¾±ä»»:Æ½ÒÆ-y_ref,Ğı×ªtheta,Ëõ·Å(sx,sy),Ğı×ª-theta2,Ëõ·Å(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1),Æ½ÒÆy_ref
-	theta = 45 * PI / 180; // ÓÉÓÃ»§Ö¸¶¨
+	// ä¸€ç³»åˆ—åŸºæœ¬å˜æ¢:å¹³ç§»-y_ref,æ—‹è½¬theta,ç¼©æ”¾(sx,sy),æ—‹è½¬-theta2,ç¼©æ”¾(1 / (cos1 * cos2 * sx + sin1 * sin2 * sy), 1),å¹³ç§»y_ref
+	theta = 45 * PI / 180; // ç”±ç”¨æˆ·æŒ‡å®š
 	cos1 = cos(theta);
 	sin1 = sin(theta);
 	tan1 = tan(theta);
@@ -2822,7 +2822,7 @@ void polygon(const std::vector<Point>& points)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -2831,7 +2831,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -2842,7 +2842,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -2851,7 +2851,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix shearYMatrix(float shy)
 {
-	// »ùÓÚÔ­µãµÄy·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„yæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[1][0] = shy;
@@ -2859,7 +2859,7 @@ Matrix shearYMatrix(float shy)
 }
 Matrix shearYByParallelYLineMatrix(float shy, float x_ref)
 {
-	// »ùÓÚÆ½ĞĞÓÚyÖáÖ±Ïß£¨¼´x=x_ref£©µÄy·½Ïò´íÇĞ
+	// åŸºäºå¹³è¡Œäºyè½´ç›´çº¿ï¼ˆå³x=x_refï¼‰çš„yæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[1][0] = shy;
@@ -2898,10 +2898,10 @@ void displayFcn(void)
 	std::vector<Point> curPoints;
 	Matrix compound(3, 3);
 
-	// »ùÓÚÔ­µãµÄ´íÇĞ
+	// åŸºäºåŸç‚¹çš„é”™åˆ‡
 	float shy = 2;
 
-	// Ö±½Ó¸ø³ö´íÇĞ¾ØÕó
+	// ç›´æ¥ç»™å‡ºé”™åˆ‡çŸ©é˜µ
 	curPoints = originalPoints;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -2914,8 +2914,8 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Ò»ÏµÁĞ»ù±¾±ä»»:Ğı×ª-theta,Ëõ·Å(sx,sy),Ğı×ªtheta2,Ëõ·Å(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy))
-	float theta = 15 * PI / 180; // ÓÉÓÃ»§Ö¸¶¨
+	// ä¸€ç³»åˆ—åŸºæœ¬å˜æ¢:æ—‹è½¬-theta,ç¼©æ”¾(sx,sy),æ—‹è½¬theta2,ç¼©æ”¾(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy))
+	float theta = 15 * PI / 180; // ç”±ç”¨æˆ·æŒ‡å®š
 	float cos1 = cos(theta);
 	float sin1 = sin(theta);
 	float tan1 = tan(theta);
@@ -2941,11 +2941,11 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// »ùÓÚÆ½ĞĞÓÚyÖá²Î¿¼ÏßµÄ´íÇĞ
+	// åŸºäºå¹³è¡Œäºyè½´å‚è€ƒçº¿çš„é”™åˆ‡
 	shy = 0.5;
 	float x_ref = -100;
 
-	// Ö±½Ó¸ø³ö´íÇĞ¾ØÕó
+	// ç›´æ¥ç»™å‡ºé”™åˆ‡çŸ©é˜µ
 	curPoints = originalPoints;
 	glLoadIdentity();
 	glTranslatef(450, 200, 0.0);
@@ -2957,8 +2957,8 @@ void displayFcn(void)
 	glColor3f(1.0, 0.0, 0.0);
 	polygon(curPoints);
 
-	// Ò»ÏµÁĞ»ù±¾±ä»»:Æ½ÒÆ-x_ref,Ğı×ª-theta,Ëõ·Å(sx,sy),Ğı×ªtheta2,Ëõ·Å(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)),Æ½ÒÆx_ref
-	theta = 45 * PI / 180; // ÓÉÓÃ»§Ö¸¶¨
+	// ä¸€ç³»åˆ—åŸºæœ¬å˜æ¢:å¹³ç§»-x_ref,æ—‹è½¬-theta,ç¼©æ”¾(sx,sy),æ—‹è½¬theta2,ç¼©æ”¾(1, 1 / (sin1 * sin2 * sx + cos1 * cos2 * sy)),å¹³ç§»x_ref
+	theta = 45 * PI / 180; // ç”±ç”¨æˆ·æŒ‡å®š
 	cos1 = cos(theta);
 	sin1 = sin(theta);
 	tan1 = tan(theta);
@@ -3129,10 +3129,10 @@ void code_7_exercise_17()
 #endif
 
 #ifdef CHAPTER_7_EXERCISE_18
-// ÉèµãPÓëOXµÄ¼Ğ½ÇÎªtheta1£¬ÓëOX'µÄ¼Ğ½ÇÎªtheta2£¬thetaÎª×ø±êÏµĞı×ª¶ÈÊı£¬¼´
-// OX'ÓëOXµÄ¼Ğ½Ç£¬ÔòÓĞtheta2 = theta1 - theta£¬ÉèOP = r£¬¸ù¾İÈı½Ç¹ØÏµÓĞ£º
-// sin1 = y / r, cos1 = x / r, sin2 = y' / r, cos2 = x' / r,Ôòx' = rcos2 =
-// r(cos1cos + sin1sin) = rcos1cos + rsin1sin = xcos + ysin£¬¶øy' = rsin2
+// è®¾ç‚¹Pä¸OXçš„å¤¹è§’ä¸ºtheta1ï¼Œä¸OX'çš„å¤¹è§’ä¸ºtheta2ï¼Œthetaä¸ºåæ ‡ç³»æ—‹è½¬åº¦æ•°ï¼Œå³
+// OX'ä¸OXçš„å¤¹è§’ï¼Œåˆ™æœ‰theta2 = theta1 - thetaï¼Œè®¾OP = rï¼Œæ ¹æ®ä¸‰è§’å…³ç³»æœ‰ï¼š
+// sin1 = y / r, cos1 = x / r, sin2 = y' / r, cos2 = x' / r,åˆ™x' = rcos2 =
+// r(cos1cos + sin1sin) = rcos1cos + rsin1sin = xcos + ysinï¼Œè€Œy' = rsin2
 // = r(sin1cos - sincos1) = rsin1cos - rsincos1 = ycos - xsin
 
 struct Point { float x; float y; };
@@ -3178,7 +3178,7 @@ void matrixSetIdentity(Matrix& m)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -3229,7 +3229,7 @@ void displayFcn(void)
 
 	glMatrixMode(GL_MODELVIEW);
 	
-	// Ë³Ê±ÕëĞı×ª±ä»»
+	// é¡ºæ—¶é’ˆæ—‹è½¬å˜æ¢
 	curP = P;
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
@@ -3242,7 +3242,7 @@ void displayFcn(void)
 	drawCoordinate();
 	drawPoints(curP);
 
-	// ¸ù¾İ¼ÆËãËùµÃ
+	// æ ¹æ®è®¡ç®—æ‰€å¾—
 	curP = P;
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
@@ -3310,7 +3310,7 @@ void matrixSetIdentity(Matrix& m)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -3319,7 +3319,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -3376,7 +3376,7 @@ void displayFcn(void)
 
 	glMatrixMode(GL_MODELVIEW);
 
-	// Í¨¹ıĞı×ª¾ØÕóµÃµ½±ä»»¾ØÕó
+	// é€šè¿‡æ—‹è½¬çŸ©é˜µå¾—åˆ°å˜æ¢çŸ©é˜µ
 
 	float thetaA = atan(u.y / u.x);
 	float thetaD = thetaA * 180 / PI;
@@ -3394,7 +3394,7 @@ void displayFcn(void)
 	drawCoordinate();
 	drawPoints(curP);
 
-	// Í¨¹ıĞı×ª¾ØÕóµÃµ½±ä»»¾ØÕó
+	// é€šè¿‡æ—‹è½¬çŸ©é˜µå¾—åˆ°å˜æ¢çŸ©é˜µ
 	curP = P;
 	glColor3f(1.0, 1.0, 1.0);
 	glLoadIdentity();
@@ -3430,7 +3430,7 @@ void displayFcn(void)
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 
-	////glPixelStoreiºÍglDrawPixels¹²Í¬Ê¹ÓÃÊ±Òª×¢ÒâÄÚ´æ¶ÔÆëÎÊÌâ
+	////glPixelStoreiå’ŒglDrawPixelså…±åŒä½¿ç”¨æ—¶è¦æ³¨æ„å†…å­˜å¯¹é½é—®é¢˜
 	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	//glRasterPos2i(100, 100);
 	//GLubyte colorShape[60] = { 0 };
@@ -3444,7 +3444,7 @@ void displayFcn(void)
 	//memset(colorShape1, 0xaa, 80);
 	//glReadPixels(100, 100, 5, 4, GL_RGB, GL_UNSIGNED_BYTE, colorShape1);
 	//glRasterPos2i(200, 100);
-	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // ÕâÀïÈô²»Îª4×Ö½Ú¶ÔÆë£¬½«³ö´í£¬ÒòÎªglReadPixelsÊÇ°´ÕÕ4×Ö½Ú¶ÔÆë¶ÁÈ¡µÄ
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // è¿™é‡Œè‹¥ä¸ä¸º4å­—èŠ‚å¯¹é½ï¼Œå°†å‡ºé”™ï¼Œå› ä¸ºglReadPixelsæ˜¯æŒ‰ç…§4å­—èŠ‚å¯¹é½è¯»å–çš„
 	//glDrawPixels(5, 4, GL_RGB, GL_UNSIGNED_BYTE, colorShape1);
 
 	glBegin(GL_POLYGON);
@@ -3454,14 +3454,14 @@ void displayFcn(void)
 	glVertex2f(100, 200);
 	glEnd();
 
-	// ¶ÁÈ¡-Ğ´ÈëÏñËØ
+	// è¯»å–-å†™å…¥åƒç´ 
 	//GLubyte colorShape[100 * 100 * 3 + 100 * 3] = { 0 };
 	//glReadPixels(100, 100, 100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
 
 	//glRasterPos2i(100, 300);
 	//glDrawPixels(100, 100, GL_RGB, GL_UNSIGNED_BYTE, colorShape);
 
-	// Ö±½Ó¿½±´ÏñËØ
+	// ç›´æ¥æ‹·è´åƒç´ 
 	glRasterPos2i(400, 300);
 	glCopyPixels(100, 100, 100, 100, GL_COLOR);
 
@@ -3518,7 +3518,7 @@ void displayFcn(void)
 
 	glEnable(GL_COLOR_LOGIC_OP);
 	
-	// AND²Ù×÷
+	// ANDæ“ä½œ
 	drawPolygon({ { 30, 500 } ,{ 60, 500 },{ 60, 550 },{ 30, 550 } }, 0.0, 0.0, 0.0);
 	drawPolygon({ { 70, 500 } ,{ 100, 500 },{ 100, 550 },{ 70, 550 } }, 0.0, 0.0, 0.0);
 	drawPolygon({ { 110, 500 } ,{ 140, 500 },{ 140, 550 },{ 110, 550 } }, 0.0, 0.0, 0.0);
@@ -3583,7 +3583,7 @@ void displayFcn(void)
 	copyPixels(630, 400, 30, 50, 750, 400, GL_AND);
 	copyPixels(630, 400, 30, 50, 750, 400, GL_AND);
 
-	// OR²Ù×÷
+	// ORæ“ä½œ
 	drawPolygon({ { 30, 300 } ,{ 60, 300 },{ 60, 350 },{ 30, 350 } }, 0.0, 0.0, 0.0);
 	drawPolygon({ { 70, 300 } ,{ 100, 300 },{ 100, 350 },{ 70, 350 } }, 0.0, 0.0, 0.0);
 	drawPolygon({ { 110, 300 } ,{ 140, 300 },{ 140, 350 },{ 110, 350 } }, 0.0, 0.0, 0.0);
@@ -3648,7 +3648,7 @@ void displayFcn(void)
 	copyPixels(630, 200, 30, 50, 750, 200, GL_OR);
 	copyPixels(630, 200, 30, 50, 750, 200, GL_OR);
 
-	// XOR²Ù×÷
+	// XORæ“ä½œ
 	drawPolygon({ { 30, 100 } ,{ 60, 100 },{ 60, 150 },{ 30, 150 } }, 0.0, 0.0, 0.0);
 	drawPolygon({ { 70, 100 } ,{ 100, 100 },{ 100, 150 },{ 70, 150 } }, 0.0, 0.0, 0.0);
 	drawPolygon({ { 110, 100 } ,{ 140, 100 },{ 140, 150 },{ 110, 150 } }, 0.0, 0.0, 0.0);
@@ -4298,7 +4298,7 @@ void drawOperator(float x, float y, ColorArray& colorArray, std::vector<int>& op
 }
 void normalByFor(std::vector<int>& operators)
 {
-	// ±éÀúËã·¨	
+	// éå†ç®—æ³•	
 	std::vector<int> temp; 
 	for (auto& c : inputStr)
 	{
@@ -4415,7 +4415,7 @@ void displayFcn(void)
 	}
 	drawPixels(50, 400, colorArray);
 
-	// °´ÊäÈëÕı³£±ä»»
+	// æŒ‰è¾“å…¥æ­£å¸¸å˜æ¢
 	auto ca = colorArray;
 	for (auto& c : inputStr)
 	{
@@ -4436,13 +4436,13 @@ void displayFcn(void)
 	}
 	drawPixels(50, 150, ca);
 
-	// Ñ­»·»¯¼ò
+	// å¾ªç¯åŒ–ç®€
 	ca = colorArray;
 	std::vector<int> operators;
 	normalByFor(operators);
 	drawOperator(300, 400, ca, operators);
 	
-	// µİ¹é»¯¼ò
+	// é€’å½’åŒ–ç®€
 	std::vector<std::vector<int>> operatorss;
 	normalByRecursion(std::vector<int>(), 0, operatorss);
 	for (int i = 0; i < operatorss.size(); i++)
@@ -4675,7 +4675,7 @@ Point rotatePoint(Point p, Point pr, float theta)
 	ret.y = p.x * std::sin(theta) + p.y * std::cos(theta) + pr.y * (1 - std::cos(theta)) - pr.x * std::sin(theta);
 	return ret;
 }
-// ±éÀú¸½½ü9¸öÏñËØ²âÊÔ
+// éå†é™„è¿‘9ä¸ªåƒç´ æµ‹è¯•
 //void _rotateByDestCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
 //{
 //	for (int i = 0; i < colorArray._h; i++)
@@ -4700,7 +4700,7 @@ Point rotatePoint(Point p, Point pr, float theta)
 //		}
 //	}
 //}
-// Ä¿±êÏñËØÖĞĞÄµãÔÚÔ´ÏñËØÇøÓòÖĞ
+// ç›®æ ‡åƒç´ ä¸­å¿ƒç‚¹åœ¨æºåƒç´ åŒºåŸŸä¸­
 void rotateByDestCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
 {
 	float thetaA = theta * 180 / PI;
@@ -4726,7 +4726,7 @@ void rotateByDestCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
 		}
 	}
 }
-// Ô´ÏñËØÖĞĞÄµãÔÚÄ¿±êÏñËØÇøÓòÖĞ
+// æºåƒç´ ä¸­å¿ƒç‚¹åœ¨ç›®æ ‡åƒç´ åŒºåŸŸä¸­
 void rotateBySourceCenter(Point p0, ColorArray& colorArray, Point pr, float theta)
 {
 	for (int i = 0; i < colorArray._h; i++)
@@ -4740,7 +4740,7 @@ void rotateBySourceCenter(Point p0, ColorArray& colorArray, Point pr, float thet
 		}
 	}
 }
-// ³¬²ÉÑù Ô´ÏñËØÖĞĞÄµãÔÚÄ¿±êÏñËØÇøÓòÖĞ
+// è¶…é‡‡æ · æºåƒç´ ä¸­å¿ƒç‚¹åœ¨ç›®æ ‡åƒç´ åŒºåŸŸä¸­
 void rotateSSBySC(Point p0, ColorArray& colorArray, Point pr, float theta, int SSLevel)
 {
 	std::map<Point, std::map<Point, ColorElement, Comp>, Comp> pointInfo;
@@ -4776,7 +4776,7 @@ void rotateSSBySC(Point p0, ColorArray& colorArray, Point pr, float theta, int S
 		drawPoint(p.first, ColorElement(sumR / squareSS, sumG / squareSS , sumB / squareSS));
 	}
 }
-// ³¬²ÉÑù Ä¿±êÏñËØÖĞĞÄµãÔÚÔ´ÏñËØÇøÓòÖĞ
+// è¶…é‡‡æ · ç›®æ ‡åƒç´ ä¸­å¿ƒç‚¹åœ¨æºåƒç´ åŒºåŸŸä¸­
 void rotateSSByDC(Point p0, ColorArray& colorArray, Point pr, float theta, int SSLevel)
 {
 	float thetaA = theta * 180 / PI;
@@ -4884,7 +4884,7 @@ void code_7_exercise_25()
 
 #ifdef CHAPTER_7_EXERCISE_26
 struct Point { float x; float y; };
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 struct Comp
 {
@@ -4999,7 +4999,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
 	if (std::abs(sx) >= 1 && std::abs(sy) >= 1)
 	{
-		// Ä¿±êÏñËØÖĞĞÄµãÔÚÔ´ÏñËØÇøÓòÖĞ
+		// ç›®æ ‡åƒç´ ä¸­å¿ƒç‚¹åœ¨æºåƒç´ åŒºåŸŸä¸­
 		Point sp0;
 		sp0.x = sx * p0.x + pr.x * (1 - sx);
 		sp0.y = sy * p0.y + pr.y * (1 - sy);
@@ -5032,7 +5032,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 	}
 	else if (std::abs(sx) <= 1 && std::abs(sy) <= 1)
 	{
-		// Ô´ÏñËØÖĞĞÄµãÔÚÄ¿±êÏñËØÇøÓòÖĞ
+		// æºåƒç´ ä¸­å¿ƒç‚¹åœ¨ç›®æ ‡åƒç´ åŒºåŸŸä¸­
 		Point sp0;
 		sp0.x = sx * p0.x + pr.x * (1 - sx);
 		sp0.y = sy * p0.y + pr.y * (1 - sy);
@@ -5074,7 +5074,7 @@ void scale(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 		scaleRealStencil(p0, colorArray, pr, sx, sy);
 	}
 }
-// ³¬²ÉÑù
+// è¶…é‡‡æ ·
 void scaleSS(Point p0, ColorArray& colorArray, Point pr, float sx, float sy, int SSLevel)
 {
 	float minPer = max(std::abs(1 / sx), std::abs(1 / sy));
@@ -5142,7 +5142,7 @@ float rectAndArea(float x1, float y1, float w1, float h1, float x2, float y2, fl
 	if (h <= 0) return 0;
 	return w * h;
 }
-// ÕæÊµ¿í¸ß¼ÆËã
+// çœŸå®å®½é«˜è®¡ç®—
 void scaleReal(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
 	Point sp0;
@@ -5240,7 +5240,7 @@ void scaleReal(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 		drawPoint(p.first, ColorElement(std::round(sumR), std::round(sumG), std::round(sumB)));
 	}
 }
-// ÕæÊµÄ£°å¼ÆËã
+// çœŸå®æ¨¡æ¿è®¡ç®—
 void scaleRealStencil(Point p0, ColorArray& colorArray, Point pr, float sx, float sy)
 {
 	Point sp0;
@@ -5468,7 +5468,7 @@ void displayFcn(void)
 	glMatrixMode(GL_MODELVIEW);
 	glColor3f(0.0, 0.0, 0.0);
 
-	// Ğı×ª-Æ½ÒÆ
+	// æ—‹è½¬-å¹³ç§»
 	glLoadIdentity();
 	glTranslatef(150.f, 300.f, 0.f);
 	drawCoordinate();
@@ -5477,7 +5477,7 @@ void displayFcn(void)
 
 	auto x = std::cos(curAngle * PI / 180) * 100;
 	auto y = std::sin(curAngle * PI / 180) * 100;
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄĞı×ª£¨Õı·½Ïò£©-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„æ—‹è½¬ï¼ˆæ­£æ–¹å‘ï¼‰-å¹³ç§»
 	glLoadIdentity();
 	glTranslatef(400.f, 300.f, 0.f);
 	drawCoordinate();
@@ -5487,7 +5487,7 @@ void displayFcn(void)
 	glRotated(curAngle, 0, 0, 1);
 	drawPolygon(rect1);
 
-	// Ö±½Ó°´Ô²Â·¾¶Æ½ÒÆ
+	// ç›´æ¥æŒ‰åœ†è·¯å¾„å¹³ç§»
 	glLoadIdentity();
 	glTranslatef(650.f, 300.f, 0.f);
 	drawCoordinate();
@@ -5598,7 +5598,7 @@ void displayFcn(void)
 	glMatrixMode(GL_MODELVIEW);
 	glColor3f(0.0, 0.0, 0.0);
 
-	// Ğı×ª-Æ½ÒÆ
+	// æ—‹è½¬-å¹³ç§»
 	glLoadIdentity();
 	translate(150.f, 300.f);
 	drawCoordinate();
@@ -5607,7 +5607,7 @@ void displayFcn(void)
 
 	float x = std::cos(curAngle * PI / 180) * 100;
 	float y = std::sin(curAngle * PI / 180) * 100;
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄĞı×ª£¨Õı·½Ïò£©-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„æ—‹è½¬ï¼ˆæ­£æ–¹å‘ï¼‰-å¹³ç§»
 	glLoadIdentity();
 	translate(400.f, 300.f);
 	drawCoordinate();
@@ -5615,7 +5615,7 @@ void displayFcn(void)
 	rotate({0.f, 0.f}, curAngle);
 	drawPolygon(rect1);
 
-	// Ö±½Ó°´Ô²Â·¾¶Æ½ÒÆ
+	// ç›´æ¥æŒ‰åœ†è·¯å¾„å¹³ç§»
 	glLoadIdentity();
 	translate(650.f, 300.f);
 	drawCoordinate();
@@ -5679,7 +5679,7 @@ void displayFcn(void)
 	auto x = std::cos(curAngle * PI / 180) * 100;
 	auto y = std::sin(curAngle * PI / 180) * 100;
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	glTranslatef(200.f, 450.f, 0.f);
@@ -5699,7 +5699,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	glTranslatef(600.f, 450.f, 0.f);
@@ -5719,7 +5719,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-Ö±½Ó°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-ç›´æ¥æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	glTranslatef(200.f, 150.f, 0.f);
@@ -5737,7 +5737,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect2_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-Ö±½Ó°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-ç›´æ¥æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	glTranslatef(600.f, 150.f, 0.f);
@@ -5868,7 +5868,7 @@ void displayFcn(void)
 	float x = std::cos(curAngle * PI / 180) * 100;
 	float y = std::sin(curAngle * PI / 180) * 100;
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	translate(200.f, 450.f);
@@ -5886,7 +5886,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	translate(600.f, 450.f);
@@ -5904,7 +5904,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-Ö±½Ó°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-ç›´æ¥æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	translate(200.f, 150.f);
@@ -5922,7 +5922,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect2_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-Ö±½Ó°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-ç›´æ¥æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	translate(600.f, 150.f);
@@ -6000,7 +6000,7 @@ void displayFcn(void)
 
 	selfScale = ((float)((curAngle - 1) % 90 + 1) / 90  + 1) / 2;
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	glTranslatef(200.f, 450.f, 0.f);
@@ -6021,7 +6021,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	glTranslatef(600.f, 450.f, 0.f);
@@ -6042,7 +6042,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	glTranslatef(200.f, 150.f, 0.f);
@@ -6061,7 +6061,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect2_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	glTranslatef(600.f, 150.f, 0.f);
@@ -6206,7 +6206,7 @@ void displayFcn(void)
 
 	selfScale = ((float)((curAngle - 1) % 90 + 1) / 90 + 1) / 2;
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	translate(200.f, 450.f);
@@ -6225,7 +6225,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// Ğı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-Æ½ÒÆ
+	// æ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	translate(600.f, 450.f);
@@ -6244,7 +6244,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect1_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄË³Ê±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é¡ºæ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = (float)(curAngle % 90) / 90 * 360;
 	glLoadIdentity();
 	translate(200.f, 150.f);
@@ -6263,7 +6263,7 @@ void displayFcn(void)
 	glColor3f(0.0, 0.0, 1.0);
 	drawPolygon(rect2_4);
 
-	// »ùÓÚÕı·½ĞÎÖĞĞÄµÄÄæÊ±Õë×ÔĞı×ª-»ùÓÚÕı·½ĞÎÖĞĞÄµÄËõ·Å-°´Ô²Â·¾¶Æ½ÒÆ
+	// åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„é€†æ—¶é’ˆè‡ªæ—‹è½¬-åŸºäºæ­£æ–¹å½¢ä¸­å¿ƒçš„ç¼©æ”¾-æŒ‰åœ†è·¯å¾„å¹³ç§»
 	selfAngle = 360 - ((float)(curAngle % 90) / 90 * 360);
 	glLoadIdentity();
 	translate(600.f, 150.f);
@@ -6393,7 +6393,7 @@ void matrixSetIdentity(Matrix& m)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -6402,7 +6402,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -6413,7 +6413,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -6426,7 +6426,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -6435,7 +6435,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -6446,7 +6446,7 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy)
 }
 Matrix shearXMatrix(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -6682,7 +6682,7 @@ void scale(float sx, float sy)
 	transformPoints(m, curWheelHolder2);
 
 	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
-	// ÏÈĞ±ÇĞÔÙËõ·Å£¬Ğ±ÇĞ²ÎÊı½«±äÎªÔ­Ê¼µÄsx/sy±¶£¬¿ÉÒÔ¶Ô±ÈÏÈĞ±ÇĞÔÙËõ·ÅºÍÏÈËõ·ÅÔÙĞ±ÇĞµÄ¾ØÕóµÃ³ö´Ë½áÂÛ
+	// å…ˆæ–œåˆ‡å†ç¼©æ”¾ï¼Œæ–œåˆ‡å‚æ•°å°†å˜ä¸ºåŸå§‹çš„sx/syå€ï¼Œå¯ä»¥å¯¹æ¯”å…ˆæ–œåˆ‡å†ç¼©æ”¾å’Œå…ˆç¼©æ”¾å†æ–œåˆ‡çš„çŸ©é˜µå¾—å‡ºæ­¤ç»“è®º
 	tansShx *= (sx / sy);
 	transformPoints(rotateByPointMatrix({0, 0}, curDirection) * shearXMatrix(tansShx), curWheel1);
 	curWheel2 = curWheel1;
@@ -7126,16 +7126,16 @@ void showOperatorNotice()
 	printf("S: decrease FPS.\n");
 	printf("D: add speed.\n");
 	printf("A: decrease speed.\n");
-	printf("¡ú: add scale x.\n");
-	printf("¡û: decrease scale x.\n");
-	printf("¡ü: add scale y.\n");
-	printf("¡ı: decrease scale y.\n");
-	printf("CTRL ¡ú: reflect to +x.\n");
-	printf("CTRL ¡û: reflect to -x.\n");
-	printf("CTRL ¡ü: reflect to +y.\n");
-	printf("CTRL ¡ı: reflect to -y.\n");
-	printf("SHIFT ¡ú: add shear.\n");
-	printf("SHIFT ¡û: decrease shear.\n");
+	printf("â†’: add scale x.\n");
+	printf("â†: decrease scale x.\n");
+	printf("â†‘: add scale y.\n");
+	printf("â†“: decrease scale y.\n");
+	printf("CTRL â†’: reflect to +x.\n");
+	printf("CTRL â†: reflect to -x.\n");
+	printf("CTRL â†‘: reflect to +y.\n");
+	printf("CTRL â†“: reflect to -y.\n");
+	printf("SHIFT â†’: add shear.\n");
+	printf("SHIFT â†: decrease shear.\n");
 	printf("R: reset state\n");
 	printf("ESC: command mode.\n");
 }
@@ -7393,7 +7393,7 @@ void matrixSetIdentity(Matrix& m)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -7402,7 +7402,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix shearXMatrix(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -7556,7 +7556,7 @@ void scale(float sx, float sy)
 	scaleX *= sx;
 	scaleY *= sy;
 	
-	// ÏÈĞ±ÇĞÔÙËõ·Å£¬Ğ±ÇĞ²ÎÊı½«±äÎªÔ­Ê¼µÄsx/sy±¶£¬¿ÉÒÔ¶Ô±ÈÏÈĞ±ÇĞÔÙËõ·ÅºÍÏÈËõ·ÅÔÙĞ±ÇĞµÄ¾ØÕóµÃ³ö´Ë½áÂÛ
+	// å…ˆæ–œåˆ‡å†ç¼©æ”¾ï¼Œæ–œåˆ‡å‚æ•°å°†å˜ä¸ºåŸå§‹çš„sx/syå€ï¼Œå¯ä»¥å¯¹æ¯”å…ˆæ–œåˆ‡å†ç¼©æ”¾å’Œå…ˆç¼©æ”¾å†æ–œåˆ‡çš„çŸ©é˜µå¾—å‡ºæ­¤ç»“è®º
 	tansShx *= (sx / sy);
 	curTransform = scaleMatrix(sx, sy) * curTransform;
 }
@@ -7634,10 +7634,10 @@ void update()
 	curPosition = nextP;
 	curDirection = dir;
 
-	// gluOrtho2DÖ®ºóµÄ»æÖÆ²Å»áÊ¹ÓÃĞÂµÄÊÓ¿Ú£¬·ñÔòÈôÔÚgluOrtho2DÖ®Ç°»æÖÆ£¬»æÖÆÊ¹ÓÃÖ®Ç°µÄÊÓ¿Ú£¬ÏÂ´ÎĞÂÊÓ¿Ú²ÅÉúĞ§
-	// Òò´ËµÚÒ»´Î»æÖÆµÄĞ§¹ûÊÇ»æÖÆÍ¼ĞÎÒÆ¶¯£¬µ«ÊÓ¿Ú²»¶¯£¬¼´»æÖÆÍ¼ĞÎ³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë
-	// ÏÂ´Î»æÖÆÊ±£¬»áÊ×ÏÈÉúĞ§ÉÏ´ÎµÄÊÓ¿ÚÉèÖÃ£¬¼´ÊÓ¿ÚÖĞĞÄÎª»æÖÆÍ¼ĞÎÖĞĞÄ£¬µ«ÊÇÍ¼ĞÎ´ËÊ±ÓÖ»áÒÆ¶¯£¬¼´»æÖÆÍ¼ĞÎÓÖ»á³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë
-	// ÕâÑùÃ¿Ö¡»æÖÆ¶¼»á³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë£¬ÒòÎªdeltaÊÇ±äÁ¿£¬ËùÒÔÃ¿Ö¡Î»ÖÃ¶¼ÓĞĞ¡Æ«²î£¬Ôì³ÉÊÓ¾õ²ĞÓ°£¬»æÖÆ¶¶¶¯
+	// gluOrtho2Dä¹‹åçš„ç»˜åˆ¶æ‰ä¼šä½¿ç”¨æ–°çš„è§†å£ï¼Œå¦åˆ™è‹¥åœ¨gluOrtho2Dä¹‹å‰ç»˜åˆ¶ï¼Œç»˜åˆ¶ä½¿ç”¨ä¹‹å‰çš„è§†å£ï¼Œä¸‹æ¬¡æ–°è§†å£æ‰ç”Ÿæ•ˆ
+	// å› æ­¤ç¬¬ä¸€æ¬¡ç»˜åˆ¶çš„æ•ˆæœæ˜¯ç»˜åˆ¶å›¾å½¢ç§»åŠ¨ï¼Œä½†è§†å£ä¸åŠ¨ï¼Œå³ç»˜åˆ¶å›¾å½¢è¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»
+	// ä¸‹æ¬¡ç»˜åˆ¶æ—¶ï¼Œä¼šé¦–å…ˆç”Ÿæ•ˆä¸Šæ¬¡çš„è§†å£è®¾ç½®ï¼Œå³è§†å£ä¸­å¿ƒä¸ºç»˜åˆ¶å›¾å½¢ä¸­å¿ƒï¼Œä½†æ˜¯å›¾å½¢æ­¤æ—¶åˆä¼šç§»åŠ¨ï¼Œå³ç»˜åˆ¶å›¾å½¢åˆä¼šè¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»
+	// è¿™æ ·æ¯å¸§ç»˜åˆ¶éƒ½ä¼šè¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»ï¼Œå› ä¸ºdeltaæ˜¯å˜é‡ï¼Œæ‰€ä»¥æ¯å¸§ä½ç½®éƒ½æœ‰å°åå·®ï¼Œé€ æˆè§†è§‰æ®‹å½±ï¼Œç»˜åˆ¶æŠ–åŠ¨
 	updateWindowPosition();
 
 	glMatrixMode(GL_MODELVIEW);
@@ -7991,16 +7991,16 @@ void showOperatorNotice()
 	printf("S: decrease FPS.\n");
 	printf("D: add speed.\n");
 	printf("A: decrease speed.\n");
-	printf("¡ú: add scale x.\n");
-	printf("¡û: decrease scale x.\n");
-	printf("¡ü: add scale y.\n");
-	printf("¡ı: decrease scale y.\n");
-	printf("CTRL ¡ú: reflect to +x.\n");
-	printf("CTRL ¡û: reflect to -x.\n");
-	printf("CTRL ¡ü: reflect to +y.\n");
-	printf("CTRL ¡ı: reflect to -y.\n");
-	printf("SHIFT ¡ú: add shear.\n");
-	printf("SHIFT ¡û: decrease shear.\n");
+	printf("â†’: add scale x.\n");
+	printf("â†: decrease scale x.\n");
+	printf("â†‘: add scale y.\n");
+	printf("â†“: decrease scale y.\n");
+	printf("CTRL â†’: reflect to +x.\n");
+	printf("CTRL â†: reflect to -x.\n");
+	printf("CTRL â†‘: reflect to +y.\n");
+	printf("CTRL â†“: reflect to -y.\n");
+	printf("SHIFT â†’: add shear.\n");
+	printf("SHIFT â†: decrease shear.\n");
 	printf("R: reset state\n");
 	printf("ESC: command mode.\n");
 }
@@ -8157,7 +8157,7 @@ void code_7_exercise_add_2()
 #ifdef CHAPTER_7_COMMON
 void init(void)
 {
-	// ºÚÉ«±³¾°É«
+	// é»‘è‰²èƒŒæ™¯è‰²
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

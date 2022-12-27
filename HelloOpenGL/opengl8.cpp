@@ -17,7 +17,7 @@ void setPixel(GLint xCoord, GLint yCoord)
 	//glGetFloatv(GL_CURRENT_COLOR, a);
 	//glDrawPixels(1, 1, GL_RGB, GL_FLOAT, a);
 }
-// ÅĞ¶Ï¸¡µãÊıÏàµÈ
+// åˆ¤æ–­æµ®ç‚¹æ•°ç›¸ç­‰
 inline bool Equal(float f1, float f2) { return std::abs(f1 - f2) < 0.0001; }
 inline bool Greater(float f1, float f2) { return Equal(f1, f2) ? false : (f1 > f2); }
 inline bool Less(float f1, float f2) { return Equal(f1, f2) ? false : (f1 < f2); }
@@ -210,7 +210,7 @@ void displayFunc2(void)
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// ÒÔÏÂÏÔÊ¾Í¬w1´°¿Ú£¬
+	// ä»¥ä¸‹æ˜¾ç¤ºåŒw1çª—å£ï¼Œ
 	//glMatrixMode(GL_PROJECTION);
 	//glLoadIdentity();
 	//gluOrtho2D(0.0, 100.0, 0.0, 50.0);
@@ -501,7 +501,7 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 		}
 	}
 	if (plotLine)
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 }
 void drawFunc()
@@ -668,7 +668,7 @@ void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 					{
 						p1.setCoords(p1.getx() + u1 * dx, p1.gety() + u1 * dy);
 					}
-					//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ¾«È·µ½¸¡µãÊı»æÍ¼
+					//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 					lineBres(p1.getx(), p1.gety(), p2.getx(), p2.gety());
 				}
 		}
@@ -1165,7 +1165,7 @@ void drawFunc()
 	u.x = v.y;
 	u.y = -v.x;
 
-	// Ô­Ê¼ÊÀ½ç×ø±êÏµºÍ¹Û²ì×ø±êÏµ
+	// åŸå§‹ä¸–ç•Œåæ ‡ç³»å’Œè§‚å¯Ÿåæ ‡ç³»
 	glViewport(0, 300, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1173,7 +1173,7 @@ void drawFunc()
 	coordinate(p0, V);
 	triangle(tri);
 
-	// ×ª»»µ½¹Û²ì×ø±êÏµ ×Ô¶¨Òå¾ØÕó µ¥Î»ÏòÁ¿¹¹ÔìĞı×ª¾ØÕó
+	// è½¬æ¢åˆ°è§‚å¯Ÿåæ ‡ç³» è‡ªå®šä¹‰çŸ©é˜µ å•ä½å‘é‡æ„é€ æ—‹è½¬çŸ©é˜µ
 	glViewport(400, 300, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1188,7 +1188,7 @@ void drawFunc()
 	transformPoints(r * translateMatrix(-p0.x, -p0.y), temp);
 	triangle(temp);
 
-	// ×ª»»µ½¹Û²ì×ø±êÏµ OpenGL¾ØÕó µ¥Î»ÏòÁ¿¹¹ÔìĞı×ª¾ØÕó
+	// è½¬æ¢åˆ°è§‚å¯Ÿåæ ‡ç³» OpenGLçŸ©é˜µ å•ä½å‘é‡æ„é€ æ—‹è½¬çŸ©é˜µ
 	glViewport(0, 0, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1203,7 +1203,7 @@ void drawFunc()
 	glTranslatef(-p0.x, -p0.y, 0.f);
 	triangle(tri);
 
-	// ×ª»»µ½¹Û²ì×ø±êÏµ OpenGL¾ØÕó Ö±½Ó¼ÆËã½Ç¶ÈĞı×ª¾ØÕó
+	// è½¬æ¢åˆ°è§‚å¯Ÿåæ ‡ç³» OpenGLçŸ©é˜µ ç›´æ¥è®¡ç®—è§’åº¦æ—‹è½¬çŸ©é˜µ
 	glViewport(400, 0, 400, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1358,7 +1358,7 @@ void drawFunc()
 
 	std::vector<Point> tri = { { 100.f, 80.f },{ 280.f, 80.f },{ 190.f, 300.f } };
 
-	// Ô­Ê¼²Ã¼ô´°¿Ú
+	// åŸå§‹è£å‰ªçª—å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-30, 370, -200, 400);
@@ -1367,10 +1367,10 @@ void drawFunc()
 	rect(xwmin, ywmin, xwmax, ywmax);
 	triangle(tri);
 
-	// ×ª»»µ½¹æ·¶»¯ÊÓ¿Ú ×Ô¶¨Òå¾ØÕó ÖĞĞÄËõ·Å+Æ½ÒÆÍÆµ¼
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–è§†å£ è‡ªå®šä¹‰çŸ©é˜µ ä¸­å¿ƒç¼©æ”¾+å¹³ç§»æ¨å¯¼
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-(float)1 / 6, (float)7 / 6, -0.5, 1.5); // ·Å´ó150±¶
+	gluOrtho2D(-(float)1 / 6, (float)7 / 6, -0.5, 1.5); // æ”¾å¤§150å€
 	glViewport(400, 300, 200, 300);
 	coordinate(1, 1);
 	rect(xvmin , yvmin , xvmax , yvmax);
@@ -1379,7 +1379,7 @@ void drawFunc()
 		* scaleMatrix({ (xwmax + xwmin) / 2 , (ywmax + ywmin) / 2 }, (xvmax - xvmin) / (xwmax - xwmin), (yvmax - yvmin) / (ywmax - ywmin)), temp);
 	triangle(temp);
 
-	// ×ª»»µ½¹æ·¶»¯ÊÓ¿Ú ×Ô¶¨Òå¾ØÕó Ö±½ÓÊ¹ÓÃÊéÉÏ½áÂÛ
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–è§†å£ è‡ªå®šä¹‰çŸ©é˜µ ç›´æ¥ä½¿ç”¨ä¹¦ä¸Šç»“è®º
 	glViewport(600, 300, 200, 300);
 	coordinate(1, 1);
 	rect(xvmin, yvmin, xvmax, yvmax);
@@ -1393,7 +1393,7 @@ void drawFunc()
 	transformPoints(m, temp);
 	triangle(temp);
 
-	// ×ª»»µ½¹æ·¶»¯ÊÓ¿Ú OpenGL¾ØÕó ÖĞĞÄËõ·Å+Æ½ÒÆÍÆµ¼
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–è§†å£ OpenGLçŸ©é˜µ ä¸­å¿ƒç¼©æ”¾+å¹³ç§»æ¨å¯¼
 	glViewport(400, 0, 200, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1405,7 +1405,7 @@ void drawFunc()
 	glTranslatef(-(xwmax + xwmin) / 2, -(ywmax + ywmin) / 2, 0.f);
 	triangle(tri);
 
-	// ×ª»»µ½¹æ·¶»¯ÊÓ¿Ú OpenGL¾ØÕó Ö±½ÓÊ¹ÓÃÊéÉÏ½áÂÛ
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–è§†å£ OpenGLçŸ©é˜µ ç›´æ¥ä½¿ç”¨ä¹¦ä¸Šç»“è®º
 	glViewport(600, 0, 200, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1561,7 +1561,7 @@ void drawFunc()
 
 	std::vector<Point> tri = { { 100.f, 80.f },{ 280.f, 80.f },{ 190.f, 300.f } };
 
-	// Ô­Ê¼²Ã¼ô´°¿Ú
+	// åŸå§‹è£å‰ªçª—å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-30, 370, -200, 400);
@@ -1570,10 +1570,10 @@ void drawFunc()
 	rect(xwmin, ywmin, xwmax, ywmax);
 	triangle(tri);
 
-	// ×ª»»µ½¹æ·¶»¯Õı·½ĞÎ ×Ô¶¨Òå¾ØÕó ×óÏÂ½ÇËõ·Å+Æ½ÒÆÍÆµ¼
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–æ­£æ–¹å½¢ è‡ªå®šä¹‰çŸ©é˜µ å·¦ä¸‹è§’ç¼©æ”¾+å¹³ç§»æ¨å¯¼
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-(float) 4 / 3, (float)4 / 3, -2, 2);	// ·Å´ó75±¶
+	gluOrtho2D(-(float) 4 / 3, (float)4 / 3, -2, 2);	// æ”¾å¤§75å€
 	glViewport(400, 300, 200, 300);
 	coordinate(1.2, 1.8);
 	rect(-1, -1, 1, 1);
@@ -1582,7 +1582,7 @@ void drawFunc()
 		* scaleMatrix({  xwmin, ywmin }, 2 / (xwmax - xwmin), 2 / (ywmax - ywmin)), temp);
 	triangle(temp);
 
-	// ×ª»»µ½¹æ·¶»¯Õı·½ĞÎ ×Ô¶¨Òå¾ØÕó Ö±½ÓÊ¹ÓÃÊéÉÏ½áÂÛ
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–æ­£æ–¹å½¢ è‡ªå®šä¹‰çŸ©é˜µ ç›´æ¥ä½¿ç”¨ä¹¦ä¸Šç»“è®º
 	glViewport(600, 300, 200, 300);
 	coordinate(1.2, 1.8);
 	rect(-1, -1, 1, 1);
@@ -1596,7 +1596,7 @@ void drawFunc()
 	transformPoints(m, temp);
 	triangle(temp);
 
-	// ×ª»»µ½¹æ·¶»¯Õı·½ĞÎ OpenGL¾ØÕó ×óÏÂ½ÇËõ·Å+Æ½ÒÆÍÆµ¼
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–æ­£æ–¹å½¢ OpenGLçŸ©é˜µ å·¦ä¸‹è§’ç¼©æ”¾+å¹³ç§»æ¨å¯¼
 	glViewport(400, 0, 200, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1608,7 +1608,7 @@ void drawFunc()
 	glTranslatef(-xwmin, -ywmin, 0.f);
 	triangle(tri);
 
-	// ×ª»»µ½¹æ·¶»¯Õı·½ĞÎ OpenGL¾ØÕó Ö±½ÓÊ¹ÓÃÊéÉÏ½áÂÛ
+	// è½¬æ¢åˆ°è§„èŒƒåŒ–æ­£æ–¹å½¢ OpenGLçŸ©é˜µ ç›´æ¥ä½¿ç”¨ä¹¦ä¸Šç»“è®º
 	glViewport(600, 0, 200, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1634,10 +1634,10 @@ void code_8_exercise_3()
 #ifdef CHAPTER_8_EXERCISE_4
 struct Point { float x; float y; };
 typedef Point Vec;
-Point pv0 = {17, 103}; // ¹Û²ì×ø±êÏµÔ­µã
-Point pv1 = {84, 237}; // ¹Û²ì×ø±êÏµÏòÉÏÏòÁ¿·½Ïòµã£¨Ïà¶ÔÓÚpv0µã£©
-float xwmin = 30, ywmin = 20, xwmax = 200, ywmax = 130;  // ²Ã¼ô´°¿Ú(¹Û²ì×ø±êÏµÖĞ¶¨Òå)
-float xvmin = 150, yvmin = 50, xvmax = 235, yvmax = 105;  // ÊÓ¿Ú(Éè±¸×ø±êÏµÖĞ¶¨Òå)
+Point pv0 = {17, 103}; // è§‚å¯Ÿåæ ‡ç³»åŸç‚¹
+Point pv1 = {84, 237}; // è§‚å¯Ÿåæ ‡ç³»å‘ä¸Šå‘é‡æ–¹å‘ç‚¹ï¼ˆç›¸å¯¹äºpv0ç‚¹ï¼‰
+float xwmin = 30, ywmin = 20, xwmax = 200, ywmax = 130;  // è£å‰ªçª—å£(è§‚å¯Ÿåæ ‡ç³»ä¸­å®šä¹‰)
+float xvmin = 150, yvmin = 50, xvmax = 235, yvmax = 105;  // è§†å£(è®¾å¤‡åæ ‡ç³»ä¸­å®šä¹‰)
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -1784,7 +1784,7 @@ void drawFunc()
 
 	auto temp = tri;
 
-	// 0.¾Ö²¿×ø±êÏµ
+	// 0.å±€éƒ¨åæ ‡ç³»
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-100, 100, -300, 300);
@@ -1792,7 +1792,7 @@ void drawFunc()
 	coordinate({ 0, 0 }, { 0, 1 }, -90, 90, -50, 200);
 	triangle(temp);
 
-	// 1.×ª»»µ½ÊÀ½ç×ø±êÏµ
+	// 1.è½¬æ¢åˆ°ä¸–ç•Œåæ ‡ç³»
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-25, 275, -25, 275);
@@ -1809,7 +1809,7 @@ void drawFunc()
 	v.y = V.y / distanceV;
 	u.x = v.y;
 	u.y = -v.x;
-	Matrix r(3, 3); // ÈÆpv0Ğı×ªµ½v, u×ø±êÏµ
+	Matrix r(3, 3); // ç»•pv0æ—‹è½¬åˆ°v, uåæ ‡ç³»
 	matrixSetIdentity(r);
 	r[0][0] = u.x;
 	r[0][1] = v.x;
@@ -1820,7 +1820,7 @@ void drawFunc()
 	transformPoints(r * translateMatrix(pv0.x, pv0.y), tempWin);
 	rect(tempWin);
 
-	// 2.×ª»»µ½¹Û²ì×ø±êÏµ Ê¹ÓÃ¹Û²ì×ø±êÏµ£¨8.2.1£©
+	// 2.è½¬æ¢åˆ°è§‚å¯Ÿåæ ‡ç³» ä½¿ç”¨è§‚å¯Ÿåæ ‡ç³»ï¼ˆ8.2.1ï¼‰
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-50, 250, -80, 220);
@@ -1836,10 +1836,10 @@ void drawFunc()
 	transformPoints(r1 * translateMatrix(-pv0.x, -pv0.y), temp);
 	triangle(temp);
 
-	// 3.×ª»»µ½¹æ·¶»¯Éè±¸×ø±êÏµ(¹æ·¶»¯Õı·½ĞÎ)
+	// 3.è½¬æ¢åˆ°è§„èŒƒåŒ–è®¾å¤‡åæ ‡ç³»(è§„èŒƒåŒ–æ­£æ–¹å½¢)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-2, 2, -2, 2); // ·Å´ó75±¶
+	gluOrtho2D(-2, 2, -2, 2); // æ”¾å¤§75å€
 	glViewport(200, 0, 300, 300);
 	coordinate({ 0, 0 }, { 0, 1 }, -1.2, 1.2, -1.2, 1.2);	
 	rect(-1, -1, 1, 1);
@@ -1852,7 +1852,7 @@ void drawFunc()
 	transformPoints(r2, temp);
 	triangle(temp);
 
-	// 4.×ª»»µ½Éè±¸×ø±êÏµ
+	// 4.è½¬æ¢åˆ°è®¾å¤‡åæ ‡ç³»
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-25, 275, -100, 200);
@@ -1879,11 +1879,11 @@ void code_8_exercise_4()
 #ifdef CHAPTER_8_EXERCISE_4_1
 struct Point { float x; float y; };
 typedef Point Vec;
-Point p0 = { 150, 143 }; // ¶ÔÏó²Î¿¼µã£¨ÖĞĞÄµã£©
-Point p1 = { 200, 240 }; // ÏòÁ¿·½Ïòµã£¨Ïà¶ÔÓÚp0µã£©(ºÍÉÏÒ»ÌâÖĞÏàÍ¬)
-float xwmin = 30 - 101.07, ywmin = 20 - 95.25, xwmax = 200 - 101.07, ywmax = 130 - 95.25;  // ²Ã¼ô´°¿Ú(ÊÀ½ç×ø±êÏµÖĞ¶¨Òå£¬ ºÍÉÏÒ»Ï°ÌâÖĞÎ»ÖÃÏàÍ¬£¬ (101.07, 95.25)ÊÇÉÏÒ»Ï°ÌâÖĞ¼ÆËã³öµÄÈı½ÇĞÎÖĞĞÄÔÚ¹Û²ì×ø±êÏµÖĞµÄ×ø±ê)
-float xvmin = 150.f, yvmin = 50.f, xvmax = 235.f, yvmax = 105.f; // ÊÓ¿Ú(Éè±¸×ø±êÏµÖĞ¶¨Òå£¬ ºÍÉÏÒ»Ï°ÌâÖĞÎ»ÖÃÏàÍ¬)
-float xnvmin = xvmin / 250, ynvmin = yvmin / 180, xnvmax = xvmax / 250, ynvmax = yvmax / 180;  // ¹æ·¶»¯ÊÓ¿Ú(¹æ·¶»¯Éè±¸×ø±êÏµÖĞ¶¨Òå£¬ 250£¬180ÊÇÉÏÒ»Ï°ÌâÖĞÉè±¸×ø±êÏµµÄ±ß½ç£¨ÏÔÊ¾´°¿Ú±ß½ç£©)
+Point p0 = { 150, 143 }; // å¯¹è±¡å‚è€ƒç‚¹ï¼ˆä¸­å¿ƒç‚¹ï¼‰
+Point p1 = { 200, 240 }; // å‘é‡æ–¹å‘ç‚¹ï¼ˆç›¸å¯¹äºp0ç‚¹ï¼‰(å’Œä¸Šä¸€é¢˜ä¸­ç›¸åŒ)
+float xwmin = 30 - 101.07, ywmin = 20 - 95.25, xwmax = 200 - 101.07, ywmax = 130 - 95.25;  // è£å‰ªçª—å£(ä¸–ç•Œåæ ‡ç³»ä¸­å®šä¹‰ï¼Œ å’Œä¸Šä¸€ä¹ é¢˜ä¸­ä½ç½®ç›¸åŒï¼Œ (101.07, 95.25)æ˜¯ä¸Šä¸€ä¹ é¢˜ä¸­è®¡ç®—å‡ºçš„ä¸‰è§’å½¢ä¸­å¿ƒåœ¨è§‚å¯Ÿåæ ‡ç³»ä¸­çš„åæ ‡)
+float xvmin = 150.f, yvmin = 50.f, xvmax = 235.f, yvmax = 105.f; // è§†å£(è®¾å¤‡åæ ‡ç³»ä¸­å®šä¹‰ï¼Œ å’Œä¸Šä¸€ä¹ é¢˜ä¸­ä½ç½®ç›¸åŒ)
+float xnvmin = xvmin / 250, ynvmin = yvmin / 180, xnvmax = xvmax / 250, ynvmax = yvmax / 180;  // è§„èŒƒåŒ–è§†å£(è§„èŒƒåŒ–è®¾å¤‡åæ ‡ç³»ä¸­å®šä¹‰ï¼Œ 250ï¼Œ180æ˜¯ä¸Šä¸€ä¹ é¢˜ä¸­è®¾å¤‡åæ ‡ç³»çš„è¾¹ç•Œï¼ˆæ˜¾ç¤ºçª—å£è¾¹ç•Œï¼‰)
 struct Matrix
 {
 	Matrix(int row, int col)
@@ -2062,7 +2062,7 @@ void drawFunc()
 
 	std::vector<Point> tri = { { -50.f, 0.f },{ 50.f, 0.f },{ 0.f, 130.f } };
 
-	// 0.¾Ö²¿×ø±êÏµ
+	// 0.å±€éƒ¨åæ ‡ç³»
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-100, 100, -300, 300);
@@ -2072,7 +2072,7 @@ void drawFunc()
 	coordinate({ 0, 0 }, { 0, 1 }, -90, 90, -50, 200);
 	triangle(tri);
 
-	// 1.×ª»»µ½ÊÀ½ç×ø±êÏµ
+	// 1.è½¬æ¢åˆ°ä¸–ç•Œåæ ‡ç³»
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-25, 275, -25, 275);
@@ -2087,7 +2087,7 @@ void drawFunc()
 	point(p0);
 	Vector(p0, V);
 
-	// 2.Ö±½Ó±ä»»ÊÀ½ç¶ÔÏó£¨8.2.2£©
+	// 2.ç›´æ¥å˜æ¢ä¸–ç•Œå¯¹è±¡ï¼ˆ8.2.2ï¼‰
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-150, 150, -150, 150);
@@ -2113,10 +2113,10 @@ void drawFunc()
 	glTranslatef(150.f, 100.f, 0.f);
 	triangle(tri);
 
-	// 3.×ª»»µ½¹æ·¶»¯Éè±¸×ø±êÏµ(¹æ·¶»¯ÊÓ¿Ú)
+	// 3.è½¬æ¢åˆ°è§„èŒƒåŒ–è®¾å¤‡åæ ‡ç³»(è§„èŒƒåŒ–è§†å£)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-0.25, 1.25, -0.25, 1.25); // ·Å´ó200±¶
+	gluOrtho2D(-0.25, 1.25, -0.25, 1.25); // æ”¾å¤§200å€
 	glViewport(200, 0, 300, 300);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -2134,7 +2134,7 @@ void drawFunc()
 	glTranslatef(150.f, 100.f, 0.f);
 	triangle(tri);
 
-	// 4.×ª»»µ½Éè±¸×ø±êÏµ
+	// 4.è½¬æ¢åˆ°è®¾å¤‡åæ ‡ç³»
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-25, 275, -100, 200);
@@ -2271,7 +2271,7 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 		}
 	}
 	if (plotLine)
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 }
 int lastTick = 0;
@@ -2465,7 +2465,7 @@ void lineClipCohSuth(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 	}
 	if (plotLine)
 	{
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 	}
 	printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY],opCount[DIVISION]);
@@ -2544,7 +2544,7 @@ void lineClipCohSuthOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 	}
 	if (plotLine)
 	{
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 	}
 	printf("Cohen-Sutherland Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
@@ -2610,7 +2610,7 @@ void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 						p1.x = p1.x + u1 * dx;
 						p1.y = p1.y + u1 * dy;
 					}
-					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 					lineBres(p1.x, p1.y, p2.x, p2.y);
 				}
 			}
@@ -2705,7 +2705,7 @@ void lineClipLiangBarskOptimize(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D 
 						p1.x = p1.x + u1 * dx;
 						p1.y = p1.y + u1 * dy;
 					}
-					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 					lineBres(p1.x, p1.y, p2.x, p2.y);
 				}
 		}
@@ -2901,7 +2901,7 @@ void lineClipLiangBarsk(wcPt2D winMin, wcPt2D winMax, wcPt2D p1, wcPt2D p2)
 						p1.x = p1.x + u1 * dx;
 						p1.y = p1.y + u1 * dy;
 					}
-					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 					lineBres(p1.x, p1.y, p2.x, p2.y);
 				}
 		}
@@ -3107,7 +3107,7 @@ void drawFunc()
 
 	Point winMin = { 400 , 300}, winMax = { 480 , 350};
 
-	// ÉÏ
+	// ä¸Š
 	Point p = { 465, 370 };
 	Point _winMin = winMin, _winMax = winMax;
 	glMatrixMode(GL_PROJECTION);
@@ -3121,7 +3121,7 @@ void drawFunc()
 	point(p);
 	rect(_winMin, _winMax);
 
-	// ÓÒÉÏ
+	// å³ä¸Š
 	p = { 500, 370 };
 	_winMin = winMin, _winMax = winMax;
 	glViewport(260, 450, 260, 150);
@@ -3132,7 +3132,7 @@ void drawFunc()
 	point(p);
 	rect(_winMin, _winMax);
 
-	// ÓÒ
+	// å³
 	p = { 520, 344 };
 	_winMin = winMin, _winMax = winMax;
 	glViewport(520, 450, 260, 150);
@@ -3143,7 +3143,7 @@ void drawFunc()
 	point(p);
 	rect(_winMin, _winMax);
 
-	// ÓÒÏÂ
+	// å³ä¸‹
 	p = { 490, 260 };
 	_winMin = winMin, _winMax = winMax;
 	glViewport(520, 150, 260, 150);
@@ -3154,7 +3154,7 @@ void drawFunc()
 	point(p);
 	rect(_winMin, _winMax);
 
-	// ÏÂ
+	// ä¸‹
 	p = { 440, 270 };
 	_winMin = winMin, _winMax = winMax;
 	glViewport(260, 150, 260, 150);
@@ -3165,7 +3165,7 @@ void drawFunc()
 	point(p);
 	rect(_winMin, _winMax);
 
-	// ×óÏÂ
+	// å·¦ä¸‹
 	p = { 375, 290 };
 	_winMin = winMin, _winMax = winMax;
 	glViewport(0, 150, 260, 150);
@@ -3338,7 +3338,7 @@ void rorate(Point& p1, Point& p2, Point& winMin, Point& winMax, float angle)
 	//auto m = rotateMatrix(center, angle * PI / 180);
 	//transformPoint(m, p1);
 	//transformPoint(m, p2);
-	// ¼ò»¯¼ÆËã
+	// ç®€åŒ–è®¡ç®—
 	float temp = 0.f;
 	if (angle == 90 || angle == -270)
 	{
@@ -3869,7 +3869,7 @@ std::map<int, int> opCount;
 #define MINUS 1
 #define MULTIPLY 2
 #define DIVISION 3
-#define TRIGONOMETRIC 4 // Èı½Çº¯Êı
+#define TRIGONOMETRIC 4 // ä¸‰è§’å‡½æ•°
 typedef enum { Left, Right, Bottom, Top } Boundary;
 inline GLint Round(const GLfloat a)
 {
@@ -4000,7 +4000,7 @@ void lineClipCohSuth(Point winMin, Point winMax, Point p1, Point p2)
 	}
 	if (plotLine)
 	{
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 	}
 	printf("Cohen-Sutherland: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
@@ -4079,12 +4079,12 @@ void lineClipCohSuthOptimize(Point winMin, Point winMax, Point p1, Point p2)
 	}
 	if (plotLine)
 	{
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 	}
 	printf("Cohen-Sutherland Optimize: \nADD: %d MINUS: %d MULTIPLY: %d DIVISION: %d\n", opCount[ADD], opCount[MINUS], opCount[MULTIPLY], opCount[DIVISION]);
 }
-// ÁºÓÑ¶°-Barsky
+// æ¢å‹æ ‹-Barsky
 GLint clipTest(GLfloat p, GLfloat q, GLfloat* u1, GLfloat* u2)
 {
 	GLfloat r;
@@ -4146,7 +4146,7 @@ void lineClipLiangBarsk(Point winMin, Point winMax, Point p1, Point p2)
 						p1.x = p1.x + u1 * dx;
 						p1.y = p1.y + u1 * dy;
 					}
-					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 					lineBres(p1.x, p1.y, p2.x, p2.y);
 				}
 			}
@@ -4241,7 +4241,7 @@ void lineClipLiangBarskOptimize(Point winMin, Point winMax, Point p1, Point p2)
 						p1.x = p1.x + u1 * dx;
 						p1.y = p1.y + u1 * dy;
 					}
-					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+					//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 					lineBres(p1.x, p1.y, p2.x, p2.y);
 				}
 		}
@@ -4355,7 +4355,7 @@ void rorate(Point& p1, Point& p2, Point& winMin, Point& winMax, float angle)
 	//auto m = rotateMatrix(center, angle * PI / 180);
 	//transformPoint(m, p1);
 	//transformPoint(m, p2);
-	// ¼ò»¯¼ÆËã
+	// ç®€åŒ–è®¡ç®—
 	float temp = 0.f;
 	if (angle == 90 || angle == -270)
 	{
@@ -5355,7 +5355,7 @@ void drawFunc()
 	glLoadIdentity();
 	gluOrtho2D(0, 260, 0, winHeight);
 
-	// polygonClipLiangBarsk1 ÕûÌå²Ã¼ô£¬Ã¿Ò»±ßÕûÌå²Ã¼ô¶à±ßĞÎ£¬È»ºó´«µ½ÏÂÒ»Ìõ±ß£¬²Î¼ûP237
+	// polygonClipLiangBarsk1 æ•´ä½“è£å‰ªï¼Œæ¯ä¸€è¾¹æ•´ä½“è£å‰ªå¤šè¾¹å½¢ï¼Œç„¶åä¼ åˆ°ä¸‹ä¸€æ¡è¾¹ï¼Œå‚è§P237
 	glViewport(0, 0, 260, winHeight);
 
 	glColor3f(1.0, 1.0, 1.0);
@@ -5372,7 +5372,7 @@ void drawFunc()
 	glColor3f(1.0, 0.0, 0.0);
 	drawPolygon(polygon1);
 
-	// polygonClipLiangBarsk2 ÕûÌå²Ã¼ô£¬µ«Ê¹ÓÃÓëP238ÖĞ²»Í¬µÄ±£Áôµã¹æÔò
+	// polygonClipLiangBarsk2 æ•´ä½“è£å‰ªï¼Œä½†ä½¿ç”¨ä¸P238ä¸­ä¸åŒçš„ä¿ç•™ç‚¹è§„åˆ™
 	glViewport(260, 0, 260, winHeight);
 
 	glColor3f(1.0, 1.0, 1.0);
@@ -5389,7 +5389,7 @@ void drawFunc()
 	glColor3f(1.0, 0.0, 0.0);
 	drawPolygon(polygon2);
 
-	// polygonClipLiangBarsk3 ²¢ĞĞ²Ã¼ô£¬¶à±ßĞÎÃ¿Ìõ±ß¶¼½øĞĞµ¥¶À²Ã¼ô£¬×îºó°´ÕÕ²Ã¼ô±ß½çÌí¼Ó½Çµã
+	// polygonClipLiangBarsk3 å¹¶è¡Œè£å‰ªï¼Œå¤šè¾¹å½¢æ¯æ¡è¾¹éƒ½è¿›è¡Œå•ç‹¬è£å‰ªï¼Œæœ€åæŒ‰ç…§è£å‰ªè¾¹ç•Œæ·»åŠ è§’ç‚¹
 	glViewport(520, 0, 260, winHeight);
 
 	glColor3f(1.0, 1.0, 1.0);
@@ -5742,7 +5742,7 @@ void drawFunc()
 	glLoadIdentity();
 	gluOrtho2D(0, 260, 0, winHeight);
 
-	// polygonClipLiangBarsk1 ÕûÌå²Ã¼ô£¬Ã¿Ò»±ßÕûÌå²Ã¼ô¶à±ßĞÎ£¬È»ºó´«µ½ÏÂÒ»Ìõ±ß£¬²Î¼ûP237
+	// polygonClipLiangBarsk1 æ•´ä½“è£å‰ªï¼Œæ¯ä¸€è¾¹æ•´ä½“è£å‰ªå¤šè¾¹å½¢ï¼Œç„¶åä¼ åˆ°ä¸‹ä¸€æ¡è¾¹ï¼Œå‚è§P237
 	auto polygon1 = curPolygon;
 	glViewport(0, 0, 260, winHeight);
 
@@ -5759,7 +5759,7 @@ void drawFunc()
 	glColor3f(1.0, 0.0, 0.0);
 	drawPolygon(polygon1);
 
-	// polygonClipLiangBarsk2 ÕûÌå²Ã¼ô£¬µ«Ê¹ÓÃÓëP238ÖĞ²»Í¬µÄ±£Áôµã¹æÔò
+	// polygonClipLiangBarsk2 æ•´ä½“è£å‰ªï¼Œä½†ä½¿ç”¨ä¸P238ä¸­ä¸åŒçš„ä¿ç•™ç‚¹è§„åˆ™
 	auto polygon2 = curPolygon;
 	glViewport(260, 0, 260, winHeight);
 
@@ -5776,7 +5776,7 @@ void drawFunc()
 	glColor3f(1.0, 0.0, 0.0);
 	drawPolygon(polygon2);
 
-	// polygonClipLiangBarsk3 ²¢ĞĞ²Ã¼ô£¬¶à±ßĞÎÃ¿Ìõ±ß¶¼½øĞĞµ¥¶À²Ã¼ô£¬×îºó°´ÕÕ²Ã¼ô±ß½çÌí¼Ó½Çµã
+	// polygonClipLiangBarsk3 å¹¶è¡Œè£å‰ªï¼Œå¤šè¾¹å½¢æ¯æ¡è¾¹éƒ½è¿›è¡Œå•ç‹¬è£å‰ªï¼Œæœ€åæŒ‰ç…§è£å‰ªè¾¹ç•Œæ·»åŠ è§’ç‚¹
 	auto polygon3 = curPolygon;
 	glViewport(520, 0, 260, winHeight);
 
@@ -5819,17 +5819,17 @@ public:
 };
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Polygon, // ¶à±ßĞÎµã
-	ClipWindow,	 // ²Ã¼ô´°¿Úµã
-	CrossIn, // ²Ã¼ô´°¿Ú½ø½»µã
-	CrossOut, //²Ã¼ô´°¿Ú³ö½»µã
+	None,    // æ— ç±»å‹
+	Polygon, // å¤šè¾¹å½¢ç‚¹
+	ClipWindow,	 // è£å‰ªçª—å£ç‚¹
+	CrossIn, // è£å‰ªçª—å£è¿›äº¤ç‚¹
+	CrossOut, //è£å‰ªçª—å£å‡ºäº¤ç‚¹
 };
 struct CrossPointInfo
 {
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	Point* point;       // ½»µã
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	Point* point;       // äº¤ç‚¹
 };
 struct LineWithCross
 {
@@ -5839,10 +5839,10 @@ struct LineWithCross
 };
 struct PointInfo
 {
-	PointType type; // ÀàĞÍ
-	int idx1;   // ²Ã¼ô´°¿Ú¶¥µã Êı×éË÷Òı
-	int idx2;	// ¶à±ßĞÎ¶¥µã Êı×éË÷Òı
-	bool dealed; // ÊÇ·ñÒÑ´¦Àí
+	PointType type; // ç±»å‹
+	int idx1;   // è£å‰ªçª—å£é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	int idx2;	// å¤šè¾¹å½¢é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	bool dealed; // æ˜¯å¦å·²å¤„ç†
 
 	PointInfo::PointInfo() : type(PointType::None), idx1(-1), idx2(-1), dealed(false) {}
 };
@@ -5850,7 +5850,7 @@ inline GLint Round(const GLfloat a)
 {
 	return GLint(a + 0.5);
 }
-// Ö»ÄÜÊÇÍ¹¶à±ßĞÎ
+// åªèƒ½æ˜¯å‡¸å¤šè¾¹å½¢
 void drawPolygon(const vector<Point>& polygon)
 {
 	glBegin(GL_POLYGON);
@@ -5874,7 +5874,7 @@ void lineBres(float x0, float y0, float xEnd, float yEnd)
 	return;
 }
 //////////////////////////////////////////////////////////////////////////
-// ÈÎÒâĞÎ×´¶à±ßĞÎÌî³äËã·¨
+// ä»»æ„å½¢çŠ¶å¤šè¾¹å½¢å¡«å……ç®—æ³•
 struct Line
 {
 	int x0;
@@ -5915,7 +5915,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -5935,7 +5935,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -5993,7 +5993,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -6032,7 +6032,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -6521,21 +6521,21 @@ bool operator < (const Point& p1, const Point& p2)
 }
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Polygon, // ¶à±ßĞÎµã
-	ClipWindow,	 // ²Ã¼ô´°¿Úµã
-	//SAME,    // ¹²Í¬µã
-	CrossIn, // ²Ã¼ô´°¿Ú½ø½»µã
-	CrossOut, //²Ã¼ô´°¿Ú³ö½»µã
+	None,    // æ— ç±»å‹
+	Polygon, // å¤šè¾¹å½¢ç‚¹
+	ClipWindow,	 // è£å‰ªçª—å£ç‚¹
+	//SAME,    // å…±åŒç‚¹
+	CrossIn, // è£å‰ªçª—å£è¿›äº¤ç‚¹
+	CrossOut, //è£å‰ªçª—å£å‡ºäº¤ç‚¹
 };
 struct CrossPointInfo
 {
 	Point point = { 0, 0 };
 	PointType type = PointType::None;
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	int lineIdx1 = 0; // ²Ã¼ô´°¿Ú±ßË÷Òı
-	int lineIdx2 = 0; // ¶à±ßĞÎ±ßË÷Òı
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	int lineIdx1 = 0; // è£å‰ªçª—å£è¾¹ç´¢å¼•
+	int lineIdx2 = 0; // å¤šè¾¹å½¢è¾¹ç´¢å¼•
 };
 struct LineWithCross
 {
@@ -6546,16 +6546,16 @@ struct LineWithCross
 struct PointInfo
 {
 	Point point = {0, 0};
-	PointType type = PointType::None; // ÀàĞÍ
-	int idx1 = -1;   // ²Ã¼ô´°¿Ú¶¥µã Êı×éË÷Òı
-	int idx2 = -1;	// ¶à±ßĞÎ¶¥µã Êı×éË÷Òı
-	bool dealed = false; // ÊÇ·ñÒÑ´¦Àí
+	PointType type = PointType::None; // ç±»å‹
+	int idx1 = -1;   // è£å‰ªçª—å£é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	int idx2 = -1;	// å¤šè¾¹å½¢é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	bool dealed = false; // æ˜¯å¦å·²å¤„ç†
 };
 inline GLint Round(const GLfloat a)
 {
 	return GLint(a + 0.5);
 }
-// Ö»ÄÜÊÇÍ¹¶à±ßĞÎ
+// åªèƒ½æ˜¯å‡¸å¤šè¾¹å½¢
 void drawPolygon(const vector<Point>& polygon)
 {
 	glBegin(GL_POLYGON);
@@ -6579,7 +6579,7 @@ void lineBres(float x0, float y0, float xEnd, float yEnd)
 	return;
 }
 //////////////////////////////////////////////////////////////////////////
-// ÈÎÒâĞÎ×´¶à±ßĞÎÌî³äËã·¨
+// ä»»æ„å½¢çŠ¶å¤šè¾¹å½¢å¡«å……ç®—æ³•
 struct Line
 {
 	int x0;
@@ -6620,7 +6620,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -6640,7 +6640,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -6698,7 +6698,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -6737,7 +6737,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -6804,7 +6804,7 @@ void fillPolygon(const std::vector<Point>& points)
 
 //////////////////////////////////////////////////////////////////////////
 typedef Point Vec;
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -7819,9 +7819,9 @@ public:
 };
 struct CrossPointInfo
 {
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	Point* point;       // ½»µã
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	Point* point;       // äº¤ç‚¹
 };
 struct LineWithCross
 {
@@ -7839,7 +7839,7 @@ void drawPoint(float x, float y)
 	glVertex2f(x, y);
 	glEnd();
 }
-// Ö»ÄÜÊÇÍ¹¶à±ßĞÎ
+// åªèƒ½æ˜¯å‡¸å¤šè¾¹å½¢
 void drawPolygon(const vector<Point>& polygon)
 {
 	glBegin(GL_POLYGON);
@@ -7863,7 +7863,7 @@ void lineBres(float x0, float y0, float xEnd, float yEnd)
 	return;
 }
 //////////////////////////////////////////////////////////////////////////
-// ÈÎÒâĞÎ×´¶à±ßĞÎÌî³äËã·¨
+// ä»»æ„å½¢çŠ¶å¤šè¾¹å½¢å¡«å……ç®—æ³•
 struct Line
 {
 	int x0;
@@ -7904,7 +7904,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -7924,7 +7924,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -7982,7 +7982,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -8021,7 +8021,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -8492,7 +8492,7 @@ void fliiEllipse(const Ellipse_& ellipse)
 	int y = ellipse.ry;
 	int px = 0;
 	int py = twoRx2*y;
-	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	/*Region 1*/
 	p = Round(Ry2 - (Rx2 * ellipse.ry) + (0.25 * Rx2));
 	while (px < py)
@@ -8503,15 +8503,15 @@ void fliiEllipse(const Ellipse_& ellipse)
 			p += Ry2 + px;
 		else
 		{
-			hLineEllipsePlot(y, 0, x - 1, ellipse.xc, ellipse.yc); // »æÖÆÉÏÒ»Ìõx×î´óµÄÉ¨ÃèÏß
+			hLineEllipsePlot(y, 0, x - 1, ellipse.xc, ellipse.yc); // ç»˜åˆ¶ä¸Šä¸€æ¡xæœ€å¤§çš„æ‰«æçº¿
 
 			y--;
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	}
-	hLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc); // »æÖÆ×îºóÒ»ÌõÉ¨ÃèÏß
+	hLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc); // ç»˜åˆ¶æœ€åä¸€æ¡æ‰«æçº¿
 
 	/*Region 2*/
 	p = Round(Ry2*(x + 0.5)*(x + 0.5) + Rx2*(y - 1)*(y - 1) - Rx2*Ry2);
@@ -8616,7 +8616,7 @@ void _clipEllipse(const Ellipse_& ellipse, const Rect& clipWindow, EllipseArea a
 	int y = ellipse.ry;
 	int px = 0;
 	int py = twoRx2*y;
-	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+	//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	/*Region 1*/
 	p = Round(Ry2 - (Rx2 * ellipse.ry) + (0.25 * Rx2));
 	while (px < py)
@@ -8627,16 +8627,16 @@ void _clipEllipse(const Ellipse_& ellipse, const Rect& clipWindow, EllipseArea a
 			p += Ry2 + px;
 		else
 		{
-			if(!clipHLineEllipsePlot(y, 0, x - 1, ellipse.xc, ellipse.yc, clipWindow , area)) // »æÖÆÉÏÒ»Ìõx×î´óµÄÉ¨ÃèÏß
+			if(!clipHLineEllipsePlot(y, 0, x - 1, ellipse.xc, ellipse.yc, clipWindow , area)) // ç»˜åˆ¶ä¸Šä¸€æ¡xæœ€å¤§çš„æ‰«æçº¿
 				return; 
 
 			y--;
 			py -= twoRx2;
 			p += Ry2 + px - py;
 		}
-		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // y²»±äÊ±£¬Ã¿´Î»æÖÆÉ¨ÃèÏß»áÔì³ÉÖØ¸´
+		//hLineEllipsePlot(y, 0, x, xCenter, yCenter); // yä¸å˜æ—¶ï¼Œæ¯æ¬¡ç»˜åˆ¶æ‰«æçº¿ä¼šé€ æˆé‡å¤
 	}
-	if (!clipHLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc, clipWindow, area)) // »æÖÆ×îºóÒ»ÌõÉ¨ÃèÏß
+	if (!clipHLineEllipsePlot(y, 0, x, ellipse.xc, ellipse.yc, clipWindow, area)) // ç»˜åˆ¶æœ€åä¸€æ¡æ‰«æçº¿
 		return;
 
 	/*Region 2*/
@@ -9220,8 +9220,8 @@ void drawFunc()
 	std::string str = "ABCDE";
 	TextInfo info;
 	
-	// ¡°È«²¿±£Áô»òÈ«²¿ÉáÆú×Ö·û´®¡±
-	// ÓÒÎÄ±¾Â·¾¶
+	// â€œå…¨éƒ¨ä¿ç•™æˆ–å…¨éƒ¨èˆå¼ƒå­—ç¬¦ä¸²â€
+	// å³æ–‡æœ¬è·¯å¾„
 	glViewport(0, 300, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9265,7 +9265,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_string_clipping(clipWindow, pos, str, info, texts);
 
-	// ×óÎÄ±¾Â·¾¶
+	// å·¦æ–‡æœ¬è·¯å¾„
 	glViewport(200, 300, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9309,7 +9309,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_string_clipping(clipWindow, pos, str, info, texts);
 
-	// ÉÏÎÄ±¾Â·¾¶
+	// ä¸Šæ–‡æœ¬è·¯å¾„
 	glViewport(400, 300, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9353,7 +9353,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_string_clipping(clipWindow, pos, str, info, texts);
 
-	// ÏÂÎÄ±¾Â·¾¶
+	// ä¸‹æ–‡æœ¬è·¯å¾„
 	glViewport(600, 300, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9397,8 +9397,8 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_string_clipping(clipWindow, pos, str, info, texts);
 
-	// ¡°È«²¿±£Áô»òÈ«²¿ÉáÆú×Ö·û¡±
-	// ÓÒÎÄ±¾Â·¾¶
+	// â€œå…¨éƒ¨ä¿ç•™æˆ–å…¨éƒ¨èˆå¼ƒå­—ç¬¦â€
+	// å³æ–‡æœ¬è·¯å¾„
 	glViewport(0, 0, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9442,7 +9442,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_character_clipping(clipWindow, pos, str, info, texts);
 
-	// ×óÎÄ±¾Â·¾¶
+	// å·¦æ–‡æœ¬è·¯å¾„
 	glViewport(200, 0, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9486,7 +9486,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_character_clipping(clipWindow, pos, str, info, texts);
 
-	// ÉÏÎÄ±¾Â·¾¶
+	// ä¸Šæ–‡æœ¬è·¯å¾„
 	glViewport(400, 0, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -9530,7 +9530,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_all_or_none_character_clipping(clipWindow, pos, str, info, texts);
 
-	// ÏÂÎÄ±¾Â·¾¶
+	// ä¸‹æ–‡æœ¬è·¯å¾„
 	glViewport(600, 0, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10033,7 +10033,7 @@ void drawFunc()
 		curConfigIdx = (++curConfigIdx) % moveConfig.size();
 	}
 
-	// ¡°È«²¿±£Áô»òÈ«²¿ÉáÆú×Ö·û´®¡±
+	// â€œå…¨éƒ¨ä¿ç•™æˆ–å…¨éƒ¨èˆå¼ƒå­—ç¬¦ä¸²â€
 	glViewport(0, 120, 400, 380);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10050,7 +10050,7 @@ void drawFunc()
 		clipString_all_or_none_string_clipping(clipWindow, pos, t.str, t.info, texts);
 	}
 
-	// ¡°È«²¿±£Áô»òÈ«²¿ÉáÆú×Ö·û¡±
+	// â€œå…¨éƒ¨ä¿ç•™æˆ–å…¨éƒ¨èˆå¼ƒå­—ç¬¦â€
 	glViewport(400, 120, 400, 380);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10119,9 +10119,9 @@ struct TextInfo
 };
 enum LocationType
 {
-	Unkown,  // ²»È·¶¨
-	Outer,  // ÍêÈ«ÔÚÍâ²¿
-	Inner,  // ÍêÈ«ÔÚÄÚ²¿
+	Unkown,  // ä¸ç¡®å®š
+	Outer,  // å®Œå…¨åœ¨å¤–éƒ¨
+	Inner,  // å®Œå…¨åœ¨å†…éƒ¨
 };
 inline int Round(const float a)
 {
@@ -10454,7 +10454,7 @@ void drawFunc()
 	std::string str = "ABCDE";
 	TextInfo info;
 
-	// ÓÒÎÄ±¾Â·¾¶
+	// å³æ–‡æœ¬è·¯å¾„
 	glViewport(0, 150, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10498,7 +10498,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_single_character(clipWindow, pos, str, info, texts);
 
-	// ×óÎÄ±¾Â·¾¶
+	// å·¦æ–‡æœ¬è·¯å¾„
 	glViewport(200, 150, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10542,7 +10542,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_single_character(clipWindow, pos, str, info, texts);
 
-	// ÉÏÎÄ±¾Â·¾¶
+	// ä¸Šæ–‡æœ¬è·¯å¾„
 	glViewport(400, 150, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10586,7 +10586,7 @@ void drawFunc()
 	glColor3f(1.f, 0.f, 0.f);
 	clipString_single_character(clipWindow, pos, str, info, texts);
 
-	// ÏÂÎÄ±¾Â·¾¶
+	// ä¸‹æ–‡æœ¬è·¯å¾„
 	glViewport(600, 150, 200, 300);
 	glColor3f(1.f, 1.f, 1.f);
 	drawPolygonLine({ { clipWindow.minX, clipWindow.minY },
@@ -10686,9 +10686,9 @@ struct Stencil
 };
 enum LocationType
 {
-	Unkown,  // ²»È·¶¨
-	Outer,  // ÍêÈ«ÔÚÍâ²¿
-	Inner,  // ÍêÈ«ÔÚÄÚ²¿
+	Unkown,  // ä¸ç¡®å®š
+	Outer,  // å®Œå…¨åœ¨å¤–éƒ¨
+	Inner,  // å®Œå…¨åœ¨å†…éƒ¨
 };
 inline int Round(const float a)
 {
@@ -11103,7 +11103,7 @@ void code_8_exercise_24()
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_ADD_1
-// ´ò¿ªÁ½ÕßËã·¨µÄÆäÖĞÖ®Ò»
+// æ‰“å¼€ä¸¤è€…ç®—æ³•çš„å…¶ä¸­ä¹‹ä¸€
 #define SUTHERLAN_HODGMAN
 //#define WEILER_ATHERTON
 struct Point
@@ -11112,7 +11112,7 @@ struct Point
 };
 #ifdef SUTHERLAN_HODGMAN
 //////////////////////////////////////////////////////////////////////////
-// ·Ö¸î°¼¶à±ßĞÎ
+// åˆ†å‰²å‡¹å¤šè¾¹å½¢
 typedef Point Vec;
 inline bool operator==(const Point& p1, const Point& p2)
 {
@@ -11328,7 +11328,7 @@ void cutPolygon(const std::vector<Point>& ploygon, std::vector<std::vector<Point
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
-// Sutherlan-Hodgman¶à±ßĞÎ²Ã¼ôËã·¨(Í¹¶à±ßĞÎ)
+// Sutherlan-Hodgmanå¤šè¾¹å½¢è£å‰ªç®—æ³•(å‡¸å¤šè¾¹å½¢)
 typedef enum { None = -1, Left, Right, Bottom, Top } Boundary;
 typedef Point wcPt2D;
 const GLint nClip = 4;
@@ -11500,16 +11500,16 @@ GLint polygonClipSuthHodg1(wcPt2D wMin, wcPt2D wMax, GLint n, wcPt2D* pIn, wcPt2
 
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Normal,  // ÆÕÍ¨µã 
-	Cross,   // ½»µã 
+	None,    // æ— ç±»å‹
+	Normal,  // æ™®é€šç‚¹ 
+	Cross,   // äº¤ç‚¹ 
 };
 struct CrossPointInfo
 {
 	float u1 = 0;
 	float u2 = 0;
 	float u = 0;
-	Point point;       // ½»µã
+	Point point;       // äº¤ç‚¹
 };
 struct LineWithCross
 {
@@ -11518,7 +11518,7 @@ struct LineWithCross
 	std::vector<CrossPointInfo> crossPoints;
 };
 //////////////////////////////////////////////////////////////////////////
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -11649,12 +11649,12 @@ bool checkIn(Point p, const std::vector<Point>& polygon)
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
-// ºÏ²¢¶à±ßĞÎËã·¨£¨²»ÔÊĞí½á¹ûÓĞÖĞ¿Õ£¬²»ÔÊĞí¶à¸ö¶à±ßĞÎ¹²Í¬½»ÓÚÒ»½»µã£©
+// åˆå¹¶å¤šè¾¹å½¢ç®—æ³•ï¼ˆä¸å…è®¸ç»“æœæœ‰ä¸­ç©ºï¼Œä¸å…è®¸å¤šä¸ªå¤šè¾¹å½¢å…±åŒäº¤äºä¸€äº¤ç‚¹ï¼‰
 struct PointInfo
 {
-	PointType type; // ÀàĞÍ
-	std::map<int, int> idxInfo; // ½»µãË÷ÒıĞÅÏ¢
-	bool dealed; // ÊÇ·ñÒÑ´¦Àí
+	PointType type; // ç±»å‹
+	std::map<int, int> idxInfo; // äº¤ç‚¹ç´¢å¼•ä¿¡æ¯
+	bool dealed; // æ˜¯å¦å·²å¤„ç†
 
 	PointInfo::PointInfo() : type(PointType::None), dealed(false) {}
 };
@@ -11707,7 +11707,7 @@ bool calcCrossPoint(LineWithCross& line1, LineWithCross& line2, CrossPointInfo& 
 	if (!crossPoint_(line1, line2, crossPointInfo.u1, crossPointInfo.u2))
 		return false;
 
-	// Èç¹ûu1,u2ÊÇÌØÊâÖµ£¬ÔòÓÅÏÈÊ¹ÓÃ
+	// å¦‚æœu1,u2æ˜¯ç‰¹æ®Šå€¼ï¼Œåˆ™ä¼˜å…ˆä½¿ç”¨
 	if (Equal(crossPointInfo.u1, 0))
 		crossPointInfo.point = line1.begin;
 	else if (Equal(crossPointInfo.u1, 1))
@@ -11941,7 +11941,7 @@ void mergePolygons(const std::vector<std::vector<Point>>& polygons, std::vector<
 }
 //////////////////////////////////////////////////////////////////////////
 
-// °Ñ°¼¶à±ßĞÎ·Ö¸î³ÉÍ¹¶à±ßĞÎ
+// æŠŠå‡¹å¤šè¾¹å½¢åˆ†å‰²æˆå‡¸å¤šè¾¹å½¢
 void polygonClipSutherlanHodgman1(const std::vector<Point>& polygon, const std::vector<Point>& clipWindow, std::vector<std::vector<Point>>& result)
 {
 	std::vector<std::vector<Point>> cutPolygons;
@@ -11965,7 +11965,7 @@ void polygonClipSutherlanHodgman1(const std::vector<Point>& polygon, const std::
 
 
 //////////////////////////////////////////////////////////////////////////
-// Sutherlan-Hodgman¶à±ßĞÎ²Ã¼ôËã·¨(Í¹¶à±ßĞÎ)
+// Sutherlan-Hodgmanå¤šè¾¹å½¢è£å‰ªç®—æ³•(å‡¸å¤šè¾¹å½¢)
 enum class AntiClockBoundary
 {
 	None = -1, Left, Bottom, Right, Top
@@ -12209,7 +12209,7 @@ void cutResult(const std::vector<Point>& polygon, std::map<AntiClockBoundary, st
 	}
 }
 
-// ·Ö¸î±ß½çÉÏµÄ¶à×é¶¥µã
+// åˆ†å‰²è¾¹ç•Œä¸Šçš„å¤šç»„é¡¶ç‚¹
 void polygonClipSutherlanHodgman2(const std::vector<Point>& polygon, const std::vector<Point>& clipWindow, std::vector<std::vector<Point>>& result)
 {
 	std::map<AntiClockBoundary, std::vector<Point>> _boundaryOrderInfo;
@@ -12253,21 +12253,21 @@ bool operator < (const Point& p1, const Point& p2)
 }
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Polygon, // ¶à±ßĞÎµã
-	ClipWindow,	 // ²Ã¼ô´°¿Úµã
-				 //SAME,    // ¹²Í¬µã
-				 CrossIn, // ²Ã¼ô´°¿Ú½ø½»µã
-				 CrossOut, //²Ã¼ô´°¿Ú³ö½»µã
+	None,    // æ— ç±»å‹
+	Polygon, // å¤šè¾¹å½¢ç‚¹
+	ClipWindow,	 // è£å‰ªçª—å£ç‚¹
+				 //SAME,    // å…±åŒç‚¹
+				 CrossIn, // è£å‰ªçª—å£è¿›äº¤ç‚¹
+				 CrossOut, //è£å‰ªçª—å£å‡ºäº¤ç‚¹
 };
 struct CrossPointInfo
 {
 	Point point = { 0, 0 };
 	PointType type = PointType::None;
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	int lineIdx1 = 0; // ²Ã¼ô´°¿Ú±ßË÷Òı
-	int lineIdx2 = 0; // ¶à±ßĞÎ±ßË÷Òı
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	int lineIdx1 = 0; // è£å‰ªçª—å£è¾¹ç´¢å¼•
+	int lineIdx2 = 0; // å¤šè¾¹å½¢è¾¹ç´¢å¼•
 };
 struct LineWithCross
 {
@@ -12278,14 +12278,14 @@ struct LineWithCross
 struct PointInfo
 {
 	Point point = { 0, 0 };
-	PointType type = PointType::None; // ÀàĞÍ
-	int idx1 = -1;   // ²Ã¼ô´°¿Ú¶¥µã Êı×éË÷Òı
-	int idx2 = -1;	// ¶à±ßĞÎ¶¥µã Êı×éË÷Òı
-	bool dealed = false; // ÊÇ·ñÒÑ´¦Àí
+	PointType type = PointType::None; // ç±»å‹
+	int idx1 = -1;   // è£å‰ªçª—å£é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	int idx2 = -1;	// å¤šè¾¹å½¢é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	bool dealed = false; // æ˜¯å¦å·²å¤„ç†
 };
 //////////////////////////////////////////////////////////////////////////
 typedef Point Vec;
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -13094,7 +13094,7 @@ void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-// ÈÎÒâĞÎ×´¶à±ßĞÎÌî³äËã·¨
+// ä»»æ„å½¢çŠ¶å¤šè¾¹å½¢å¡«å……ç®—æ³•
 struct Line
 {
 	int x0;
@@ -13135,7 +13135,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 	for (int i = 0; i < points.size(); i++)
 	{
 		int next = (i + 1) % points.size();
-		// Ìø¹ıË®Æ½Ïß
+		// è·³è¿‡æ°´å¹³çº¿
 		if (points[i].y == points[next].y)
 			continue;
 
@@ -13155,7 +13155,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 			lines[next].y0--;
 	}
 
-	// ÔÙ´Î¼ì²éË®Æ½Ïß
+	// å†æ¬¡æ£€æŸ¥æ°´å¹³çº¿
 	for (auto it = lines.begin(); it != lines.end();)
 	{
 		if (it->y0 == it->y1)
@@ -13213,7 +13213,7 @@ std::vector<SortedLineSet> SortLines(const std::vector<Point>& points)
 		if (maxY < line.y1)
 			maxY = line.y1;
 	}
-	lineSet.push_back({ maxY + 1 ,{} }); // ½áÎ²
+	lineSet.push_back({ maxY + 1 ,{} }); // ç»“å°¾
 	return lineSet;
 }
 void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLines)
@@ -13252,7 +13252,7 @@ void fillWithActiveLines(int beginY, int endY, std::vector<ActiveLine>& activeLi
 
 						line.counter += std::abs(line.sortedLine.dy * 2);
 						if ((line.counter >= std::abs(line.sortedLine.dx)) ||
-							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ½áÊøÌõ¼ş*/)
+							(line.sortedLine.dx > 0 ? line.currentX > line.sortedLine.endX : line.currentX < line.sortedLine.endX) /* ç»“æŸæ¡ä»¶*/)
 						{
 							line.counter -= std::abs(line.sortedLine.dx * 2);
 							break;
@@ -13540,7 +13540,7 @@ bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2E
 
 	return true;
 }
-// °´ÕÕCohen-SutherlanÔ­Ê¼Ëã·¨, ÏÈ°Ñp1²Ãµ½ÄÚµã£¬ÔÙ½»»»p1,p2£¬ÔÙ½«p2²Ãµ½ÄÚµã£¬¿ÉÄÜĞèÒªÁ½´Î±éÀúËùÓĞ±ß½øĞĞ²Ã¼ô
+// æŒ‰ç…§Cohen-SutherlanåŸå§‹ç®—æ³•, å…ˆæŠŠp1è£åˆ°å†…ç‚¹ï¼Œå†äº¤æ¢p1,p2ï¼Œå†å°†p2è£åˆ°å†…ç‚¹ï¼Œå¯èƒ½éœ€è¦ä¸¤æ¬¡éå†æ‰€æœ‰è¾¹è¿›è¡Œè£å‰ª
 void lineClipCohSuth1(const std::vector<Point>& polygon, Point p1, Point p2)
 {
 	GLubyte code1, code2;
@@ -13580,10 +13580,10 @@ void lineClipCohSuth1(const std::vector<Point>& polygon, Point p1, Point p2)
 		}
 	}
 	if (plotLine)
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 }
-// ¸ÄÁ¼Ëã·¨, Ò»´Î±éÀúËùÓĞ±ß½øĞĞ¿ÉÄÜµÄ²Ã¼ô
+// æ”¹è‰¯ç®—æ³•, ä¸€æ¬¡éå†æ‰€æœ‰è¾¹è¿›è¡Œå¯èƒ½çš„è£å‰ª
 void lineClipCohSuth2(const std::vector<Point>& polygon, Point p1, Point p2)
 {
 	GLubyte code1, code2;
@@ -13632,7 +13632,7 @@ void lineClipCohSuth2(const std::vector<Point>& polygon, Point p1, Point p2)
 		plotLine = true;
 	}
 	if (plotLine)
-		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.x), Round(p1.y), Round(p2.x), Round(p2.y)); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 }
 void drawFunc()
@@ -13852,7 +13852,7 @@ void lineClipLiangBarsk(const std::vector<Point>& polygon, Point p1, Point p2)
 			p1.x = p1.x + u1 * dx;
 			p1.y = p1.y + u1 * dy;;
 		}
-		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 	}
 }
@@ -14035,13 +14035,13 @@ void calcClipPoint(int clockIdx, int antiClockIdx, const std::vector<Point>& pol
 	int nextClockIdx = realIdx(polygon, clockIdx + 1);
 	int nextAntiClockIdx = realIdx(polygon, antiClockIdx - 1);
 	
-	// Ö±Ïß´ÓÍâµ½ÄÚ£¬Ò»¶¨ÊÇÏÈ½øÈëclock±ß£¬ÔÙÀë¿ªantiClock±ß£¬ÀíÓÉÈçÏÂ£º
-	// ÓÉÓÚµÚÒ»¸ö³õÊ¼µãÊÇÄæÊ±Õë·½ÏòµÄµÚÒ»¸öµã£¬ÄæÊ±Õë¼´²æ»ıÕı·½Ïò£¬¼´µÚÒ»¸ö³õÊ¼µãÊÇÑØÖ±Ïß·½ÏòµÄ×îÓÒµã£¬¶øÆäËûµãÔòÊÇÓÉ³õÊ¼µã´ÓÓÒÍù×ó¡£
-	// 1.¶ÔÓÚË³Ê±Õëµã£º
-	// ÓĞ£¨Ö±Ïß·½Ïò£©X£¨³õÊ¼µãµ½Ë³Ê±Õëµã£©ÎªÕı£¬¶ø³õÊ¼µãµ½Ë³Ê±ÕëµãµÄ·½ÏòÓë¸Ã±ß·½ÏòÏà·´£¨±ßÎªÄæÊ±Õë£©£¬¼´ÓĞ£¨Ö±Ïß·½Ïò£©X£¨¸Ã±ß·½Ïò£©Îª¸º£¬¼´ÓĞ£¨¸Ã±ß·½Ïò£©X£¨Ö±Ïß·½Ïò£©ÎªÕı£¬¼´Ö±Ïß½øÈë¸Ã±ß£¨Ë³Ê±Õëµã±ß£©
-	// 2.¶ÔÓÚÄæÊ±Õëµã£º
-	// ÓĞ£¨Ö±Ïß·½Ïò£©X£¨³õÊ¼µãµ½ÄæÊ±Õëµã£©ÎªÕı£¬¶ø³õÊ¼µãµ½ÄæÊ±ÕëµãµÄ·½ÏòÓë¸Ã±ß·½ÏòÏàÍ¬£¨±ßÎªÄæÊ±Õë£©£¬¼´ÓĞ£¨Ö±Ïß·½Ïò£©X£¨¸Ã±ß·½Ïò£©ÎªÕı£¬¼´ÓĞ£¨¸Ã±ß·½Ïò£©X£¨Ö±Ïß·½Ïò£©Îª¸º£¬¼´Ö±ÏßÀë¿ª¸Ã±ß£¨ÄæÊ±Õëµã±ß£©
-	// ¶ø½øÈëÒ»¶¨ÔÚÇ°£¬Àë¿ªÒ»¶¨ÔÚºó£¬ËùÒÔ°´Ö±ÏßP1µ½P2µÄ·½ÏòÒ»¶¨ÊÇP1½øÈë£¬P2Àë¿ª
+	// ç›´çº¿ä»å¤–åˆ°å†…ï¼Œä¸€å®šæ˜¯å…ˆè¿›å…¥clockè¾¹ï¼Œå†ç¦»å¼€antiClockè¾¹ï¼Œç†ç”±å¦‚ä¸‹ï¼š
+	// ç”±äºç¬¬ä¸€ä¸ªåˆå§‹ç‚¹æ˜¯é€†æ—¶é’ˆæ–¹å‘çš„ç¬¬ä¸€ä¸ªç‚¹ï¼Œé€†æ—¶é’ˆå³å‰ç§¯æ­£æ–¹å‘ï¼Œå³ç¬¬ä¸€ä¸ªåˆå§‹ç‚¹æ˜¯æ²¿ç›´çº¿æ–¹å‘çš„æœ€å³ç‚¹ï¼Œè€Œå…¶ä»–ç‚¹åˆ™æ˜¯ç”±åˆå§‹ç‚¹ä»å³å¾€å·¦ã€‚
+	// 1.å¯¹äºé¡ºæ—¶é’ˆç‚¹ï¼š
+	// æœ‰ï¼ˆç›´çº¿æ–¹å‘ï¼‰Xï¼ˆåˆå§‹ç‚¹åˆ°é¡ºæ—¶é’ˆç‚¹ï¼‰ä¸ºæ­£ï¼Œè€Œåˆå§‹ç‚¹åˆ°é¡ºæ—¶é’ˆç‚¹çš„æ–¹å‘ä¸è¯¥è¾¹æ–¹å‘ç›¸åï¼ˆè¾¹ä¸ºé€†æ—¶é’ˆï¼‰ï¼Œå³æœ‰ï¼ˆç›´çº¿æ–¹å‘ï¼‰Xï¼ˆè¯¥è¾¹æ–¹å‘ï¼‰ä¸ºè´Ÿï¼Œå³æœ‰ï¼ˆè¯¥è¾¹æ–¹å‘ï¼‰Xï¼ˆç›´çº¿æ–¹å‘ï¼‰ä¸ºæ­£ï¼Œå³ç›´çº¿è¿›å…¥è¯¥è¾¹ï¼ˆé¡ºæ—¶é’ˆç‚¹è¾¹ï¼‰
+	// 2.å¯¹äºé€†æ—¶é’ˆç‚¹ï¼š
+	// æœ‰ï¼ˆç›´çº¿æ–¹å‘ï¼‰Xï¼ˆåˆå§‹ç‚¹åˆ°é€†æ—¶é’ˆç‚¹ï¼‰ä¸ºæ­£ï¼Œè€Œåˆå§‹ç‚¹åˆ°é€†æ—¶é’ˆç‚¹çš„æ–¹å‘ä¸è¯¥è¾¹æ–¹å‘ç›¸åŒï¼ˆè¾¹ä¸ºé€†æ—¶é’ˆï¼‰ï¼Œå³æœ‰ï¼ˆç›´çº¿æ–¹å‘ï¼‰Xï¼ˆè¯¥è¾¹æ–¹å‘ï¼‰ä¸ºæ­£ï¼Œå³æœ‰ï¼ˆè¯¥è¾¹æ–¹å‘ï¼‰Xï¼ˆç›´çº¿æ–¹å‘ï¼‰ä¸ºè´Ÿï¼Œå³ç›´çº¿ç¦»å¼€è¯¥è¾¹ï¼ˆé€†æ—¶é’ˆç‚¹è¾¹ï¼‰
+	// è€Œè¿›å…¥ä¸€å®šåœ¨å‰ï¼Œç¦»å¼€ä¸€å®šåœ¨åï¼Œæ‰€ä»¥æŒ‰ç›´çº¿P1åˆ°P2çš„æ–¹å‘ä¸€å®šæ˜¯P1è¿›å…¥ï¼ŒP2ç¦»å¼€
 	float dx = p2.x - p1.x, dy = p2.y - p1.y;
 	auto _p1 = p1;
 	float u1, u2;
@@ -14167,7 +14167,7 @@ void lineClipNLN(const std::vector<Point>& polygon, Point p1, Point p2)
 	}
 
 	if (draw)
-		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(p1.x, p1.y, p2.x, p2.y);
 }
 void drawFunc()
@@ -14351,7 +14351,7 @@ bool crossPoint(Point line1Begin, Point line1End, Point line2Begin, Point line2E
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -14508,14 +14508,14 @@ bool checkIn(Point p, const std::vector<Point>& polygon)
 //////////////////////////////////////////////////////////////////////////
 enum class CrossPointType
 {
-	None,   // ÎŞ
-	Enter, // ½øÈë
-	Exit, // Àë¿ª
+	None,   // æ— 
+	Enter, // è¿›å…¥
+	Exit, // ç¦»å¼€
 };
 struct CrossPointInfo
 {
-	float u1; // Ö±ÏßµÄu
-	float u2; // ±ßµÄu
+	float u1; // ç›´çº¿çš„u
+	float u2; // è¾¹çš„u
 	int edgeBeginIdx; 
 	int edgeEndIdx;
 	CrossPointType type;
@@ -14582,7 +14582,7 @@ void checkCross(const std::vector<Point>& polygon, Point p1, Point p2, std::vect
 		updateIt = false;
 		if (last < crossPoints.end())
 		{
-			// ¹ı½»µãÊ±£¬ÏÈÈ·¶¨½ø³ö¹ØÏµ
+			// è¿‡äº¤ç‚¹æ—¶ï¼Œå…ˆç¡®å®šè¿›å‡ºå…³ç³»
 			if (it->u1 == last->u1 && it->type != last->type)
 			{
 				CrossPointType lltype = CrossPointType::None;
@@ -14731,7 +14731,7 @@ void lineClipCrossPoint(const std::vector<Point>& polygon, Point p1, Point p2)
 
 	for (auto line : result)
 	{
-		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ¾«È·µ½¸¡µãÊı»æÍ¼
+		//lineBres(Round(p1.getx()), Round(p1.gety()), Round(p2.getx()), Round(p2.gety())); // ç²¾ç¡®åˆ°æµ®ç‚¹æ•°ç»˜å›¾
 		lineBres(line[0].x, line[0].y, line[1].x, line[1].y);
 	}
 }
@@ -14983,7 +14983,7 @@ void code_8_exercise_add_1_4()
 #endif
 
 #ifdef CHAPTER_8_EXERCISE_ADD_2
-// ´ò¿ªÁ½ÕßËã·¨µÄÆäÖĞÖ®Ò»
+// æ‰“å¼€ä¸¤è€…ç®—æ³•çš„å…¶ä¸­ä¹‹ä¸€
 //#define SUTHERLAN_HODGMAN
 #define WEILER_ATHERTON
 
@@ -15083,7 +15083,7 @@ void matrixSetIdentity(Matrix& m)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -15092,7 +15092,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -15103,7 +15103,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -15116,7 +15116,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -15125,7 +15125,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -15136,7 +15136,7 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy)
 }
 Matrix shearXMatrix(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -15169,10 +15169,10 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ²Ã¼ô
+// è£å‰ª
 #ifdef SUTHERLAN_HODGMAN
 //////////////////////////////////////////////////////////////////////////
-// Sutherlan-Hodgman¶à±ßĞÎ²Ã¼ôËã·¨(Í¹¶à±ßĞÎ)
+// Sutherlan-Hodgmanå¤šè¾¹å½¢è£å‰ªç®—æ³•(å‡¸å¤šè¾¹å½¢)
 inline bool operator==(const Point& p1, const Point& p2)
 {
 	//return p1.x == p2.x && p1.y == p2.y;
@@ -15474,7 +15474,7 @@ void cutResult(const std::vector<Point>& polygon, std::map<AntiClockBoundary, st
 	}
 }
 
-// ·Ö¸î±ß½çÉÏµÄ¶à×é¶¥µã Ëã·¨
+// åˆ†å‰²è¾¹ç•Œä¸Šçš„å¤šç»„é¡¶ç‚¹ ç®—æ³•
 void polygonClipSutherlanHodgman(const std::vector<Point>& polygon, wcPt2D wMin, wcPt2D wMax, std::vector<std::vector<Point>>& result)
 {
 	std::map<AntiClockBoundary, std::vector<Point>> _boundaryOrderInfo;
@@ -15518,21 +15518,21 @@ bool operator < (const Point& p1, const Point& p2)
 }
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Polygon, // ¶à±ßĞÎµã
-	ClipWindow,	 // ²Ã¼ô´°¿Úµã
-				 //SAME,    // ¹²Í¬µã
-				 CrossIn, // ²Ã¼ô´°¿Ú½ø½»µã
-				 CrossOut, //²Ã¼ô´°¿Ú³ö½»µã
+	None,    // æ— ç±»å‹
+	Polygon, // å¤šè¾¹å½¢ç‚¹
+	ClipWindow,	 // è£å‰ªçª—å£ç‚¹
+				 //SAME,    // å…±åŒç‚¹
+				 CrossIn, // è£å‰ªçª—å£è¿›äº¤ç‚¹
+				 CrossOut, //è£å‰ªçª—å£å‡ºäº¤ç‚¹
 };
 struct CrossPointInfo
 {
 	Point point = { 0, 0 };
 	PointType type = PointType::None;
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	int lineIdx1 = 0; // ²Ã¼ô´°¿Ú±ßË÷Òı
-	int lineIdx2 = 0; // ¶à±ßĞÎ±ßË÷Òı
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	int lineIdx1 = 0; // è£å‰ªçª—å£è¾¹ç´¢å¼•
+	int lineIdx2 = 0; // å¤šè¾¹å½¢è¾¹ç´¢å¼•
 };
 struct LineWithCross
 {
@@ -15543,14 +15543,14 @@ struct LineWithCross
 struct PointInfo
 {
 	Point point = { 0, 0 };
-	PointType type = PointType::None; // ÀàĞÍ
-	int idx1 = -1;   // ²Ã¼ô´°¿Ú¶¥µã Êı×éË÷Òı
-	int idx2 = -1;	// ¶à±ßĞÎ¶¥µã Êı×éË÷Òı
-	bool dealed = false; // ÊÇ·ñÒÑ´¦Àí
+	PointType type = PointType::None; // ç±»å‹
+	int idx1 = -1;   // è£å‰ªçª—å£é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	int idx2 = -1;	// å¤šè¾¹å½¢é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	bool dealed = false; // æ˜¯å¦å·²å¤„ç†
 };
 //////////////////////////////////////////////////////////////////////////
 typedef Point Vec;
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -16359,7 +16359,7 @@ void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-// Ïß¶Î²Ã¼ôËã·¨
+// çº¿æ®µè£å‰ªç®—æ³•
 const GLint winLeftBitCode = 0x01;
 const GLint winRightBitCode = 0x02;
 const GLint winBottomBitCode = 0x04;
@@ -16494,10 +16494,10 @@ float curDirection;
 float wheelRadius = 0;
 Path* path = nullptr;
 
-// ²Ã¼ô´°¿Ú
+// è£å‰ªçª—å£
 float clipwinRotate = 0;
 float deltaClipwinRotate = 5 * PI / 180;
-Point clipwinPos = { 0, 0 }; // ÖĞĞÄµã
+Point clipwinPos = { 0, 0 }; // ä¸­å¿ƒç‚¹
 float deltaClipwinPos = 5;
 float clipwinWidth = 200;
 float clipwinHeight = 150;
@@ -16505,7 +16505,7 @@ float deltaClipwinSize = 10;
 bool clipwinFollow = true;
 bool clipwinMode = false;
 
-// ÊÓ¿Ú
+// è§†å£
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
 float xnvmin = xvmin / winWidth;
 float xnvmax = xvmax / winWidth;
@@ -16513,7 +16513,7 @@ float ynvmin = yvmin / winHeight;
 float ynvmax = yvmax / winHeight;
 bool viewTransformDirty = true;
 
-// OpenglÊÓ¿Ú
+// Openglè§†å£
 float _xvmin = 330, _yvmin = 420, _xvmax = 530, _yvmax = 570;
 
 std::vector<std::vector<Point>> viewCar;
@@ -16683,11 +16683,11 @@ void drawWheel()
 }
 Matrix updateViewCoord()
 {
-	// ÕâÀï½«¹Û²ì×ø±êÏµÔ­µãÄ¬ÈÏÎª²Ã¼ô´°¿ÚÖĞĞÄµã¡£ÆäÊµ¹Û²ì×ø±êÏµµÄÔ­µãÓ°ÏìµÄ¾ÍÊÇµãÔÚ¹Û²ì×ø±êÏµÖĞ
-	// µÄ¾ø¶Ô×ø±êÖµ£¬µ«Õâ¸ö¾ø¶Ô×ø±êÖµµÄÊıÖµ²¢²»ÖØÒª£¬ÖØÒªµÄÊÇµãºÍ²Ã¼ô´°¿ÚµÄÏà¶ÔÎ»ÖÃ¹ØÏµ£¬ÒòÎª×îÖÕÊÓ
-	// ¿ÚÖĞÏÔÊ¾µÄÊÇ²Ã¼ôºóµÄÄÚÈİ£¬¶ø²Ã¼ôºóµÄÄÚÈİ¾ÍÊÇÕâ¸öÏà¶ÔÎ»ÖÃ¹ØÏµ¾ö¶¨µÄ£¬¸úÁ½ÕßµÄ¾ø¶Ô×ø±êÖµÎŞ¹Ø¡£
-	// ¶øÓÉÓÚÊÇ¸ÕÌå±ä»»£¨Ğı×ª£¬Æ½ÒÆ£©£¬Ïà¶ÔÎ»ÖÃ¹ØÏµ¶¼²»»á±ä£¬ËùÒÔ£¬ÎªÁË·½±ãºóĞø¼ÆËã(²»È»²Ã¼ô´°¿ÚÎ»
-	// ÖÃ»¹Òª¼ÆËã)£¬ÕâÀïÑ¡¹Û²ì×ø±êÏµÔ­µãÎª²Ã¼ô´°¿ÚÖĞĞÄµã£¨²Ã¼ô´°¿Ú±ä»»ºóÔÚ¹Û²ì×ø±êÏµµÄÔ­µã£©
+	// è¿™é‡Œå°†è§‚å¯Ÿåæ ‡ç³»åŸç‚¹é»˜è®¤ä¸ºè£å‰ªçª—å£ä¸­å¿ƒç‚¹ã€‚å…¶å®è§‚å¯Ÿåæ ‡ç³»çš„åŸç‚¹å½±å“çš„å°±æ˜¯ç‚¹åœ¨è§‚å¯Ÿåæ ‡ç³»ä¸­
+	// çš„ç»å¯¹åæ ‡å€¼ï¼Œä½†è¿™ä¸ªç»å¯¹åæ ‡å€¼çš„æ•°å€¼å¹¶ä¸é‡è¦ï¼Œé‡è¦çš„æ˜¯ç‚¹å’Œè£å‰ªçª—å£çš„ç›¸å¯¹ä½ç½®å…³ç³»ï¼Œå› ä¸ºæœ€ç»ˆè§†
+	// å£ä¸­æ˜¾ç¤ºçš„æ˜¯è£å‰ªåçš„å†…å®¹ï¼Œè€Œè£å‰ªåçš„å†…å®¹å°±æ˜¯è¿™ä¸ªç›¸å¯¹ä½ç½®å…³ç³»å†³å®šçš„ï¼Œè·Ÿä¸¤è€…çš„ç»å¯¹åæ ‡å€¼æ— å…³ã€‚
+	// è€Œç”±äºæ˜¯åˆšä½“å˜æ¢ï¼ˆæ—‹è½¬ï¼Œå¹³ç§»ï¼‰ï¼Œç›¸å¯¹ä½ç½®å…³ç³»éƒ½ä¸ä¼šå˜ï¼Œæ‰€ä»¥ï¼Œä¸ºäº†æ–¹ä¾¿åç»­è®¡ç®—(ä¸ç„¶è£å‰ªçª—å£ä½
+	// ç½®è¿˜è¦è®¡ç®—)ï¼Œè¿™é‡Œé€‰è§‚å¯Ÿåæ ‡ç³»åŸç‚¹ä¸ºè£å‰ªçª—å£ä¸­å¿ƒç‚¹ï¼ˆè£å‰ªçª—å£å˜æ¢ååœ¨è§‚å¯Ÿåæ ‡ç³»çš„åŸç‚¹ï¼‰
 
 	return rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y);
 }
@@ -16824,7 +16824,7 @@ void updateView()
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	// Ö±½Ó¶Ôµã½øĞĞ´¦Àí
+	// ç›´æ¥å¯¹ç‚¹è¿›è¡Œå¤„ç†
 	//temp = curWheel1;
 	//transformPoints(viewTransform, temp);
 	//transformPoints(updateViewport(), temp);
@@ -16837,7 +16837,7 @@ void updateView()
 	//clipPoint(temp);
 	//viewWheels2 = temp;
 	
-	// ¸ù¾İ³¤Öá¼ÆËã
+	// æ ¹æ®é•¿è½´è®¡ç®—
 	/*transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
 	auto sviewX = (xvmax - xvmin) / clipwinWidth;
@@ -16873,10 +16873,10 @@ void updateView()
 	clipPoint(viewWheels1);
 	clipPoint(viewWheels2);*/
 
-	// ÂÖ×Ó»æÖÆÎªÍÖÔ²£¬ÊÇÎªÁË±£Ö¤ÏñËØµÄÁ¬¹áĞÔ£¬·ñÔòËõ·Åºó»á³öÏÖÏñËØ¼äµÄ¼ä¸ô
-	// ¹Û²ì±ä»»¹ı³ÌÎª Ğ±ÇĞ->Ğı×ª->XY·½ÏòËõ·Å£¬ÒòÍÖÔ²Ğı×ªºóÔÙËõ·ÅÎŞ·¨µÃÖªÍÖÔ²µÄ²ÎÊı£¬
-	// ËùÒÔ½«±ä»»¹ı³Ì¸ÄÎª XY·½ÏòËõ·Å£¨ÍÖÔ²ÖáÏò£©->Ğ±ÇĞ->Ğı×ª
-	// ·½·¨Îª ¼ÆËãÁ½¸ö¾ØÕó²¢ÁîÆäÏàµÈ
+	// è½®å­ç»˜åˆ¶ä¸ºæ¤­åœ†ï¼Œæ˜¯ä¸ºäº†ä¿è¯åƒç´ çš„è¿è´¯æ€§ï¼Œå¦åˆ™ç¼©æ”¾åä¼šå‡ºç°åƒç´ é—´çš„é—´éš”
+	// è§‚å¯Ÿå˜æ¢è¿‡ç¨‹ä¸º æ–œåˆ‡->æ—‹è½¬->XYæ–¹å‘ç¼©æ”¾ï¼Œå› æ¤­åœ†æ—‹è½¬åå†ç¼©æ”¾æ— æ³•å¾—çŸ¥æ¤­åœ†çš„å‚æ•°ï¼Œ
+	// æ‰€ä»¥å°†å˜æ¢è¿‡ç¨‹æ”¹ä¸º XYæ–¹å‘ç¼©æ”¾ï¼ˆæ¤­åœ†è½´å‘ï¼‰->æ–œåˆ‡->æ—‹è½¬
+	// æ–¹æ³•ä¸º è®¡ç®—ä¸¤ä¸ªçŸ©é˜µå¹¶ä»¤å…¶ç›¸ç­‰
 	transformPoint(updateViewport(), tempp1);
 	transformPoint(updateViewport(), tempp2);
 	auto sx = (xvmax - xvmin) / clipwinWidth;
@@ -17014,7 +17014,7 @@ void scale(float sx, float sy)
 	transformPoints(m, curWheelHolder2);
 	
 	ellipse({ 0, 0 }, std::abs(scaleX) * wheelRadius, std::abs(scaleY) * wheelRadius, curWheel1);
-	// ÏÈĞ±ÇĞÔÙËõ·Å£¬Ğ±ÇĞ²ÎÊı½«±äÎªÔ­Ê¼µÄsx/sy±¶£¬¿ÉÒÔ¶Ô±ÈÏÈĞ±ÇĞÔÙËõ·ÅºÍÏÈËõ·ÅÔÙĞ±ÇĞµÄ¾ØÕóµÃ³ö´Ë½áÂÛ
+	// å…ˆæ–œåˆ‡å†ç¼©æ”¾ï¼Œæ–œåˆ‡å‚æ•°å°†å˜ä¸ºåŸå§‹çš„sx/syå€ï¼Œå¯ä»¥å¯¹æ¯”å…ˆæ–œåˆ‡å†ç¼©æ”¾å’Œå…ˆç¼©æ”¾å†æ–œåˆ‡çš„çŸ©é˜µå¾—å‡ºæ­¤ç»“è®º
 	tansShx *= (sx / sy);
 	transformPoints(rotateByPointMatrix({ 0, 0 }, curDirection) * shearXMatrix(tansShx), curWheel1);
 	curWheel2 = curWheel1;
@@ -17661,16 +17661,16 @@ void showOperatorNotice()
 	printf("S: decrease FPS.\n");
 	printf("D: add speed.\n");
 	printf("A: decrease speed.\n");
-	printf("¡ú: add scale x.\n");
-	printf("¡û: decrease scale x.\n");
-	printf("¡ü: add scale y.\n");
-	printf("¡ı: decrease scale y.\n");
-	printf("CTRL ¡ú: reflect to +x.\n");
-	printf("CTRL ¡û: reflect to -x.\n");
-	printf("CTRL ¡ü: reflect to +y.\n");
-	printf("CTRL ¡ı: reflect to -y.\n");
-	printf("SHIFT ¡ú: add shear.\n");
-	printf("SHIFT ¡û: decrease shear.\n");
+	printf("â†’: add scale x.\n");
+	printf("â†: decrease scale x.\n");
+	printf("â†‘: add scale y.\n");
+	printf("â†“: decrease scale y.\n");
+	printf("CTRL â†’: reflect to +x.\n");
+	printf("CTRL â†: reflect to -x.\n");
+	printf("CTRL â†‘: reflect to +y.\n");
+	printf("CTRL â†“: reflect to -y.\n");
+	printf("SHIFT â†’: add shear.\n");
+	printf("SHIFT â†: decrease shear.\n");
 	printf("R: reset state. \n");
 	printf("V: clip window mode. \n");
 	printf("ESC: command mode.\n");
@@ -17707,16 +17707,16 @@ void showViewOperatorNotice()
 	system("cls");
 	printf("Clip Window Operator: \n");
 	printf("F: fllow the car.\n");
-	printf("¡ú: move right.\n");
-	printf("¡û: move left.\n");
-	printf("¡ü: move up.\n");
-	printf("¡ı: move down.\n");
-	printf("CTRL ¡ú: add width.\n");
-	printf("CTRL ¡û: decrease width.\n");
-	printf("CTRL ¡ü: add height. \n");
-	printf("CTRL ¡ı: decrease height. \n");
-	printf("SHIFT ¡ü: add angle.\n");
-	printf("SHIFT ¡ı: decrease angle.\n");
+	printf("â†’: move right.\n");
+	printf("â†: move left.\n");
+	printf("â†‘: move up.\n");
+	printf("â†“: move down.\n");
+	printf("CTRL â†’: add width.\n");
+	printf("CTRL â†: decrease width.\n");
+	printf("CTRL â†‘: add height. \n");
+	printf("CTRL â†“: decrease height. \n");
+	printf("SHIFT â†‘: add angle.\n");
+	printf("SHIFT â†“: decrease angle.\n");
 	printf("R: reset state\n");
 	printf("ESC: back.\n");
 }
@@ -18120,7 +18120,7 @@ void matrixSetIdentity(Matrix& m)
 }
 Matrix translateMatrix(float tx, float ty)
 {
-	// Æ½ÒÆ
+	// å¹³ç§»
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][2] = tx;
@@ -18129,7 +18129,7 @@ Matrix translateMatrix(float tx, float ty)
 }
 Matrix rotateMatrix(float theta)
 {
-	// »ùÓÚÔ­µãĞı×ª
+	// åŸºäºåŸç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -18140,7 +18140,7 @@ Matrix rotateMatrix(float theta)
 }
 Matrix rotateByPointMatrix(Point p, float theta)
 {
-	// »ùÓÚÖ¸¶¨µãĞı×ª
+	// åŸºäºæŒ‡å®šç‚¹æ—‹è½¬
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = std::cos(theta);
@@ -18153,7 +18153,7 @@ Matrix rotateByPointMatrix(Point p, float theta)
 }
 Matrix scaleMatrix(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -18162,7 +18162,7 @@ Matrix scaleMatrix(float sx, float sy)
 }
 Matrix scaleByPointMatrix(Point p, float sx, float sy)
 {
-	// »ùÓÚÖ¸¶¨µãËõ·Å
+	// åŸºäºæŒ‡å®šç‚¹ç¼©æ”¾
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -18173,7 +18173,7 @@ Matrix scaleByPointMatrix(Point p, float sx, float sy)
 }
 Matrix shearXMatrix(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(3, 3);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -18206,7 +18206,7 @@ void transformPoints(Matrix& m, std::vector<Point>& points)
 }
 Matrix scaleMatrix4(float sx, float sy)
 {
-	// »ùÓÚÔ­µãËõ·Å
+	// åŸºäºåŸç‚¹ç¼©æ”¾
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][0] = sx;
@@ -18215,7 +18215,7 @@ Matrix scaleMatrix4(float sx, float sy)
 }
 Matrix shearXMatrix4(float shx)
 {
-	// »ùÓÚÔ­µãµÄx·½Ïò´íÇĞ
+	// åŸºäºåŸç‚¹çš„xæ–¹å‘é”™åˆ‡
 	Matrix ret(4, 4);
 	matrixSetIdentity(ret);
 	ret[0][1] = shx;
@@ -18223,7 +18223,7 @@ Matrix shearXMatrix4(float shx)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// ¶à±ßĞÎ²Ã¼ô
+// å¤šè¾¹å½¢è£å‰ª
 inline bool operator==(const Point& p1, const Point& p2)
 {
 	//return p1.x == p2.x && p1.y == p2.y;
@@ -18251,21 +18251,21 @@ bool operator < (const Point& p1, const Point& p2)
 }
 enum class PointType
 {
-	None,    // ÎŞÀàĞÍ
-	Polygon, // ¶à±ßĞÎµã
-	ClipWindow,	 // ²Ã¼ô´°¿Úµã
-				 //SAME,    // ¹²Í¬µã
-				 CrossIn, // ²Ã¼ô´°¿Ú½ø½»µã
-				 CrossOut, //²Ã¼ô´°¿Ú³ö½»µã
+	None,    // æ— ç±»å‹
+	Polygon, // å¤šè¾¹å½¢ç‚¹
+	ClipWindow,	 // è£å‰ªçª—å£ç‚¹
+				 //SAME,    // å…±åŒç‚¹
+				 CrossIn, // è£å‰ªçª—å£è¿›äº¤ç‚¹
+				 CrossOut, //è£å‰ªçª—å£å‡ºäº¤ç‚¹
 };
 struct CrossPointInfo
 {
 	Point point = { 0, 0 };
 	PointType type = PointType::None;
-	float u1 = 0.0f;	// ²Ã¼ô´°¿Ú±ß Ö±Ïß²ÎÊı·½³Ìu
-	float u2 = 0.0f;	// ¶à±ßĞÎ±ß	Ö±Ïß²ÎÊı·½³Ìu
-	int lineIdx1 = 0; // ²Ã¼ô´°¿Ú±ßË÷Òı
-	int lineIdx2 = 0; // ¶à±ßĞÎ±ßË÷Òı
+	float u1 = 0.0f;	// è£å‰ªçª—å£è¾¹ ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	float u2 = 0.0f;	// å¤šè¾¹å½¢è¾¹	ç›´çº¿å‚æ•°æ–¹ç¨‹u
+	int lineIdx1 = 0; // è£å‰ªçª—å£è¾¹ç´¢å¼•
+	int lineIdx2 = 0; // å¤šè¾¹å½¢è¾¹ç´¢å¼•
 };
 struct LineWithCross
 {
@@ -18276,14 +18276,14 @@ struct LineWithCross
 struct PointInfo
 {
 	Point point = { 0, 0 };
-	PointType type = PointType::None; // ÀàĞÍ
-	int idx1 = -1;   // ²Ã¼ô´°¿Ú¶¥µã Êı×éË÷Òı
-	int idx2 = -1;	// ¶à±ßĞÎ¶¥µã Êı×éË÷Òı
-	bool dealed = false; // ÊÇ·ñÒÑ´¦Àí
+	PointType type = PointType::None; // ç±»å‹
+	int idx1 = -1;   // è£å‰ªçª—å£é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	int idx2 = -1;	// å¤šè¾¹å½¢é¡¶ç‚¹ æ•°ç»„ç´¢å¼•
+	bool dealed = false; // æ˜¯å¦å·²å¤„ç†
 };
 //////////////////////////////////////////////////////////////////////////
 typedef Point Vec;
-// ¼ì²éÄÚÍâ
+// æ£€æŸ¥å†…å¤–
 bool sign(float f)
 {
 	return f > 0;
@@ -19092,7 +19092,7 @@ void polygonClipWeilerAtherton(std::vector<Point>& clipWindow, std::vector<Point
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
-// Ïß¶Î²Ã¼ôËã·¨
+// çº¿æ®µè£å‰ªç®—æ³•
 typedef Point Vec;
 inline GLint inside(GLint code)
 {
@@ -19272,10 +19272,10 @@ Path* path = nullptr;
 float wheelRadian = 0.f;
 Matrix curTransform(4, 4);
 
-// ²Ã¼ô´°¿Ú
+// è£å‰ªçª—å£
 float clipwinRotate = 0;
 float deltaClipwinRotate = 5 * PI / 180;
-Point clipwinPos = { 0, 0 }; // ÖĞĞÄµã
+Point clipwinPos = { 0, 0 }; // ä¸­å¿ƒç‚¹
 float deltaClipwinPos = 5;
 float clipwinWidth = 200;
 float clipwinHeight = 150;
@@ -19283,10 +19283,10 @@ float deltaClipwinSize = 10;
 bool clipwinFollow = true;
 bool clipwinMode = false;
 
-// ÊÓ¿Ú1
+// è§†å£1
 float _xvmin = 330, _yvmin = 420, _xvmax = 530, _yvmax = 570;
 
-// ÊÓ¿Ú2
+// è§†å£2
 float xvmin = 570, yvmin = 420, xvmax = 770, yvmax = 570;
 float xnvmin = xvmin / winWidth;
 float xnvmax = xvmax / winWidth;
@@ -19496,7 +19496,7 @@ void scale(float sx, float sy)
 	scaleX *= sx;
 	scaleY *= sy;
 
-	// ÏÈĞ±ÇĞÔÙËõ·Å£¬Ğ±ÇĞ²ÎÊı½«±äÎªÔ­Ê¼µÄsx/sy±¶£¬¿ÉÒÔ¶Ô±ÈÏÈĞ±ÇĞÔÙËõ·ÅºÍÏÈËõ·ÅÔÙĞ±ÇĞµÄ¾ØÕóµÃ³ö´Ë½áÂÛ
+	// å…ˆæ–œåˆ‡å†ç¼©æ”¾ï¼Œæ–œåˆ‡å‚æ•°å°†å˜ä¸ºåŸå§‹çš„sx/syå€ï¼Œå¯ä»¥å¯¹æ¯”å…ˆæ–œåˆ‡å†ç¼©æ”¾å’Œå…ˆç¼©æ”¾å†æ–œåˆ‡çš„çŸ©é˜µå¾—å‡ºæ­¤ç»“è®º
 	tansShx *= (sx / sy);
 	curTransform = scaleMatrix4(sx, sy) * curTransform;
 }
@@ -19569,8 +19569,8 @@ void updateClipwinPos()
 }
 void updateViewport1()
 {
-	// »æÖÆÊÓ¿Ú1
-	// ÕâÀïÖ±½Ó²ÉÓÃopenglÍ¶Ó°±ä»»µ½ÊÓ¿Ú
+	// ç»˜åˆ¶è§†å£1
+	// è¿™é‡Œç›´æ¥é‡‡ç”¨openglæŠ•å½±å˜æ¢åˆ°è§†å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(clipwinPos.x - clipwinWidth / 2, clipwinPos.x + clipwinWidth / 2, clipwinPos.y - clipwinHeight / 2, clipwinPos.y + clipwinHeight / 2);
@@ -19647,11 +19647,11 @@ void updateViewport1()
 }
 Matrix updateViewCoord()
 {
-	// ÕâÀï½«¹Û²ì×ø±êÏµÔ­µãÄ¬ÈÏÎª²Ã¼ô´°¿ÚÖĞĞÄµã¡£ÆäÊµ¹Û²ì×ø±êÏµµÄÔ­µãÓ°ÏìµÄ¾ÍÊÇµãÔÚ¹Û²ì×ø±êÏµÖĞ
-	// µÄ¾ø¶Ô×ø±êÖµ£¬µ«Õâ¸ö¾ø¶Ô×ø±êÖµµÄÊıÖµ²¢²»ÖØÒª£¬ÖØÒªµÄÊÇµãºÍ²Ã¼ô´°¿ÚµÄÏà¶ÔÎ»ÖÃ¹ØÏµ£¬ÒòÎª×îÖÕÊÓ
-	// ¿ÚÖĞÏÔÊ¾µÄÊÇ²Ã¼ôºóµÄÄÚÈİ£¬¶ø²Ã¼ôºóµÄÄÚÈİ¾ÍÊÇÕâ¸öÏà¶ÔÎ»ÖÃ¹ØÏµ¾ö¶¨µÄ£¬¸úÁ½ÕßµÄ¾ø¶Ô×ø±êÖµÎŞ¹Ø¡£
-	// ¶øÓÉÓÚÊÇ¸ÕÌå±ä»»£¨Ğı×ª£¬Æ½ÒÆ£©£¬Ïà¶ÔÎ»ÖÃ¹ØÏµ¶¼²»»á±ä£¬ËùÒÔ£¬ÎªÁË·½±ãºóĞø¼ÆËã(²»È»²Ã¼ô´°¿ÚÎ»
-	// ÖÃ»¹Òª¼ÆËã)£¬ÕâÀïÑ¡¹Û²ì×ø±êÏµÔ­µãÎª²Ã¼ô´°¿ÚÖĞĞÄµã£¨²Ã¼ô´°¿Ú±ä»»ºóÔÚ¹Û²ì×ø±êÏµµÄÔ­µã£©
+	// è¿™é‡Œå°†è§‚å¯Ÿåæ ‡ç³»åŸç‚¹é»˜è®¤ä¸ºè£å‰ªçª—å£ä¸­å¿ƒç‚¹ã€‚å…¶å®è§‚å¯Ÿåæ ‡ç³»çš„åŸç‚¹å½±å“çš„å°±æ˜¯ç‚¹åœ¨è§‚å¯Ÿåæ ‡ç³»ä¸­
+	// çš„ç»å¯¹åæ ‡å€¼ï¼Œä½†è¿™ä¸ªç»å¯¹åæ ‡å€¼çš„æ•°å€¼å¹¶ä¸é‡è¦ï¼Œé‡è¦çš„æ˜¯ç‚¹å’Œè£å‰ªçª—å£çš„ç›¸å¯¹ä½ç½®å…³ç³»ï¼Œå› ä¸ºæœ€ç»ˆè§†
+	// å£ä¸­æ˜¾ç¤ºçš„æ˜¯è£å‰ªåçš„å†…å®¹ï¼Œè€Œè£å‰ªåçš„å†…å®¹å°±æ˜¯è¿™ä¸ªç›¸å¯¹ä½ç½®å…³ç³»å†³å®šçš„ï¼Œè·Ÿä¸¤è€…çš„ç»å¯¹åæ ‡å€¼æ— å…³ã€‚
+	// è€Œç”±äºæ˜¯åˆšä½“å˜æ¢ï¼ˆæ—‹è½¬ï¼Œå¹³ç§»ï¼‰ï¼Œç›¸å¯¹ä½ç½®å…³ç³»éƒ½ä¸ä¼šå˜ï¼Œæ‰€ä»¥ï¼Œä¸ºäº†æ–¹ä¾¿åç»­è®¡ç®—(ä¸ç„¶è£å‰ªçª—å£ä½
+	// ç½®è¿˜è¦è®¡ç®—)ï¼Œè¿™é‡Œé€‰è§‚å¯Ÿåæ ‡ç³»åŸç‚¹ä¸ºè£å‰ªçª—å£ä¸­å¿ƒç‚¹ï¼ˆè£å‰ªçª—å£å˜æ¢ååœ¨è§‚å¯Ÿåæ ‡ç³»çš„åŸç‚¹ï¼‰
 
 	return rotateMatrix(-clipwinRotate) * translateMatrix(-clipwinPos.x, -clipwinPos.y);
 }
@@ -19678,9 +19678,9 @@ Matrix updateViewport()
 }
 void updateViewport2()
 {
-	// »æÖÆÊÓ¿Ú2
-	// ÕâÀï²ÉÓÃ½«²Ã¼ô´°¿Ú£¨¶ÔÂÖ×Ó¶øÑÔÊÇÊÓ¿Ú£©Äæ±ä»»µ½¾Ö²¿×ø±êÏµ£¬½øĞĞÔ­Ê¼¸÷×Ô²¿¼şµÄ²Ã¼ô£¬
-	// È»ºóÔÙ½«²Ã¼ôºóµÄ²¿¼ş±ä»»µ½ÊÓ¿Ú
+	// ç»˜åˆ¶è§†å£2
+	// è¿™é‡Œé‡‡ç”¨å°†è£å‰ªçª—å£ï¼ˆå¯¹è½®å­è€Œè¨€æ˜¯è§†å£ï¼‰é€†å˜æ¢åˆ°å±€éƒ¨åæ ‡ç³»ï¼Œè¿›è¡ŒåŸå§‹å„è‡ªéƒ¨ä»¶çš„è£å‰ªï¼Œ
+	// ç„¶åå†å°†è£å‰ªåçš„éƒ¨ä»¶å˜æ¢åˆ°è§†å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
@@ -19951,10 +19951,10 @@ void update()
 	curPosition = nextP;
 	curDirection = dir;
 
-	// gluOrtho2DÖ®ºóµÄ»æÖÆ²Å»áÊ¹ÓÃĞÂµÄÊÓ¿Ú£¬·ñÔòÈôÔÚgluOrtho2DÖ®Ç°»æÖÆ£¬»æÖÆÊ¹ÓÃÖ®Ç°µÄÊÓ¿Ú£¬ÏÂ´ÎĞÂÊÓ¿Ú²ÅÉúĞ§
-	// Òò´ËµÚÒ»´Î»æÖÆµÄĞ§¹ûÊÇ»æÖÆÍ¼ĞÎÒÆ¶¯£¬µ«ÊÓ¿Ú²»¶¯£¬¼´»æÖÆÍ¼ĞÎ³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë
-	// ÏÂ´Î»æÖÆÊ±£¬»áÊ×ÏÈÉúĞ§ÉÏ´ÎµÄÊÓ¿ÚÉèÖÃ£¬¼´ÊÓ¿ÚÖĞĞÄÎª»æÖÆÍ¼ĞÎÖĞĞÄ£¬µ«ÊÇÍ¼ĞÎ´ËÊ±ÓÖ»áÒÆ¶¯£¬¼´»æÖÆÍ¼ĞÎÓÖ»á³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë
-	// ÕâÑùÃ¿Ö¡»æÖÆ¶¼»á³¬Ç°ÊÓ¿ÚÒ»¸ödelta*speed¾àÀë£¬ÒòÎªdeltaÊÇ±äÁ¿£¬ËùÒÔÃ¿Ö¡Î»ÖÃ¶¼ÓĞĞ¡Æ«²î£¬Ôì³ÉÊÓ¾õ²ĞÓ°£¬»æÖÆ¶¶¶¯
+	// gluOrtho2Dä¹‹åçš„ç»˜åˆ¶æ‰ä¼šä½¿ç”¨æ–°çš„è§†å£ï¼Œå¦åˆ™è‹¥åœ¨gluOrtho2Dä¹‹å‰ç»˜åˆ¶ï¼Œç»˜åˆ¶ä½¿ç”¨ä¹‹å‰çš„è§†å£ï¼Œä¸‹æ¬¡æ–°è§†å£æ‰ç”Ÿæ•ˆ
+	// å› æ­¤ç¬¬ä¸€æ¬¡ç»˜åˆ¶çš„æ•ˆæœæ˜¯ç»˜åˆ¶å›¾å½¢ç§»åŠ¨ï¼Œä½†è§†å£ä¸åŠ¨ï¼Œå³ç»˜åˆ¶å›¾å½¢è¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»
+	// ä¸‹æ¬¡ç»˜åˆ¶æ—¶ï¼Œä¼šé¦–å…ˆç”Ÿæ•ˆä¸Šæ¬¡çš„è§†å£è®¾ç½®ï¼Œå³è§†å£ä¸­å¿ƒä¸ºç»˜åˆ¶å›¾å½¢ä¸­å¿ƒï¼Œä½†æ˜¯å›¾å½¢æ­¤æ—¶åˆä¼šç§»åŠ¨ï¼Œå³ç»˜åˆ¶å›¾å½¢åˆä¼šè¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»
+	// è¿™æ ·æ¯å¸§ç»˜åˆ¶éƒ½ä¼šè¶…å‰è§†å£ä¸€ä¸ªdelta*speedè·ç¦»ï¼Œå› ä¸ºdeltaæ˜¯å˜é‡ï¼Œæ‰€ä»¥æ¯å¸§ä½ç½®éƒ½æœ‰å°åå·®ï¼Œé€ æˆè§†è§‰æ®‹å½±ï¼Œç»˜åˆ¶æŠ–åŠ¨
 	updateWindowPosition();
 	updateClipwinPos();
 
@@ -20012,13 +20012,13 @@ void update()
 	glTranslated(-32 * scaleX, 10 * scaleY, 0);
 	drawWheel();
 
-	// ²Ã¼ô´°¿Ú
+	// è£å‰ªçª—å£
 	glLoadIdentity();
 	glTranslatef(clipwinPos.x, clipwinPos.y, 0.f);
 	glRotatef(clipwinRotate * 180 / PI, 0.0, 0.0, 1.0);
 	drawWindow();
 
-	// »æÖÆ×´Ì¬ÎÄ×Ö£¬ÊÓ¿Ú
+	// ç»˜åˆ¶çŠ¶æ€æ–‡å­—ï¼Œè§†å£
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth, 0, winHeight);
@@ -20511,16 +20511,16 @@ void showOperatorNotice()
 	printf("S: decrease FPS.\n");
 	printf("D: add speed.\n");
 	printf("A: decrease speed.\n");
-	printf("¡ú: add scale x.\n");
-	printf("¡û: decrease scale x.\n");
-	printf("¡ü: add scale y.\n");
-	printf("¡ı: decrease scale y.\n");
-	printf("CTRL ¡ú: reflect to +x.\n");
-	printf("CTRL ¡û: reflect to -x.\n");
-	printf("CTRL ¡ü: reflect to +y.\n");
-	printf("CTRL ¡ı: reflect to -y.\n");
-	printf("SHIFT ¡ú: add shear.\n");
-	printf("SHIFT ¡û: decrease shear.\n");
+	printf("â†’: add scale x.\n");
+	printf("â†: decrease scale x.\n");
+	printf("â†‘: add scale y.\n");
+	printf("â†“: decrease scale y.\n");
+	printf("CTRL â†’: reflect to +x.\n");
+	printf("CTRL â†: reflect to -x.\n");
+	printf("CTRL â†‘: reflect to +y.\n");
+	printf("CTRL â†“: reflect to -y.\n");
+	printf("SHIFT â†’: add shear.\n");
+	printf("SHIFT â†: decrease shear.\n");
 	printf("R: reset state. \n");
 	printf("V: clip window mode. \n");
 	printf("ESC: command mode.\n");
@@ -20557,16 +20557,16 @@ void showViewOperatorNotice()
 	system("cls");
 	printf("Clip Window Operator: \n");
 	printf("F: fllow the car.\n");
-	printf("¡ú: move right.\n");
-	printf("¡û: move left.\n");
-	printf("¡ü: move up.\n");
-	printf("¡ı: move down.\n");
-	printf("CTRL ¡ú: add width.\n");
-	printf("CTRL ¡û: decrease width.\n");
-	printf("CTRL ¡ü: add height. \n");
-	printf("CTRL ¡ı: decrease height. \n");
-	printf("SHIFT ¡ü: add angle.\n");
-	printf("SHIFT ¡ı: decrease angle.\n");
+	printf("â†’: move right.\n");
+	printf("â†: move left.\n");
+	printf("â†‘: move up.\n");
+	printf("â†“: move down.\n");
+	printf("CTRL â†’: add width.\n");
+	printf("CTRL â†: decrease width.\n");
+	printf("CTRL â†‘: add height. \n");
+	printf("CTRL â†“: decrease height. \n");
+	printf("SHIFT â†‘: add angle.\n");
+	printf("SHIFT â†“: decrease angle.\n");
 	printf("R: reset state\n");
 	printf("ESC: back.\n");
 }
@@ -20836,7 +20836,7 @@ void code_8_exercise_add_2_1()
 #ifdef CHAPTER_8_COMMON
 void init(void)
 {
-	// ºÚÉ«±³¾°É«
+	// é»‘è‰²èƒŒæ™¯è‰²
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

@@ -2,55 +2,55 @@
 #define __CAMERA_H__
 
 #include <windows.h>
-#include<gl/glu.h>                     /**< °üº¬glÍ·ÎÄ¼þ */
-#include "testvector.h"                 /**< °üº¬ÏòÁ¿ÀàÍ·ÎÄ¼þ */
+#include<gl/glu.h>                     /**< åŒ…å«glå¤´æ–‡ä»¶ */
+#include "testvector.h"                 /**< åŒ…å«å‘é‡ç±»å¤´æ–‡ä»¶ */
 
-/** ÉãÏñ»úÀà */
+/** æ‘„åƒæœºç±» */
 class Camera
 {
 public:
-	/** ¹¹Ôìº¯ÊýºÍÎö¹¹º¯Êý */
+	/** æž„é€ å‡½æ•°å’Œæžæž„å‡½æ•° */
 	Camera();
 	~Camera();
 
-	/** »ñµÃÉãÏñ»ú×´Ì¬·½·¨ */
+	/** èŽ·å¾—æ‘„åƒæœºçŠ¶æ€æ–¹æ³• */
 	Vector3 getPosition() { return m_Position; }
 	Vector3 getView() { return m_View; }
 	Vector3 getUpVector() { return m_UpVector; }
 	float   getSpeed() { return m_Speed; }
 
-	/** ÉèÖÃËÙ¶È */
+	/** è®¾ç½®é€Ÿåº¦ */
 	void    setSpeed(float speed)
 	{
 		m_Speed = speed;
 	}
 
-	/** ÉèÖÃÉãÏñ»úµÄÎ»ÖÃ, ¹Û²ìµãºÍÏòÉÏÏòÁ¿ */
+	/** è®¾ç½®æ‘„åƒæœºçš„ä½ç½®, è§‚å¯Ÿç‚¹å’Œå‘ä¸Šå‘é‡ */
 	void setCamera(float positionX, float positionY, float positionZ,
 		float viewX, float viewY, float viewZ,
 		float upVectorX, float upVectorY, float upVectorZ);
 
-	/** Ðý×ªÉãÏñ»ú·½Ïò */
+	/** æ—‹è½¬æ‘„åƒæœºæ–¹å‘ */
 	void rotateView(float angle, float X, float Y, float Z);
 
-	/** ¸ù¾ÝÊó±êÉèÖÃÉãÏñ»ú¹Û²ì·½Ïò */
+	/** æ ¹æ®é¼ æ ‡è®¾ç½®æ‘„åƒæœºè§‚å¯Ÿæ–¹å‘ */
 	void setViewByMouse();
 
-	/** ×óÓÒÉãÏñ»úÒÆ¶¯ */
+	/** å·¦å³æ‘„åƒæœºç§»åŠ¨ */
 	void yawCamera(float speed);
 
-	/** Ç°ºóÒÆ¶¯ÉãÏñ»ú */
+	/** å‰åŽç§»åŠ¨æ‘„åƒæœº */
 	void moveCamera(float speed);
 
-	/** ·ÅÖÃÉãÏñ»ú */
+	/** æ”¾ç½®æ‘„åƒæœº */
 	void setLook();
 
 private:
-	/** ÉãÏñ»úÊôÐÔ */
-	Vector3        m_Position;      /**< Î»ÖÃ */
-	Vector3        m_View;          /**< ³¯Ïò */
-	Vector3        m_UpVector;      /**< ÏòÉÏÏòÁ¿ */
-	float          m_Speed;         /**< ËÙ¶È */
+	/** æ‘„åƒæœºå±žæ€§ */
+	Vector3        m_Position;      /**< ä½ç½® */
+	Vector3        m_View;          /**< æœå‘ */
+	Vector3        m_UpVector;      /**< å‘ä¸Šå‘é‡ */
+	float          m_Speed;         /**< é€Ÿåº¦ */
 
 };
 

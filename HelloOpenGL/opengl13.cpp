@@ -19,7 +19,7 @@ static void init(void)
 void displayWirePolyhedra(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(0.0, 0.0, 1.0); // °×É«»æÖÆ
+	glColor3f(0.0, 0.0, 1.0); // ç™½è‰²ç»˜åˆ¶
 	gluLookAt(5.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 	
 	glScalef(1.5, 2.0, 1.0);
@@ -76,8 +76,8 @@ void main(int argc, char** argv)
 #ifdef CHAPTER_13_COMMON
 void init(void)
 {
-	glClearColor(0.0, 0.0, 0.0, 0.0); // ºÚÉ«±³¾°É«
-	glColor3f(1.0, 1.0, 1.0); // °×É«»æÖÆ
+	glClearColor(0.0, 0.0, 0.0, 0.0); // é»‘è‰²èƒŒæ™¯è‰²
+	glColor3f(1.0, 1.0, 1.0); // ç™½è‰²ç»˜åˆ¶
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, winWidth , 0, winHeight);

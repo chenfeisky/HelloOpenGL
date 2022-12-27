@@ -1,16 +1,16 @@
 //#include "stdafx.h"
 #include <stdio.h>
-#include "testcamera.h"                    /**< °üº¬ÉãÏñ»úÍ·ÎÄ¼ş */
+#include "testcamera.h"                    /**< åŒ…å«æ‘„åƒæœºå¤´æ–‡ä»¶ */
 
-/** ¹¹Ôìº¯Êı */
+/** æ„é€ å‡½æ•° */
 Camera::Camera()
 {
-	/** ³õÊ¼»¯ÏòÁ¿Öµ */
+	/** åˆå§‹åŒ–å‘é‡å€¼ */
 	Vector3 zero = Vector3(0.0, 0.0, 0.0);
 	Vector3 view = Vector3(0.0, 1.0, 0.5);
 	Vector3 up = Vector3(0.0, 0.0, 1.0);
 
-	/** ³õÊ¼»¯ÉãÏñ»ú */
+	/** åˆå§‹åŒ–æ‘„åƒæœº */
 	m_Position = zero;
 	m_View = view;
 	m_UpVector = up;
@@ -22,102 +22,102 @@ Camera::~Camera()
 {
 }
 
-/** ÉèÖÃÉãÏñ»úµÄÎ»ÖÃ,³¯ÏòºÍÏòÉÏÏòÁ¿ */
+/** è®¾ç½®æ‘„åƒæœºçš„ä½ç½®,æœå‘å’Œå‘ä¸Šå‘é‡ */
 void Camera::setCamera(float positionX, float positionY, float positionZ,
 	float viewX, float viewY, float viewZ,
 	float upVectorX, float upVectorY, float upVectorZ)
 {
-	/** ¹¹ÔìÏòÁ¿ */
+	/** æ„é€ å‘é‡ */
 	Vector3 Position = Vector3(positionX, positionY, positionZ);
 	Vector3 View = Vector3(viewX, viewY, viewZ);
 	Vector3 UpVector = Vector3(upVectorX, upVectorY, upVectorZ);
 
-	/** ÉèÖÃÉãÏñ»ú */
+	/** è®¾ç½®æ‘„åƒæœº */
 	m_Position = Position;
 	m_View = View;
 	m_UpVector = UpVector;
 }
 
-/**  Ğı×ªÉãÏñ»ú·½Ïò  */
+/**  æ—‹è½¬æ‘„åƒæœºæ–¹å‘  */
 void Camera::rotateView(float angle, float x, float y, float z)
 {
 	Vector3 newView;
 
-	/** ¼ÆËã·½ÏòÏòÁ¿ */
+	/** è®¡ç®—æ–¹å‘å‘é‡ */
 	Vector3 view = m_View - m_Position;
 
-	/** ¼ÆËã sin ºÍcosÖµ */
+	/** è®¡ç®— sin å’Œcoså€¼ */
 	float cosTheta = (float)cos(angle);
 	float sinTheta = (float)sin(angle);
 
-	/** ¼ÆËãĞı×ªÏòÁ¿µÄxÖµ */
+	/** è®¡ç®—æ—‹è½¬å‘é‡çš„xå€¼ */
 	newView.x = (cosTheta + (1 - cosTheta) * x * x)        * view.x;
 	newView.x += ((1 - cosTheta) * x * y - z * sinTheta)    * view.y;
 	newView.x += ((1 - cosTheta) * x * z + y * sinTheta)    * view.z;
 
-	/** ¼ÆËãĞı×ªÏòÁ¿µÄyÖµ */
+	/** è®¡ç®—æ—‹è½¬å‘é‡çš„yå€¼ */
 	newView.y = ((1 - cosTheta) * x * y + z * sinTheta)    * view.x;
 	newView.y += (cosTheta + (1 - cosTheta) * y * y)        * view.y;
 	newView.y += ((1 - cosTheta) * y * z - x * sinTheta)    * view.z;
 
-	/** ¼ÆËãĞı×ªÏòÁ¿µÄzÖµ */
+	/** è®¡ç®—æ—‹è½¬å‘é‡çš„zå€¼ */
 	newView.z = ((1 - cosTheta) * x * z - y * sinTheta)    * view.x;
 	newView.z += ((1 - cosTheta) * y * z + x * sinTheta)    * view.y;
 	newView.z += (cosTheta + (1 - cosTheta) * z * z)        * view.z;
 
-	/** ¸üĞÂÉãÏñ»úµÄ·½Ïò */
+	/** æ›´æ–°æ‘„åƒæœºçš„æ–¹å‘ */
 	m_View = m_Position + newView;
 }
 
-/** ÓÃÊó±êĞı×ªÉãÏñ»ú */
+/** ç”¨é¼ æ ‡æ—‹è½¬æ‘„åƒæœº */
 void Camera::setViewByMouse()
 {
-	POINT mousePos;                                   /**< ±£´æµ±Ç°Êó±êÎ»ÖÃ */
-	int middleX = GetSystemMetrics(SM_CXSCREEN) >> 1; /**< µÃµ½ÆÁÄ»¿í¶ÈµÄÒ»°ë */
-	int middleY = GetSystemMetrics(SM_CYSCREEN) >> 1; /**< µÃµ½ÆÁÄ»¸ß¶ÈµÄÒ»°ë */
-	float angleY = 0.0f;                              /**< ÉãÏñ»ú×óÓÒĞı×ª½Ç¶È */
-	float angleZ = 0.0f;                              /**< ÉãÏñ»úÉÏÏÂĞı×ª½Ç¶È */
+	POINT mousePos;                                   /**< ä¿å­˜å½“å‰é¼ æ ‡ä½ç½® */
+	int middleX = GetSystemMetrics(SM_CXSCREEN) >> 1; /**< å¾—åˆ°å±å¹•å®½åº¦çš„ä¸€åŠ */
+	int middleY = GetSystemMetrics(SM_CYSCREEN) >> 1; /**< å¾—åˆ°å±å¹•é«˜åº¦çš„ä¸€åŠ */
+	float angleY = 0.0f;                              /**< æ‘„åƒæœºå·¦å³æ—‹è½¬è§’åº¦ */
+	float angleZ = 0.0f;                              /**< æ‘„åƒæœºä¸Šä¸‹æ—‹è½¬è§’åº¦ */
 	static float currentRotX = 0.0f;
 
-	/** µÃµ½µ±Ç°Êó±êÎ»ÖÃ */
+	/** å¾—åˆ°å½“å‰é¼ æ ‡ä½ç½® */
 	GetCursorPos(&mousePos);
 	ShowCursor(TRUE);
 
-	/** Èç¹ûÊó±êÃ»ÓĞÒÆ¶¯,Ôò²»ÓÃ¸üĞÂ */
+	/** å¦‚æœé¼ æ ‡æ²¡æœ‰ç§»åŠ¨,åˆ™ä¸ç”¨æ›´æ–° */
 	if ((mousePos.x == middleX) && (mousePos.y == middleY))
 		return;
 
-	/** ÉèÖÃÊó±êÎ»ÖÃÔÚÆÁÄ»ÖĞĞÄ */
+	/** è®¾ç½®é¼ æ ‡ä½ç½®åœ¨å±å¹•ä¸­å¿ƒ */
 	SetCursorPos(middleX, middleY);
 
-	/**< µÃµ½Êó±êÒÆ¶¯·½Ïò */
+	/**< å¾—åˆ°é¼ æ ‡ç§»åŠ¨æ–¹å‘ */
 	angleY = (float)((middleX - mousePos.x)) / 1000.0f;
 	angleZ = (float)((middleY - mousePos.y)) / 1000.0f;
 
-	static float lastRotX = 0.0f;      /**< ÓÃÓÚ±£´æĞı×ª½Ç¶È */
+	static float lastRotX = 0.0f;      /**< ç”¨äºä¿å­˜æ—‹è½¬è§’åº¦ */
 	lastRotX = currentRotX;
 
-	/** ¸ú×ÙÉãÏñ»úÉÏÏÂĞı×ª½Ç¶È */
+	/** è·Ÿè¸ªæ‘„åƒæœºä¸Šä¸‹æ—‹è½¬è§’åº¦ */
 	currentRotX += angleZ;
 
-	/** Èç¹ûÉÏÏÂĞı×ª»¡¶È´óÓÚ1.0,ÎÒÃÇ½ØÈ¡µ½1.0²¢Ğı×ª */
+	/** å¦‚æœä¸Šä¸‹æ—‹è½¬å¼§åº¦å¤§äº1.0,æˆ‘ä»¬æˆªå–åˆ°1.0å¹¶æ—‹è½¬ */
 	if (currentRotX > 1.0f)
 	{
 		currentRotX = 1.0f;
 
-		/** ¸ù¾İ±£´æµÄ½Ç¶ÈĞı×ª·½Ïò */
+		/** æ ¹æ®ä¿å­˜çš„è§’åº¦æ—‹è½¬æ–¹å‘ */
 		if (lastRotX != 1.0f)
 		{
-			/** Í¨¹ı²æ»ıÕÒµ½ÓëĞı×ª·½Ïò´¹Ö±µÄÏòÁ¿ */
+			/** é€šè¿‡å‰ç§¯æ‰¾åˆ°ä¸æ—‹è½¬æ–¹å‘å‚ç›´çš„å‘é‡ */
 			Vector3 vAxis = m_View - m_Position;
 			vAxis = vAxis.crossProduct(m_UpVector);
 			vAxis = vAxis.normalize();
 
-			///Ğı×ª
+			///æ—‹è½¬
 			rotateView(1.0f - lastRotX, vAxis.x, vAxis.y, vAxis.z);
 		}
 	}
-	/** Èç¹ûĞı×ª»¡¶ÈĞ¡ÓÚ-1.0,ÔòÒ²½ØÈ¡µ½-1.0²¢Ğı×ª */
+	/** å¦‚æœæ—‹è½¬å¼§åº¦å°äº-1.0,åˆ™ä¹Ÿæˆªå–åˆ°-1.0å¹¶æ—‹è½¬ */
 	else if (currentRotX < -1.0f)
 	{
 		currentRotX = -1.0f;
@@ -125,32 +125,32 @@ void Camera::setViewByMouse()
 		if (lastRotX != -1.0f)
 		{
 
-			/** Í¨¹ı²æ»ıÕÒµ½ÓëĞı×ª·½Ïò´¹Ö±µÄÏòÁ¿ */
+			/** é€šè¿‡å‰ç§¯æ‰¾åˆ°ä¸æ—‹è½¬æ–¹å‘å‚ç›´çš„å‘é‡ */
 			Vector3 vAxis = m_View - m_Position;
 			vAxis = vAxis.crossProduct(m_UpVector);
 			vAxis = vAxis.normalize();
 
-			///Ğı×ª
+			///æ—‹è½¬
 			rotateView(-1.0f - lastRotX, vAxis.x, vAxis.y, vAxis.z);
 		}
 	}
-	/** ·ñÔò¾ÍĞı×ªangleZ¶È */
+	/** å¦åˆ™å°±æ—‹è½¬angleZåº¦ */
 	else
 	{
-		/** ÕÒµ½ÓëĞı×ª·½Ïò´¹Ö±ÏòÁ¿ */
+		/** æ‰¾åˆ°ä¸æ—‹è½¬æ–¹å‘å‚ç›´å‘é‡ */
 		Vector3 vAxis = m_View - m_Position;
 		vAxis = vAxis.crossProduct(m_UpVector);
 		vAxis = vAxis.normalize();
 
-		///Ğı×ª
+		///æ—‹è½¬
 		rotateView(angleZ, vAxis.x, vAxis.y, vAxis.z);
 	}
 
-	/** ×ÜÊÇ×óÓÒĞı×ªÉãÏñ»ú */
+	/** æ€»æ˜¯å·¦å³æ—‹è½¬æ‘„åƒæœº */
 	rotateView(angleY, 0, 1, 0);
 }
 
-/** ×óÓÒÒÆ¶¯ÉãÏñ»ú */
+/** å·¦å³ç§»åŠ¨æ‘„åƒæœº */
 void Camera::yawCamera(float speed)
 {
 	Vector3 yaw;
@@ -168,25 +168,25 @@ void Camera::yawCamera(float speed)
 	m_View.z += yaw.z * speed;
 }
 
-/** Ç°ºóÒÆ¶¯ÉãÏñ»ú */
+/** å‰åç§»åŠ¨æ‘„åƒæœº */
 void Camera::moveCamera(float speed)
 {
-	/** ¼ÆËã·½ÏòÏòÁ¿ */
+	/** è®¡ç®—æ–¹å‘å‘é‡ */
 	Vector3 vector = m_View - m_Position;
-	vector = vector.normalize();         /**< µ¥Î»»¯ */
+	vector = vector.normalize();         /**< å•ä½åŒ– */
 
-										 /** ¸üĞÂÉãÏñ»ú */
-	m_Position.x += vector.x * speed;    /**< ¸ù¾İËÙ¶È¸üĞÂÎ»ÖÃ */
+										 /** æ›´æ–°æ‘„åƒæœº */
+	m_Position.x += vector.x * speed;    /**< æ ¹æ®é€Ÿåº¦æ›´æ–°ä½ç½® */
 	m_Position.z += vector.z * speed;
-	m_View.x += vector.x * speed;        /**< ¸ù¾İËÙ¶È¸üĞÂ·½Ïò */
+	m_View.x += vector.x * speed;        /**< æ ¹æ®é€Ÿåº¦æ›´æ–°æ–¹å‘ */
 	m_View.z += vector.z * speed;
 }
 
 
-/** ÉèÖÃÊÓµã */
+/** è®¾ç½®è§†ç‚¹ */
 void Camera::setLook()
 {
-	/** ÉèÖÃÊÓ¿Ú */
+	/** è®¾ç½®è§†å£ */
 	gluLookAt(m_Position.x, m_Position.y, m_Position.z,
 		m_View.x, m_View.y, m_View.z,
 		m_UpVector.x, m_UpVector.y, m_UpVector.z);
