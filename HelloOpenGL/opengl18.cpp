@@ -66,6 +66,61 @@ void code_18_5_1()
 }
 #endif
 
+#ifdef CHAPTER_18_5_2
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	GLubyte texArray[32][32][4];
+	for (int y = 0; y < 32; y ++)
+	{
+		for (int x = 0; x < 32; x++)
+		{
+			if (y == 0 || y == 10 || y == 20)
+			{
+				texArray[y][x][0] = 255;
+				texArray[y][x][1] = 0;
+				texArray[y][x][2] = 0;
+				texArray[y][x][3] = 255;
+			}
+			else
+			{
+				texArray[y][x][0] = 255;
+				texArray[y][x][1] = 255;
+				texArray[y][x][2] = 255;
+				texArray[y][x][3] = 255;
+			}			
+		}
+	}
+
+	GLfloat vertex1[] = { -20, 0, 0 };
+	GLfloat vertex2[] = { 20, 0, 0 };
+	GLfloat vertex3[] = { 20, 30, 0 };
+	GLfloat vertex4[] = { -20, 30, 0 };
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, texArray);
+	glEnable(GL_TEXTURE_2D);
+
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0, 0.0); glVertex3fv(vertex1);
+		glTexCoord2f(1.0, 0.0); glVertex3fv(vertex2);
+		glTexCoord2f(1.0, 1.0); glVertex3fv(vertex3);
+		glTexCoord2f(0.0, 1.0); glVertex3fv(vertex4);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+
+	glFlush();
+}
+
+void code_18_5_2()
+{
+	glutDisplayFunc(displayFcn);
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_18_COMMON
 
@@ -81,6 +136,14 @@ void init(void)
 
 void main(int argc, char** argv)
 {
+
+#ifdef CHAPTER_18_5_2
+	widthMin = -400;
+	widthMax = 400;
+	heightMin = -300;
+	heightMax = 300;
+#endif
+
 	//srand(time(0));
 	srand(100);
 	glutInit(&argc, argv);
@@ -93,6 +156,10 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_18_5_1
 	code_18_5_1();
+#endif
+
+#ifdef CHAPTER_18_5_2
+	code_18_5_2();
 #endif
 
 	glutMainLoop();
