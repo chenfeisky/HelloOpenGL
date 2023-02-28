@@ -75,6 +75,9 @@
     <ClInclude Include="opengl19h.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="opengl20h.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl4.cpp">
@@ -138,6 +141,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="opengl19.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl20.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
