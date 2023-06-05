@@ -48,12 +48,14 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\opengl\include</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>$(ProjectDir)..\opengl\lib</AdditionalLibraryDirectories>
       <StackReserveSize>100000000</StackReserveSize>
+      <AdditionalDependencies>glew32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>if not exist "$(OutDir)" mkdir "$(OutDir)"
@@ -91,9 +93,11 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClInclude Include="opengl13h.h" />
     <ClInclude Include="opengl14h.h" />
     <ClInclude Include="opengl16h.h" />
+    <ClInclude Include="opengl17h.h" />
     <ClInclude Include="opengl18h.h" />
     <ClInclude Include="opengl19h.h" />
     <ClInclude Include="opengl20h.h" />
+    <ClInclude Include="opengl22h.h" />
     <ClInclude Include="opengl3h.h" />
     <ClInclude Include="opengl4h.h" />
     <ClInclude Include="opengl5h.h" />
@@ -113,9 +117,11 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="opengl13.cpp" />
     <ClCompile Include="opengl14.cpp" />
     <ClCompile Include="opengl16.cpp" />
+    <ClCompile Include="opengl17.cpp" />
     <ClCompile Include="opengl18.cpp" />
     <ClCompile Include="opengl19.cpp" />
     <ClCompile Include="opengl20.cpp" />
+    <ClCompile Include="opengl22.cpp" />
     <ClCompile Include="opengl3.cpp" />
     <ClCompile Include="opengl4.cpp" />
     <ClCompile Include="opengl5.cpp" />
@@ -129,6 +135,10 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="testcamera.cpp" />
     <ClCompile Include="testmain.cpp" />
     <ClCompile Include="testvector.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\PhongFragmentShader.frag" />
+    <None Include="shader\PhongVertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

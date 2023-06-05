@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 //#include <gl/glut.h>
+#include "GL/glew.h"
 #include "glut.h"
 
 #include <string>
@@ -25,7 +26,8 @@
 using std::vector;
 
 //#define TOOLS
-#define CHAPTER 20
+#define CHAPTER 22
+
 #define WIN_DEBUG
 
 
