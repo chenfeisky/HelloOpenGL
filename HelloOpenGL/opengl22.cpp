@@ -165,31 +165,9 @@ void SpecialKey(GLint key, GLint x, GLint y)
 	displayFcn();
 }
 
-void code_22_3_2()
+void processShader()
 {
-	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
-	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
-	camera->setLookPoint(Point(0.f, 0.f, 0.f));
-
-	//glutDisplayFunc(displayFcn);
-	glutSpecialFunc(&SpecialKey);
-
-
-	//GLfloat lightPosType[] = { 0.0, 0, 10.0, 1.0 };
-	//glLightfv(GL_LIGHT0, GL_POSITION, lightPosType);
-
-	//GLfloat blackColor[] = { 0, 0, 0, 1 };
-	//GLfloat whiteColor[] = { 1, 1, 0, 1 };
-	//glLightfv(GL_LIGHT0, GL_AMBIENT, blackColor);
-	//glLightfv(GL_LIGHT0, GL_DIFFUSE, whiteColor);
-	//glLightfv(GL_LIGHT0, GL_SPECULAR, whiteColor);
-
-	//glEnable(GL_LIGHT0);
-	//glEnable(GL_LIGHTING);
-
-
-
-	/*GLuint vertShader, fragShader;
+	GLuint vertShader, fragShader;
 	vertShader = glCreateShader(GL_VERTEX_SHADER);
 	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -258,7 +236,19 @@ void code_22_3_2()
 		fprintf(stderr, "%s\n", log);
 	}
 
-	glUseProgram(program);*/
+	glUseProgram(program);
+}
+
+void code_22_3_2()
+{
+	camera = new Camera(Point(0, 0, 100), Rotator(0, 0, 0));
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f));
+
+	//glutDisplayFunc(displayFcn);
+	glutSpecialFunc(&SpecialKey);
+
+	processShader();
 }
 #endif
 
@@ -284,7 +274,12 @@ void main(int argc, char** argv)
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(winWidth, winHeight);
 	glutCreateWindow("An Example OpenGL Program");
-
+	int glewCode = glewInit();
+	if (glewCode != GLEW_OK)
+	{
+		printf("glewInit err:%d\n", glewCode);
+		return;
+	}
 	init();
 
 #ifdef CHAPTER_22_3_2

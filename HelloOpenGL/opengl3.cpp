@@ -182,6 +182,12 @@ void main(int argc, char** argv)
 	glutInitWindowPosition(50, 100);
 	glutInitWindowSize(400, 300);
 	glutCreateWindow("An Example OpenGL Program");
+	int glewCode = glewInit();
+	if (glewCode != GLEW_OK)
+	{
+		printf("glewInit err:%d\n", glewCode);
+		return;
+	}
 
 	init();
 

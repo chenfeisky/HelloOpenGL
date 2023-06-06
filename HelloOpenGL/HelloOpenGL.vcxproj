@@ -49,13 +49,14 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)..\opengl\include</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>$(ProjectDir)..\opengl\lib</AdditionalLibraryDirectories>
       <StackReserveSize>100000000</StackReserveSize>
-      <AdditionalDependencies>glew32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32s.lib;OpenGL32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>if not exist "$(OutDir)" mkdir "$(OutDir)"
