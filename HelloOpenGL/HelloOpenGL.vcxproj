@@ -47,7 +47,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\opengl\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\opengl\include;$(ProjectDir)..\opengl\include\stb-master</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -131,6 +131,7 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="opengl8.cpp" />
     <ClCompile Include="opengl9.cpp" />
     <ClCompile Include="openglCamera.cpp" />
+    <ClCompile Include="openglStbImage.cpp" />
     <ClCompile Include="openglTools.cpp" />
     <ClCompile Include="testbmp.cpp" />
     <ClCompile Include="testcamera.cpp" />
@@ -138,8 +139,20 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="testvector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shader\CubeTextureMappingFragmentShader.frag" />
+    <None Include="Shader\CubeTextureMappingVertexShader.vert" />
+    <None Include="Shader\cubew1.frag" />
+    <None Include="Shader\cubew1.vert" />
+    <None Include="Shader\LightVertexShader.vert" />
+    <None Include="Shader\lightw1.frag" />
+    <None Include="Shader\MultiTextureMappingFragmentShader.frag" />
+    <None Include="Shader\MultiTextureMappingVertexShader.vert" />
+    <None Include="Shader\PhongCustomFragmentShader.frag" />
+    <None Include="Shader\PhongCustomVertexShader.vert" />
     <None Include="shader\PhongFragmentShader.frag" />
     <None Include="shader\PhongVertexShader.vert" />
+    <None Include="Shader\TextureMappingFragmentShader.frag" />
+    <None Include="Shader\TextureMappingVertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

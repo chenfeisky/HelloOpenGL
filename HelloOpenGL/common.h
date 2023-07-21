@@ -1,5 +1,5 @@
 #pragma once
-
+#pragma warning(disable:4996)
 
 #include <stdio.h>
 //#include <gl/glut.h>
@@ -22,6 +22,10 @@
 #include <math.h>
 #include <algorithm> 
 #include <thread>
+
+#include "stb_image.h"
+#include "stb_image_write.h"
+#include "stb_image_resize.h"
 
 using std::vector;
 

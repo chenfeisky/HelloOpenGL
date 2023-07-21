@@ -48,6 +48,8 @@ public:
 	Camera(Point viewP0, Vec3 N, Vec3 V, float moveSpeed = 1.f, float wheelSpeed = 1.f, float middleDrageSpeed = 1.f, float leftDrageSpeed = 1.f, float rightDrageSpeed = 1.f);
 	void setLookPoint(Point lookPoint, float lookDistance = 100.f);
 	void update();
+	void GetModelViewMatrix(float matrix[16]);
+	void GetProjectionMatrix(float matrix[16]);
 
 public:
 	Point _viewP0;
@@ -79,6 +81,7 @@ private:
 
 	Rotator GetCameraRotator();
 	void SetCameraRotator(Rotator r);
+
 
 	void onLeftMouseButtonDown(int x, int y);
 	void onLeftMouseButtonUp(int x, int y);

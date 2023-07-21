@@ -936,6 +936,39 @@ void Camera::tick(float dt)
 	glutPostRedisplay();
 }
 
+
+void Camera::GetModelViewMatrix(float matrix[16])
+{
+	glMatrixMode(GL_MODELVIEW);
+	
+	glPushMatrix();
+	glLoadIdentity();
+	
+	Point pu = { camera->_viewP0.x - camera->_n.x,
+		camera->_viewP0.y - camera->_n.y,
+		camera->_viewP0.z - camera->_n.z, };
+	gluLookAt(camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z, pu.x, pu.y, pu.z, camera->_v.x, camera->_v.y, camera->_v.z);
+
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
+
+	glPopMatrix();
+}
+
+void Camera::GetProjectionMatrix(float matrix[16])
+{
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	
+	float clipWinHeight = 2 * tan(45.f / 2 * PI / 180);
+	float clipWinWidth = winWidth / winHeight * clipWinHeight;
+	glFrustum(-clipWinWidth / 2, clipWinWidth / 2, -clipWinHeight / 2, clipWinHeight / 2, dnear, dfar);
+
+	glGetFloatv(GL_PROJECTION_MATRIX, matrix);
+
+	glPopMatrix();
+}
+
 void viewOpenGL()
 {
 	glMatrixMode(GL_MODELVIEW);

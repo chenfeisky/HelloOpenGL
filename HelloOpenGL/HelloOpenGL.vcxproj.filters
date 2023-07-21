@@ -13,7 +13,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="shader">
+    <Filter Include="Shader">
       <UniqueIdentifier>{37a56c75-765d-4785-ab4a-a2b540d3404c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -161,13 +161,52 @@
     <ClCompile Include="opengl17.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="openglStbImage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\PhongVertexShader.vert">
-      <Filter>shader</Filter>
+      <Filter>Shader</Filter>
     </None>
     <None Include="shader\PhongFragmentShader.frag">
-      <Filter>shader</Filter>
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\cubew1.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\cubew1.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\lightw1.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\LightVertexShader.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\PhongCustomFragmentShader.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\PhongCustomVertexShader.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\TextureMappingFragmentShader.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\TextureMappingVertexShader.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\CubeTextureMappingFragmentShader.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\CubeTextureMappingVertexShader.vert">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\MultiTextureMappingFragmentShader.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\MultiTextureMappingVertexShader.vert">
+      <Filter>Shader</Filter>
     </None>
   </ItemGroup>
 </Project>
