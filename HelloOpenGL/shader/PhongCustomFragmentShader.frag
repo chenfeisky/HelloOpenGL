@@ -41,5 +41,6 @@ void main(){
 	float distan = min(sqrt(light2fragVec.x * light2fragVec.x + light2fragVec.y * light2fragVec.y + light2fragVec.z * light2fragVec.z), enableDistance);
 	float strength = 1 - distan / enableDistance;
 
-	fragColor = vec4(color, 1.0);
+	//fragColor = vec4(color, 1.0);
+	fragColor = vec4(vec3(lightdir), 1.0);
 }

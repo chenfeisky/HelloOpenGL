@@ -19,13 +19,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -139,6 +139,8 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <ClCompile Include="testvector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shader\BumpMappingFragmentShader.frag" />
+    <None Include="Shader\BumpMappingVertexShader.vert" />
     <None Include="Shader\CubeTextureMappingFragmentShader.frag" />
     <None Include="Shader\CubeTextureMappingVertexShader.vert" />
     <None Include="Shader\cubew1.frag" />

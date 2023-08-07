@@ -208,5 +208,11 @@
     <None Include="Shader\MultiTextureMappingVertexShader.vert">
       <Filter>Shader</Filter>
     </None>
+    <None Include="Shader\BumpMappingFragmentShader.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\BumpMappingVertexShader.vert">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

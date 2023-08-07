@@ -1589,6 +1589,344 @@ void code_22_4_2_Test2()
 }
 #endif
 
+
+#ifdef CHAPTER_22_4_3
+static unsigned int VAO;
+static GLuint platShaderProgramID;
+static GLint ImageHeight;
+static GLint ImageWidth;
+static GLubyte* pixelData;
+static GLint ImageColorFormat;
+static GLuint texture;
+static float plat_VerticesAndNormal[] =
+{
+	-200.f, -300.f, -2.f,  0.0f,  0.0f, -1.0f,
+	 200.f, -300.f, -2.f,  0.0f,  0.0f, -1.0f,
+	 200.f,  300.f, -2.f,  0.0f,  0.0f, -1.0f,
+	 200.f,  300.f, -2.f,  0.0f,  0.0f, -1.0f,
+	-200.f,  300.f, -2.f,  0.0f,  0.0f, -1.0f,
+	-200.f, -300.f, -2.f,  0.0f,  0.0f, -1.0f,
+			
+	-200.f, -300.f,  2.f,  0.0f,  0.0f, 1.0f,
+	 200.f, -300.f,  2.f,  0.0f,  0.0f, 1.0f,
+	 200.f,  300.f,  2.f,  0.0f,  0.0f, 1.0f,
+	 200.f,  300.f,  2.f,  0.0f,  0.0f, 1.0f,
+	-200.f,  300.f,  2.f,  0.0f,  0.0f, 1.0f,
+	-200.f, -300.f,  2.f,  0.0f,  0.0f, 1.0f,
+			
+	-200.f,  300.f,  2.f, -1.0f,  0.0f,  0.0f,
+	-200.f,  300.f, -2.f, -1.0f,  0.0f,  0.0f,
+	-200.f, -300.f, -2.f, -1.0f,  0.0f,  0.0f,
+	-200.f, -300.f, -2.f, -1.0f,  0.0f,  0.0f,
+	-200.f, -300.f,  2.f, -1.0f,  0.0f,  0.0f,
+	-200.f,  300.f,  2.f, -1.0f,  0.0f,  0.0f,
+			
+	 2.f,  300.f,  2.f,  1.0f,  0.0f,  0.0f,
+	 2.f,  300.f, -2.f,  1.0f,  0.0f,  0.0f,
+	 2.f, -300.f, -2.f,  1.0f,  0.0f,  0.0f,
+	 2.f, -300.f, -2.f,  1.0f,  0.0f,  0.0f,
+	 2.f, -300.f,  2.f,  1.0f,  0.0f,  0.0f,
+	 2.f,  300.f,  2.f,  1.0f,  0.0f,  0.0f,
+			
+	-200.f, -300.f, -2.f,  0.0f, -1.0f,  0.0f,
+	 200.f, -300.f, -2.f,  0.0f, -1.0f,  0.0f,
+	 200.f, -300.f,  2.f,  0.0f, -1.0f,  0.0f,
+	 200.f, -300.f,  2.f,  0.0f, -1.0f,  0.0f,
+	-200.f, -300.f,  2.f,  0.0f, -1.0f,  0.0f,
+	-200.f, -300.f, -2.f,  0.0f, -1.0f,  0.0f,
+			
+	-200.f,  300.f, -2.f,  0.0f,  1.0f,  0.0f,
+	 200.f,  300.f, -2.f,  0.0f,  1.0f,  0.0f,
+	 200.f,  300.f,  2.f,  0.0f,  1.0f,  0.0f,
+	 200.f,  300.f,  2.f,  0.0f,  1.0f,  0.0f,
+	-200.f,  300.f,  2.f,  0.0f,  1.0f,  0.0f,
+	-200.f,  300.f, -2.f,  0.0f,  1.0f,  0.0f
+};
+GLchar* ReadTextFile(const char* name)
+{
+	FILE* fp = nullptr;
+	GLchar* content = NULL;
+	int count = 0;
+
+	if (name == NULL) return NULL;
+
+	fopen_s(&fp, name, "rt");
+	if (fp == NULL) return NULL;
+
+	fseek(fp, 0, SEEK_END);
+	count = ftell(fp);
+	rewind(fp);
+
+	if (count > 0)
+	{
+		content = (GLchar*)malloc(sizeof(char) * (count + 1));
+		if (content != NULL)
+		{
+			count = fread(content, sizeof(char), count, fp);
+			content[count] = '\0';
+		}
+	}
+	fclose(fp);
+	return content;
+}
+
+void readBmpFile(const char* filePath)
+{
+	int iw, ih, n;
+	stbi_set_flip_vertically_on_load(1);
+	// 加载图片获取宽、高、颜色通道信息
+	unsigned char* idata = stbi_load(filePath, &ImageWidth, &ImageHeight, &n, 0);
+
+	if (n == 3)
+		ImageColorFormat = GL_RGB;
+	else if (n == 4)
+		ImageColorFormat = GL_RGBA;
+	else
+		ImageColorFormat = GL_RGB;
+
+	pixelData = idata;
+}
+
+
+void displayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glColor3f(1.0, 0.0, 0.0);
+
+	glEnable(GL_LIGHTING);// 打开光照处理功能
+
+	Point lightPosition(10.f, 0.f, 10.f, 1.f);
+
+	GLfloat light_position[] = { lightPosition.x, lightPosition.y, lightPosition.z, 1.0f };
+	GLfloat light_ambient[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // GL_AMBIENT 属性的值 R,G,B,A 
+	GLfloat light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // GL_DIFFUSE 属性的值 R,G,B,A
+	GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // GL_SPECULAR 属性的值 R,G,B,A
+
+	GLfloat mat_ambient[] = { 0.5f, 0.0f, 0.0f, 1.0f };
+	GLfloat mat_diffuse[] = { 0.5f, 0.0f, 0.0f, 1.0f };
+	GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat mat_emission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	GLfloat mat_shininess = 30.0f;
+
+	{
+		// 设置光源	
+		glLightfv(GL_LIGHT0, GL_POSITION, light_position); // 设置 GL_POSITION (光源位置)属性 
+		glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient); // 设置 GL_AMBIENT( 光源发出的光，经过非常多次反射，遗留在整个光照环境中的强度)
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);// 设置 GL_DIFFUSE(光源发出的光，照射到粗糙表面时，经过漫反射，所得到的光强度)
+		glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);// 设置 GL_SPECULAR(光源发出的光，照射到光滑表面时，经过镜面反射，所得到的光强度) 
+
+		glEnable(GL_LIGHT0);// 开启光源
+
+	}
+
+	// 绑定纹理
+	glBindTexture(GL_TEXTURE_2D, texture);
+	//glUniform1i(glGetUniformLocation(platShaderProgramID, "ourTexture"), 0); // 纹理单元0是默认激活的，所以这里不用显示复制
+
+	glUseProgram(platShaderProgramID);
+	Matrix modelMatrix(4, 4);
+	matrixSetIdentity(modelMatrix);
+
+	float viewMatrix[4][4];
+	camera->GetModelViewMatrix((float*)viewMatrix);
+
+	float projectionMatrix[4][4];
+	camera->GetProjectionMatrix((float*)projectionMatrix);
+
+	glUniformMatrix4fv(glGetUniformLocation(platShaderProgramID, "modelMat"), 1, GL_FALSE, (const float*)modelMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(platShaderProgramID, "viewMat"), 1, GL_FALSE, (const float*)viewMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(platShaderProgramID, "projectionMat"), 1, GL_FALSE, (const float*)projectionMatrix);
+
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "light_ambient"), light_ambient[0], light_ambient[1], light_ambient[2]);
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "light_diffuse"), light_diffuse[0], light_diffuse[1], light_diffuse[2]);
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "light_specular"), light_specular[0], light_specular[1], light_specular[2]);
+
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "mat_ambient"), mat_ambient[0], mat_ambient[1], mat_ambient[2]);
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "mat_diffuse"), mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "mat_specular"), mat_specular[0], mat_specular[1], mat_specular[2]);
+	glUniform1f(glGetUniformLocation(platShaderProgramID, "mat_shininess"), mat_shininess);
+
+
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "lightPos"), lightPosition.x, lightPosition.y, lightPosition.z);
+	glUniform3f(glGetUniformLocation(platShaderProgramID, "viewPos"), camera->_viewP0.x, camera->_viewP0.y, camera->_viewP0.z);
+
+
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	//glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glUseProgram(0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	glutSwapBuffers();
+	glFlush();
+}
+
+GLint CreateShader(const char* vertPath, const char* fragPath)
+{
+	GLuint vertShader, fragShader;
+	vertShader = glCreateShader(GL_VERTEX_SHADER);
+	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+	GLchar* vertSource, * fragSource;
+	vertSource = ReadTextFile(vertPath);
+	if (vertSource == nullptr)
+	{
+		fputs("Failed to read vertex shader\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	fragSource = ReadTextFile(fragPath);
+	if (fragSource == nullptr)
+	{
+		fputs("Failed to read fragment shader\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	glShaderSource(vertShader, 1, (const GLchar**)&vertSource, nullptr);
+	glShaderSource(fragShader, 1, (const GLchar**)&fragSource, nullptr);
+	free(vertSource);
+	free(fragSource);
+
+	glCompileShader(vertShader);
+	glCompileShader(fragShader);
+
+	GLint status;
+	glGetShaderiv(vertShader, GL_COMPILE_STATUS, &status);
+	if (status != GL_TRUE)
+	{
+		fputs("Error in vertex shader compilation\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+	glGetShaderiv(fragShader, GL_COMPILE_STATUS, &status);
+	if (status != GL_TRUE)
+	{
+		fputs("Error in fragment shader compilation\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	GLint programID = glCreateProgram();
+	glAttachShader(programID, vertShader);
+	glAttachShader(programID, fragShader);
+	glLinkProgram(programID);
+	glGetProgramiv(programID, GL_LINK_STATUS, &status);
+	if (status != GL_TRUE)
+	{
+		fputs("Error when linking shader program\n", stderr);
+		exit(EXIT_FAILURE);
+	}
+
+	GLint length;
+	GLsizei num;
+	char* log;
+	glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &length);
+	if (length > 0)
+	{
+		log = (char*)malloc(sizeof(char) * length);
+		glGetShaderInfoLog(vertShader, length, &num, log);
+		fprintf(stderr, "%s\n", log);
+	}
+	glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &length);
+	if (length > 0)
+	{
+		log = (char*)malloc(sizeof(char) * length);
+		glGetProgramInfoLog(programID, length, &num, log);
+		fprintf(stderr, "%s\n", log);
+	}
+
+	//glUseProgram(programID);
+	return programID;
+}
+
+
+
+void code_22_4_3()
+{
+	camera = new Camera(Point(0, 0, 1000), Rotator(0, 0, 0),2);
+	cameraDisplayFunc(displayFcn, camera, winWidth, winHeight);
+	camera->setLookPoint(Point(0.f, 0.f, 0.f), 1000);
+
+	// 加载纹理
+	glGenTextures(1, &texture);
+	// 将纹理对象texture绑定到GL_TEXTURE_2D上，往后对GL_TEXTURE_2D的操作都将对texture执行
+	glBindTexture(GL_TEXTURE_2D, texture);
+	// 设置纹理在不同轴的环绕方式
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// 设置纹理的纹理过滤方式
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// 加载纹理图片
+	//readBmpFile("Texture/TestBmp.bmp");
+	readBmpFile("Texture/T_Brick_Clay_New_D.PNG");
+	
+	// 将纹理图片保存到绑定GL_TEXTURE_2D的对象上，以字符数组形式
+	glTexImage2D(GL_TEXTURE_2D, 0, ImageColorFormat, ImageWidth, ImageHeight, 0, ImageColorFormat, GL_UNSIGNED_BYTE, pixelData);
+	// 生成GL_TEXTURE_2D绑定对象的多级渐远纹理
+	glGenerateMipmap(GL_TEXTURE_2D);
+	// 释放纹理图片内存，解绑纹理texture
+	stbi_image_free(pixelData);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	//创建顶点缓冲对象
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);		//绑定缓冲对象，设定缓冲类型
+	//将顶点数据复制到缓冲的内存中，并指定显卡如何管理数据，这里指定为GL_STATIC_DRAW
+	ImageWidth = 500;
+	ImageHeight = 500;
+	float vertices[] =
+	{
+		// 顶点位置								   // 法线			   // 纹理坐标
+		 ImageWidth / 2,  ImageHeight / 2, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 1.0f, // Top Right
+		-ImageWidth / 2,  ImageHeight / 2, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f,  // Top Left 
+		 ImageWidth / 2, -ImageHeight / 2, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 0.0f, // Bottom Right
+
+		-ImageWidth / 2,  ImageHeight / 2, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f,  // Top Left 
+		-ImageWidth / 2, -ImageHeight / 2, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // Bottom Left
+		 ImageWidth / 2, -ImageHeight / 2, 0.0f,   0.0f, 0.0f, 1.0f,   1.0f, 0.0f, // Bottom Right
+
+	};
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	//创建VAO顶点数组对象
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	//顶点
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);		//以顶点属性位置作为参数,启用顶点属性
+	//法线
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);		//以顶点属性位置作为参数,启用顶点属性
+	//纹理坐标
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);		//以顶点属性位置作为参数,启用顶点属性
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	//// =========================================
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(plat_VerticesAndNormal), plat_VerticesAndNormal, GL_STATIC_DRAW);
+
+	////创建VAO顶点数组对象
+	//glGenVertexArrays(1, &VAO);
+	//glBindVertexArray(VAO);
+	////顶点
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(0);		//以顶点属性位置作为参数,启用顶点属性
+	////法向量
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3));
+	//glEnableVertexAttribArray(1);		//以顶点属性位置作为参数,启用顶点属性
+
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindVertexArray(0);
+	//// =============================================
+
+	glEnable(GL_DEPTH_TEST);
+
+	platShaderProgramID = CreateShader("Shader/BumpMappingVertexShader.vert", "Shader/BumpMappingFragmentShader.frag");
+	//platShaderProgramID = CreateShader("Shader/PhongCustomVertexShader.vert", "Shader/PhongCustomFragmentShader.frag");
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // CHAPTER_22_COMMON
 
@@ -1637,6 +1975,14 @@ void main(int argc, char** argv)
 
 #ifdef CHAPTER_22_4_2_Test2
 	code_22_4_2_Test2();
+#endif
+
+#ifdef CHAPTER_22_4_3
+	code_22_4_3();
+#endif
+
+#ifdef CHAPTER_22_4_3_Test
+	code_22_4_3_Test();
 #endif
 
 	glutMainLoop();
