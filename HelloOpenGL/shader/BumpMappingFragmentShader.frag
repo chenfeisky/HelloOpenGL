@@ -60,5 +60,4 @@ void main()
 	color += vec3(base) * light_specular * pow(RdotV, 0.5f);
 
     fragColor = vec4(color, 1.0f);
-	//fragColor = vec4(vec3(bump), 1.0f);
 }

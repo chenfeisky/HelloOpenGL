@@ -214,5 +214,11 @@
     <None Include="Shader\BumpMappingVertexShader.vert">
       <Filter>Shader</Filter>
     </None>
+    <None Include="Shader\NormalMappingFragmentShader.frag">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shader\NormalMappingVertexShader.vert">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

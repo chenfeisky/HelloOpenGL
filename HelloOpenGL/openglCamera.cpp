@@ -23,7 +23,7 @@
 
 static float winWidth, winHeight;
 static void (*displayFcn)(void) = nullptr;
-static GLfloat dnear = 1, dfar = 2000;
+static GLfloat dnear = 1, dfar = 20000;
 static Camera* camera = nullptr;
 static int fps = 60;
 

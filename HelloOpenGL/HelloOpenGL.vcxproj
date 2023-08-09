@@ -149,6 +149,8 @@ xcopy /Y /Q "$(ProjectDir)..\opengl\dll\*.*" "$(OutDir)"</Command>
     <None Include="Shader\lightw1.frag" />
     <None Include="Shader\MultiTextureMappingFragmentShader.frag" />
     <None Include="Shader\MultiTextureMappingVertexShader.vert" />
+    <None Include="Shader\NormalMappingFragmentShader.frag" />
+    <None Include="Shader\NormalMappingVertexShader.vert" />
     <None Include="Shader\PhongCustomFragmentShader.frag" />
     <None Include="Shader\PhongCustomVertexShader.vert" />
     <None Include="shader\PhongFragmentShader.frag" />
