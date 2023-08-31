@@ -87,6 +87,9 @@
     <ClInclude Include="opengl17h.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="opengl23h.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opengl4.cpp">
@@ -162,6 +165,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="openglStbImage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl23.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
